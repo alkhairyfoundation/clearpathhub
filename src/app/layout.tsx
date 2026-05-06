@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import Providers from "@/components/Providers";
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -32,7 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased bg-gray-50">{children}</body>
+      <body className="antialiased bg-gray-50">
+        <Providers>{children}</Providers>
+      </body>
       {/* Service Worker Registration */}
       <script id="sw-register" dangerouslySetInnerHTML={{ __html: `
         if ('serviceWorker' in navigator) {

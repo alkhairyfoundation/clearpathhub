@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Clock, Check, X, FileText, Upload, AlertCircle } from 'lucide-react';
 
-export default function ApplyPage() {
+function ApplyPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
@@ -222,5 +221,13 @@ export default function ApplyPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ApplyPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-slate-800"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div></div>}>
+      <ApplyPageContent />
+    </Suspense>
   );
 }

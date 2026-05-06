@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-export const dynamic = 'force-dynamic';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';

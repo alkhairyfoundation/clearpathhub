@@ -1,8 +1,6 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -22,14 +20,15 @@ import {
 } from 'lucide-react';
 import type { Profile, UserRole } from '@/types';
 
-export default function AdminUsersPage() {
+function AdminUsersPageContent() {
   const { profile } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const initialRole = searchParams.get('role') as UserRole | null;
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>((searchParams.get('role') as UserRole) || 'all');
+  const [selectedRole, setSelectedRole] = useState<UserRole | 'all'>(initialRole || 'all');
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
 
@@ -203,5 +202,13 @@ export default function AdminUsersPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+      <AdminUsersPageContent />
+    </Suspense>
   );
 }
