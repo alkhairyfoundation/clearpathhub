@@ -1,10 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "ClearPath Edu Hub - School Management System",
   description: "Comprehensive school management system for ClearPath Edu Hub",
-  viewport: 'width=device-width, initial-scale=1',
   manifest: '/manifest.json',
   icons: [
     {
