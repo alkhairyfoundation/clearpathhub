@@ -14,8 +14,6 @@ import {
   Menu,
   X,
   Bell,
-  Search,
-  ChevronDown,
   Video,
   ClipboardList,
   FileText,
@@ -145,23 +143,26 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <div className="fixed inset-0 flex">
-        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* Sidebar */}
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:translate-x-0 lg:static ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="h-full flex flex-col">
-            <div className="p-4 border-b">
-              <Link href={role === 'admin' ? '/admin' : `/${role}`} className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <GraduationCap className="text-white" size={24} />
+            {/* Logo */}
+            <div className="p-4 border-b border-slate-200">
+              <Link href={role === 'admin' ? '/admin' : `/${role}`} className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                  <GraduationCap className="text-white" size={22} />
                 </div>
                 <div>
-                  <h1 className="font-bold text-slate-800">ClearPath</h1>
-                  <p className="text-xs text-slate-500">{getRoleLabel()} Portal</p>
+                  <h1 className="font-bold text-slate-900 leading-tight">ClearPath</h1>
+                  <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider -mt-0.5">{getRoleLabel()} Portal</p>
                 </div>
               </Link>
             </div>
 
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            {/* Navigation */}
+            <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -170,15 +171,16 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
                   onClick={() => setSidebarOpen(false)}
                 >
                   {item.icon}
-                  <span>{item.label}</span>
+                  <span className="font-medium">{item.label}</span>
                 </Link>
               ))}
             </nav>
 
-            <div className="p-4 border-t">
+            {/* Sign Out */}
+            <div className="p-3 border-t border-slate-200">
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-3 px-4 py-3 text-red-600 rounded-lg hover:bg-red-50 w-full"
+                className="flex items-center gap-3 px-4 py-2.5 text-red-600 rounded-lg hover:bg-red-50 w-full transition-colors font-medium"
               >
                 <LogOut size={20} />
                 <span>Sign Out</span>
@@ -187,38 +189,39 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <div className="flex-1 flex flex-col">
-          <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 lg:px-8">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <header className="h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-4 lg:px-8">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
 
             <div className="hidden lg:flex items-center gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 w-64"
+                  className="pl-4 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-600 w-64 text-sm"
                 />
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
-                <Bell size={20} className="text-gray-600" />
+              <button className="p-2 hover:bg-slate-100 rounded-lg relative transition-colors">
+                <Bell size={20} className="text-slate-600" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {profile?.first_name?.[0]}{profile?.last_name?.[0]}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  {profile?.first_name?.[0]?.toUpperCase()}{profile?.last_name?.[0]?.toUpperCase()}
                 </div>
                 <div className="hidden sm:block">
-                  <p className="text-sm font-medium text-slate-800">
+                  <p className="text-sm font-semibold text-slate-800">
                     {profile?.first_name} {profile?.last_name}
                   </p>
                   <p className="text-xs text-slate-500 capitalize">{role}</p>
@@ -227,12 +230,14 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main className="flex-1 p-4 lg:p-8">
+          {/* Page Content */}
+          <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
             {children}
           </main>
         </div>
       </div>
 
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"

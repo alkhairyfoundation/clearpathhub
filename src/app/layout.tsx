@@ -8,8 +8,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "ClearPath Edu Hub - School Management System",
-  description: "Comprehensive school management system for ClearPath Edu Hub",
+  title: {
+    default: "ClearPath Edu Hub - The Mastery Engine",
+    template: "%s | ClearPath Edu Hub",
+  },
+  description: "Mastery-based learning platform where every student truly masters each lesson before moving forward.",
   manifest: '/manifest.json',
   icons: [
     {
