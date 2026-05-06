@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(
   request: Request,
   { params }: { params: { predictionId: string } }
 ) {
+  const supabase = await createSupabaseServerClient()
   try {
     const { predictionId } = params;
     

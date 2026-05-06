@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
+  const supabase = await createSupabaseServerClient()
   try {
     // Get query parameters
     const { searchParams } = new URL(request.url)
@@ -54,6 +57,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const supabase = await createSupabaseServerClient()
   try {
     const { recipient_id, subject, content } = await request.json()
     
