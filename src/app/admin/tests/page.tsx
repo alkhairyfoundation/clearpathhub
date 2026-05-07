@@ -1,19 +1,25 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit, Trash2, X, FileText, BarChart3, Check } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, X, FileText, BarChart3, Check, Loader2, Search, Users, Clock, Eye, Send } from 'lucide-react';
 
 export default function AdminTestsPage() {
   const { profile } = useAuth();
   const router = useRouter();
   const [tests, setTests] = useState<any[]>([]);
   const [attempts, setAttempts] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showTestModal, setShowTestModal] = useState(false);
+  const [editingTest, setEditingTest] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all');
   const [formData, setFormData] = useState({
     title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test', exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50
   });
@@ -25,106 +31,153 @@ export default function AdminTestsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [testsRes, attemptsRes] = await Promise.all([
-      supabase.from('tests').select('*, subject:subjects(*), class:classes(*)').order('created_at', { ascending: false }),
-      supabase.from('test_attempts').select('*, student:profiles(*), test:tests(*)').order('created_at', { ascending: false }).limit(50),
+    const [testsRes, attemptsRes, subjectsRes, classesRes] = await Promise.all([
+      supabase.from('tests').select('*, subject:subjects(name), class:classes(name)').order('created_at', { ascending: false }),
+      supabase.from('test_attempts').select('*, student:profiles(first_name, last_name), test:tests(title)').order('created_at', { ascending: false }).limit(50),
+      supabase.from('subjects').select('id, name').order('name'),
+      supabase.from('classes').select('id, name').order('level'),
     ]);
     if (testsRes.data) setTests(testsRes.data);
     if (attemptsRes.data) setAttempts(attemptsRes.data);
+    if (subjectsRes.data) setSubjects(subjectsRes.data);
+    if (classesRes.data) setClasses(classesRes.data);
     setLoading(false);
   }
 
-  async function handleCreateTest() {
-    const { data: test } = await supabase.from('tests').insert({ ...formData, created_by: profile?.id, is_published: false }).select().single();
+  function openModal(test?: any) {
     if (test) {
-      setTests([test, ...tests]);
-      setShowTestModal(false);
+      setEditingTest(test);
+      setFormData({ title: test.title, description: test.description || '', subject_id: test.subject_id || '', class_id: test.class_id || '', test_type: test.test_type, exam_date: test.exam_date || '', duration_minutes: test.duration_minutes || 30, total_marks: test.total_marks || 100, passing_score: test.passing_score || 50 });
+    } else {
+      setEditingTest(null);
+      setFormData({ title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test', exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50 });
     }
+    setShowTestModal(true);
   }
 
-  async function deleteTest(id: string) {
-    if (confirm('Delete this test?')) {
-      await supabase.from('tests').delete().eq('id', id);
-      fetchData();
+  async function handleSave() {
+    if (!formData.title.trim()) return;
+    setSaving(true);
+    if (editingTest) {
+      await supabase.from('tests').update(formData).eq('id', editingTest.id);
+    } else {
+      await supabase.from('tests').insert({ ...formData, created_by: profile?.id, is_published: false, id: crypto.randomUUID() });
     }
+    setSaving(false);
+    setShowTestModal(false);
+    fetchData();
   }
 
-  const publishedTests = tests.filter((t: any) => t.is_published);
-  const draftTests = tests.filter((t: any) => !t.is_published);
-  const avgScore = attempts.length > 0 ? Math.round(attempts.reduce((s: number, a: any) => s + a.score, 0) / attempts.length) : 0;
+  async function togglePublish(test: any) {
+    await supabase.from('tests').update({ is_published: !test.is_published }).eq('id', test.id);
+    fetchData();
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Delete this test and all associated attempts?')) return;
+    setDeleting(id);
+    await supabase.from('tests').delete().eq('id', id);
+    await supabase.from('test_attempts').delete().eq('test_id', id);
+    setDeleting(null);
+    fetchData();
+  }
+
+  const filtered = tests.filter(t => {
+    const matchSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchType = filterType === 'all' || t.test_type === filterType;
+    return matchSearch && matchType;
+  });
+
+  const publishedTests = tests.filter(t => t.is_published);
+  const draftTests = tests.filter(t => !t.is_published);
+  const avgScore = attempts.length > 0 ? Math.round(attempts.reduce((s: number, a: any) => s + (a.score || 0), 0) / attempts.length) : 0;
+  const totalAttempts = attempts.length;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Tests & Exams</h1>
-          <p className="text-slate-500">Manage class tests and exams</p>
+      <div className="flex items-center gap-4">
+        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-slate-900">Tests & Exams</h1>
+          <p className="text-slate-500 mt-1">Manage assessments and track student performance</p>
         </div>
-        <button onClick={() => setShowTestModal(true)} className="btn-primary flex items-center gap-2">
-          <Plus size={20} />Create Test
-        </button>
+        <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Create Test</button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-500">Total Tests</span>
-            <FileText size={18} className="text-blue-600" />
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{tests.length}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-500">Published</span>
-            <Check size={18} className="text-green-600" />
-          </div>
-          <p className="text-2xl font-bold text-green-600">{publishedTests.length}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-500">Draft</span>
-            <Edit size={18} className="text-yellow-600" />
-          </div>
-          <p className="text-2xl font-bold text-yellow-600">{draftTests.length}</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-500">Avg Score</span>
-            <BarChart3 size={18} className="text-purple-600" />
-          </div>
-          <p className="text-2xl font-bold text-purple-600">{avgScore}%</p>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total Tests</span><FileText size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-slate-900">{tests.length}</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Published</span><Check size={16} className="text-green-600" /></div><p className="text-2xl font-bold text-green-600">{publishedTests.length}</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Attempts</span><Users size={16} className="text-purple-600" /></div><p className="text-2xl font-bold text-purple-600">{totalAttempts}</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Avg Score</span><BarChart3 size={16} className="text-amber-600" /></div><p className="text-2xl font-bold text-amber-600">{avgScore}%</p></div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">All Tests</h2>
+      <div className="card">
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input type="text" placeholder="Search tests..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="input w-auto">
+            <option value="all">All Types</option>
+            <option value="class_test">Class Test</option>
+            <option value="mid_term">Mid Term</option>
+            <option value="exam">Exam</option>
+            <option value="quiz">Quiz</option>
+          </select>
+        </div>
+
         {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : tests.length === 0 ? (
-          <p className="text-slate-500 text-center py-8">No tests yet</p>
+          <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16"><FileText className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500">{tests.length === 0 ? 'No tests created yet' : 'No tests match your filters'}</p></div>
         ) : (
           <div className="space-y-3">
-            {tests.map((test: any) => (
-              <div key={test.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-medium text-slate-800">{test.title}</h3>
-                  <p className="text-sm text-slate-500">{test.test_type} - {test.total_marks} marks</p>
+            {filtered.map(test => (
+              <div key={test.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-4 mb-3 sm:mb-0">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><FileText size={20} className="text-blue-600" /></div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{test.title}</p>
+                    <p className="text-sm text-slate-500">{test.subject?.name || 'No Subject'} • {test.class?.name || 'No Class'} • {test.test_type.replace('_', ' ')} • {test.total_marks} marks</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded text-xs ${test.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                    {test.is_published ? 'Published' : 'Draft'}
-                  </span>
-                  <button onClick={() => deleteTest(test.id)} className="p-2 text-red-600 hover:bg-red-50 rounded">
-                    <Trash2 size={18} />
-                  </button>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${test.is_published ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{test.is_published ? 'Published' : 'Draft'}</span>
+                  {test.exam_date && <span className="text-xs text-slate-500 flex items-center gap-1"><Clock size={12} />{new Date(test.exam_date).toLocaleDateString()}</span>}
+                  <button onClick={() => togglePublish(test)} className="p-1.5 hover:bg-green-50 rounded-lg text-green-600" title={test.is_published ? 'Unpublish' : 'Publish'}><Send size={15} /></button>
+                  <button onClick={() => openModal(test)} className="p-1.5 hover:bg-blue-50 rounded-lg"><Edit size={15} className="text-blue-600" /></button>
+                  <button onClick={() => handleDelete(test.id)} disabled={deleting === test.id} className="p-1.5 hover:bg-red-50 rounded-lg disabled:opacity-50">{deleting === test.id ? <Loader2 size={15} className="text-red-600 animate-spin" /> : <Trash2 size={15} className="text-red-600" />}</button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {attempts.length > 0 && (
+        <div className="card">
+          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Users size={18} className="text-slate-400" />Recent Attempts</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Student</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Test</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Score</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Date</th></tr></thead>
+              <tbody className="divide-y divide-slate-100">{attempts.slice(0, 10).map(a => (<tr key={a.id} className="hover:bg-slate-50"><td className="py-3 px-4 font-medium text-slate-900">{a.student?.first_name} {a.student?.last_name}</td><td className="py-3 px-4 text-sm text-slate-600 hidden sm:table-cell">{a.test?.title}</td><td className="py-3 px-4"><span className={`font-semibold ${a.score >= 50 ? 'text-green-600' : 'text-red-600'}`}>{a.score}%</span></td><td className="py-3 px-4 text-sm text-slate-500 hidden md:table-cell">{new Date(a.created_at).toLocaleDateString()}</td></tr>))}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {showTestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between"><h3 className="text-lg font-bold text-slate-900">{editingTest ? 'Edit Test' : 'Create Test'}</h3><button onClick={() => setShowTestModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
+            <div className="p-5 space-y-4">
+              <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="e.g., Mathematics Mid-Term" /></div>
+              <div className="grid grid-cols-2 gap-4"><div><label className="label">Subject</label><select value={formData.subject_id} onChange={(e) => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div><div><label className="label">Class</label><select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input"><option value="">Select</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div></div>
+              <div className="grid grid-cols-2 gap-4"><div><label className="label">Type</label><select value={formData.test_type} onChange={(e) => setFormData({ ...formData, test_type: e.target.value })} className="input"><option value="class_test">Class Test</option><option value="mid_term">Mid Term</option><option value="exam">Exam</option><option value="quiz">Quiz</option></select></div><div><label className="label">Date</label><input type="date" value={formData.exam_date} onChange={(e) => setFormData({ ...formData, exam_date: e.target.value })} className="input" /></div></div>
+              <div className="grid grid-cols-3 gap-4"><div><label className="label">Duration (min)</label><input type="number" value={formData.duration_minutes} onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Total Marks</label><input type="number" value={formData.total_marks} onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Pass %</label><input type="number" value={formData.passing_score} onChange={(e) => setFormData({ ...formData, passing_score: parseInt(e.target.value) })} className="input" /></div></div>
+              <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={2} /></div>
+            </div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200"><button onClick={() => setShowTestModal(false)} className="btn-ghost">Cancel</button><button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving...' : editingTest ? 'Update' : 'Create'}</button></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

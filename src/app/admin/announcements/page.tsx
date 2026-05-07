@@ -1,275 +1,178 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Edit, Trash2, X, Megaphone, Send, Calendar, AlertTriangle } from 'lucide-react';
-import type { Announcement, Profile } from '@/types';
+import { ArrowLeft, Plus, Edit, Trash2, X, Megaphone, Calendar, Users, Eye, Clock, AlertTriangle, CheckCircle, Loader2, Search, Filter } from 'lucide-react';
 
 export default function AdminAnnouncementsPage() {
   const { profile } = useAuth();
   const router = useRouter();
-  const [announcements, setAnnouncements] = useState<(Announcement & { creator?: Profile })[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+  const [editingAnn, setEditingAnn] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterAudience, setFilterAudience] = useState<string>('all');
+  const [filterPriority, setFilterPriority] = useState('all');
+  const [filterAudience, setFilterAudience] = useState('all');
   const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    audience: 'all' as 'all' | 'students' | 'teachers' | 'parents' | 'staff',
-    priority: 'normal' as 'low' | 'normal' | 'high' | 'urgent',
-    expires_at: '',
+    title: '', content: '', priority: 'normal', audience: 'all', scheduled_at: '', expires_at: ''
   });
 
   useEffect(() => {
-    if (!profile || profile.role !== 'admin') {
-      router.push('/login');
-      return;
-    }
-    fetchAnnouncements();
-  }, [profile, filterAudience]);
+    if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
+    fetchData();
+  }, [profile]);
 
-  async function fetchAnnouncements() {
+  async function fetchData() {
     setLoading(true);
-    let query = supabase
-      .from('announcements')
-      .select('*, creator:profiles(*)')
-      .order('created_at', { ascending: false });
-
-    if (filterAudience !== 'all') {
-      query = query.eq('audience', filterAudience);
-    }
-
-    const { data } = await query;
+    const { data } = await supabase.from('announcements').select('*, creator:profiles(first_name, last_name)').order('created_at', { ascending: false });
     if (data) setAnnouncements(data);
     setLoading(false);
   }
 
+  function openModal(ann?: any) {
+    if (ann) {
+      setEditingAnn(ann);
+      setFormData({
+        title: ann.title, content: ann.content || '', priority: ann.priority || 'normal',
+        audience: ann.audience || 'all', scheduled_at: ann.scheduled_at || '', expires_at: ann.expires_at || ''
+      });
+    } else {
+      setEditingAnn(null);
+      setFormData({ title: '', content: '', priority: 'normal', audience: 'all', scheduled_at: '', expires_at: '' });
+    }
+    setShowModal(true);
+  }
+
   async function handleSave() {
+    if (!formData.title.trim()) return;
+    setSaving(true);
     const data = {
       ...formData,
-      created_by: profile?.id,
+      creator_id: profile?.id,
+      scheduled_at: formData.scheduled_at || null,
       expires_at: formData.expires_at || null,
+      is_active: formData.scheduled_at ? new Date(formData.scheduled_at) > new Date() : true,
     };
-
-    if (editingAnnouncement) {
-      await supabase.from('announcements').update(data).eq('id', editingAnnouncement.id);
+    if (editingAnn) {
+      await supabase.from('announcements').update(data).eq('id', editingAnn.id);
     } else {
-      await supabase.from('announcements').insert({ ...data, id: crypto.randomUUID() });
+      await supabase.from('announcements').insert({ ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() });
     }
+    setSaving(false);
     setShowModal(false);
-    setFormData({ title: '', content: '', audience: 'all', priority: 'normal', expires_at: '' });
-    setEditingAnnouncement(null);
-    fetchAnnouncements();
+    fetchData();
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Are you sure you want to delete this announcement?')) {
-      await supabase.from('announcements').delete().eq('id', id);
-      fetchAnnouncements();
-    }
+    if (!confirm('Delete this announcement?')) return;
+    await supabase.from('announcements').delete().eq('id', id);
+    fetchData();
   }
 
-  const filteredAnnouncements = announcements.filter(a =>
-    a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  async function toggleActive(ann: any) {
+    await supabase.from('announcements').update({ is_active: !ann.is_active }).eq('id', ann.id);
+    fetchData();
+  }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-700 border-red-300';
-      case 'high': return 'bg-orange-100 text-orange-700 border-orange-300';
-      case 'normal': return 'bg-blue-100 text-blue-700 border-blue-300';
-      case 'low': return 'bg-gray-100 text-gray-700 border-gray-300';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  const filtered = announcements.filter(a => {
+    const matchSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase()) || a.content?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchPriority = filterPriority === 'all' || a.priority === filterPriority;
+    const matchAudience = filterAudience === 'all' || a.audience === filterAudience;
+    return matchSearch && matchPriority && matchAudience;
+  });
+
+  const activeCount = announcements.filter(a => a.is_active !== false).length;
+  const scheduledCount = announcements.filter(a => a.scheduled_at && new Date(a.scheduled_at) > new Date()).length;
+  const expiredCount = announcements.filter(a => a.expires_at && new Date(a.expires_at) < new Date()).length;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Announcements</h1>
-          <p className="text-slate-500">Create and manage announcements</p>
+      <div className="flex items-center gap-4">
+        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-slate-900">Announcements</h1>
+          <p className="text-slate-500 mt-1">Manage school-wide communications</p>
         </div>
-        <button
-          onClick={() => { setEditingAnnouncement(null); setFormData({ title: '', content: '', audience: 'all', priority: 'normal', expires_at: '' }); setShowModal(true); }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={20} />
-          New Announcement
-        </button>
+        <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />New Announcement</button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search announcements..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input pl-10"
-            />
-          </div>
-          <div className="flex gap-2">
-            {(['all', 'all', 'students', 'teachers', 'parents', 'staff'] as const).map((audience) => (
-              <button
-                key={audience}
-                onClick={() => setFilterAudience(audience)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filterAudience === audience
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {audience === 'all' ? 'All' : audience.charAt(0).toUpperCase() + audience.slice(1)}
-              </button>
-            ))}
-          </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total</span><Megaphone size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-slate-900">{announcements.length}</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Active</span><CheckCircle size={16} className="text-green-600" /></div><p className="text-2xl font-bold text-green-600">{activeCount}</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Scheduled</span><Clock size={16} className="text-amber-600" /></div><p className="text-2xl font-bold text-amber-600">{scheduledCount}</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Expired</span><AlertTriangle size={16} className="text-red-600" /></div><p className="text-2xl font-bold text-red-600">{expiredCount}</p></div>
+      </div>
+
+      <div className="card">
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input type="text" placeholder="Search announcements..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
+          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="input w-auto"><option value="all">All Priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option></select>
+          <select value={filterAudience} onChange={(e) => setFilterAudience(e.target.value)} className="input w-auto"><option value="all">All Audiences</option><option value="all">Everyone</option><option value="parents">Parents</option><option value="teachers">Teachers</option><option value="students">Students</option></select>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : filteredAnnouncements.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
-            <Megaphone size={48} className="mx-auto mb-4 opacity-50" />
-            <p>No announcements found</p>
-          </div>
+          <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16"><Megaphone className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500">No announcements found</p></div>
         ) : (
-          <div className="space-y-4">
-            {filteredAnnouncements.map((announcement) => (
-              <div
-                key={announcement.id}
-                className={`p-4 rounded-lg border-l-4 ${
-                  announcement.priority === 'urgent' ? 'border-red-500 bg-red-50' :
-                  announcement.priority === 'high' ? 'border-orange-500 bg-orange-50' :
-                  'border-blue-500 bg-blue-50'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-slate-800">{announcement.title}</h3>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(announcement.priority)}`}>
-                        {announcement.priority}
-                      </span>
+          <div className="space-y-3">
+            {filtered.map(ann => {
+              const isScheduled = ann.scheduled_at && new Date(ann.scheduled_at) > new Date();
+              const isExpired = ann.expires_at && new Date(ann.expires_at) < new Date();
+              return (
+                <div key={ann.id} className={`p-4 rounded-xl border ${ann.is_active === false || isExpired ? 'bg-slate-50 border-slate-200 opacity-70' : 'bg-white border-slate-100'} ${ann.priority === 'urgent' ? 'border-l-4 border-l-red-500' : ann.priority === 'high' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-blue-500'}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100"><Megaphone size={20} className="text-slate-600" /></div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900">{ann.title}</p>
+                        <p className="text-sm text-slate-500 line-clamp-1">{ann.content}</p>
+                        <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-400">
+                          <span className="flex items-center gap-1"><Users size={12} />{ann.audience || 'all'}</span>
+                          <span className="flex items-center gap-1"><Calendar size={12} />{new Date(ann.created_at).toLocaleDateString()}</span>
+                          {ann.scheduled_at && <span className="flex items-center gap-1"><Clock size={12} />Scheduled: {new Date(ann.scheduled_at).toLocaleString()}</span>}
+                          {ann.expires_at && <span className="flex items-center gap-1"><Clock size={12} />Expires: {new Date(ann.expires_at).toLocaleDateString()}</span>}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-600 mb-2">{announcement.content}</p>
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
-                      <span>To: {announcement.audience}</span>
-                      <span>By: {announcement.creator?.first_name} {announcement.creator?.last_name}</span>
-                      <span>{new Date(announcement.created_at).toLocaleDateString()}</span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${ann.priority === 'urgent' ? 'bg-red-100 text-red-700' : ann.priority === 'high' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{ann.priority}</span>
+                      {isScheduled && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 flex items-center gap-1"><Clock size={10} />Scheduled</span>}
+                      {isExpired && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Expired</span>}
+                      {ann.is_active !== false && !isExpired && !isScheduled && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 flex items-center gap-1"><Eye size={10} />Active</span>}
+                      <button onClick={() => toggleActive(ann)} className="p-1.5 hover:bg-slate-100 rounded-lg" title={ann.is_active === false ? 'Activate' : 'Deactivate'}>{ann.is_active === false ? <CheckCircle size={15} className="text-green-600" /> : <Eye size={15} className="text-slate-400" />}</button>
+                      <button onClick={() => openModal(ann)} className="p-1.5 hover:bg-blue-50 rounded-lg"><Edit size={15} className="text-blue-600" /></button>
+                      <button onClick={() => handleDelete(ann.id)} className="p-1.5 hover:bg-red-50 rounded-lg"><Trash2 size={15} className="text-red-600" /></button>
                     </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => { setEditingAnnouncement(announcement); setFormData({ title: announcement.title, content: announcement.content, audience: announcement.audience, priority: announcement.priority, expires_at: announcement.expires_at || '' }); setShowModal(true); }}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                    >
-                      <Edit size={16} className="text-slate-600" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(announcement.id)}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                    >
-                      <Trash2 size={16} className="text-red-500" />
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-lg font-semibold text-slate-800">
-                {editingAnnouncement ? 'Edit Announcement' : 'New Announcement'}
-              </h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                <X size={20} className="text-slate-600" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="label">Title</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="input"
-                  placeholder="Announcement title"
-                />
-              </div>
-              <div>
-                <label className="label">Content</label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="input"
-                  rows={4}
-                  placeholder="Write your announcement..."
-                />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10"><h3 className="text-lg font-bold text-slate-900">{editingAnn ? 'Edit' : 'New'} Announcement</h3><button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
+            <div className="p-5 space-y-4">
+              <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Announcement title" /></div>
+              <div><label className="label">Content</label><textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="input" rows={4} placeholder="Announcement details..." /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className="label">Priority</label><select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })} className="input"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+                <div><label className="label">Audience</label><select value={formData.audience} onChange={(e) => setFormData({ ...formData, audience: e.target.value })} className="input"><option value="all">Everyone</option><option value="parents">Parents Only</option><option value="teachers">Teachers Only</option><option value="students">Students Only</option></select></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Audience</label>
-                  <select
-                    value={formData.audience}
-                    onChange={(e) => setFormData({ ...formData, audience: e.target.value as any })}
-                    className="input"
-                  >
-                    <option value="all">All</option>
-                    <option value="students">Students</option>
-                    <option value="teachers">Teachers</option>
-                    <option value="parents">Parents</option>
-                    <option value="staff">Staff</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Priority</label>
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                    className="input"
-                  >
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="label">Expires At (Optional)</label>
-                <input
-                  type="datetime-local"
-                  value={formData.expires_at}
-                  onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                  className="input"
-                />
+                <div><label className="label">Schedule (optional)</label><input type="datetime-local" value={formData.scheduled_at} onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })} className="input" /></div>
+                <div><label className="label">Expires (optional)</label><input type="datetime-local" value={formData.expires_at} onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })} className="input" /></div>
               </div>
             </div>
-            <div className="flex justify-end gap-3 p-6 border-t">
-              <button onClick={() => setShowModal(false)} className="btn-outline">
-                Cancel
-              </button>
-              <button onClick={handleSave} className="btn-primary flex items-center gap-2">
-                <Send size={18} />
-                {editingAnnouncement ? 'Update' : 'Publish'}
-              </button>
-            </div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 sticky bottom-0 bg-white"><button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button><button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? <><Loader2 size={16} className="animate-spin" />Saving...</> : editingAnn ? 'Update' : 'Publish'}</button></div>
           </div>
         </div>
       )}
