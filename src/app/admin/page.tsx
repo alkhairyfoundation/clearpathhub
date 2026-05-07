@@ -28,6 +28,7 @@ interface DashboardStats {
 export default function AdminDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
+  const [currentDate, setCurrentDate] = useState('');
   const [stats, setStats] = useState<DashboardStats>({
     students: 0, teachers: 0, parents: 0, staff: 0,
     attendanceRate: 0, avgScore: 0, totalClasses: 0, totalSubjects: 0,
@@ -41,6 +42,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchDashboard();
+    setCurrentDate(new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
   }, [profile]);
 
   async function fetchDashboard() {
@@ -169,7 +171,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200">
           <Calendar size={16} />
-          <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          <span>{currentDate}</span>
         </div>
       </div>
 

@@ -31,7 +31,7 @@ export default function AdminIDCardsPage() {
     const [studentsRes, classesRes, settingsRes] = await Promise.all([
       supabase.from('students').select('*, profile:profiles(first_name, last_name, email, phone), class:classes(name)').order('admission_number'),
       supabase.from('classes').select('id, name').order('level'),
-      supabase.from('school_settings').select('*').limit(1).single(),
+      supabase.from('school_settings').select('*').limit(1).maybeSingle(),
     ]);
     if (studentsRes.data) setStudents(studentsRes.data);
     if (classesRes.data) setClasses(classesRes.data);

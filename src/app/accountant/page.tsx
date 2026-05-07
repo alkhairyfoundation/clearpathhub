@@ -10,6 +10,7 @@ import { DollarSign, FileText, TrendingUp, TrendingDown, Download, ArrowRight, C
 export default function AccountantDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
+  const [currentDate, setCurrentDate] = useState('');
   const [stats, setStats] = useState({ income: 0, expense: 0, balance: 0, pending: 0, totalInvoices: 0 });
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [pendingInvoices, setPendingInvoices] = useState<any[]>([]);
@@ -18,6 +19,7 @@ export default function AccountantDashboard() {
   useEffect(() => {
     if (!profile || profile.role !== 'accountant') { router.push('/login'); return; }
     fetchData();
+    setCurrentDate(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
   }, [profile]);
 
   async function fetchData() {
@@ -72,7 +74,7 @@ export default function AccountantDashboard() {
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200">
             <Calendar size={16} />
-            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+            <span>{currentDate}</span>
           </div>
           <button onClick={handleExport} className="btn-primary flex items-center gap-2"><Download size={18} />Export</button>
         </div>

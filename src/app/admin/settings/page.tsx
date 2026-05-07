@@ -27,7 +27,7 @@ export default function AdminSettingsPage() {
 
   async function fetchSettings() {
     setFetching(true);
-    const { data } = await supabase.from('school_settings').select('*').limit(1).single();
+    const { data } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
     if (data) {
       setSettings(data);
     }

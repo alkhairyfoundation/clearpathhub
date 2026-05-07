@@ -4,7 +4,7 @@ import { useState, useEffect, ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { 
+import {
   LayoutDashboard, Users, Settings, BookOpen, GraduationCap, LogOut, Menu, X, Bell,
   Video, ClipboardList, FileText, Award, Activity, DollarSign, Printer,
   QrCode, BarChart3, Megaphone, UserCheck, Star, Download,
@@ -83,20 +83,18 @@ const getRolePath = (role: string) => `/${role}`;
 
 export default function PortalLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
   const { profile, signOut } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    setMobileDropdownOpen(false);
+    setSidebarOpen(false);
   }, [pathname]);
 
   useEffect(() => {
     function handleResize() {
       if (window.innerWidth >= 1024) {
         setSidebarOpen(false);
-        setMobileDropdownOpen(false);
       }
     }
     window.addEventListener('resize', handleResize);
@@ -108,7 +106,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-500 text-sm">Loading your portal...</p>
+          <p className="text-slate-500 text-sm">Loading...</p>
         </div>
       </div>
     );
@@ -134,13 +132,17 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
     router.push('/login');
   }
 
-  function NavContent({ onClick }: { onClick?: () => void }) {
+  function NavContent({ mobile = false }: { mobile?: boolean }) {
+    const baseClasses = mobile
+      ? 'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all'
+      : 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all';
+
     return (
       <>
         {navItems.map((item, i) => {
           if (item.section) {
             return (
-              <div key={i} className="px-3 pt-4 pb-1">
+              <div key={`section-${i}`} className={mobile ? 'px-4 pt-4 pb-1' : 'px-3 pt-4 pb-1'}>
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{item.section}</p>
               </div>
             );
@@ -151,8 +153,8 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              onClick={onClick}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              onClick={() => mobile && setSidebarOpen(false)}
+              className={`${baseClasses} ${
                 isActive
                   ? 'bg-blue-50 text-blue-700'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
@@ -167,12 +169,49 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  const currentYear = new Date().getFullYear();
-
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Mobile sidebar */}
+      <aside className={`fixed top-0 left-0 z-50 h-full w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full">
+          {/* Mobile sidebar header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+            <Link href={dashboardPath} onClick={() => setSidebarOpen(false)} className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
+                <GraduationCap className="text-white" size={20} />
+              </div>
+              <div>
+                <h1 className="font-bold text-slate-900 text-sm leading-tight">Mastery Engine</h1>
+                <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider">{getRoleLabel()}</p>
+              </div>
+            </Link>
+            <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-slate-100 rounded-lg">
+              <X size={20} className="text-slate-500" />
+            </button>
+          </div>
+
+          {/* Mobile sidebar nav */}
+          <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+            <NavContent mobile />
+          </nav>
+
+          {/* Mobile sidebar footer */}
+          <div className="border-t border-slate-200 p-3">
+            <button onClick={() => { handleSignOut(); setSidebarOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full transition-colors">
+              <LogOut size={18} />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 shadow-sm">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 shadow-sm z-30">
         <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200">
           <Link href={dashboardPath} className="flex items-center gap-3 flex-1">
             <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-md">
@@ -197,34 +236,41 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between px-4 sm:px-6 h-14">
+      {/* Main Content Area */}
+      <div className="lg:pl-64 flex flex-col min-h-screen">
+        {/* Top Header */}
+        <header className="sticky top-0 z-20 bg-white border-b border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between px-4 sm:px-6 h-16">
+            {/* Left: Menu button + Page title */}
             <div className="flex items-center gap-3">
-              <button onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 rounded-lg">
-                {mobileDropdownOpen ? <X size={22} /> : <Menu size={22} />}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 -ml-2 hover:bg-slate-100 rounded-lg transition-colors"
+                aria-label="Open menu"
+              >
+                <Menu size={22} className="text-slate-600" />
               </button>
-              <Link href={dashboardPath} className="lg:hidden flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                  <GraduationCap className="text-white" size={18} />
-                </div>
-                <span className="font-bold text-slate-900 text-sm">Mastery Engine</span>
-              </Link>
+              <div className="hidden sm:block">
+                <h2 className="text-lg font-semibold text-slate-900 capitalize">
+                  {pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Dashboard'}
+                </h2>
+              </div>
             </div>
 
+            {/* Right: Notifications + User */}
             <div className="flex items-center gap-2 sm:gap-4">
-              <button className="p-2 hover:bg-slate-100 rounded-lg relative">
+              <button className="p-2 hover:bg-slate-100 rounded-lg relative transition-colors">
                 <Bell size={20} className="text-slate-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+
+              {/* Profile dropdown */}
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm">
                   {profile?.first_name?.[0]?.toUpperCase()}{profile?.last_name?.[0]?.toUpperCase()}
                 </div>
-                <div className="hidden sm:block min-w-0">
-                  <p className="text-sm font-semibold text-slate-800 truncate max-w-[150px]">
+                <div className="hidden md:block min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 truncate max-w-[160px]">
                     {profile?.first_name} {profile?.last_name}
                   </p>
                   <p className="text-xs text-slate-500 capitalize">{role}</p>
@@ -232,26 +278,13 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
               </div>
             </div>
           </div>
-
-          {/* Mobile Dropdown Nav */}
-          {mobileDropdownOpen && (
-            <div className="lg:hidden border-t border-slate-200 bg-white max-h-[80vh] overflow-y-auto">
-              <nav className="py-2 px-3 space-y-0.5">
-                <NavContent onClick={() => setMobileDropdownOpen(false)} />
-                <div className="pt-2 mt-2 border-t border-slate-200">
-                  <button onClick={() => { handleSignOut(); setMobileDropdownOpen(false); }} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full">
-                    <LogOut size={18} />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              </nav>
-            </div>
-          )}
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {children}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full">
+          <div className="mx-auto w-full max-w-7xl">
+            {children}
+          </div>
         </main>
 
         {/* Footer */}
@@ -262,16 +295,11 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
               <a href="mailto:support@masteryengine.com" className="hover:text-blue-600 transition-colors flex items-center gap-1"><Mail size={12} />Support</a>
             </div>
             <div className="flex items-center gap-1 text-slate-400">
-              <span>&copy; {currentYear} <span className="font-semibold text-slate-600">Odebunmi Tawwab</span></span>
+              <span>&copy; {new Date().getFullYear()} <span className="font-semibold text-slate-600">Odebunmi Tawwab</span></span>
             </div>
           </div>
         </footer>
       </div>
-
-      {/* Mobile overlay when sidebar is open (for larger screens) */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
     </div>
   );
 }

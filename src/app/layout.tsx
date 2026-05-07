@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
@@ -9,10 +10,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "ClearPath Edu Hub - The Mastery Engine",
+    default: "ClearPath Edu Hub - School Management System",
     template: "%s | ClearPath Edu Hub",
   },
-  description: "Mastery-based learning platform where every student truly masters each lesson before moving forward.",
+  description: "Complete school management system for ClearPath Edu Hub — academics, attendance, finance, and parent communication.",
   manifest: '/manifest.json',
   icons: [
     {
@@ -38,21 +39,22 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased bg-gray-50">
         <Providers>{children}</Providers>
-      </body>
-      {/* Service Worker Registration */}
-      <script id="sw-register" dangerouslySetInnerHTML={{ __html: `
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-              .then(registration => {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-              })
-              .catch(err => {
-                console.log('ServiceWorker registration failed: ', err);
+        <Script id="sw-register" strategy="lazyOnload">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                  .then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  })
+                  .catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                  });
               });
-          });
-        }
-      ` }} />
+            }
+          `}
+        </Script>
+      </body>
     </html>
   );
 }

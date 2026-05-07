@@ -36,7 +36,7 @@ export default function TeacherProfilePage() {
   async function fetchTeacherData() {
     if (!profile) return;
 
-    const { data: staff } = await supabase.from('staff').select('*, department(name)').eq('profile_id', profile.id).limit(1).single();
+    const { data: staff } = await supabase.from('staff').select('*, department(name)').eq('profile_id', profile.id).limit(1).maybeSingle();
     if (staff) setStaffInfo(staff);
 
     const { data: subjs } = await supabase.from('subjects').select('*, class(name)').eq('teacher_id', profile.id);

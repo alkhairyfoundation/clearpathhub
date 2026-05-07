@@ -37,7 +37,7 @@ export default function StudentProfilePage() {
   async function fetchStudentData() {
     if (!profile) return;
 
-    const { data: student } = await supabase.from('students').select('*, class(name, level)').eq('profile_id', profile.id).limit(1).single();
+    const { data: student } = await supabase.from('students').select('*, class(name, level)').eq('profile_id', profile.id).limit(1).maybeSingle();
     if (student) {
       setStudentInfo(student);
       if (student.class) setStudentClass(student.class);

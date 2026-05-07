@@ -39,7 +39,7 @@ export default function AdminProfilePage() {
   }, [profile]);
 
   async function fetchSchoolSettings() {
-    const { data } = await supabase.from('school_settings').select('*').limit(1).single();
+    const { data } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
     if (data) setSchoolSettings(data);
   }
 

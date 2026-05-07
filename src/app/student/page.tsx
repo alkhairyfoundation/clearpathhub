@@ -10,6 +10,7 @@ import { Video, FileText, Award, UserCheck, Printer, Bell, TrendingUp, ArrowRigh
 export default function StudentDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
+  const [currentDate, setCurrentDate] = useState('');
   const [stats, setStats] = useState({ sessions: 0, homework: 0, avgScore: 0, attendance: 0, pendingHomework: 0, resultsCount: 0 });
   const [recentLessons, setRecentLessons] = useState<any[]>([]);
   const [recentHomework, setRecentHomework] = useState<any[]>([]);
@@ -20,13 +21,14 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
     fetchDashboard();
+    setCurrentDate(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
   }, [profile]);
 
   async function fetchDashboard() {
     setLoading(true);
 
     const [studentRes, sessionsRes, homeworkRes, resultsRes, attendanceRes, announcementsRes] = await Promise.all([
-      supabase.from('students').select('*, class:classes(name)').eq('profile_id', profile?.id).single(),
+      supabase.from('students').select('*, class:classes(name)').eq('profile_id', profile?.id).maybeSingle(),
       supabase.from('sessions').select('id, title, description, created_at, class:classes(name), teacher:profiles(first_name, last_name)').eq('class_id', null).order('created_at', { ascending: false }).limit(5),
       supabase.from('homework').select('id, title, due_date, subject:subjects(name), class:classes(name)').eq('is_active', true).order('due_date', { ascending: true }).limit(5),
       supabase.from('results').select('score, subject:subjects(name)').eq('student_id', profile?.id),
@@ -69,7 +71,7 @@ export default function StudentDashboard() {
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200">
           <Calendar size={16} />
-          <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+          <span>{currentDate}</span>
         </div>
       </div>
 

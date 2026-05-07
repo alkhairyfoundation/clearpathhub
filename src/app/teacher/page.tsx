@@ -14,6 +14,7 @@ import {
 export default function TeacherDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
+  const [currentDate, setCurrentDate] = useState('');
   const [stats, setStats] = useState({ classes: 0, subjects: 0, pendingHomework: 0, pendingQuizzes: 0, sessions: 0, students: 0 });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -23,6 +24,7 @@ export default function TeacherDashboard() {
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
     fetchDashboard();
+    setCurrentDate(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
   }, [profile]);
 
   async function fetchDashboard() {
@@ -76,7 +78,7 @@ export default function TeacherDashboard() {
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200">
           <Calendar size={16} />
-          <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+          <span>{currentDate}</span>
         </div>
       </div>
 

@@ -28,7 +28,7 @@ export default function AdminSchoolQRPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('school_settings').select('*').limit(1).single();
+    const { data } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
     if (data) setSchoolSettings(data);
     setLoading(false);
   }

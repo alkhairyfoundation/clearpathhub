@@ -20,7 +20,7 @@ export default function StudentIDCardPage() {
   }, [profile]);
 
   async function fetchData() {
-    const { data } = await supabase.from('students').select('*, profile:profiles(*), class:classes(*)').eq('profile_id', profile?.id).single();
+    const { data } = await supabase.from('students').select('*, profile:profiles(*), class:classes(*)').eq('profile_id', profile?.id).maybeSingle();
     if (data) setStudent(data);
     if (data?.admission_number) {
       const qr = await QRCode.toDataURL(data.admission_number, { width: 150, margin: 1 });

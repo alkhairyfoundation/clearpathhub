@@ -33,7 +33,7 @@ export default function AccountantProfilePage() {
   async function fetchAccountantData() {
     if (!profile) return;
 
-    const { data: staff } = await supabase.from('staff').select('*').eq('profile_id', profile.id).limit(1).single();
+    const { data: staff } = await supabase.from('staff').select('*').eq('profile_id', profile.id).limit(1).maybeSingle();
     if (staff) setStaffInfo(staff);
 
     const { data: transactions } = await supabase.from('transactions').select('type, amount');

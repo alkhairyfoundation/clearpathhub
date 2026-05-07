@@ -27,7 +27,7 @@ export default function AdminStaffQRPage() {
   async function fetchData() {
     const [staffRes, settingsRes] = await Promise.all([
       supabase.from('profiles').select('id, first_name, last_name, role').in('role', ['teacher', 'accountant']).order('first_name'),
-      supabase.from('school_settings').select('*').limit(1).single(),
+      supabase.from('school_settings').select('*').limit(1).maybeSingle(),
     ]);
     if (staffRes.data) setStaff(staffRes.data);
     if (settingsRes.data) setSchoolSettings(settingsRes.data);
