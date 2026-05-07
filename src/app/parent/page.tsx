@@ -5,12 +5,12 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Users, Activity, DollarSign, Bell, ArrowRight, ChevronRight, Calendar, Award, UserCheck, FileText, TrendingUp, GraduationCap } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
+import { Users, Activity, DollarSign, Bell, ArrowRight, ChevronRight, Award, UserCheck, FileText, TrendingUp, GraduationCap } from 'lucide-react';
 
 export default function ParentDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
-  const [currentDate, setCurrentDate] = useState('');
   const [children, setChildren] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalChildren: 0, avgPerformance: 0, pendingFees: 0, unreadAnnouncements: 0 });
@@ -19,7 +19,6 @@ export default function ParentDashboard() {
   useEffect(() => {
     if (!profile || profile.role !== 'parent') { router.push('/login'); return; }
     fetchDashboard();
-    setCurrentDate(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
   }, [profile]);
 
   async function fetchDashboard() {
@@ -56,18 +55,7 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Parent Dashboard</h1>
-          <p className="text-slate-500 mt-1">Bismillah! Welcome, {profile?.first_name} {profile?.last_name}</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200">
-          <Calendar size={16} />
-          <span>{currentDate}</span>
-        </div>
-      </div>
-
+    <DashboardLayout title="Parent Dashboard" subtitle={`Bismillah! Welcome, ${profile?.first_name} ${profile?.last_name}`}>
       {loading ? (
         <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
       ) : (
@@ -156,6 +144,6 @@ export default function ParentDashboard() {
           </div>
         </>
       )}
-    </div>
+    </DashboardLayout>
   );
 }

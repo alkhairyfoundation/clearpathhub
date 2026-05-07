@@ -5,16 +5,16 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import DashboardLayout from '@/components/DashboardLayout';
 import {
   GraduationCap, Video, ClipboardList, FileText, Award, UserCheck, Activity,
-  QrCode, Bell, TrendingUp, ArrowRight, ChevronRight, Calendar, Clock, Users,
+  QrCode, Bell, TrendingUp, ArrowRight, ChevronRight, Clock, Users,
   BookOpen, CheckCircle, AlertCircle, Megaphone
 } from 'lucide-react';
 
 export default function TeacherDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
-  const [currentDate, setCurrentDate] = useState('');
   const [stats, setStats] = useState({ classes: 0, subjects: 0, pendingHomework: 0, pendingQuizzes: 0, sessions: 0, students: 0 });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -24,7 +24,6 @@ export default function TeacherDashboard() {
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
     fetchDashboard();
-    setCurrentDate(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
   }, [profile]);
 
   async function fetchDashboard() {
@@ -70,18 +69,7 @@ export default function TeacherDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Teacher Dashboard</h1>
-          <p className="text-slate-500 mt-1">Bismillah! Welcome back, {profile?.first_name} {profile?.last_name}</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200">
-          <Calendar size={16} />
-          <span>{currentDate}</span>
-        </div>
-      </div>
-
+    <DashboardLayout title="Teacher Dashboard" subtitle={`Bismillah! Welcome back, ${profile?.first_name} ${profile?.last_name}`}>
       {loading ? (
         <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
       ) : (
@@ -175,6 +163,6 @@ export default function TeacherDashboard() {
           </div>
         </>
       )}
-    </div>
+    </DashboardLayout>
   );
 }

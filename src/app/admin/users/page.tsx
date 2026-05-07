@@ -171,6 +171,25 @@ function AdminUsersPageContent() {
     setError('');
 
     try {
+      // Check if any selected students already have a parent
+      const { data: existingLinks, error: checkError } = await supabase
+        .from('students')
+        .select('id, admission_number, profile:profiles(first_name, last_name), parent:profiles!parent_id(first_name, last_name)')
+        .in('id', selectedStudentIds)
+        .not('parent_id', 'is', null);
+
+      if (checkError) throw new Error(checkError.message);
+
+      if (existingLinks && existingLinks.length > 0) {
+        const confirmReassign = window.confirm(
+          `${existingLinks.length} student(s) already have a parent assigned. Do you want to reassign them to ${linkingParent.first_name} ${linkingParent.last_name}?`
+        );
+        if (!confirmReassign) {
+          setSaving(false);
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('students')
         .update({ parent_id: linkingParent.id })

@@ -5,12 +5,12 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Video, FileText, Award, UserCheck, Printer, Bell, TrendingUp, ArrowRight, ChevronRight, Calendar, Clock, BookOpen, CheckCircle, AlertCircle, Users, GraduationCap } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
+import { Video, FileText, Award, UserCheck, Printer, Bell, TrendingUp, ArrowRight, ChevronRight, Clock, BookOpen, CheckCircle, AlertCircle, Users, GraduationCap } from 'lucide-react';
 
 export default function StudentDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
-  const [currentDate, setCurrentDate] = useState('');
   const [stats, setStats] = useState({ sessions: 0, homework: 0, avgScore: 0, attendance: 0, pendingHomework: 0, resultsCount: 0 });
   const [recentLessons, setRecentLessons] = useState<any[]>([]);
   const [recentHomework, setRecentHomework] = useState<any[]>([]);
@@ -21,7 +21,6 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
     fetchDashboard();
-    setCurrentDate(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
   }, [profile]);
 
   async function fetchDashboard() {
@@ -63,18 +62,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Student Dashboard</h1>
-          <p className="text-slate-500 mt-1">Bismillah! Welcome back, {profile?.first_name} {profile?.last_name}</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200">
-          <Calendar size={16} />
-          <span>{currentDate}</span>
-        </div>
-      </div>
-
+    <DashboardLayout title="Student Dashboard" subtitle={`Bismillah! Welcome back, ${profile?.first_name} ${profile?.last_name}`}>
       {loading ? (
         <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
       ) : (
@@ -176,7 +164,7 @@ export default function StudentDashboard() {
                 {announcements.length > 0 && <span className="badge badge-red">{announcements.length}</span>}
               </div>
               {announcements.length === 0 ? (
-                <div className="text-center py-8 text-slate-400"><Megaphone size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No new announcements</p></div>
+                <div className="text-center py-8 text-slate-400"><Bell size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No new announcements</p></div>
               ) : (
                 <div className="space-y-3">
                   {announcements.map(a => (
@@ -209,8 +197,6 @@ export default function StudentDashboard() {
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function Megaphone(props: any) { return <Bell {...props} />; }
+</DashboardLayout>
+   );
+  }

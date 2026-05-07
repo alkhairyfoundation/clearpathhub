@@ -5,13 +5,21 @@ export async function POST(request: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      console.error('Session error:', sessionError);
+      return NextResponse.json({ success: false, error: 'Unauthorized - Please log in again' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
-    if (profile?.role !== 'admin') {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+    
+    if (profileError || profile?.role !== 'admin') {
+      console.error('Profile error or non-admin:', profileError);
       return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 403 });
     }
 
@@ -66,13 +74,18 @@ export async function GET(request: Request) {
     const role = searchParams.get('role');
     const search = searchParams.get('search');
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
-    if (profile?.role !== 'admin') {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+    
+    if (profileError || profile?.role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 403 });
     }
 

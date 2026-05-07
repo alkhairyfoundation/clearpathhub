@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import {
-  Users, GraduationCap, UserCheck, BarChart3, TrendingUp, Calendar, ArrowRight,
+  Users, GraduationCap, UserCheck, BarChart3, TrendingUp, ArrowRight,
   BookOpen, Award, Activity, DollarSign, QrCode, Megaphone, Settings, FileText,
   AlertTriangle, Clock, ChevronRight
 } from 'lucide-react';
@@ -28,7 +29,6 @@ interface DashboardStats {
 export default function AdminDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
-  const [currentDate, setCurrentDate] = useState('');
   const [stats, setStats] = useState<DashboardStats>({
     students: 0, teachers: 0, parents: 0, staff: 0,
     attendanceRate: 0, avgScore: 0, totalClasses: 0, totalSubjects: 0,
@@ -42,7 +42,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchDashboard();
-    setCurrentDate(new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
   }, [profile]);
 
   async function fetchDashboard() {
@@ -162,19 +161,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
-          <p className="text-slate-500 mt-1">Welcome back, {profile?.first_name} {profile?.last_name}!</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-4 py-2 rounded-lg border border-slate-200">
-          <Calendar size={16} />
-          <span>{currentDate}</span>
-        </div>
-      </div>
-
+    <DashboardLayout title="Admin Dashboard" subtitle={`Welcome back, ${profile?.first_name} ${profile?.last_name}!`}>
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsCards.map((card, index) => (
@@ -335,6 +322,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
