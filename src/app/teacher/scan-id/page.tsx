@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { QrCode, Camera, UserCheck, Check, X, Loader2 } from 'lucide-react';
 import jsQR from 'jsqr';
 
@@ -125,8 +126,9 @@ export default function TeacherScanIDPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold text-slate-800">Scan Student ID</h1><p className="text-slate-500">Scan QR code or enter admission number to mark attendance</p></div>
+    <DashboardLayout title="Scan Student ID" subtitle="Scan QR code or enter admission number to mark attendance">
+      <div className="space-y-6">
+        <div><h1 className="text-2xl font-bold text-slate-800">Scan Student ID</h1><p className="text-slate-500">Scan QR code or enter admission number to mark attendance</p></div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md p-6">
@@ -206,7 +208,8 @@ export default function TeacherScanIDPage() {
             </div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

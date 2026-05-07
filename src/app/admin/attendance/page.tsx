@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Calendar, Search, UserCheck, CheckCircle, XCircle, Clock, Shield, Loader2, Download, Users } from 'lucide-react';
 
 export default function AdminAttendancePage() {
@@ -66,7 +67,7 @@ export default function AdminAttendancePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <DashboardLayout title="Attendance" subtitle="Track and manage student attendance">
       <div className="flex items-center gap-4">
         <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
         <div className="flex-1">
@@ -124,6 +125,6 @@ export default function AdminAttendancePage() {
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

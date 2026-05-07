@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Plus, Edit, Trash2, X, Star, Trophy, Calendar, CheckCircle, Clock, BookOpen, Loader2, Search, Award } from 'lucide-react';
 
 export default function AdminEvaluationPage() {
@@ -87,18 +88,19 @@ export default function AdminEvaluationPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">Teacher Evaluation</h1>
-          <p className="text-slate-500 mt-1">Assign tasks, evaluate performance, and track progress</p>
+    <DashboardLayout title="Teacher Evaluation" subtitle="Assign tasks, evaluate performance, and track progress">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-slate-900">Teacher Evaluation</h1>
+            <p className="text-slate-500 mt-1">Assign tasks, evaluate performance, and track progress</p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setShowTaskModal(true)} className="btn-primary flex items-center gap-2"><Plus size={18} />Assign Task</button>
+            <button onClick={() => { setSelectedTeacher(teachers[0]); setShowEvalModal(true); }} className="btn-outline flex items-center gap-2"><Star size={18} />Evaluate</button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setShowTaskModal(true)} className="btn-primary flex items-center gap-2"><Plus size={18} />Assign Task</button>
-          <button onClick={() => { setSelectedTeacher(teachers[0]); setShowEvalModal(true); }} className="btn-outline flex items-center gap-2"><Star size={18} />Evaluate</button>
-        </div>
-      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total Tasks</span><BookOpen size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-slate-900">{tasks.length}</p></div>
@@ -218,7 +220,8 @@ export default function AdminEvaluationPage() {
             <div className="flex justify-end gap-3 p-5 border-t border-slate-200"><button onClick={() => setShowEvalModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateEvaluation} disabled={saving || !selectedTeacher} className="btn-primary disabled:opacity-50">{saving ? 'Creating...' : 'Create Evaluation'}</button></div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

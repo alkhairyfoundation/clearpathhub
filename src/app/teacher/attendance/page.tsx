@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Search, X, CheckCircle, XCircle, Clock, UserCheck, Users, Loader2 } from 'lucide-react';
 
 export default function TeacherAttendancePage() {
@@ -75,10 +75,11 @@ export default function TeacherAttendancePage() {
   const lateCount = Object.values(attendanceRecords).filter(s => s === 'late').length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-800">Take Attendance</h1><p className="text-slate-500">Mark student attendance for your class</p></div>
-      </div>
+    <DashboardLayout title="Take Attendance" subtitle="Mark student attendance for your class">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><h1 className="text-2xl font-bold text-slate-800">Take Attendance</h1><p className="text-slate-500">Mark student attendance for your class</p></div>
+        </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow-md p-6">
@@ -158,7 +159,8 @@ export default function TeacherAttendancePage() {
             </div>
           )}
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

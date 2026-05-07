@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Plus, Edit, Trash2, X, FileText, BarChart3, Check, Loader2, Search, Users, Clock, Eye, Send } from 'lucide-react';
 
 export default function AdminTestsPage() {
@@ -94,15 +95,16 @@ export default function AdminTestsPage() {
   const totalAttempts = attempts.length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">Tests & Exams</h1>
-          <p className="text-slate-500 mt-1">Manage assessments and track student performance</p>
+    <DashboardLayout title="Tests & Exams" subtitle="Manage assessments and track student performance">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-slate-900">Tests & Exams</h1>
+            <p className="text-slate-500 mt-1">Manage assessments and track student performance</p>
+          </div>
+          <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Create Test</button>
         </div>
-        <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Create Test</button>
-      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total Tests</span><FileText size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-slate-900">{tests.length}</p></div>
@@ -177,7 +179,8 @@ export default function AdminTestsPage() {
             <div className="flex justify-end gap-3 p-5 border-t border-slate-200"><button onClick={() => setShowTestModal(false)} className="btn-ghost">Cancel</button><button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving...' : editingTest ? 'Update' : 'Create'}</button></div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

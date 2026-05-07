@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, QrCode, Download, Printer, Eye, Loader2 } from 'lucide-react';
 import QRCode from 'qrcode';
+import DashboardLayout from '@/components/DashboardLayout';
 import jsPDF from 'jspdf';
 
 export default function AdminSchoolQRPage() {

@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import {
   Plus, Search, Edit, Trash2, Users, GraduationCap, UserCheck, UserMinus,
   DollarSign, X, Loader2, AlertCircle, Check, UserPlus, Link2, Eye
@@ -521,12 +522,14 @@ function AdminUsersPageContent() {
 
 export default function AdminUsersPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
-      </div>
-    }>
-      <AdminUsersPageContent />
-    </Suspense>
+    <DashboardLayout title="User Management" subtitle="Manage school users and permissions">
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+        </div>
+      }>
+        <AdminUsersPageContent />
+      </Suspense>
+    </DashboardLayout>
   );
 }

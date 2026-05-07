@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Save, Shield, Palette, FileText, Image, Check, AlertCircle, Loader2 } from 'lucide-react';
 import type { SchoolSettings } from '@/types';
+import DashboardLayout from '@/components/DashboardLayout';
 
 export default function AdminSettingsPage() {
   const { profile } = useAuth();

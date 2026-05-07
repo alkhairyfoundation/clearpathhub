@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, Download, Printer, QrCode } from 'lucide-react';
 import QRCode from 'qrcode';
 
@@ -52,11 +52,12 @@ export default function StudentIDCardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold text-slate-800">My ID Card</h1><p className="text-slate-500">Digital ID card with QR code</p></div>
-
-      <div className="flex justify-center">
-        <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-8 text-white w-full max-w-sm">
+    <DashboardLayout title="My ID Card" subtitle="Digital ID card with QR code">
+      <div className="space-y-6">
+        <div><h1 className="text-2xl font-bold text-slate-800">My ID Card</h1><p className="text-slate-500">Digital ID card with QR code</p></div>
+        
+        <div className="flex justify-center">
+          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-8 text-white w-full max-w-sm">
           <div className="flex items-center justify-between mb-6">
             <div><h3 className="text-xl font-bold">ClearPath Edu Hub</h3><p className="text-blue-200 text-sm">Student ID Card</p></div>
             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center"><span className="text-blue-600 text-xs font-bold">Logo</span></div>
@@ -82,6 +83,7 @@ export default function StudentIDCardPage() {
       <div className="flex justify-center gap-4">
         <button onClick={handlePrint} className="btn-primary flex items-center gap-2"><Printer size={18} />Print ID Card</button>
       </div>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

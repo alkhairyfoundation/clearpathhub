@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, TrendingUp, Award, BookOpen, BarChart3 } from 'lucide-react';
 
 function ProgressContent() {
@@ -49,14 +50,15 @@ function ProgressContent() {
   if (loading) return <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-800">Academic Progress</h1>
-          <p className="text-slate-500">{child ? `${child.profile?.first_name} ${child.profile?.last_name}` : ''}</p>
+    <DashboardLayout title="Academic Progress" subtitle="{child ? `${child.profile?.first_name} ${child.profile?.last_name}` : ''}">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-slate-800">Academic Progress</h1>
+            <p className="text-slate-500">{child ? `${child.profile?.first_name} ${child.profile?.last_name}` : ''}</p>
+          </div>
         </div>
-      </div>
 
       {!child ? (
         <div className="bg-white rounded-xl p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No children linked to your account</p></div>
@@ -100,8 +102,9 @@ function ProgressContent() {
             )}
           </div>
         </>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }
 

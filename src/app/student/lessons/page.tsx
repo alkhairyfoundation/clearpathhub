@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, Download, Eye, Paperclip } from 'lucide-react';
 
 export default function StudentLessonsPage() {
@@ -27,10 +27,11 @@ export default function StudentLessonsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold text-slate-800">Lesson Notes</h1><p className="text-slate-500">Download and view lesson materials</p></div>
-
-      {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : (
+    <DashboardLayout title="Lesson Notes" subtitle="Download and view lesson materials">
+      <div className="space-y-6">
+        <div><h1 className="text-2xl font-bold text-slate-800">Lesson Notes</h1><p className="text-slate-500">Download and view lesson materials</p></div>
+        
+        {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {lessons.length === 0 ? <div className="col-span-full bg-white rounded-xl p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No lessons available</p></div> :
           lessons.map((lesson) => (
@@ -60,7 +61,8 @@ export default function StudentLessonsPage() {
             )}
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, uploadFile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Upload, Check, Clock, FileText, Paperclip, Image, FileVideo, ExternalLink, Loader2 } from 'lucide-react';
 
 export default function StudentHomeworkPage() {
@@ -80,10 +81,11 @@ export default function StudentHomeworkPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold text-slate-800">Homework</h1><p className="text-slate-500">View and submit homework assignments</p></div>
-
-      {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : (
+    <DashboardLayout title="Homework" subtitle="View and submit homework assignments">
+      <div className="space-y-6">
+        <div><h1 className="text-2xl font-bold text-slate-800">Homework</h1><p className="text-slate-500">View and submit homework assignments</p></div>
+        
+        {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : (
         <div className="space-y-4">
           {homework.length === 0 ? <div className="bg-white rounded-xl p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No homework assigned</p></div> :
           homework.map((hw) => {
@@ -162,7 +164,8 @@ export default function StudentHomeworkPage() {
             );
           })}
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

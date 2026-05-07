@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Activity, Star, Edit, Trash2, X, Send, Calendar, User } from 'lucide-react';
 
 export default function TeacherBehaviorPage() {
@@ -60,11 +60,12 @@ export default function TeacherBehaviorPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-800">Behavioral Reports</h1><p className="text-slate-500">Weekly behavior reports for students</p></div>
-        <button onClick={() => { getWeekRange(); setShowModal(true); }} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Report</button>
-      </div>
+    <DashboardLayout title="Behavioral Reports" subtitle="Weekly behavior reports for students">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><h1 className="text-2xl font-bold text-slate-800">Behavioral Reports</h1><p className="text-slate-500">Weekly behavior reports for students</p></div>
+          <button onClick={() => { getWeekRange(); setShowModal(true); }} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Report</button>
+        </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
         {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : reports.length === 0 ? <div className="text-center py-12 text-slate-500"><Activity size={48} className="mx-auto mb-4 opacity-50" /><p>No behavior reports yet</p></div> : (
@@ -108,7 +109,8 @@ export default function TeacherBehaviorPage() {
             <div className="flex justify-end gap-3 p-6 border-t"><button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button><button onClick={handleSave} className="btn-primary flex items-center gap-2"><Send size={18} />Submit Report</button></div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

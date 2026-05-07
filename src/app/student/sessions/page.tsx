@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Play, FileText, Clock, CheckCircle, XCircle, HelpCircle, BookOpen, Pause, PlayCircle, Lock, AlertCircle } from 'lucide-react';
 
 interface CheckpointQuestion {
@@ -174,10 +175,11 @@ export default function StudentSessionsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold text-slate-800">Video Lessons</h1><p className="text-slate-500">Watch lessons and complete checkpoint quizzes to unlock content</p></div>
-
-      {loading ? (
+    <DashboardLayout title="Video Lessons" subtitle="Watch lessons and complete checkpoint quizzes to unlock content">
+      <div className="space-y-6">
+        <div><h1 className="text-2xl font-bold text-slate-800">Video Lessons</h1><p className="text-slate-500">Watch lessons and complete checkpoint quizzes to unlock content</p></div>
+        
+        {loading ? (
         <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -280,7 +282,8 @@ export default function StudentSessionsPage() {
             </div>
           )}
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

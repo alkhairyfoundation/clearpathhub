@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, Users, CheckCircle } from 'lucide-react';
 import type { Session, Subject, Class, Profile } from '@/types';
 
@@ -66,11 +66,12 @@ export default function TeacherQuizzesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-800">Quizzes</h1><p className="text-slate-500">Create and manage quizzes</p></div>
-        <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Quiz</button>
-      </div>
+    <DashboardLayout title="Quizzes" subtitle="Create and manage quizzes">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><h1 className="text-2xl font-bold text-slate-800">Quizzes</h1><p className="text-slate-500">Create and manage quizzes</p></div>
+          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Quiz</button>
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse"><div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div></div>) :
@@ -120,7 +121,8 @@ export default function TeacherQuizzesPage() {
             <div className="flex justify-end gap-3 p-6 border-t sticky bottom-0 bg-white"><button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button><button onClick={handleSaveQuiz} className="btn-primary">Create Quiz</button></div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

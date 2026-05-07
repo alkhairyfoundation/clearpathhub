@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, QrCode, Download, Printer, Calendar, UserCheck, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import QRCode from 'qrcode';
 
@@ -64,12 +65,12 @@ export default function AdminStaffQRPage() {
   const presentRate = staffAttendance.length > 0 ? Math.round((presentCount / staffAttendance.length) * 100) : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <div className="flex-1">
+    <DashboardLayout title="Staff QR Attendance" subtitle="Generate and manage staff attendance QR codes">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
           <h1 className="text-2xl font-bold text-slate-900">Staff Attendance QR</h1>
-          <p className="text-slate-500 mt-1">Generate daily QR codes for staff check-in</p>
+          <p className="text-slate-500 mt-1">Generate daily QR codes for staff attendance</p>
         </div>
       </div>
 
@@ -130,6 +131,6 @@ export default function AdminStaffQRPage() {
           <li>Monitor attendance in real-time from this page</li>
         </ol>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

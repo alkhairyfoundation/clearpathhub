@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, CheckCircle, AlertCircle, HelpCircle, Pause, BookOpen } from 'lucide-react';
 import type { Session, Subject } from '@/types';
 
@@ -173,26 +173,27 @@ export default function TeacherSessionsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Video Lessons</h1>
-          <p className="text-slate-500">Create video lessons with checkpoints and notes</p>
+    <DashboardLayout title="Video Lessons" subtitle="Create video lessons with checkpoints and notes">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Video Lessons</h1>
+            <p className="text-slate-500">Create video lessons with checkpoints and notes</p>
+          </div>
+          <button
+            onClick={() => { 
+              setEditingSession(null); 
+              setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', duration: 30 });
+              setCheckpoints([]);
+              setLessonNotes('');
+              setShowModal(true); 
+            }}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={20} />
+            Add Video Lesson
+          </button>
         </div>
-        <button
-          onClick={() => { 
-            setEditingSession(null); 
-            setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', duration: 30 });
-            setCheckpoints([]);
-            setLessonNotes('');
-            setShowModal(true); 
-          }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={20} />
-          Add Video Lesson
-        </button>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
@@ -417,7 +418,8 @@ export default function TeacherSessionsPage() {
             </div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

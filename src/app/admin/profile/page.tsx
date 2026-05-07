@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Clock, MapPin } from 'lucide-react';
 import type { SchoolSettings } from '@/types';
 
@@ -96,7 +97,7 @@ export default function AdminProfilePage() {
   if (!profile) return null;
 
   return (
-    <div className="space-y-6">
+    <DashboardLayout title="My Profile" subtitle="Manage your account settings">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
@@ -271,6 +272,6 @@ export default function AdminProfilePage() {
           )}
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

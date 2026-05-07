@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Edit, Trash2, X, DollarSign, FileText, Printer, Check, Clock } from 'lucide-react';
 
 export default function AccountantInvoicesPage() {
@@ -49,11 +49,12 @@ export default function AccountantInvoicesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-800">Invoices</h1><p className="text-slate-500">Create and manage invoices</p></div>
-        <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Invoice</button>
-      </div>
+    <DashboardLayout title="Invoices" subtitle="Create and manage invoices">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><h1 className="text-2xl font-bold text-slate-800">Invoices</h1><p className="text-slate-500">Create and manage invoices</p></div>
+          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Invoice</button>
+        </div>
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : invoices.length === 0 ? <div className="p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No invoices yet</p></div> : (
@@ -77,7 +78,8 @@ export default function AccountantInvoicesPage() {
             <div className="flex justify-end gap-3 p-6 border-t"><button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button><button onClick={handleSave} className="btn-primary">Create Invoice</button></div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Bell, Calendar, AlertTriangle, Info } from 'lucide-react';
 
 export default function ParentAnnouncementsPage() {
@@ -45,14 +46,15 @@ export default function ParentAnnouncementsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-800">Announcements</h1>
-          <p className="text-slate-500">School updates and important notices</p>
+    <DashboardLayout title="Announcements" subtitle="School updates and important notices">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-slate-800">Announcements</h1>
+            <p className="text-slate-500">School updates and important notices</p>
+          </div>
         </div>
-      </div>
 
       <div className="flex gap-2">
         {['all', 'urgent', 'high', 'normal'].map(f => (
@@ -75,7 +77,8 @@ export default function ParentAnnouncementsPage() {
             </div>
           ))}
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

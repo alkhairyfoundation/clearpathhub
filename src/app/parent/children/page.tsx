@@ -1,10 +1,10 @@
 'use client';
 
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { Users, Award, UserCheck, DollarSign, Bell, BookOpen, TrendingUp } from 'lucide-react';
 
 export default function ParentChildrenPage() {
@@ -45,10 +45,11 @@ export default function ParentChildrenPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-800">My Children</h1><p className="text-slate-500">View your children&apos;s information and progress</p></div>
-      </div>
+    <DashboardLayout title="My Children" subtitle="View your children's information and progress">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><h1 className="text-2xl font-bold text-slate-800">My Children</h1><p className="text-slate-500">View your children&apos;s information and progress</p></div>
+        </div>
 
       {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : children.length === 0 ? (
         <div className="bg-white rounded-xl p-12 text-center"><Users className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No children linked to your account</p><p className="text-sm text-slate-400 mt-1">Contact the school admin to link your children</p></div>
@@ -77,7 +78,8 @@ export default function ParentChildrenPage() {
             );
           })}
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

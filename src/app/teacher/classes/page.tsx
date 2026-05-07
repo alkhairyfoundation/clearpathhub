@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import DashboardLayout from '@/components/DashboardLayout';
 import { GraduationCap, Users, BookOpen, Plus, Edit, Trash2, X, Search, Clock, Calendar } from 'lucide-react';
 
 export default function TeacherClassesPage() {
@@ -75,11 +76,12 @@ export default function TeacherClassesPage() {
   const getClassStudents = (classId: string) => students.filter(s => s.class_id === classId);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-800">My Classes</h1><p className="text-slate-500">Manage your classes and view student rosters</p></div>
-        <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Add Class</button>
-      </div>
+    <DashboardLayout title="My Classes" subtitle="Manage your classes and view student rosters">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><h1 className="text-2xl font-bold text-slate-800">My Classes</h1><p className="text-slate-500">Manage your classes and view student rosters</p></div>
+          <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Add Class</button>
+        </div>
 
       <div className="card">
         <div className="relative mb-4"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input type="text" placeholder="Search classes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
@@ -145,7 +147,8 @@ export default function TeacherClassesPage() {
             <div className="flex justify-end gap-3 p-5 border-t border-slate-200"><button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button><button onClick={handleSave} disabled={saving} className="btn-primary">{saving ? 'Saving...' : editingClass ? 'Update' : 'Create'}</button></div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

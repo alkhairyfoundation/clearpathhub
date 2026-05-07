@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Download, Upload, FileText, Table, FileSpreadsheet, Printer, Loader2, CheckCircle, AlertCircle, Users, BookOpen, BarChart3, DollarSign, QrCode } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
 
 export default function ImportExportPage() {
   const { profile } = useAuth();
