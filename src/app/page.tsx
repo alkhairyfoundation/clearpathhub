@@ -46,7 +46,7 @@ export default function Home() {
                 Sign In
               </Link>
               <Link href="/login" className="btn-primary flex items-center gap-2">
-                Get Started
+                Sign In
                 <ArrowRight size={16} />
               </Link>
             </div>
@@ -69,28 +69,29 @@ export default function Home() {
 
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/10 border border-blue-400/20 rounded-full text-blue-300 text-sm font-medium mb-6">
               <Zap size={14} />
-              Complete School Management System
+              ClearPath Edu Hub
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
-              Manage Your School
-              <br />
+              The{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-emerald-400 to-purple-400">
-                From One Platform
+                Complete School
               </span>
+              <br />
+              Management System
             </h1>
 
             <p className="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-              ClearPath Edu Hub brings together academics, attendance, finance, parent communication, and student performance tracking — all in one secure, role-based system.
+              ClearPath Edu Hub is our school's digital platform — bringing together academics, attendance, finance, parent communication, and student performance tracking in one place.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login" className="btn-primary flex items-center justify-center gap-2 text-lg px-8 py-4">
                 <Play size={20} />
-                Get Started
+                Access Portal
               </Link>
               <a href="#features" className="btn-outline border-white/20 text-white px-8 py-4 flex items-center justify-center gap-2 hover:bg-white/10 hover:border-white/30 hover:text-white">
-                Explore Features
+                Learn More
                 <ArrowRight size={18} />
               </a>
             </div>
@@ -125,10 +126,10 @@ export default function Home() {
               Platform Features
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Everything Your School Needs
+              Everything in One Platform
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              From the classroom to the front office, every tool your staff, teachers, and parents need.
+              ClearPath Edu Hub brings every aspect of school operations into a single, unified system.
             </p>
           </div>
 
@@ -267,13 +268,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-4">
-              Role-Based Access
+              Access Levels
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Five Roles, One Platform
+              Role-Based Access
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Each user gets a tailored dashboard and tools specific to their responsibilities
+              Each user logs in to a personalized dashboard with tools specific to their role
             </p>
           </div>
 
@@ -329,10 +330,10 @@ export default function Home() {
               How It Works
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Setup in Minutes
+              Getting Started
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Get your school running on ClearPath in four simple steps
+              Log in with your credentials to access your personalized dashboard
             </p>
           </div>
 
@@ -381,13 +382,13 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Digitize Your School?
+            Access Your Dashboard
           </h2>
           <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-            Join schools using ClearPath Edu Hub to streamline operations, improve learning outcomes, and keep parents connected.
+            Sign in to ClearPath Edu Hub to manage academics, track performance, and stay connected with our school community.
           </p>
           <Link href="/login" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-700 rounded-xl font-bold text-lg hover:bg-blue-50 transition-colors shadow-xl shadow-blue-900/30">
-            Get Started Now
+            Sign In Now
             <ArrowRight size={20} />
           </Link>
         </div>
@@ -408,17 +409,17 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-slate-400 mb-6 max-w-md leading-relaxed">
-                A complete school management platform — from academics and attendance to finance and parent communication.
+                Our school's complete management platform — from academics and attendance to finance and parent communication.
               </p>
               <p className="text-amber-400/80 text-sm font-medium">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
             </div>
 
             <div>
-              <h4 className="text-white font-semibold mb-4">Platform</h4>
+              <h4 className="text-white font-semibold mb-4">Portal</h4>
               <ul className="space-y-3">
                 <li><Link href="/login" className="hover:text-white transition-colors">Sign In</Link></li>
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#roles" className="hover:text-white transition-colors">User Roles</a></li>
+                <li><a href="#roles" className="hover:text-white transition-colors">Access Levels</a></li>
               </ul>
             </div>
 
@@ -442,7 +443,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-slate-800 mt-12 pt-8 text-center text-sm">
-            <p>© {new Date().getFullYear()} ClearPath Edu Hub. Built with purpose. Every student, every lesson, one platform.</p>
+            <p>© 2026 ClearPath Edu Hub. All rights reserved.</p>
           </div>
         </div>
       </footer>
