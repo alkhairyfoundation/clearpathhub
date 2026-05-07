@@ -1,83 +1,64 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { cookies } from 'next/headers';
+import { createSupabaseServerClient, createSupabaseAdminClient } from '@/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     
-    // Check if user is authenticated and is admin
     const { data: { session } } = await supabase.auth.getSession();
-    
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user profile to check role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
     if (profile?.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: 'Admin access required' },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 403 });
     }
 
-    // Parse request body
     const { email, password, first_name, last_name, role, phone } = await request.json();
+    if (!email || !password || !first_name || !last_name || !role) {
+      return NextResponse.json({ success: false, error: 'All fields are required' }, { status: 400 });
+    }
+    if (password.length < 6) {
+      return NextResponse.json({ success: false, error: 'Password must be at least 6 characters' }, { status: 400 });
+    }
 
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    const adminClient = createSupabaseAdminClient();
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
+      email_confirm: true,
+      user_metadata: { first_name, last_name, role },
+    });
+
+    if (authError) {
+      console.error('Auth creation error:', authError);
+      return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
+    }
+
+    if (authData.user) {
+      const { error: profileError } = await adminClient.from('profiles').insert({
+        id: authData.user.id,
+        email,
         first_name,
         last_name,
         role,
-      },
-    });
+        phone: phone || null,
+      });
 
-    if (authError) throw authError;
-
-    // Create profile
-    if (authData.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email,
-          first_name,
-          last_name,
-          role,
-          phone: phone || null,
-        });
-
-      if (profileError) throw profileError;
+      if (profileError) {
+        await adminClient.auth.admin.deleteUser(authData.user.id);
+        return NextResponse.json({ success: false, error: profileError.message }, { status: 500 });
+      }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'User created successfully',
-      user: authData.user,
-    });
+    return NextResponse.json({ success: true, message: 'User created successfully', user: authData.user });
   } catch (error: any) {
     console.error('Error creating user:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
-// GET - List users (admin only)
 export async function GET(request: Request) {
   try {
     const supabase = await createSupabaseServerClient();
@@ -85,54 +66,26 @@ export async function GET(request: Request) {
     const role = searchParams.get('role');
     const search = searchParams.get('search');
 
-    // Check auth
     const { data: { session } } = await supabase.auth.getSession();
-    
     if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check admin role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
     if (profile?.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, error: 'Admin access required' },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 403 });
     }
 
-    // Build query
-    let query = supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (role && role !== 'all') {
-      query = query.eq('role', role);
-    }
-
-    if (search) {
-      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`);
-    }
+    let query = supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if (role && role !== 'all') { query = query.eq('role', role); }
+    if (search) { query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`); }
 
     const { data: users, error } = await query;
-
     if (error) throw error;
 
     return NextResponse.json({ success: true, data: users });
   } catch (error: any) {
     console.error('Error fetching users:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
