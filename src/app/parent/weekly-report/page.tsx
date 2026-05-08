@@ -9,7 +9,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 function WeeklyReportContent() {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get('child');
@@ -18,9 +18,10 @@ function WeeklyReportContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!profile || profile.role !== 'parent') { router.push('/login'); return; }
     fetchData();
-  }, [profile, childId]);
+  }, [profile, authLoading, childId]);
 
   async function fetchData() {
     setLoading(true);

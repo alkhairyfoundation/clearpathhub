@@ -8,7 +8,7 @@ import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar } from 'lucide-r
 import jsQR from 'jsqr';
 
 export default function StaffScanQRPage() {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
   const router = useRouter();
   const [showCamera, setShowCamera] = useState(false);
   const [cameraError, setCameraError] = useState('');
@@ -21,9 +21,10 @@ export default function StaffScanQRPage() {
   const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (loading) return;
     if (!profile || !['teacher', 'accountant', 'admin'].includes(profile.role || '')) { router.push('/login'); return; }
     return () => stopCamera();
-  }, [profile]);
+  }, [profile, loading]);
 
   async function startCamera() {
     setCameraError('');

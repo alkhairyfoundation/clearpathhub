@@ -1,48 +1,88 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient, createSupabaseAdminClient } from '@/lib/supabase-server';
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+async function verifyAdmin() {
   try {
     const supabase = await createSupabaseServerClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return null;
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError || !session) {
-      return NextResponse.json({ success: false, error: 'Unauthorized - Please log in again' }, { status: 401 });
-    }
-
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
       .single();
 
-    if (profileError || profile?.role !== 'admin') {
-      return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 403 });
-    }
+    if (profile?.role === 'admin') return supabase;
+    return null;
+  } catch {
+    return null;
+  }
+}
 
+export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+  try {
     const adminClient = createSupabaseAdminClient();
 
-    // Delete from Supabase Auth first
     const { error: authError } = await adminClient.auth.admin.deleteUser(params.id);
-
     if (authError) {
-      console.error('Auth delete error:', authError);
       return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
     }
 
-    // Then delete from profiles table
     const { error: profileDeleteError } = await adminClient.from('profiles').delete().eq('id', params.id);
-
     if (profileDeleteError) {
-      console.error('Profile delete error after auth delete:', profileDeleteError);
-      // Auth user is already deleted, but we should still return success
-      // since the auth user is gone
+      console.error('Profile delete warning (auth user already deleted):', profileDeleteError);
     }
 
     return NextResponse.json({ success: true, message: 'User deleted successfully' });
   } catch (error: any) {
-    console.error('Error deleting user:', error);
+    const msg = error.message?.includes('SUPABASE_SERVICE_ROLE_KEY')
+      ? 'Server configuration error: Service role key not set'
+      : error.message;
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const supabase = await verifyAdmin();
+    if (!supabase) {
+      return NextResponse.json({ success: false, error: 'Unauthorized - Admin access required' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { first_name, last_name, role, phone, password } = body;
+
+    const updates: Record<string, any> = {};
+    if (first_name !== undefined) updates.first_name = first_name;
+    if (last_name !== undefined) updates.last_name = last_name;
+    if (role !== undefined) updates.role = role;
+    if (phone !== undefined) updates.phone = phone || null;
+
+    if (Object.keys(updates).length > 0) {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', params.id);
+
+      if (updateError) {
+        return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
+      }
+    }
+
+    if (password) {
+      if (password.length < 6) {
+        return NextResponse.json({ success: false, error: 'Password must be at least 6 characters' }, { status: 400 });
+      }
+      const adminClient = createSupabaseAdminClient();
+      const { error: authError } = await adminClient.auth.admin.updateUserById(params.id, { password });
+      if (authError) {
+        return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ success: true, message: 'User updated successfully' });
+  } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

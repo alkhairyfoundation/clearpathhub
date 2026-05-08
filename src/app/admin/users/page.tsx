@@ -48,6 +48,8 @@ function AdminUsersPageContent() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [newCredentials, setNewCredentials] = useState({ email: '', password: '' });
+  const [viewingUser, setViewingUser] = useState<Profile | null>(null);
+  const [resetPasswordMode, setResetPasswordMode] = useState(false);
 
   const [formData, setFormData] = useState<UserFormData>({
     email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '',
@@ -98,6 +100,7 @@ function AdminUsersPageContent() {
     setEditingUser(user);
     setError('');
     setSuccess('');
+    setResetPasswordMode(false);
     setFormData({
       email: user.email, password: '', first_name: user.first_name,
       last_name: user.last_name, role: user.role, phone: user.phone || '',
@@ -113,18 +116,24 @@ function AdminUsersPageContent() {
 
     try {
       if (editingUser) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            role: formData.role,
-            phone: formData.phone || null,
-          })
-          .eq('id', editingUser.id);
+        const body: Record<string, any> = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          role: formData.role,
+          phone: formData.phone || null,
+        };
+        if (formData.password) body.password = formData.password;
 
-        if (updateError) throw new Error(updateError.message);
-        setSuccess('User updated successfully');
+        const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Failed to update user');
+        setSuccess(result.message);
+        setResetPasswordMode(false);
       } else {
         if (!formData.password || formData.password.length < 6) {
           throw new Error('Password must be at least 6 characters');
@@ -341,6 +350,13 @@ function AdminUsersPageContent() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setViewingUser(user)}
+                          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={15} className="text-slate-500" />
+                        </button>
                         {user.role === 'parent' && (
                           <button
                             onClick={() => { setLinkingParent(user); setSelectedStudentIds([]); fetchAvailableStudents(); setShowLinkModal(true); }}
@@ -423,10 +439,23 @@ function AdminUsersPageContent() {
                 <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input" required disabled={!!editingUser} />
               </div>
 
-              {!editingUser && (
+              {!editingUser ? (
                 <div>
                   <label className="label">Password</label>
                   <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="input" required placeholder="Minimum 6 characters" minLength={6} />
+                </div>
+              ) : (
+                <div>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" checked={resetPasswordMode} onChange={(e) => { setResetPasswordMode(e.target.checked); if (!e.target.checked) setFormData({ ...formData, password: '' }); }} className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm font-medium text-slate-700">Reset Password</span>
+                  </label>
+                  {resetPasswordMode && (
+                    <div className="mt-3">
+                      <label className="label">New Password</label>
+                      <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="input" required={resetPasswordMode} placeholder="Minimum 6 characters" minLength={6} />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -453,6 +482,66 @@ function AdminUsersPageContent() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Detail View Modal */}
+      {viewingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setViewingUser(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900">User Details</h3>
+              <button onClick={() => setViewingUser(null)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+                <X size={20} className="text-slate-500" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                  {viewingUser.first_name[0]?.toUpperCase()}{viewingUser.last_name[0]?.toUpperCase()}
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-slate-900">{viewingUser.first_name} {viewingUser.last_name}</h4>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mt-1 ${roleConfig[viewingUser.role]?.bg} ${roleConfig[viewingUser.role]?.color}`}>
+                    {roleConfig[viewingUser.role]?.icon}
+                    {roleConfig[viewingUser.role]?.label}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                  <span className="text-sm text-slate-500">Email</span>
+                  <span className="text-sm font-medium text-slate-900">{viewingUser.email}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                  <span className="text-sm text-slate-500">Phone</span>
+                  <span className="text-sm font-medium text-slate-900">{viewingUser.phone || '—'}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                  <span className="text-sm text-slate-500">User ID</span>
+                  <span className="text-sm font-mono text-slate-600">{viewingUser.id}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                  <span className="text-sm text-slate-500">Created</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {new Date(viewingUser.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                  <span className="text-sm text-slate-500">Last Updated</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {new Date(viewingUser.updated_at || viewingUser.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => { setViewingUser(null); openEditModal(viewingUser); }} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                  <Edit size={16} /> Edit User
+                </button>
+                <button onClick={() => setViewingUser(null)} className="btn-ghost flex-1">Close</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
