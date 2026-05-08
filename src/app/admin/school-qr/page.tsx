@@ -40,9 +40,10 @@ export default function AdminSchoolQRPage() {
       type: 'SCHOOL_ATTENDANCE',
       school: schoolSettings.school_name || 'Mastery Engine',
       schoolId: schoolSettings.id,
-      address: schoolSettings.school_address || schoolSettings.address || '',
-      phone: schoolSettings.school_phone || schoolSettings.phone || '',
-      email: schoolSettings.school_email || schoolSettings.email || '',
+      address: schoolSettings.school_address || '',
+      phone: schoolSettings.school_phone || '',
+      email: schoolSettings.school_email || '',
+      motto: schoolSettings.school_motto || '',
       version: '2.0',
       purpose: 'staff_daily_attendance'
     });
@@ -76,9 +77,9 @@ export default function AdminSchoolQRPage() {
     doc.setFontSize(12);
     doc.text('School Identity QR Code', pageWidth / 2, 30, { align: 'center' });
     
-    if (schoolSettings.address) {
+    if (schoolSettings.school_address) {
       doc.setFontSize(10);
-      doc.text(schoolSettings.address, pageWidth / 2, 38, { align: 'center' });
+      doc.text(schoolSettings.school_address, pageWidth / 2, 38, { align: 'center' });
     }
 
     const qrImage = qrCodeUrl;
@@ -92,13 +93,13 @@ export default function AdminSchoolQRPage() {
     
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
-    if (schoolSettings.phone) doc.text(`Phone: ${schoolSettings.phone}`, pageWidth / 2, 185, { align: 'center' });
-    if (schoolSettings.email) doc.text(`Email: ${schoolSettings.email}`, pageWidth / 2, 192, { align: 'center' });
-    if (schoolSettings.website) doc.text(`Website: ${schoolSettings.website}`, pageWidth / 2, 199, { align: 'center' });
-    if (schoolSettings.motto) {
+    if (schoolSettings.school_phone) doc.text(`Phone: ${schoolSettings.school_phone}`, pageWidth / 2, 185, { align: 'center' });
+    if (schoolSettings.school_email) doc.text(`Email: ${schoolSettings.school_email}`, pageWidth / 2, 192, { align: 'center' });
+    
+    if (schoolSettings.school_motto) {
       doc.setFontSize(11);
       doc.setTextColor(30, 58, 95);
-      doc.text(`"${schoolSettings.motto}"`, pageWidth / 2, 210, { align: 'center' });
+      doc.text(`"${schoolSettings.school_motto}"`, pageWidth / 2, 202, { align: 'center' });
     }
 
     doc.setFontSize(8);
@@ -134,17 +135,16 @@ export default function AdminSchoolQRPage() {
       <body>
         <div class="card">
           <h1>${schoolName}</h1>
-          ${schoolSettings.address ? `<p class="subtitle">${schoolSettings.address}</p>` : ''}
+          ${schoolSettings.school_address ? `<p class="subtitle">${schoolSettings.school_address}</p>` : ''}
           <div class="qr-box">
             <img src="${qrCodeUrl}" alt="School QR Code" />
           </div>
           <p class="subtitle" style="margin-top: 20px; font-weight: bold; color: #1e3a5f;">Scan for School Information</p>
           <div class="info">
-            ${schoolSettings.phone ? `<div>Phone: ${schoolSettings.phone}</div>` : ''}
-            ${schoolSettings.email ? `<div>Email: ${schoolSettings.email}</div>` : ''}
-            ${schoolSettings.website ? `<div>Website: ${schoolSettings.website}</div>` : ''}
+            ${schoolSettings.school_phone ? `<div>Phone: ${schoolSettings.school_phone}</div>` : ''}
+            ${schoolSettings.school_email ? `<div>Email: ${schoolSettings.school_email}</div>` : ''}
           </div>
-          ${schoolSettings.motto ? `<p class="motto">"${schoolSettings.motto}"</p>` : ''}
+          ${schoolSettings.school_motto ? `<p class="motto">"${schoolSettings.school_motto}"</p>` : ''}
           <p class="footer">Generated on ${new Date().toLocaleDateString()}</p>
         </div>
       </body>
@@ -191,8 +191,8 @@ export default function AdminSchoolQRPage() {
               </div>
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-slate-900">{schoolSettings?.school_name || 'Mastery Engine'}</h3>
-                {schoolSettings?.address && <p className="text-slate-500 text-sm">{schoolSettings.address}</p>}
-                {schoolSettings?.motto && <p className="text-blue-600 italic text-sm mt-1">&ldquo;{schoolSettings.motto}&rdquo;</p>}
+                {schoolSettings?.school_address && <p className="text-slate-500 text-sm">{schoolSettings.school_address}</p>}
+                {schoolSettings?.school_motto && <p className="text-blue-600 italic text-sm mt-1">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
               </div>
               <div className="flex flex-wrap gap-3 justify-center">
                 <button onClick={downloadPNG} className="btn-primary flex items-center gap-2">
@@ -236,10 +236,9 @@ export default function AdminSchoolQRPage() {
             <h3 className="font-bold text-slate-900 mb-4">School Information</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-slate-500">Name</span><span className="font-medium">{schoolSettings?.school_name || 'N/A'}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Address</span><span className="font-medium">{schoolSettings?.address || 'N/A'}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Phone</span><span className="font-medium">{schoolSettings?.phone || 'N/A'}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Email</span><span className="font-medium">{schoolSettings?.email || 'N/A'}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Website</span><span className="font-medium">{schoolSettings?.website || 'N/A'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Address</span><span className="font-medium">{schoolSettings?.school_address || 'N/A'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Phone</span><span className="font-medium">{schoolSettings?.school_phone || 'N/A'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Email</span><span className="font-medium">{schoolSettings?.school_email || 'N/A'}</span></div>
             </div>
           </div>
 
@@ -268,11 +267,11 @@ export default function AdminSchoolQRPage() {
             <div className="p-6 text-center">
               <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 text-white">
                 <h3 className="text-xl font-bold mb-1">{schoolSettings?.school_name || 'Mastery Engine'}</h3>
-                {schoolSettings?.address && <p className="text-blue-200 text-sm">{schoolSettings.address}</p>}
+                {schoolSettings?.school_address && <p className="text-blue-200 text-sm">{schoolSettings.school_address}</p>}
                 <div className="mt-4 inline-block bg-white rounded-lg p-3">
                   {qrCodeUrl && <img src={qrCodeUrl} alt="QR" className="w-40 h-40" />}
                 </div>
-                {schoolSettings?.motto && <p className="text-blue-200 italic text-sm mt-4">&ldquo;{schoolSettings.motto}&rdquo;</p>}
+                {schoolSettings?.school_motto && <p className="text-blue-200 italic text-sm mt-4">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
               </div>
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
