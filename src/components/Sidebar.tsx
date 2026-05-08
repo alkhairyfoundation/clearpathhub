@@ -30,6 +30,7 @@ const navItems = {
     { href: '/admin/entrance-exams', label: 'Entrance Exams', icon: FileCheck },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/id-cards', label: 'Student ID Cards', icon: QrCode },
+    { href: '/admin/scan-id', label: 'Scan Student ID', icon: ScanLine },
     { href: '/admin/staff-id-cards', label: 'Staff ID Cards', icon: QrCode },
     { href: '/admin/school-qr', label: 'School QR Code', icon: QrCode },
     { href: '/admin/staff-qr', label: 'Staff Attendance QR', icon: ScanLine },
