@@ -168,14 +168,13 @@ a {
     @apply bg-red-100 text-red-700;
   }
   
-  .badge-yellow {
-    @apply bg-amber-100 text-amber-700;
-  }
-  
-  .badge-purple {
-    @apply bg-purple-100 text-purple-700;
-  }
-}
+.badge-yellow {
+     @apply bg-amber-100 text-amber-700;
+   }
+ 
+ .badge-purple {
+     @apply bg-purple-100 text-purple-700;
+   }
 
 @layer utilities {
   .animate-scale-in {
@@ -317,7 +316,6 @@ a {
     50% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
   }
   
-  .animate-pulse-glow {
-    animation: pulse-glow 2s infinite;
-  }
-}
+.animate-pulse-glow {
+     animation: pulse-glow 2s infinite;
+   }
