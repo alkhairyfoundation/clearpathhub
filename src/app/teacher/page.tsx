@@ -22,10 +22,11 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
-    fetchDashboard();
-  }, [profile]);
+useEffect(() => {
+     if (loading) return;
+     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
+     fetchDashboard();
+   }, [profile, loading]);
 
   async function fetchDashboard() {
     setLoading(true);

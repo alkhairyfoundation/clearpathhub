@@ -39,10 +39,11 @@ export default function AdminDashboard() {
   const [atRiskStudents, setAtRiskStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
-    fetchDashboard();
-  }, [profile]);
+useEffect(() => {
+     if (loading) return;
+     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
+     fetchDashboard();
+   }, [profile, loading]);
 
   async function fetchDashboard() {
     setLoading(true);

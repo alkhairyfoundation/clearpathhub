@@ -19,10 +19,11 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!profile || profile.role !== 'student') { router.push('/login'); return; }
-    fetchDashboard();
-  }, [profile]);
+useEffect(() => {
+     if (loading) return;
+     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
+     fetchDashboard();
+   }, [profile, loading]);
 
   async function fetchDashboard() {
     setLoading(true);

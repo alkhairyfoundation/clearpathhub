@@ -87,22 +87,22 @@ export default function Home() {
               </div>
 
               <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
-                <div className="text-center p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-3xl font-black text-white">5</p>
-                  <p className="text-sm text-slate-400 mt-1">Roles</p>
-                </div>
-                <div className="text-center p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-3xl font-black text-white">9+</p>
-                  <p className="text-sm text-slate-400 mt-1">Modules</p>
-                </div>
-                <div className="text-center p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-3xl font-black text-white">10K+</p>
-                  <p className="text-sm text-slate-400 mt-1">Students</p>
-                </div>
-                <div className="text-center p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-3xl font-black text-white">99%</p>
-                  <p className="text-sm text-slate-400 mt-1">Uptime</p>
-                </div>
+<div className="text-center p-4 rounded-2xl bg-white/10 border border-white/20">
+                   <p className="text-3xl font-bold text-white">5</p>
+                   <p className="text-sm text-slate-500 mt-1">Roles</p>
+                 </div>
+                 <div className="text-center p-4 rounded-2xl bg-white/10 border border-white/20">
+                   <p className="text-3xl font-bold text-white">9+</p>
+                   <p className="text-sm text-slate-500 mt-1">Modules</p>
+                 </div>
+                 <div className="text-center p-4 rounded-2xl bg-white/10 border border-white/20">
+                   <p className="text-3xl font-bold text-white">10K+</p>
+                   <p className="text-sm text-slate-500 mt-1">Students</p>
+                 </div>
+                 <div className="text-center p-4 rounded-2xl bg-white/10 border border-white/20">
+                   <p className="text-3xl font-bold text-white">99%</p>
+                   <p className="text-sm text-slate-500 mt-1">Uptime</p>
+                 </div>
               </div>
             </div>
 
