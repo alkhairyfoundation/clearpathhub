@@ -17,6 +17,7 @@ function ProgressContent() {
   const [subjectAverages, setSubjectAverages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [testAttempts, setTestAttempts] = useState<any[]>([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'parent') { router.push('/login'); return; }
@@ -25,29 +26,34 @@ function ProgressContent() {
 
   async function fetchData() {
     setLoading(true);
-    const childrenRes = await supabase.from('students').select('*, profile:profiles(first_name, last_name), class:classes(name)').eq('parent_id', profile?.id);
-    
-    if (childrenRes.data?.length) {
-      const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
-      if (selectedChild) {
-        setChild(selectedChild);
-        const [resultsRes, attemptsRes] = await Promise.all([
-          supabase.from('results').select('*, subject:subjects(name)').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(50),
-          supabase.from('test_attempts').select('*, test:tests(title)').eq('student_id', selectedChild.profile_id).order('completed_at', { ascending: false }).limit(20),
-        ]);
-        if (resultsRes.data) {
-          setResults(resultsRes.data);
-          const averages: Record<string, { name: string; total: number; count: number }> = {};
-          resultsRes.data.forEach(r => {
-            const subjectName = r.subject?.name || 'Unknown';
-            if (!averages[subjectName]) averages[subjectName] = { name: subjectName, total: 0, count: 0 };
-            averages[subjectName].total += r.score || 0;
-            averages[subjectName].count++;
-          });
-          setSubjectAverages(Object.values(averages).map(a => ({ ...a, average: Math.round(a.total / a.count) })));
+    try {
+      const childrenRes = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
+      if (childrenRes.error) throw new Error(childrenRes.error.message);
+      
+      if (childrenRes.data?.length) {
+        const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
+        if (selectedChild) {
+          setChild(selectedChild);
+          const [resultsRes, attemptsRes] = await Promise.all([
+            supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(50),
+            supabase.from('test_attempts').select('*, test:tests!test_id(title)').eq('student_id', selectedChild.profile_id).order('completed_at', { ascending: false }).limit(20),
+          ]);
+          if (resultsRes.data) {
+            setResults(resultsRes.data);
+            const averages: Record<string, { name: string; total: number; count: number }> = {};
+            resultsRes.data.forEach(r => {
+              const subjectName = r.subject?.name || 'Unknown';
+              if (!averages[subjectName]) averages[subjectName] = { name: subjectName, total: 0, count: 0 };
+              averages[subjectName].total += r.score || 0;
+              averages[subjectName].count++;
+            });
+            setSubjectAverages(Object.values(averages).map(a => ({ ...a, average: Math.round(a.total / a.count) })));
+          }
+          if (attemptsRes.data) setTestAttempts(attemptsRes.data);
         }
-        if (attemptsRes.data) setTestAttempts(attemptsRes.data);
       }
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   }

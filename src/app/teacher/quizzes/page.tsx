@@ -49,6 +49,7 @@ export default function TeacherQuizzesPage() {
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [formData, setFormData] = useState({ title: '', description: '', session_id: '', passing_score: 50, time_limit: 30 });
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -57,33 +58,48 @@ export default function TeacherQuizzesPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [quizzesRes, sessionsRes] = await Promise.all([
-      supabase.from('quizzes').select('*, session:sessions(*), questions:quiz_questions(*)').order('created_at', { ascending: false }),
-      supabase.from('sessions').select('*').order('title'),
-    ]);
-    if (quizzesRes.data) setQuizzes(quizzesRes.data);
-    if (sessionsRes.data) setSessions(sessionsRes.data);
+    try {
+      const [quizzesRes, sessionsRes] = await Promise.all([
+        supabase.from('quizzes').select('*, session:sessions!session_id(*), questions:quiz_questions!quiz_id(*)').order('created_at', { ascending: false }),
+        supabase.from('sessions').select('*').order('title'),
+      ]);
+      if (quizzesRes.error) throw new Error(quizzesRes.error.message);
+      if (quizzesRes.data) setQuizzes(quizzesRes.data);
+      if (sessionsRes.data) setSessions(sessionsRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
   async function handleSaveQuiz() {
-    const { data: quiz } = await supabase.from('quizzes').insert({ ...formData, session_id: formData.session_id || null }).select().single();
-    if (quiz && questions.length > 0) {
-      const quizQuestions = questions.map((q, i) => ({
-        quiz_id: quiz.id,
-        question: q.question,
-        question_image: q.question_image || null,
-        options: q.options,
-        option_images: q.option_images || null,
-        correct_answer: typeof q.correct_answer === 'object' ? q.correct_answer : q.correct_answer,
-        points: q.points || 1,
-        question_type: q.question_type || 'multiple_choice',
-        order_index: i,
-      }));
-      await supabase.from('quiz_questions').insert(quizQuestions);
+    if (!formData.title) { setError('Quiz title is required'); return; }
+    setError('');
+    try {
+      const { data: quiz, error: quizError } = await supabase.from('quizzes').insert({ title: formData.title, description: formData.description, session_id: formData.session_id || null, passing_score: formData.passing_score, time_limit: formData.time_limit }).select().single();
+      if (quizError) throw new Error(quizError.message);
+      if (quiz && questions.length > 0) {
+        const quizQuestions = questions.map((q, i) => ({
+          quiz_id: quiz.id,
+          question: q.question,
+          question_image: q.question_image || null,
+          options: q.options,
+          option_images: q.option_images || null,
+          correct_answer: typeof q.correct_answer === 'object' ? q.correct_answer : q.correct_answer,
+          points: q.points || 1,
+          question_type: q.question_type || 'multiple_choice',
+          order_index: i,
+        }));
+        await supabase.from('quiz_questions').insert(quizQuestions);
+      }
+      setShowModal(false);
+      setFormData({ title: '', description: '', session_id: '', passing_score: 50, time_limit: 30 });
+      setQuestions([]);
+      fetchData();
+    } catch (err: any) {
+      setError(err.message);
     }
-    setShowModal(false);
-    setFormData({ title: '', description: '', session_id: '', passing_score: 50, time_limit: 30 });
+  }
     setQuestions([]);
     fetchData();
   }

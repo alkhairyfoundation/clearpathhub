@@ -17,6 +17,7 @@ export default function AdminAttendancePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [stats, setStats] = useState({ present: 0, absent: 0, late: 0, excused: 0, total: 0 });
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -32,9 +33,10 @@ export default function AdminAttendancePage() {
 
   async function fetchAttendance() {
     setLoading(true);
-    let query = supabase.from('attendance').select('*, student:profiles(first_name, last_name, email), class:classes(name)').eq('date', date);
+    let query = supabase.from('attendance').select('*, student:profiles!student_id(first_name, last_name, email), class:classes!class_id(name)').eq('date', date);
     if (selectedClass !== 'all') query = query.eq('class_id', selectedClass);
-    const { data } = await query.order('student.first_name');
+    const { data, error } = await query.order('student.first_name');
+    if (error) setError(error.message);
     if (data) {
       setAttendance(data);
       setStats({
@@ -50,12 +52,19 @@ export default function AdminAttendancePage() {
 
   async function markAttendance(studentId: string, status: string) {
     setSaving(studentId);
-    await supabase.from('attendance').upsert({
-      student_id: studentId, class_id: selectedClass !== 'all' ? selectedClass : null, date, status,
-      marked_by: profile?.id, marked_at: new Date().toISOString(), scan_method: 'manual',
-    });
-    setSaving(null);
-    fetchAttendance();
+    setError('');
+    try {
+      const { error } = await supabase.from('attendance').upsert({
+        student_id: studentId, class_id: selectedClass !== 'all' ? selectedClass : null, date, status,
+        marked_by: profile?.id, marked_at: new Date().toISOString(), scan_method: 'manual',
+      });
+      if (error) throw new Error(error.message);
+      fetchAttendance();
+    } catch (err: any) {
+      setError(err.message || 'Failed to mark attendance');
+    } finally {
+      setSaving(null);
+    }
   }
 
   const presentPct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
@@ -74,8 +83,10 @@ export default function AdminAttendancePage() {
           <h1 className="text-2xl font-bold text-slate-900">Attendance</h1>
           <p className="text-slate-500 mt-1">Track and manage student attendance</p>
         </div>
-        <button className="btn-outline flex items-center gap-2"><Download size={18} /> Export</button>
-      </div>
+        <button className="btn-outline flex items-center gap-2" onClick={() => setError('Export feature coming soon')}><Download size={18} /> Export</button>
+        </div>
+
+        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="card"><label className="label">Date</label><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" /></div>

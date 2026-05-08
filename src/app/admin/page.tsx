@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
-const COLORS = ['#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2'];
+const COLORS = ['#b3922f', '#063b29', '#10b981', '#d97706', '#dc2626', '#7c3aed'];
 
 interface DashboardStats {
   students: number;
@@ -61,8 +61,8 @@ export default function AdminDashboard() {
       supabase.from('attendance').select('status, date').order('date', { ascending: false }).limit(30),
       supabase.from('results').select('score').limit(100),
       supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(5),
-      supabase.from('sessions').select('*, teacher:profiles(first_name, last_name), subject:subjects(name)').order('created_at', { ascending: false }).limit(5),
-      supabase.from('results').select('*, student:profiles(first_name, last_name), subject:subjects(name)').order('created_at', { ascending: false }).limit(5),
+      supabase.from('sessions').select('*, teacher:profiles!teacher_id(first_name, last_name), subject:subjects!subject_id(name)').order('created_at', { ascending: false }).limit(5),
+      supabase.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)').order('created_at', { ascending: false }).limit(5),
     ]);
 
     const presentCount = attendanceRes.data?.filter((a: { status: string }) => a.status === 'present').length || 0;
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
       if (lowScores.length > 0) {
         const { data: studentData } = await supabase
           .from('results')
-          .select('student_id, score, student:profiles(first_name, last_name)')
+          .select('student_id, score, student:profiles!student_id(first_name, last_name)')
           .lt('score', 50)
           .limit(5);
         if (studentData) {
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
                 <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#64748b' }} />
                 <YAxis tick={{ fontSize: 12, fill: '#64748b' }} domain={[0, 100]} />
                 <Tooltip />
-                <Line type="monotone" dataKey="attendance" stroke="#2563eb" strokeWidth={2} dot={{ fill: '#2563eb', r: 4 }} />
+                <Line type="monotone" dataKey="attendance" stroke="#b3922f" strokeWidth={2} dot={{ fill: '#b3922f', r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           )}

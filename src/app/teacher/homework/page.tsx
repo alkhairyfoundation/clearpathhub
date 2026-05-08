@@ -22,6 +22,8 @@ export default function TeacherHomeworkPage() {
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
   const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -30,14 +32,19 @@ export default function TeacherHomeworkPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [hwRes, subsRes, clsRes] = await Promise.all([
-      supabase.from('homework').select('*, subject:subjects(*), class:classes(*)').order('due_date', { ascending: false }),
-      supabase.from('subjects').select('*').order('name'),
-      supabase.from('classes').select('*').order('name'),
-    ]);
-    if (hwRes.data) setHomework(hwRes.data);
-    if (subsRes.data) setSubjects(subsRes.data);
-    if (clsRes.data) setClasses(clsRes.data);
+    try {
+      const [hwRes, subsRes, clsRes] = await Promise.all([
+        supabase.from('homework').select('*, subject:subjects!subject_id(*), class:classes!class_id(*)').order('due_date', { ascending: false }),
+        supabase.from('subjects').select('*').order('name'),
+        supabase.from('classes').select('*').order('name'),
+      ]);
+      if (hwRes.error) throw new Error(hwRes.error.message);
+      if (hwRes.data) setHomework(hwRes.data);
+      if (subsRes.data) setSubjects(subsRes.data);
+      if (clsRes.data) setClasses(clsRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
@@ -73,7 +80,7 @@ export default function TeacherHomeworkPage() {
     if (editingHomework) {
       await supabase.from('homework').update(data).eq('id', editingHomework.id);
     } else {
-      await supabase.from('homework').insert({ ...data, id: crypto.randomUUID() });
+      await supabase.from('homework').insert(data);
     }
     setUploading(false);
     setShowModal(false);

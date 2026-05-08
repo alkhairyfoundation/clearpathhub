@@ -40,6 +40,7 @@ export default function StudentSessionsPage() {
   const [savingResults, setSavingResults] = useState(false);
   const [passedCheckpoints, setPassedCheckpoints] = useState(false);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [error, setError] = useState('');
   const playerRef = useRef<any>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const checkpointSavedRef = useRef(false);
@@ -57,12 +58,17 @@ export default function StudentSessionsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [sessionsRes, notesRes] = await Promise.all([
-      supabase.from('sessions').select('*, subject:subjects(*), quiz:quizzes(quiz_questions(*))').eq('is_published', true).order('created_at', { ascending: false }),
-      supabase.from('lessons').select('*').eq('is_published', true).order('created_at', { ascending: false }),
-    ]);
-    if (sessionsRes.data) setSessions(sessionsRes.data);
-    if (notesRes.data) setLessonNotes(notesRes.data);
+    try {
+      const [sessionsRes, notesRes] = await Promise.all([
+        supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes!quiz_id(quiz_questions!quiz_id(*))').eq('is_published', true).order('created_at', { ascending: false }),
+        supabase.from('lessons').select('*').eq('is_published', true).order('created_at', { ascending: false }),
+      ]);
+      if (sessionsRes.error) throw new Error(sessionsRes.error.message);
+      if (sessionsRes.data) setSessions(sessionsRes.data);
+      if (notesRes.data) setLessonNotes(notesRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 

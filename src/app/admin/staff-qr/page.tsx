@@ -17,6 +17,8 @@ export default function AdminStaffQRPage() {
   const [generating, setGenerating] = useState(false);
   const [staff, setStaff] = useState<any[]>([]);
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -36,16 +38,23 @@ export default function AdminStaffQRPage() {
 
   async function generateDailyQR() {
     setGenerating(true);
-    const qrData = `STAFF_ATTENDANCE_${date}_${Date.now().toString(36).toUpperCase()}`;
+    const qrData = JSON.stringify({
+      type: 'STAFF_ATTENDANCE',
+      date: date,
+      schoolId: schoolSettings?.id,
+      school: schoolSettings?.school_name || 'School',
+      timestamp: Date.now(),
+      version: '2.0'
+    });
     try {
-      const url = await QRCode.toDataURL(qrData, { width: 300, margin: 2 });
+      const url = await QRCode.toDataURL(qrData, { width: 300, margin: 2, color: { dark: '#1e3a5f', light: '#ffffff' } });
       setQrCodeUrl(url);
     } catch { /* ignore */ }
     setGenerating(false);
   }
 
   async function fetchAttendance() {
-    const { data } = await supabase.from('staff_attendance').select('*, staff:profiles(first_name, last_name)').eq('date', date).order('created_at', { ascending: false });
+    const { data } = await supabase.from('staff_attendance').select('*, staff:profiles!staff_id(first_name, last_name)').eq('date', date).order('created_at', { ascending: false });
     if (data) setStaffAttendance(data);
   }
 

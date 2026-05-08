@@ -43,19 +43,23 @@ export default function TeacherStudentsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [studentsRes, classesRes] = await Promise.all([
-      supabase
-        .from('students')
-        .select('*, profile:profiles(first_name, last_name, email, phone), class:classes(name)')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('classes')
-        .select('id, name, level')
-        .order('level'),
-    ]);
-
-    if (studentsRes.data) setStudents(studentsRes.data);
-    if (classesRes.data) setClasses(classesRes.data);
+    try {
+      const [studentsRes, classesRes] = await Promise.all([
+        supabase
+          .from('students')
+          .select('*, profile:profiles!profile_id(first_name, last_name, email, phone), class:classes!class_id(name)')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('classes')
+          .select('id, name, level')
+          .order('level'),
+      ]);
+      if (studentsRes.error) throw new Error(studentsRes.error.message);
+      if (studentsRes.data) setStudents(studentsRes.data);
+      if (classesRes.data) setClasses(classesRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 

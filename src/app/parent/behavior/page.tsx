@@ -15,6 +15,7 @@ function BehaviorContent() {
   const [child, setChild] = useState<any>(null);
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'parent') { router.push('/login'); return; }
@@ -23,14 +24,19 @@ function BehaviorContent() {
 
   async function fetchData() {
     setLoading(true);
-    const childrenRes = await supabase.from('students').select('*, profile:profiles(first_name, last_name), class:classes(name)').eq('parent_id', profile?.id);
-    if (childrenRes.data?.length) {
-      const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
-      if (selectedChild) {
-        setChild(selectedChild);
-        const reportsRes = await supabase.from('behavioral_reports').select('*, teacher:profiles(first_name, last_name)').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20);
-        if (reportsRes.data) setReports(reportsRes.data);
+    try {
+      const childrenRes = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
+      if (childrenRes.error) throw new Error(childrenRes.error.message);
+      if (childrenRes.data?.length) {
+        const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
+        if (selectedChild) {
+          setChild(selectedChild);
+          const reportsRes = await supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20);
+          if (reportsRes.data) setReports(reportsRes.data);
+        }
       }
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   }

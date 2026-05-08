@@ -37,14 +37,14 @@ export default function AdminSchoolQRPage() {
   async function generateSchoolQR() {
     if (!schoolSettings) return;
     const schoolData = JSON.stringify({
+      type: 'SCHOOL_ATTENDANCE',
       school: schoolSettings.school_name || 'Mastery Engine',
-      address: schoolSettings.address || '',
-      phone: schoolSettings.phone || '',
-      email: schoolSettings.email || '',
-      website: schoolSettings.website || '',
-      motto: schoolSettings.motto || '',
-      type: 'school_identity',
-      version: '1.0'
+      schoolId: schoolSettings.id,
+      address: schoolSettings.school_address || schoolSettings.address || '',
+      phone: schoolSettings.school_phone || schoolSettings.phone || '',
+      email: schoolSettings.school_email || schoolSettings.email || '',
+      version: '2.0',
+      purpose: 'staff_daily_attendance'
     });
     try {
       const url = await QRCode.toDataURL(schoolData, { width: qrSize, margin: 3, color: { dark: '#1e3a5f', light: '#ffffff' } });

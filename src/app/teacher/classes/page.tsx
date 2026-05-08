@@ -20,6 +20,8 @@ export default function TeacherClassesPage() {
   const [editingClass, setEditingClass] = useState<any>(null);
   const [formData, setFormData] = useState({ name: '', level: '', section: '', teacher_id: '', capacity: 40 });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -28,36 +30,55 @@ export default function TeacherClassesPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [classesRes, studentsRes, subjectsRes] = await Promise.all([
-      supabase.from('classes').select('*, teacher:profiles(first_name, last_name)').order('level'),
-      supabase.from('students').select('*, profile:profiles(first_name, last_name), class:classes(name)').order('admission_number'),
-      supabase.from('subjects').select('*').order('name'),
-    ]);
-    if (classesRes.data) setClasses(classesRes.data);
-    if (studentsRes.data) setStudents(studentsRes.data);
-    if (subjectsRes.data) setSubjects(subjectsRes.data);
+    try {
+      const [classesRes, studentsRes, subjectsRes] = await Promise.all([
+        supabase.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').order('level'),
+        supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').order('admission_number'),
+        supabase.from('subjects').select('*').order('name'),
+      ]);
+      if (classesRes.error) throw new Error(classesRes.error.message);
+      if (studentsRes.error) throw new Error(studentsRes.error.message);
+      if (classesRes.data) setClasses(classesRes.data);
+      if (studentsRes.data) setStudents(studentsRes.data);
+      if (subjectsRes.data) setSubjects(subjectsRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
   async function handleSave() {
-    if (!formData.name.trim()) return;
-    setSaving(true);
-    const data = { ...formData, teacher_id: profile?.id, capacity: parseInt(formData.capacity.toString()) };
-    if (editingClass) {
-      await supabase.from('classes').update(data).eq('id', editingClass.id);
-    } else {
-      await supabase.from('classes').insert({ ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() });
+    if (!formData.name.trim()) { setError('Class name is required'); return; }
+    setError(''); setSaving(true);
+    try {
+      const data = { ...formData, teacher_id: profile?.id, capacity: parseInt(formData.capacity.toString()) };
+      if (editingClass) {
+        const { error } = await supabase.from('classes').update(data).eq('id', editingClass.id);
+        if (error) throw new Error(error.message);
+        setSuccess('Class updated');
+      } else {
+        const { error } = await supabase.from('classes').insert(data);
+        if (error) throw new Error(error.message);
+        setSuccess('Class created');
+      }
+      setTimeout(() => { setShowModal(false); setFormData({ name: '', level: '', section: '', teacher_id: '', capacity: 40 }); setEditingClass(null); fetchData(); }, 1000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setShowModal(false);
-    setFormData({ name: '', level: '', section: '', teacher_id: '', capacity: 40 });
-    setEditingClass(null);
-    fetchData();
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this class?')) return;
-    await supabase.from('classes').delete().eq('id', id);
+    try {
+      const { error } = await supabase.from('classes').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      setSuccess('Class deleted');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    }
     fetchData();
   }
 
@@ -90,6 +111,9 @@ export default function TeacherClassesPage() {
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Add Class</button>
         </div>
+
+        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
       <div className="card">
         <div className="relative mb-4"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input type="text" placeholder="Search classes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>

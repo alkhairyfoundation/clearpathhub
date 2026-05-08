@@ -19,6 +19,9 @@ export default function AdminClassesPage() {
   const [editing, setEditing] = useState<Class | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', level: 1, department_id: '', class_teacher_id: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -28,7 +31,7 @@ export default function AdminClassesPage() {
   async function fetchData() {
     setLoading(true);
     const [classesRes, deptsRes, teachersRes] = await Promise.all([
-      supabase.from('classes').select('*, department:departments(name), class_teacher:profiles!classes_class_teacher_id_fkey(first_name, last_name)').order('level').order('name'),
+      supabase.from('classes').select('*, department:departments!department_id(name), class_teacher:profiles!class_teacher_id(first_name, last_name)').order('level').order('name'),
       supabase.from('departments').select('*').order('name'),
       supabase.from('profiles').select('*').eq('role', 'teacher').order('first_name'),
     ]);
@@ -45,19 +48,41 @@ export default function AdminClassesPage() {
   }
 
   async function handleSave() {
-    if (editing) {
-      await supabase.from('classes').update(formData).eq('id', editing.id);
-    } else {
-      await supabase.from('classes').insert(formData);
+    if (!formData.name.trim()) { setError('Class name is required'); return; }
+    if (formData.level < 1 || formData.level > 12) { setError('Level must be between 1 and 12'); return; }
+    
+    setError(''); setSaving(true);
+    try {
+      if (editing) {
+        const { error: err } = await supabase.from('classes').update(formData).eq('id', editing.id);
+        if (err) throw new Error(err.message);
+        setSuccess('Class updated successfully');
+      } else {
+        const { error: err } = await supabase.from('classes').insert(formData);
+        if (err) throw new Error(err.message);
+        setSuccess('Class created successfully');
+      }
+      setTimeout(() => { setShowModal(false); fetchData(); }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save class');
+    } finally {
+      setSaving(false);
     }
-    setShowModal(false); fetchData();
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this class?')) return;
+    if (!confirm('Delete this class? This may affect associated students and subjects.')) return;
     setDeleting(id);
-    await supabase.from('classes').delete().eq('id', id);
-    setDeleting(null); fetchData();
+    try {
+      const { error } = await supabase.from('classes').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      setSuccess('Class deleted successfully');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete class');
+    } finally {
+      setDeleting(null);
+    }
   }
 
   return (
@@ -76,6 +101,9 @@ export default function AdminClassesPage() {
           <Plus size={18} /> Add Class
         </button>
       </div>
+
+      {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
+      {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
       {loading ? (
         <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
@@ -132,14 +160,18 @@ export default function AdminClassesPage() {
               <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
             </div>
             <div className="p-6 space-y-4">
+              {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
               <div><label className="label">Class Name</label><input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="e.g., JSS 1A" /></div>
-              <div><label className="label">Level</label><input type="number" value={formData.level} onChange={e => setFormData({...formData, level: parseInt(e.target.value)})} className="input" min={1} max={12} /></div>
+              <div><label className="label">Level</label><input type="number" value={formData.level} onChange={e => setFormData({...formData, level: parseInt(e.target.value) || 1})} className="input" min={1} max={12} /></div>
               <div><label className="label">Department</label><select value={formData.department_id} onChange={e => setFormData({...formData, department_id: e.target.value})} className="input"><option value="">No Department</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
               <div><label className="label">Class Teacher</label><select value={formData.class_teacher_id} onChange={e => setFormData({...formData, class_teacher_id: e.target.value})} className="input"><option value="">Select Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
             </div>
             <div className="flex justify-end gap-3 p-6 border-t">
-              <button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button>
-              <button onClick={handleSave} className="btn-primary">{editing ? 'Update' : 'Create'}</button>
+              <button onClick={() => { setShowModal(false); setError(''); }} className="btn-outline">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">
+                {saving && <Loader2 size={16} className="animate-spin" />}
+                {editing ? 'Update' : 'Create'}
+              </button>
             </div>
           </div>
         </div>

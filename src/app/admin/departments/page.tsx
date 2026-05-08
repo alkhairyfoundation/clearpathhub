@@ -18,6 +18,8 @@ export default function AdminDepartmentsPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', code: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -43,24 +45,40 @@ export default function AdminDepartmentsPage() {
   }
 
   async function handleSave() {
-    if (!formData.name || !formData.code) return;
-    setSaving(true);
-    if (editingDepartment) {
-      await supabase.from('departments').update(formData).eq('id', editingDepartment.id);
-    } else {
-      await supabase.from('departments').insert({ ...formData, id: crypto.randomUUID() });
+    if (!formData.name.trim()) { setError('Department name is required'); return; }
+    if (!formData.code.trim()) { setError('Department code is required'); return; }
+    setError(''); setSaving(true);
+    try {
+      if (editingDepartment) {
+        const { error: err } = await supabase.from('departments').update(formData).eq('id', editingDepartment.id);
+        if (err) throw new Error(err.message);
+        setSuccess('Department updated successfully');
+      } else {
+        const { error: err } = await supabase.from('departments').insert(formData);
+        if (err) throw new Error(err.message);
+        setSuccess('Department created successfully');
+      }
+      setTimeout(() => { setShowModal(false); fetchDepartments(); }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save department');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setShowModal(false);
-    fetchDepartments();
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this department?')) return;
+    if (!confirm('Delete this department? This may affect associated classes and subjects.')) return;
     setDeleting(id);
-    await supabase.from('departments').delete().eq('id', id);
-    setDeleting(null);
-    fetchDepartments();
+    try {
+      const { error } = await supabase.from('departments').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      setSuccess('Department deleted successfully');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete department');
+    } finally {
+      setDeleting(null);
+    }
   }
 
   return (
@@ -80,6 +98,9 @@ export default function AdminDepartmentsPage() {
             <Plus size={18} /> Add Department
           </button>
         </div>
+
+        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -129,12 +150,16 @@ export default function AdminDepartmentsPage() {
                 <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X className="text-slate-500" size={20} /></button>
               </div>
               <div className="p-5 space-y-4">
+                {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
                 <div><label className="label">Department Name</label><input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="e.g., Science Department" /></div>
                 <div><label className="label">Department Code</label><input type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="input" placeholder="e.g., SCI" /></div>
               </div>
               <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
-                <button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button>
-                <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
+                <button onClick={() => { setShowModal(false); setError(''); }} className="btn-ghost">Cancel</button>
+                <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">
+                  {saving && <Loader2 size={16} className="animate-spin" />}
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </div>
           </div>

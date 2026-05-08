@@ -17,6 +17,8 @@ export default function TeacherBehaviorPage() {
   const [formData, setFormData] = useState({
     student_id: '', week_start: '', week_end: '', rating: 3, punctuality: 3, class_participation: 3, homework_completion: 3, behavior: '', teacher_notes: ''
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -25,18 +27,31 @@ export default function TeacherBehaviorPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [reportsRes, studentsRes] = await Promise.all([
-      supabase.from('behavioral_reports').select('*, student:profiles(*)').order('week_start', { ascending: false }).limit(50),
-      supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
-    ]);
-    if (reportsRes.data) setReports(reportsRes.data);
-    if (studentsRes.data) setStudents(studentsRes.data);
+    try {
+      const [reportsRes, studentsRes] = await Promise.all([
+        supabase.from('behavioral_reports').select('*, student:profiles!student_id(*)').order('week_start', { ascending: false }).limit(50),
+        supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
+      ]);
+      if (reportsRes.error) throw new Error(reportsRes.error.message);
+      if (reportsRes.data) setReports(reportsRes.data);
+      if (studentsRes.data) setStudents(studentsRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
   async function handleSave() {
-    await supabase.from('behavioral_reports').insert({ ...formData, student_id: formData.student_id || null, entered_by: profile?.id });
-    setShowModal(false); setFormData({ student_id: '', week_start: '', week_end: '', rating: 3, punctuality: 3, class_participation: 3, homework_completion: 3, behavior: '', teacher_notes: '' }); fetchData();
+    if (!formData.student_id || !formData.week_start) { setError('Student and week start are required'); return; }
+    setError(''); setSuccess('');
+    try {
+      const { error } = await supabase.from('behavioral_reports').insert({ student_id: formData.student_id, week_start: formData.week_start, week_end: formData.week_end, rating: formData.rating, punctuality: formData.punctuality, class_participation: formData.class_participation, homework_completion: formData.homework_completion, behavior: formData.behavior, teacher_notes: formData.teacher_notes, entered_by: profile?.id });
+      if (error) throw new Error(error.message);
+      setSuccess('Report saved');
+      setTimeout(() => { setShowModal(false); setFormData({ student_id: '', week_start: '', week_end: '', rating: 3, punctuality: 3, class_participation: 3, homework_completion: 3, behavior: '', teacher_notes: '' }); fetchData(); }, 1000);
+    } catch (err: any) {
+      setError(err.message);
+    }
   }
 
   function getWeekRange() {

@@ -27,20 +27,20 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 -- SCHOOL SETTINGS
 CREATE TABLE IF NOT EXISTS school_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  school_name TEXT NOT NULL DEFAULT 'ClearPath Edu Hub',
-  school_motto TEXT,
-  school_address TEXT,
-  school_phone TEXT,
-  school_email TEXT,
-  school_logo TEXT,
-  primary_color TEXT DEFAULT '#2563eb',
-  secondary_color TEXT DEFAULT '#1e293b',
-  accent_color TEXT DEFAULT '#10b981',
-  academic_year TEXT,
-  term TEXT DEFAULT 'First Term',
-  session_start DATE,
-  session_end DATE
+   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+   school_name TEXT NOT NULL DEFAULT 'ClearPath Edu Hub',
+   school_motto TEXT,
+   school_address TEXT,
+   school_phone TEXT,
+   school_email TEXT,
+   school_logo TEXT,
+   primary_color TEXT DEFAULT '#b3922f',
+   secondary_color TEXT DEFAULT '#063b29',
+   accent_color TEXT DEFAULT '#10b981',
+   academic_year TEXT,
+   term TEXT DEFAULT 'First Term',
+   session_start DATE,
+   session_end DATE
 );
 
 -- DEPARTMENTS
@@ -399,11 +399,14 @@ CREATE TABLE IF NOT EXISTS entrance_applications (
   date_of_birth DATE,
   gender TEXT,
   applied_class TEXT,
+  admitted_class TEXT,
   previous_school TEXT,
   exam_score INTEGER,
   status TEXT DEFAULT 'pending',
   reviewed_by UUID REFERENCES profiles(id),
   reviewed_at TIMESTAMP,
+  security_events JSONB,
+  completed_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -865,7 +868,7 @@ CREATE POLICY "Users can delete their group messages" ON group_messages FOR DELE
 
 -- Insert default school settings
 INSERT INTO school_settings (school_name, primary_color, secondary_color, accent_color, academic_year, term)
-VALUES ('ClearPath Edu Hub', '#2563eb', '#1e293b', '#10b981', '2024-2025', 'First Term')
+VALUES ('ClearPath Edu Hub', '#b3922f', '#063b29', '#10b981', '2024-2025', 'First Term')
 ON CONFLICT DO NOTHING;
 
 -- Insert default model performance record

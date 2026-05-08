@@ -13,6 +13,7 @@ export default function ParentChildrenPage() {
   const [children, setChildren] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [childStats, setChildStats] = useState<Record<string, any>>({});
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'parent') { router.push('/login'); return; }
@@ -21,25 +22,30 @@ export default function ParentChildrenPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase
-      .from('students')
-      .select('*, profile:profiles(first_name, last_name, email, phone), class:classes(name)')
-      .eq('parent_id', profile?.id)
-      .order('admission_number');
-    
-    if (data) {
-      setChildren(data);
-      const stats: Record<string, any> = {};
-      for (const child of data) {
-        const [resultsRes, attendanceRes] = await Promise.all([
-          supabase.from('results').select('score, subject:subjects(name)').eq('student_id', child.profile_id).order('created_at', { ascending: false }).limit(10),
-          supabase.from('attendance').select('status').eq('student_id', child.profile_id).order('date', { ascending: false }).limit(30),
-        ]);
-        const avgScore = resultsRes.data?.length ? Math.round(resultsRes.data.reduce((s: number, r: any) => s + (r.score || 0), 0) / resultsRes.data.length) : 0;
-        const attendanceRate = attendanceRes.data?.length ? Math.round((attendanceRes.data.filter((a: any) => a.status === 'present').length / attendanceRes.data.length) * 100) : 0;
-        stats[child.id] = { avgScore, attendanceRate, totalResults: resultsRes.data?.length || 0, totalAttendance: attendanceRes.data?.length || 0 };
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*, profile:profiles!profile_id(first_name, last_name, email, phone), class:classes!class_id(name)')
+        .eq('parent_id', profile?.id)
+        .order('admission_number');
+      if (error) throw new Error(error.message);
+      
+      if (data) {
+        setChildren(data);
+        const stats: Record<string, any> = {};
+        for (const child of data) {
+          const [resultsRes, attendanceRes] = await Promise.all([
+            supabase.from('results').select('score, subject:subjects!subject_id(name)').eq('student_id', child.profile_id).order('created_at', { ascending: false }).limit(10),
+            supabase.from('attendance').select('status').eq('student_id', child.profile_id).order('date', { ascending: false }).limit(30),
+          ]);
+          const avgScore = resultsRes.data?.length ? Math.round(resultsRes.data.reduce((s: number, r: any) => s + (r.score || 0), 0) / resultsRes.data.length) : 0;
+          const attendanceRate = attendanceRes.data?.length ? Math.round((attendanceRes.data.filter((a: any) => a.status === 'present').length / attendanceRes.data.length) * 100) : 0;
+          stats[child.id] = { avgScore, attendanceRate, totalResults: resultsRes.data?.length || 0, totalAttendance: attendanceRes.data?.length || 0 };
+        }
+        setChildStats(stats);
       }
-      setChildStats(stats);
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   }

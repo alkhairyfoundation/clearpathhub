@@ -34,10 +34,23 @@ export default function TeacherScanIDPage() {
     setManualInput('');
   }
 
-  async function processAdmissionNumber(admissionNumber: string) {
+  async function processAdmissionNumber(data: string) {
+    let admissionNumber = data.trim();
+    
+    try {
+      const parsed = JSON.parse(data);
+      if (parsed.admissionNumber) {
+        admissionNumber = parsed.admissionNumber;
+      } else if (parsed.type === 'STUDENT_ATTENDANCE' && parsed.admissionNumber) {
+        admissionNumber = parsed.admissionNumber;
+      }
+    } catch {
+      // Not JSON, use as-is for backward compatibility
+    }
+    
     const { data: student } = await supabase
       .from('students')
-      .select('*, profile:profiles(first_name, last_name), class:classes(name)')
+      .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
       .eq('admission_number', admissionNumber)
       .single();
     
@@ -114,10 +127,7 @@ export default function TeacherScanIDPage() {
         });
         
         if (code?.data) {
-          const admissionNumber = code.data.trim();
-          if (admissionNumber) {
-            processAdmissionNumber(admissionNumber);
-          }
+          processAdmissionNumber(code.data);
         }
       }
     }

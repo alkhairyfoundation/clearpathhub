@@ -16,6 +16,7 @@ function WeeklyReportContent() {
   const [child, setChild] = useState<any>(null);
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -25,24 +26,26 @@ function WeeklyReportContent() {
 
   async function fetchData() {
     setLoading(true);
-    const childrenRes = await supabase.from('students').select('*, profile:profiles(first_name, last_name), class:classes(name)').eq('parent_id', profile?.id);
-    if (childrenRes.data?.length) {
-      const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
-      if (selectedChild) {
-        setChild(selectedChild);
-        const now = new Date();
-        const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() - now.getDay());
-        weekStart.setHours(0, 0, 0, 0);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 7);
+    try {
+      const childrenRes = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
+      if (childrenRes.error) throw new Error(childrenRes.error.message);
+      if (childrenRes.data?.length) {
+        const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
+        if (selectedChild) {
+          setChild(selectedChild);
+          const now = new Date();
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - now.getDay());
+          weekStart.setHours(0, 0, 0, 0);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 7);
 
-        const [attendanceRes, resultsRes, homeworkRes, behaviorRes] = await Promise.all([
-          supabase.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', weekStart.toISOString().split('T')[0]).lt('date', weekEnd.toISOString().split('T')[0]),
-          supabase.from('results').select('*, subject:subjects(name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
-          supabase.from('homework_submissions').select('*, homework:homework(title, subject:subjects(name))').eq('student_id', selectedChild.profile_id).gte('submitted_at', weekStart.toISOString()).lt('submitted_at', weekEnd.toISOString()),
-          supabase.from('behavioral_reports').select('*, teacher:profiles(first_name, last_name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
-        ]);
+          const [attendanceRes, resultsRes, homeworkRes, behaviorRes] = await Promise.all([
+            supabase.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', weekStart.toISOString().split('T')[0]).lt('date', weekEnd.toISOString().split('T')[0]),
+            supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
+            supabase.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', selectedChild.profile_id).gte('submitted_at', weekStart.toISOString()).lt('submitted_at', weekEnd.toISOString()),
+            supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
+          ]);
 
         const totalAttendance = attendanceRes.data?.length || 0;
         const presentDays = attendanceRes.data?.filter(a => a.status === 'present').length || 0;
@@ -60,7 +63,10 @@ function WeeklyReportContent() {
           positiveNotes: behaviorRes.data?.filter(b => b.type === 'positive').length || 0,
           concerns: behaviorRes.data?.filter(b => b.type === 'concern' || b.type === 'warning').length || 0,
         });
+        }
       }
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   }

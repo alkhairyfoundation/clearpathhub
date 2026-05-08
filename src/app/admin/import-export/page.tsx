@@ -42,8 +42,8 @@ export default function ImportExportPage() {
       switch (type) {
         case 'Students': data = (await supabase.from('profiles').select('*').eq('role', 'student')).data || []; break;
         case 'Teachers': data = (await supabase.from('profiles').select('*').eq('role', 'teacher')).data || []; break;
-        case 'Results': data = (await supabase.from('results').select('*, student:profiles(first_name, last_name), subject:subjects(name)')).data || []; break;
-        case 'Attendance': data = (await supabase.from('attendance').select('*, student:profiles(first_name, last_name)')).data || []; break;
+        case 'Results': data = (await supabase.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)')).data || []; break;
+        case 'Attendance': data = (await supabase.from('attendance').select('*, student:profiles!student_id(first_name, last_name)')).data || []; break;
         case 'Invoices': data = (await supabase.from('invoices').select('*')).data || []; break;
       }
 
@@ -91,7 +91,7 @@ export default function ImportExportPage() {
         for (const row of rows) {
           if (type === 'Students' && row.first_name && row.last_name && row.email) {
             const { error } = await supabase.from('profiles').insert({
-              id: crypto.randomUUID(), first_name: row.first_name, last_name: row.last_name,
+              first_name: row.first_name, last_name: row.last_name,
               email: row.email, phone: row.phone || '', role: 'student', is_active: true,
             });
             if (!error) successCount++;

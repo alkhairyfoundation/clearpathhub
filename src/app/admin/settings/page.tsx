@@ -13,7 +13,7 @@ export default function AdminSettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<Partial<SchoolSettings>>({
     school_name: '', school_motto: '', school_address: '', school_phone: '', school_email: '',
-    primary_color: '#2563eb', secondary_color: '#0f172a', accent_color: '#059669',
+    primary_color: '#b3922f', secondary_color: '#063b29', accent_color: '#10b981',
     academic_year: new Date().getFullYear().toString(), term: 'First Term',
   });
   const [loading, setLoading] = useState(false);
@@ -41,7 +41,6 @@ export default function AdminSettingsPage() {
     setSaved(false);
 
     const { error: upsertError } = await supabase.from('school_settings').upsert({
-      id: settings.id || crypto.randomUUID(),
       ...settings,
     });
 
@@ -133,8 +132,8 @@ export default function AdminSettingsPage() {
             <div>
               <label className="label">Primary Color</label>
               <div className="flex items-center gap-3">
-                <input type="color" value={settings.primary_color || '#2563eb'} onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer" />
-                <input type="text" value={settings.primary_color || ''} onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })} className="input flex-1" placeholder="#2563eb" />
+                <input type="color" value={settings.primary_color || '#b3922f'} onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer" />
+                <input type="text" value={settings.primary_color || ''} onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })} className="input flex-1" placeholder="#b3922f" />
               </div>
             </div>
             <div>

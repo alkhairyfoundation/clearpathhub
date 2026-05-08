@@ -36,20 +36,28 @@ export default function TeacherProfilePage() {
 
   async function fetchTeacherData() {
     if (!profile) return;
+    try {
+      const { data: staff } = await supabase.from('staff').select('*, department:departments!department_id(name)').eq('profile_id', profile.id).limit(1).maybeSingle();
+      if (staff) setStaffInfo(staff);
 
-    const { data: staff } = await supabase.from('staff').select('*, department(name)').eq('profile_id', profile.id).limit(1).maybeSingle();
-    if (staff) setStaffInfo(staff);
-
-    const { data: subjs } = await supabase.from('subjects').select('*, class(name)').eq('teacher_id', profile.id);
-    if (subjs) { setSubjects(subjs); const classIds = Array.from(new Set(subjs.map(s => s.class_id).filter(Boolean))); const { data: cls } = await supabase.from('classes').select('*').in('id', classIds); if (cls) setClasses(cls); }
-
-    const { count: studentCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).in('class_id', classes.map(c => c.id));
-    const { count: sessionCount } = await supabase.from('sessions').select('*', { count: 'exact', head: true }).eq('teacher_id', profile.id);
-    const { count: evalCount } = await supabase.from('teacher_evaluations').select('*', { count: 'exact', head: true }).eq('teacher_id', profile.id).eq('status', 'pending');
-    const { data: tasks } = await supabase.from('teacher_tasks').select('*').eq('teacher_id', profile.id).eq('status', 'submitted');
-
-    setStats({ totalStudents: studentCount || 0, totalSessions: sessionCount || 0, pendingEvaluations: evalCount || 0, completedTasks: (tasks || []).length });
-    if (tasks && tasks.length > 0) setPendingTasks(tasks.slice(0, 3));
+      const { data: subjs } = await supabase.from('subjects').select('*, class:classes!class_id(name)').eq('teacher_id', profile.id);
+      if (subjs) {
+        setSubjects(subjs);
+        const classIds = Array.from(new Set(subjs.map(s => s.class_id).filter(Boolean)));
+        const { data: cls } = await supabase.from('classes').select('*').in('id', classIds);
+        if (cls) {
+          setClasses(cls);
+          const { count: studentCount } = await supabase.from('students').select('*', { count: 'exact', head: true }).in('class_id', cls.map(c => c.id));
+          const { count: sessionCount } = await supabase.from('sessions').select('*', { count: 'exact', head: true }).eq('teacher_id', profile.id);
+          const { count: evalCount } = await supabase.from('teacher_evaluations').select('*', { count: 'exact', head: true }).eq('teacher_id', profile.id).eq('status', 'pending');
+          const { data: tasks } = await supabase.from('teacher_tasks').select('*').eq('teacher_id', profile.id).eq('status', 'submitted');
+          setStats({ totalStudents: studentCount || 0, totalSessions: sessionCount || 0, pendingEvaluations: evalCount || 0, completedTasks: (tasks || []).length });
+          if (tasks && tasks.length > 0) setPendingTasks(tasks.slice(0, 3));
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
   }
 
   async function handleSaveProfile() {

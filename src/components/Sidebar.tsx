@@ -51,6 +51,7 @@ const navItems = {
     { href: '/student/homework', label: 'Homework', icon: Clipboard },
     { href: '/student/results', label: 'Results', icon: BarChart3 },
     { href: '/student/attendance', label: 'Attendance', icon: UserCheck },
+    { href: '/student/entrance-exams', label: 'Entrance Exams', icon: FileCheck },
     { href: '/student/id-card', label: 'My ID Card', icon: QrCode },
     { href: '/student/profile', label: 'Profile', icon: Settings },
   ],
@@ -88,7 +89,7 @@ export default function Sidebar({ role }: SidebarProps) {
             href={item.href}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
               isActive
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >

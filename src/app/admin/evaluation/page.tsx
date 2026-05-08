@@ -21,6 +21,8 @@ export default function AdminEvaluationPage() {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({ teacher_id: '', task_type: 'reading', title: '', description: '', due_date: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -30,8 +32,8 @@ export default function AdminEvaluationPage() {
   async function fetchData() {
     setLoading(true);
     const [tasksRes, evalsRes, teachersRes] = await Promise.all([
-      supabase.from('teacher_tasks').select('*, teacher:profiles(first_name, last_name)').order('due_date', { ascending: false }),
-      supabase.from('teacher_evaluations').select('*, teacher:profiles(first_name, last_name)').order('created_at', { ascending: false }),
+      supabase.from('teacher_tasks').select('*, teacher:profiles!teacher_id(first_name, last_name)').order('due_date', { ascending: false }),
+      supabase.from('teacher_evaluations').select('*, teacher:profiles!teacher_id(first_name, last_name)').order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, first_name, last_name, email').eq('role', 'teacher').order('first_name'),
     ]);
     if (tasksRes.data) setTasks(tasksRes.data);
@@ -41,30 +43,52 @@ export default function AdminEvaluationPage() {
   }
 
   async function handleCreateTask() {
-    if (!formData.teacher_id || !formData.title.trim()) return;
-    setSaving(true);
-    await supabase.from('teacher_tasks').insert({ ...formData, created_by: profile?.id, status: 'pending' });
-    setSaving(false);
-    setShowTaskModal(false);
-    setFormData({ teacher_id: '', task_type: 'reading', title: '', description: '', due_date: '' });
-    fetchData();
+    if (!formData.teacher_id) { setError('Please select a teacher'); return; }
+    if (!formData.title.trim()) { setError('Title is required'); return; }
+    setError(''); setSaving(true);
+    try {
+      const { error } = await supabase.from('teacher_tasks').insert({ ...formData, created_by: profile?.id, status: 'pending' });
+      if (error) throw new Error(error.message);
+      setSuccess('Task assigned successfully');
+      setShowTaskModal(false);
+      setFormData({ teacher_id: '', task_type: 'reading', title: '', description: '', due_date: '' });
+      fetchData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to assign task');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleGradeTask(id: string, grade: number) {
-    await supabase.from('teacher_tasks').update({ status: 'graded', admin_grade: grade }).eq('id', id);
+    try {
+      const { error } = await supabase.from('teacher_tasks').update({ status: 'graded', admin_grade: grade }).eq('id', id);
+      if (error) throw new Error(error.message);
+      setSuccess('Task graded');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (err: any) {
+      setError(err.message);
+    }
     fetchData();
   }
 
   async function handleCreateEvaluation() {
-    if (!selectedTeacher) return;
-    setSaving(true);
-    await supabase.from('teacher_evaluations').insert({
-      teacher_id: selectedTeacher.id, evaluation_type: 'task', title: 'Performance Review',
-      description: 'End of term evaluation', due_date: new Date().toISOString().split('T')[0], status: 'pending'
-    });
-    setSaving(false);
-    setShowEvalModal(false);
-    fetchData();
+    if (!selectedTeacher) { setError('Please select a teacher'); return; }
+    setError(''); setSaving(true);
+    try {
+      const { error } = await supabase.from('teacher_evaluations').insert({
+        teacher_id: selectedTeacher.id, evaluation_type: 'task', title: 'Performance Review',
+        description: 'End of term evaluation', due_date: new Date().toISOString().split('T')[0], status: 'pending'
+      });
+      if (error) throw new Error(error.message);
+      setSuccess('Evaluation created');
+      setShowEvalModal(false);
+      fetchData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to create evaluation');
+    } finally {
+      setSaving(false);
+    }
   }
 
   const pendingTasks = tasks.filter(t => t.status === 'pending');
@@ -101,6 +125,9 @@ export default function AdminEvaluationPage() {
             <button onClick={() => { setSelectedTeacher(teachers[0]); setShowEvalModal(true); }} className="btn-outline flex items-center gap-2"><Star size={18} />Evaluate</button>
           </div>
         </div>
+
+        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total Tasks</span><BookOpen size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-slate-900">{tasks.length}</p></div>

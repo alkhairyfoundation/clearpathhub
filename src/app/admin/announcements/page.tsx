@@ -21,6 +21,8 @@ export default function AdminAnnouncementsPage() {
   const [formData, setFormData] = useState({
     title: '', content: '', priority: 'normal', audience: 'all', scheduled_at: '', expires_at: ''
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -29,7 +31,8 @@ export default function AdminAnnouncementsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('announcements').select('*, creator:profiles(first_name, last_name)').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').order('created_at', { ascending: false });
+    if (error) setError(error.message);
     if (data) setAnnouncements(data);
     setLoading(false);
   }
@@ -49,33 +52,56 @@ export default function AdminAnnouncementsPage() {
   }
 
   async function handleSave() {
-    if (!formData.title.trim()) return;
-    setSaving(true);
-    const data = {
-      ...formData,
-      creator_id: profile?.id,
-      scheduled_at: formData.scheduled_at || null,
-      expires_at: formData.expires_at || null,
-      is_active: formData.scheduled_at ? new Date(formData.scheduled_at) > new Date() : true,
-    };
-    if (editingAnn) {
-      await supabase.from('announcements').update(data).eq('id', editingAnn.id);
-    } else {
-      await supabase.from('announcements').insert({ ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() });
+    if (!formData.title.trim()) { setError('Title is required'); return; }
+    setError(''); setSaving(true);
+    try {
+      const data = {
+        title: formData.title.trim(),
+        content: formData.content,
+        priority: formData.priority,
+        audience: formData.audience,
+        creator_id: profile?.id,
+        scheduled_at: formData.scheduled_at || null,
+        expires_at: formData.expires_at || null,
+        is_active: formData.scheduled_at ? new Date(formData.scheduled_at) > new Date() : true,
+      };
+      if (editingAnn) {
+        const { error: err } = await supabase.from('announcements').update(data).eq('id', editingAnn.id);
+        if (err) throw new Error(err.message);
+        setSuccess('Announcement updated successfully');
+      } else {
+        const { error: err } = await supabase.from('announcements').insert(data);
+        if (err) throw new Error(err.message);
+        setSuccess('Announcement published successfully');
+      }
+      setTimeout(() => { setShowModal(false); fetchData(); }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save announcement');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setShowModal(false);
-    fetchData();
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this announcement?')) return;
-    await supabase.from('announcements').delete().eq('id', id);
+    try {
+      const { error } = await supabase.from('announcements').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      setSuccess('Announcement deleted');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete');
+    }
     fetchData();
   }
 
   async function toggleActive(ann: any) {
-    await supabase.from('announcements').update({ is_active: !ann.is_active }).eq('id', ann.id);
+    try {
+      const { error } = await supabase.from('announcements').update({ is_active: !ann.is_active }).eq('id', ann.id);
+      if (error) throw new Error(error.message);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update');
+    }
     fetchData();
   }
 
@@ -100,6 +126,9 @@ export default function AdminAnnouncementsPage() {
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />New Announcement</button>
         </div>
+
+        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total</span><Megaphone size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-slate-900">{announcements.length}</p></div>
@@ -165,6 +194,7 @@ export default function AdminAnnouncementsPage() {
                 <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
               </div>
               <div className="p-5 space-y-4">
+                {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
                 <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Announcement title" /></div>
                 <div><label className="label">Content</label><textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="input" rows={4} placeholder="Announcement details..." /></div>
                 <div className="grid grid-cols-2 gap-4">
@@ -177,7 +207,7 @@ export default function AdminAnnouncementsPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-3 p-5 border-t border-slate-200 sticky bottom-0 bg-white">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button>
+                <button type="button" onClick={() => { setShowModal(false); setError(''); }} className="btn-ghost">Cancel</button>
                 <button type="button" onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? <><Loader2 size={16} className="animate-spin" />Saving...</> : editingAnn ? 'Update' : 'Publish'}</button>
               </div>
             </div>

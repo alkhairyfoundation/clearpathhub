@@ -16,6 +16,8 @@ export default function TeacherLessonsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ title: '', content: '', subject_id: '', attachments: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -24,23 +26,45 @@ export default function TeacherLessonsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [lessonsRes, subjectsRes] = await Promise.all([
-      supabase.from('lessons').select('*, subject:subjects(*)').order('created_at', { ascending: false }),
-      supabase.from('subjects').select('*').order('name'),
-    ]);
-    if (lessonsRes.data) setLessons(lessonsRes.data);
-    if (subjectsRes.data) setSubjects(subjectsRes.data);
+    try {
+      const [lessonsRes, subjectsRes] = await Promise.all([
+        supabase.from('lessons').select('*, subject:subjects!subject_id(*)').order('created_at', { ascending: false }),
+        supabase.from('subjects').select('*').order('name'),
+      ]);
+      if (lessonsRes.error) throw new Error(lessonsRes.error.message);
+      if (lessonsRes.data) setLessons(lessonsRes.data);
+      if (subjectsRes.data) setSubjects(subjectsRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
   async function handleSave() {
-    const data = { ...formData, subject_id: formData.subject_id || null, teacher_id: profile?.id, attachments: formData.attachments ? formData.attachments.split(',').map(a => a.trim()) : [], is_published: true };
-    await supabase.from('lessons').insert({ ...data, id: crypto.randomUUID() });
-    setShowModal(false); setFormData({ title: '', content: '', subject_id: '', attachments: '' }); fetchData();
+    if (!formData.title.trim()) { setError('Title is required'); return; }
+    setError(''); setSuccess('');
+    try {
+      const data = { title: formData.title, content: formData.content, subject_id: formData.subject_id || null, teacher_id: profile?.id, attachments: formData.attachments ? formData.attachments.split(',').map(a => a.trim()) : [], is_published: true };
+      const { error } = await supabase.from('lessons').insert(data);
+      if (error) throw new Error(error.message);
+      setSuccess('Lesson created');
+      setTimeout(() => { setShowModal(false); setFormData({ title: '', content: '', subject_id: '', attachments: '' }); fetchData(); }, 1000);
+    } catch (err: any) {
+      setError(err.message);
+    }
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Delete this lesson?')) { await supabase.from('lessons').delete().eq('id', id); fetchData(); }
+    if (!confirm('Delete this lesson?')) return;
+    try {
+      const { error } = await supabase.from('lessons').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      setSuccess('Lesson deleted');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message);
+    }
+    fetchData();
   }
 
   return (

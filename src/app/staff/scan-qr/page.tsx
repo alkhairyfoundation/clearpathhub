@@ -74,10 +74,26 @@ export default function StaffScanQRPage() {
 
   async function processScan(data: string) {
     stopCamera();
+    
+    let qrCode = data;
+    let qrType = 'raw';
+    
+    try {
+      const parsed = JSON.parse(data);
+      if (parsed.type === 'STAFF_ATTENDANCE' || parsed.type === 'SCHOOL_ATTENDANCE') {
+        qrCode = parsed.school || parsed.type;
+        qrType = 'staff_attendance';
+      }
+    } catch {
+      qrType = 'manual';
+    }
+    
     const record = {
       staff_id: profile?.id,
       staff_name: `${profile?.first_name} ${profile?.last_name}`,
       qr_data: data,
+      qr_code: qrCode,
+      scan_type: qrType,
       scanned_at: new Date().toISOString(),
       date: new Date().toISOString().split('T')[0],
       status: 'present'

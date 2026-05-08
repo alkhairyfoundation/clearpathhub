@@ -18,6 +18,8 @@ export default function TeacherResultsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [formData, setFormData] = useState({ student_id: '', subject_id: '', exam_type: 'ca1' as const, score: 0, grade: '', remarks: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -26,21 +28,34 @@ export default function TeacherResultsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [resRes, subsRes, stuRes] = await Promise.all([
-      supabase.from('results').select('*, student:profiles(*), subject:subjects(*)').order('created_at', { ascending: false }).limit(50),
-      supabase.from('subjects').select('*').order('name'),
-      supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
-    ]);
-    if (resRes.data) setResults(resRes.data);
-    if (subsRes.data) setSubjects(subsRes.data);
-    if (stuRes.data) setStudents(stuRes.data);
+    try {
+      const [resRes, subsRes, stuRes] = await Promise.all([
+        supabase.from('results').select('*, student:profiles!student_id(*), subject:subjects!subject_id(*)').order('created_at', { ascending: false }).limit(50),
+        supabase.from('subjects').select('*').order('name'),
+        supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
+      ]);
+      if (resRes.error) throw new Error(resRes.error.message);
+      if (resRes.data) setResults(resRes.data);
+      if (subsRes.data) setSubjects(subsRes.data);
+      if (stuRes.data) setStudents(stuRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
   async function handleSave() {
-    const grade = calculateGrade(formData.score);
-    await supabase.from('results').insert({ id: crypto.randomUUID(), ...formData, grade, entered_by: profile?.id });
-    setShowModal(false); setFormData({ student_id: '', subject_id: '', exam_type: 'ca1', score: 0, grade: '', remarks: '' }); fetchData();
+    if (!formData.student_id || !formData.subject_id) { setError('Student and subject are required'); return; }
+    setError(''); setSuccess('');
+    try {
+      const grade = calculateGrade(formData.score);
+      const { error } = await supabase.from('results').insert({ student_id: formData.student_id, subject_id: formData.subject_id, exam_type: formData.exam_type, score: formData.score, grade, remarks: formData.remarks, entered_by: profile?.id });
+      if (error) throw new Error(error.message);
+      setSuccess('Result saved');
+      setTimeout(() => { setShowModal(false); setFormData({ student_id: '', subject_id: '', exam_type: 'ca1', score: 0, grade: '', remarks: '' }); fetchData(); }, 1000);
+    } catch (err: any) {
+      setError(err.message);
+    }
   }
 
   function calculateGrade(score: number): string {

@@ -61,6 +61,8 @@ export default function TeacherSessionsPage() {
   });
   const [checkpoints, setCheckpoints] = useState<VideoCheckpoint[]>([]);
   const [lessonNotes, setLessonNotes] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') {
@@ -72,26 +74,37 @@ export default function TeacherSessionsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [sessionsRes, subjectsRes] = await Promise.all([
-      supabase.from('sessions').select('*, subject:subjects(*), quiz:quizzes(*)').order('created_at', { ascending: false }),
-      supabase.from('subjects').select('*').order('name'),
-    ]);
-    if (sessionsRes.data) setSessions(sessionsRes.data);
-    if (subjectsRes.data) setSubjects(subjectsRes.data);
+    try {
+      const [sessionsRes, subjectsRes] = await Promise.all([
+        supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes(*)').order('created_at', { ascending: false }),
+        supabase.from('subjects').select('*').order('name'),
+      ]);
+      if (sessionsRes.error) throw new Error(sessionsRes.error.message);
+      if (sessionsRes.data) setSessions(sessionsRes.data);
+      if (subjectsRes.data) setSubjects(subjectsRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
   async function handleSave() {
-    const data = {
-      ...formData,
-      subject_id: formData.subject_id || null,
-      teacher_id: profile?.id,
-      duration: parseInt(formData.duration.toString()),
-      is_published: true,
-    };
+    setError(''); setSuccess('');
+    try {
+      const data = {
+        title: formData.title,
+        description: formData.description,
+        video_url: formData.video_url,
+        video_type: formData.video_type,
+        subject_id: formData.subject_id || null,
+        teacher_id: profile?.id,
+        duration: parseInt(formData.duration.toString()),
+        is_published: true,
+      };
 
-    if (editingSession) {
-      await supabase.from('sessions').update(data).eq('id', editingSession.id);
+      if (editingSession) {
+        const { error } = await supabase.from('sessions').update(data).eq('id', editingSession.id);
+        if (error) throw new Error(error.message);
       // Save checkpoints
       if (checkpoints.length > 0) {
         const quizData = {
@@ -118,7 +131,8 @@ export default function TeacherSessionsPage() {
         }
       }
     } else {
-      const { data: newSession } = await supabase.from('sessions').insert({ ...data, id: crypto.randomUUID() }).select().single();
+      const { data: newSession, error: sessionError } = await supabase.from('sessions').insert(data).select().single();
+      if (sessionError) throw new Error(sessionError.message);
       if (newSession && checkpoints.length > 0) {
         const quizData = {
           session_id: newSession.id,
@@ -147,7 +161,6 @@ export default function TeacherSessionsPage() {
     // Save lesson notes if provided
     if (selectedSessionForLesson && lessonNotes) {
       await supabase.from('lessons').insert({
-        id: crypto.randomUUID(),
         subject_id: formData.subject_id || null,
         teacher_id: profile?.id,
         title: `${formData.title} - Notes`,
@@ -156,9 +169,11 @@ export default function TeacherSessionsPage() {
       });
     }
 
+    setSuccess(editingSession ? 'Session updated' : 'Session created');
     setShowModal(false);
     setShowLessonModal(false);
     setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', duration: 30 });
+    fetchData();
     setEditingSession(null);
     setCheckpoints([]);
     setLessonNotes('');

@@ -15,6 +15,7 @@ export default function ParentDashboard() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalChildren: 0, avgPerformance: 0, pendingFees: 0, unreadAnnouncements: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'parent') { router.push('/login'); return; }
@@ -23,34 +24,37 @@ export default function ParentDashboard() {
 
   async function fetchDashboard() {
     setLoading(true);
+    try {
+      const [childrenRes, announcementsRes] = await Promise.all([
+        supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id),
+        supabase.from('announcements').select('*').in('audience', ['all', 'parents']).order('created_at', { ascending: false }).limit(5),
+      ]);
+      if (childrenRes.error) throw new Error(childrenRes.error.message);
 
-    const [childrenRes, announcementsRes] = await Promise.all([
-      supabase.from('students').select('*, profile:profiles(first_name, last_name), class:classes(name)').eq('parent_id', profile?.id),
-      supabase.from('announcements').select('*').in('audience', ['all', 'parents']).order('created_at', { ascending: false }).limit(5),
-    ]);
+      if (childrenRes.data) {
+        setChildren(childrenRes.data);
+        setStats(prev => ({ ...prev, totalChildren: childrenRes.data.length }));
 
-    if (childrenRes.data) {
-      setChildren(childrenRes.data);
-      setStats(prev => ({ ...prev, totalChildren: childrenRes.data.length }));
+        const childIds = childrenRes.data.map(c => c.profile_id);
+        if (childIds.length > 0) {
+          const { data: resultsData } = await supabase.from('results').select('score').in('student_id', childIds);
+          if (resultsData?.length) {
+            const avg = Math.round(resultsData.reduce((sum: number, r: any) => sum + r.score, 0) / resultsData.length);
+            setStats(prev => ({ ...prev, avgPerformance: avg }));
+          }
 
-      const childIds = childrenRes.data.map(c => c.profile_id);
-      if (childIds.length > 0) {
-        const { data: resultsData } = await supabase.from('results').select('score').in('student_id', childIds);
-        if (resultsData?.length) {
-          const avg = Math.round(resultsData.reduce((sum: number, r: any) => sum + r.score, 0) / resultsData.length);
-          setStats(prev => ({ ...prev, avgPerformance: avg }));
+          const { data: invoiceData } = await supabase.from('invoices').select('id, amount, status').in('student_id', childIds).eq('status', 'pending');
+          setStats(prev => ({ ...prev, pendingFees: invoiceData?.length || 0 }));
         }
-
-        const { data: invoiceData } = await supabase.from('invoices').select('id, amount, status').in('student_id', childIds).eq('status', 'pending');
-        setStats(prev => ({ ...prev, pendingFees: invoiceData?.length || 0 }));
       }
-    }
 
-    if (announcementsRes.data) {
-      setAnnouncements(announcementsRes.data);
-      setStats(prev => ({ ...prev, unreadAnnouncements: announcementsRes.data.length }));
+      if (announcementsRes.data) {
+        setAnnouncements(announcementsRes.data);
+        setStats(prev => ({ ...prev, unreadAnnouncements: announcementsRes.data.length }));
+      }
+    } catch (err: any) {
+      setError(err.message);
     }
-
     setLoading(false);
   }
 

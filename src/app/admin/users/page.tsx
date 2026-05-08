@@ -12,11 +12,11 @@ import {
 import type { Profile, UserRole, Student } from '@/types';
 
 const roleConfig: Record<UserRole, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  admin: { label: 'Admin', color: 'text-purple-700', bg: 'bg-purple-100', icon: <Users size={14} /> },
-  teacher: { label: 'Teacher', color: 'text-blue-700', bg: 'bg-blue-100', icon: <UserCheck size={14} /> },
-  student: { label: 'Student', color: 'text-emerald-700', bg: 'bg-emerald-100', icon: <GraduationCap size={14} /> },
-  parent: { label: 'Parent', color: 'text-orange-700', bg: 'bg-orange-100', icon: <UserMinus size={14} /> },
-  accountant: { label: 'Accountant', color: 'text-green-700', bg: 'bg-green-100', icon: <DollarSign size={14} /> },
+  admin: { label: 'Admin', color: 'text-primary-700', bg: 'bg-primary-100', icon: <Users size={14} /> },
+  teacher: { label: 'Teacher', color: 'text-emerald-700', bg: 'bg-emerald-100', icon: <UserCheck size={14} /> },
+  student: { label: 'Student', color: 'text-accent-700', bg: 'bg-accent-100', icon: <GraduationCap size={14} /> },
+  parent: { label: 'Parent', color: 'text-secondary-700', bg: 'bg-secondary-100', icon: <UserMinus size={14} /> },
+  accountant: { label: 'Accountant', color: 'text-success-700', bg: 'bg-success-100', icon: <DollarSign size={14} /> },
 };
 
 type UserFormData = {
@@ -81,7 +81,7 @@ function AdminUsersPageContent() {
   }
 
   async function fetchAvailableStudents() {
-    const { data } = await supabase.from('students').select('*, profile:profiles(first_name, last_name)');
+    const { data } = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name)');
     if (data) setAvailableStudents(data);
   }
 
@@ -195,7 +195,7 @@ function AdminUsersPageContent() {
       // Check if any selected students already have a parent
       const { data: existingLinks, error: checkError } = await supabase
         .from('students')
-        .select('id, admission_number, profile:profiles(first_name, last_name), parent:profiles!parent_id(first_name, last_name)')
+        .select('id, admission_number, profile:profiles!profile_id(first_name, last_name), parent:profiles!parent_id(first_name, last_name)')
         .in('id', selectedStudentIds)
         .not('parent_id', 'is', null);
 

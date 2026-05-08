@@ -15,6 +15,7 @@ export default function ParentPaymentsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalPaid: 0, totalPending: 0, totalOverdue: 0 });
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'parent') { router.push('/login'); return; }
@@ -23,22 +24,27 @@ export default function ParentPaymentsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const childrenRes = await supabase.from('students').select('*, profile:profiles(first_name, last_name), class:classes(name)').eq('parent_id', profile?.id);
-    if (childrenRes.data?.length) {
-      setChildren(childrenRes.data);
-      const childIds = childrenRes.data.map(c => c.profile_id);
-      const [invoicesRes, transactionsRes] = await Promise.all([
-        supabase.from('invoices').select('*, student:profiles(first_name, last_name)').in('student_id', childIds).order('due_date', { ascending: true }),
-        supabase.from('transactions').select('*, student:profiles(first_name, last_name)').in('student_id', childIds).order('created_at', { ascending: false }).limit(20),
-      ]);
-      if (invoicesRes.data) {
-        setInvoices(invoicesRes.data);
-        const paid = invoicesRes.data.filter(i => i.status === 'paid').reduce((s: number, i: any) => s + (i.amount || 0), 0);
-        const pending = invoicesRes.data.filter(i => i.status === 'pending').reduce((s: number, i: any) => s + (i.amount || 0), 0);
-        const overdue = invoicesRes.data.filter(i => i.status === 'pending' && new Date(i.due_date) < new Date()).reduce((s: number, i: any) => s + (i.amount || 0), 0);
-        setStats({ totalPaid: paid, totalPending: pending, totalOverdue: overdue });
+    try {
+      const childrenRes = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
+      if (childrenRes.error) throw new Error(childrenRes.error.message);
+      if (childrenRes.data?.length) {
+        setChildren(childrenRes.data);
+        const childIds = childrenRes.data.map(c => c.profile_id);
+        const [invoicesRes, transactionsRes] = await Promise.all([
+          supabase.from('invoices').select('*, student:profiles!student_id(first_name, last_name)').in('student_id', childIds).order('due_date', { ascending: true }),
+          supabase.from('transactions').select('*, student:profiles!student_id(first_name, last_name)').in('student_id', childIds).order('created_at', { ascending: false }).limit(20),
+        ]);
+        if (invoicesRes.data) {
+          setInvoices(invoicesRes.data);
+          const paid = invoicesRes.data.filter(i => i.status === 'paid').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+          const pending = invoicesRes.data.filter(i => i.status === 'pending').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+          const overdue = invoicesRes.data.filter(i => i.status === 'pending' && new Date(i.due_date) < new Date()).reduce((s: number, i: any) => s + (i.amount || 0), 0);
+          setStats({ totalPaid: paid, totalPending: pending, totalOverdue: overdue });
+        }
+        if (transactionsRes.data) setTransactions(transactionsRes.data);
       }
-      if (transactionsRes.data) setTransactions(transactionsRes.data);
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   }

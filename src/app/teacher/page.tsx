@@ -20,6 +20,7 @@ export default function TeacherDashboard() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [myClasses, setMyClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -28,36 +29,43 @@ export default function TeacherDashboard() {
 
   async function fetchDashboard() {
     setLoading(true);
-    const [
-      subjectsRes, classesRes, homeworkRes, quizzesRes, sessionsRes, announcementsRes
-    ] = await Promise.all([
-      supabase.from('subjects').select('id, name, class_id', { count: 'exact' }).eq('teacher_id', profile?.id),
-      supabase.from('classes').select('id, name, level').order('level'),
-      supabase.from('homework').select('id, title, due_date, class_id', { count: 'exact' }).eq('teacher_id', profile?.id).eq('is_active', true),
-      supabase.from('quizzes').select('id, title, due_date', { count: 'exact' }).eq('teacher_id', profile?.id).eq('is_active', true),
-      supabase.from('sessions').select('id, title, created_at, class:classes(name)').eq('teacher_id', profile?.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('announcements').select('*, creator:profiles(first_name, last_name)').in('audience', ['all', 'teachers', 'staff']).order('created_at', { ascending: false }).limit(5),
-    ]);
+    try {
+      const [
+        subjectsRes, classesRes, homeworkRes, quizzesRes, sessionsRes, announcementsRes
+      ] = await Promise.all([
+        supabase.from('subjects').select('id, name, class_id', { count: 'exact' }).eq('teacher_id', profile?.id),
+        supabase.from('classes').select('id, name, level').order('level'),
+        supabase.from('homework').select('id, title, due_date, class_id', { count: 'exact' }).eq('teacher_id', profile?.id).eq('is_active', true),
+        supabase.from('quizzes').select('id, title, due_date', { count: 'exact' }).eq('teacher_id', profile?.id).eq('is_active', true),
+        supabase.from('sessions').select('id, title, created_at, class:classes!class_id(name)').eq('teacher_id', profile?.id).order('created_at', { ascending: false }).limit(5),
+        supabase.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').in('audience', ['all', 'teachers', 'staff']).order('created_at', { ascending: false }).limit(5),
+      ]);
 
-    const myClassIds = subjectsRes.data?.map(s => s.class_id).filter(Boolean) || [];
-    setStats({
-      classes: myClassIds.length,
-      subjects: subjectsRes.count || 0,
-      pendingHomework: homeworkRes.count || 0,
-      pendingQuizzes: quizzesRes.count || 0,
-      sessions: sessionsRes.data?.length || 0,
-      students: 0,
-    });
+      if (subjectsRes.error) throw new Error(subjectsRes.error.message);
+      if (sessionsRes.error) throw new Error(sessionsRes.error.message);
+      if (announcementsRes.error) throw new Error(announcementsRes.error.message);
 
-    if (sessionsRes.data) setRecentActivity(sessionsRes.data);
-    if (announcementsRes.data) setAnnouncements(announcementsRes.data);
+      const myClassIds = subjectsRes.data?.map(s => s.class_id).filter(Boolean) || [];
+      setStats({
+        classes: myClassIds.length,
+        subjects: subjectsRes.count || 0,
+        pendingHomework: homeworkRes.count || 0,
+        pendingQuizzes: quizzesRes.count || 0,
+        sessions: sessionsRes.data?.length || 0,
+        students: 0,
+      });
 
-    const uniqueClassIds = Array.from(new Set(myClassIds));
-    if (uniqueClassIds.length > 0) {
-      const { data: classData } = await supabase.from('classes').select('id, name, level').in('id', uniqueClassIds);
-      if (classData) setMyClasses(classData);
+      if (sessionsRes.data) setRecentActivity(sessionsRes.data);
+      if (announcementsRes.data) setAnnouncements(announcementsRes.data);
+
+      const uniqueClassIds = Array.from(new Set(myClassIds));
+      if (uniqueClassIds.length > 0) {
+        const { data: classData } = await supabase.from('classes').select('id, name, level').in('id', uniqueClassIds);
+        if (classData) setMyClasses(classData);
+      }
+    } catch (err: any) {
+      setError(err.message);
     }
-
     setLoading(false);
   }
 
@@ -70,6 +78,7 @@ export default function TeacherDashboard() {
 
   return (
     <DashboardLayout title="Teacher Dashboard" subtitle={`Bismillah! Welcome back, ${profile?.first_name} ${profile?.last_name}`}>
+      {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm mb-4">{error}</div>}
       {loading ? (
         <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
       ) : (

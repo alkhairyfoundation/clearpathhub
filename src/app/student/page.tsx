@@ -17,6 +17,7 @@ export default function StudentDashboard() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [studentInfo, setStudentInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
@@ -25,17 +26,18 @@ export default function StudentDashboard() {
 
   async function fetchDashboard() {
     setLoading(true);
+    try {
+      const [studentRes, sessionsRes, homeworkRes, resultsRes, attendanceRes, announcementsRes] = await Promise.all([
+        supabase.from('students').select('*, class:classes!class_id(name)').eq('profile_id', profile?.id).maybeSingle(),
+        supabase.from('sessions').select('id, title, description, created_at, class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name)').eq('class_id', null).order('created_at', { ascending: false }).limit(5),
+        supabase.from('homework').select('id, title, due_date, subject:subjects!subject_id(name), class:classes!class_id(name)').eq('is_active', true).order('due_date', { ascending: true }).limit(5),
+        supabase.from('results').select('score, subject:subjects!subject_id(name)').eq('student_id', profile?.id),
+        supabase.from('attendance').select('status').eq('student_id', profile?.id),
+        supabase.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').in('audience', ['all', 'students']).order('created_at', { ascending: false }).limit(5),
+      ]);
+      if (studentRes.error) throw new Error(studentRes.error.message);
 
-    const [studentRes, sessionsRes, homeworkRes, resultsRes, attendanceRes, announcementsRes] = await Promise.all([
-      supabase.from('students').select('*, class:classes(name)').eq('profile_id', profile?.id).maybeSingle(),
-      supabase.from('sessions').select('id, title, description, created_at, class:classes(name), teacher:profiles(first_name, last_name)').eq('class_id', null).order('created_at', { ascending: false }).limit(5),
-      supabase.from('homework').select('id, title, due_date, subject:subjects(name), class:classes(name)').eq('is_active', true).order('due_date', { ascending: true }).limit(5),
-      supabase.from('results').select('score, subject:subjects(name)').eq('student_id', profile?.id),
-      supabase.from('attendance').select('status').eq('student_id', profile?.id),
-      supabase.from('announcements').select('*, creator:profiles(first_name, last_name)').in('audience', ['all', 'students']).order('created_at', { ascending: false }).limit(5),
-    ]);
-
-    if (studentRes.data) setStudentInfo(studentRes.data);
+      if (studentRes.data) setStudentInfo(studentRes.data);
 
     if (sessionsRes.data) setRecentLessons(sessionsRes.data);
     if (homeworkRes.data) setRecentHomework(homeworkRes.data);
@@ -58,6 +60,9 @@ export default function StudentDashboard() {
     });
 
     if (announcementsRes.data) setAnnouncements(announcementsRes.data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
@@ -185,8 +190,8 @@ export default function StudentDashboard() {
               {[
                 { label: 'Video Lessons', href: '/student/sessions', icon: <Video size={20} />, bg: 'bg-blue-50 text-blue-600' },
                 { label: 'Homework', href: '/student/homework', icon: <FileText size={20} />, bg: 'bg-emerald-50 text-emerald-600' },
+                { label: 'Entrance Exam', href: '/student/entrance-exams', icon: <GraduationCap size={20} />, bg: 'bg-primary-50 text-primary-600' },
                 { label: 'Results', href: '/student/results', icon: <Award size={20} />, bg: 'bg-purple-50 text-purple-600' },
-                { label: 'My ID Card', href: '/student/id-card', icon: <Printer size={20} />, bg: 'bg-amber-50 text-amber-600' },
               ].map((link, i) => (
                 <Link key={i} href={link.href} className={`p-4 rounded-xl ${link.bg} hover:opacity-80 transition-all text-center`}>
                   <div className="mb-2 flex justify-center">{link.icon}</div>

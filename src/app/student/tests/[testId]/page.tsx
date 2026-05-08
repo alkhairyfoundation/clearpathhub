@@ -48,6 +48,7 @@ export default function StudentTakeTestPage() {
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [tabSwitches, setTabSwitches] = useState(0);
   const [fullscreenExits, setFullscreenExits] = useState(0);
+  const [error, setError] = useState('');
   const [securityEvents, setSecurityEvents] = useState<any[]>([]);
   const activityRef = useRef<HTMLDivElement>(null);
 
@@ -132,20 +133,25 @@ export default function StudentTakeTestPage() {
   }, [started, submitted]);
 
   async function fetchTest() {
-    const [testRes, questionsRes] = await Promise.all([
-      supabase.from('tests').select('*, subject:subjects(name), class:classes(name)').eq('id', testId).eq('is_published', true).single(),
-      supabase.from('test_questions').select('*').eq('test_id', testId).order('order_index'),
-    ]);
-    if (testRes.data) {
-      setTest(testRes.data);
-      setTimeLeft((testRes.data.duration_minutes || 30) * 60);
-    }
-    if (questionsRes.data) {
-      let qs = questionsRes.data;
-      if (testRes.data?.shuffle_questions) {
-        qs = [...qs].sort(() => Math.random() - 0.5);
+    try {
+      const [testRes, questionsRes] = await Promise.all([
+        supabase.from('tests').select('*, subject:subjects!subject_id(name), class:classes!class_id(name)').eq('id', testId).eq('is_published', true).single(),
+        supabase.from('test_questions').select('*').eq('test_id', testId).order('order_index'),
+      ]);
+      if (testRes.error) throw new Error(testRes.error.message);
+      if (testRes.data) {
+        setTest(testRes.data);
+        setTimeLeft((testRes.data.duration_minutes || 30) * 60);
       }
-      setQuestions(qs);
+      if (questionsRes.data) {
+        let qs = questionsRes.data;
+        if (testRes.data?.shuffle_questions) {
+          qs = [...qs].sort(() => Math.random() - 0.5);
+        }
+        setQuestions(qs);
+      }
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   }
@@ -291,8 +297,8 @@ export default function StudentTakeTestPage() {
 
         {question.question_type === 'multiple_choice' && question.options && (
           <div className="space-y-3">
-            {question.options.map((opt: string, i: number) => (
-              <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${answers[currentQ] === i ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+{question.options.map((opt: string, i: number) => (
+               <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${answers[currentQ] === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'}`}>
                 <div className="flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-semibold text-sm flex-shrink-0">{String.fromCharCode(65 + i)}</span>
                   <span className="flex-1">{opt}</span>
@@ -306,7 +312,7 @@ export default function StudentTakeTestPage() {
         {question.question_type === 'true_false' && (
           <div className="grid grid-cols-2 gap-3">
             {['True', 'False'].map((opt, i) => (
-              <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`p-6 rounded-xl text-center font-semibold border-2 transition-all ${answers[currentQ] === i ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>{opt}</button>
+              <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`p-6 rounded-xl text-center font-semibold border-2 transition-all ${answers[currentQ] === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'}`}>{opt}</button>
             ))}
           </div>
         )}
@@ -330,7 +336,7 @@ export default function StudentTakeTestPage() {
             {question.options.map((opt: string, i: number) => {
               const selected = Array.isArray(answers[currentQ]) && answers[currentQ].includes(i);
               return (
-                <button key={i} onClick={() => handleMultipleSelection(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${selected ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                <button key={i} onClick={() => handleMultipleSelection(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${selected ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'}`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'border-blue-500 bg-blue-500' : 'border-slate-300'}`}>
                       {selected && <Check size={14} className="text-white" />}

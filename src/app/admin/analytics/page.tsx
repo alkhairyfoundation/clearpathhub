@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
-const COLORS = ['#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#f59e0b', '#ec4899'];
+const COLORS = ['#b3922f', '#063b29', '#10b981', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#f59e0b', '#ec4899'];
 
 interface AnalyticsData {
   totalStudents: number;
@@ -61,7 +61,7 @@ export default function AdminAnalyticsPage() {
       supabase.from('classes').select('id', { count: 'exact', head: true }),
       supabase.from('subjects').select('id', { count: 'exact', head: true }),
       supabase.from('attendance').select('status, date').order('date', { ascending: false }).limit(200),
-      supabase.from('results').select('*, student:profiles(first_name, last_name), subject:subjects(name), class:classes(name)').order('created_at', { ascending: false }).limit(200),
+      supabase.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name), class:classes!class_id(name)').order('created_at', { ascending: false }).limit(200),
     ]);
 
     const scores = resultsRes.data?.map(r => r.score) || [];
@@ -144,7 +144,7 @@ export default function AdminAnalyticsPage() {
   }
 
   const statsCards = [
-    { label: 'Total Students', value: data.totalStudents, icon: <GraduationCap size={20} />, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { label: 'Total Students', value: data.totalStudents, icon: <GraduationCap size={20} />, color: 'text-primary-600', bg: 'bg-primary-100' },
     { label: 'Teachers', value: data.totalTeachers, icon: <Users size={20} />, color: 'text-emerald-600', bg: 'bg-emerald-100' },
     { label: 'Parents', value: data.totalParents, icon: <UserCheck size={20} />, color: 'text-purple-600', bg: 'bg-purple-100' },
     { label: 'Classes', value: data.totalClasses, icon: <BookOpen size={20} />, color: 'text-amber-600', bg: 'bg-amber-100' },
@@ -158,7 +158,7 @@ export default function AdminAnalyticsPage() {
     return (
       <DashboardLayout title="Analytics" subtitle="Comprehensive school performance insights">
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div>
         </div>
       </DashboardLayout>
     );
@@ -204,7 +204,7 @@ export default function AdminAnalyticsPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                   <Tooltip />
-                  <Bar dataKey="avg" fill="#2563eb" radius={[4, 4, 0, 0]} name="Average Score" />
+                  <Bar dataKey="avg" fill="#b3922f" radius={[4, 4, 0, 0]} name="Average Score" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -224,7 +224,7 @@ export default function AdminAnalyticsPage() {
                   <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: '#64748b' }} width={100} />
                   <Tooltip />
-                  <Bar dataKey="avg" fill="#059669" radius={[0, 4, 4, 0]} name="Average Score" />
+                  <Bar dataKey="avg" fill="#b3922f" radius={[0, 4, 4, 0]} name="Average Score" />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -246,7 +246,7 @@ export default function AdminAnalyticsPage() {
                   <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748b' }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="rate" stroke="#2563eb" strokeWidth={2} dot={{ fill: '#2563eb', r: 3 }} name="Attendance %" />
+                  <Line type="monotone" dataKey="rate" stroke="#b3922f" strokeWidth={2} dot={{ fill: '#b3922f', r: 3 }} name="Attendance %" />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -331,7 +331,7 @@ export default function AdminAnalyticsPage() {
                       <td className="py-2 px-3 text-sm font-medium text-slate-900">{r.student?.first_name} {r.student?.last_name}</td>
                       <td className="py-2 px-3 text-sm text-slate-600">{r.subject?.name || '-'}</td>
                       <td className="py-2 px-3">
-                        <span className={`text-sm font-semibold ${r.score >= 50 ? 'text-green-600' : 'text-red-600'}`}>{r.score}%</span>
+                        <span className={`text-sm font-semibold ${r.score >= 50 ? 'text-success-600' : 'text-danger-600'}`}>{r.score}%</span>
                       </td>
                       <td className="py-2 px-3">
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${r.grade?.includes('A') ? 'bg-green-100 text-green-700' : r.grade === 'F' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}>{r.grade || '-'}</span>

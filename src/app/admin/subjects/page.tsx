@@ -36,6 +36,8 @@ export default function AdminSubjectsPage() {
   const [filterDepartment, setFilterDepartment] = useState('all');
   const [filterClass, setFilterClass] = useState('all');
   const [formData, setFormData] = useState({ name: '', code: '', department_id: '', class_id: '', teacher_id: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -45,7 +47,7 @@ export default function AdminSubjectsPage() {
   async function fetchData() {
     setLoading(true);
     const [subjectsRes, classesRes, deptsRes, teachersRes] = await Promise.all([
-      supabase.from('subjects').select('*, department:departments(name), class:classes(name), teacher:profiles!teacher_id(first_name, last_name)').order('name'),
+      supabase.from('subjects').select('*, department:departments!department_id(name), class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name)').order('name'),
       supabase.from('classes').select('id, name').order('level'),
       supabase.from('departments').select('id, name').order('name'),
       supabase.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
@@ -75,31 +77,46 @@ export default function AdminSubjectsPage() {
   }
 
   async function handleSave() {
-    if (!formData.name.trim()) return;
-    setSaving(true);
-    const data = {
-      name: formData.name.trim(),
-      code: formData.code.trim() || formData.name.substring(0, 4).toUpperCase(),
-      department_id: formData.department_id || null,
-      class_id: formData.class_id || null,
-      teacher_id: formData.teacher_id || null,
-    };
-    if (editingSubject) {
-      await supabase.from('subjects').update(data).eq('id', editingSubject.id);
-    } else {
-      await supabase.from('subjects').insert({ ...data, id: crypto.randomUUID() });
+    if (!formData.name.trim()) { setError('Subject name is required'); return; }
+    setError(''); setSaving(true);
+    try {
+      const data = {
+        name: formData.name.trim(),
+        code: formData.code.trim() || formData.name.substring(0, 4).toUpperCase(),
+        department_id: formData.department_id || null,
+        class_id: formData.class_id || null,
+        teacher_id: formData.teacher_id || null,
+      };
+      if (editingSubject) {
+        const { error: err } = await supabase.from('subjects').update(data).eq('id', editingSubject.id);
+        if (err) throw new Error(err.message);
+        setSuccess('Subject updated successfully');
+      } else {
+        const { error: err } = await supabase.from('subjects').insert(data);
+        if (err) throw new Error(err.message);
+        setSuccess('Subject created successfully');
+      }
+      setTimeout(() => { setShowModal(false); fetchData(); }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save subject');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setShowModal(false);
-    fetchData();
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this subject? This action cannot be undone.')) return;
+    if (!confirm('Delete this subject? This may affect related lessons and results.')) return;
     setDeleting(id);
-    await supabase.from('subjects').delete().eq('id', id);
-    setDeleting(null);
-    fetchData();
+    try {
+      const { error } = await supabase.from('subjects').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      setSuccess('Subject deleted successfully');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete subject');
+    } finally {
+      setDeleting(null);
+    }
   }
 
   const filtered = subjects.filter(s => {
@@ -122,6 +139,9 @@ export default function AdminSubjectsPage() {
             <Plus size={18} /> Add Subject
           </button>
         </div>
+
+        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
         
         <div className="card">
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -182,6 +202,7 @@ export default function AdminSubjectsPage() {
                 <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
               </div>
               <div className="p-5 space-y-4">
+                {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
                 <div><label className="label">Subject Name</label><input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="e.g., Mathematics" /></div>
                 <div><label className="label">Subject Code</label><input type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="input" placeholder="e.g., MATH101" /></div>
                 <div><label className="label">Department</label><select value={formData.department_id} onChange={e => setFormData({...formData, department_id: e.target.value})} className="input"><option value="">No Department</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
@@ -189,8 +210,11 @@ export default function AdminSubjectsPage() {
                 <div><label className="label">Assigned Teacher</label><select value={formData.teacher_id} onChange={e => setFormData({...formData, teacher_id: e.target.value})} className="input"><option value="">No Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
               </div>
               <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
-                <button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button>
-                <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
+                <button onClick={() => { setShowModal(false); setError(''); }} className="btn-ghost">Cancel</button>
+                <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">
+                  {saving && <Loader2 size={16} className="animate-spin" />}
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </div>
           </div>

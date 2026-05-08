@@ -17,6 +17,7 @@ export default function TeacherAttendancePage() {
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -33,18 +34,23 @@ export default function TeacherAttendancePage() {
   async function loadClassData() {
     if (!selectedClass) return;
     setLoading(true);
-    const [studentsRes, attendanceRes] = await Promise.all([
-      supabase.from('students').select('*, profile:profiles(first_name, last_name), class:classes(name)').eq('class_id', selectedClass).order('admission_number'),
-      supabase.from('attendance').select('student_id, status').eq('date', date).eq('class_id', selectedClass),
-    ]);
-    if (studentsRes.data) {
-      const studentMap: Record<string, string> = {};
-      studentsRes.data.forEach(s => {
-        const record = attendanceRes.data?.find(r => r.student_id === s.profile_id);
-        studentMap[s.profile_id] = record?.status || '';
-      });
-      setStudents(studentsRes.data);
-      setAttendanceRecords(studentMap);
+    try {
+      const [studentsRes, attendanceRes] = await Promise.all([
+        supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('class_id', selectedClass).order('admission_number'),
+        supabase.from('attendance').select('student_id, status').eq('date', date).eq('class_id', selectedClass),
+      ]);
+      if (studentsRes.error) throw new Error(studentsRes.error.message);
+      if (studentsRes.data) {
+        const studentMap: Record<string, string> = {};
+        studentsRes.data.forEach(s => {
+          const record = attendanceRes.data?.find(r => r.student_id === s.profile_id);
+          studentMap[s.profile_id] = record?.status || '';
+        });
+        setStudents(studentsRes.data);
+        setAttendanceRecords(studentMap);
+      }
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   }

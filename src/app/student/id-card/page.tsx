@@ -34,8 +34,8 @@ export default function StudentIDCardPage() {
       printWindow.document.write(`
         <html><head><title>ID Card</title><style>body{margin:0;padding:20px;font-family:Arial;}</style></head>
         <body>
-          <div style="border:2px solid #2563eb;padding:20px;border-radius:12px;width:340px;text-align:center;">
-            <h2 style="color:#2563eb;">ClearPath Edu Hub</h2>
+          <div style="border:2px solid #b3922f;padding:20px;border-radius:12px;width:340px;text-align:center;">
+            <h2 style="color:#b3922f;">ClearPath Edu Hub</h2>
             <p style="color:#666;">Student ID Card</p>
             <div style="width:100px;height:100px;background:#eee;margin:10px auto;border-radius:8px;display:flex;align-items:center;justify-content:center;">Photo</div>
             <h3 style="margin:10px 0;">${profile?.first_name} ${profile?.last_name}</h3>
