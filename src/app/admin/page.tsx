@@ -60,7 +60,7 @@ useEffect(() => {
       supabase.from('classes').select('id', { count: 'exact', head: true }),
       supabase.from('subjects').select('id', { count: 'exact', head: true }),
       supabase.from('attendance').select('status, date').order('date', { ascending: false }).limit(30),
-      supabase.from('results').select('score').limit(100),
+      supabase.from('results').select('score').order('created_at', { ascending: false }).limit(100),
       supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(5),
       supabase.from('sessions').select('*, teacher:profiles!teacher_id(first_name, last_name), subject:subjects!subject_id(name)').order('created_at', { ascending: false }).limit(5),
       supabase.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)').order('created_at', { ascending: false }).limit(5),

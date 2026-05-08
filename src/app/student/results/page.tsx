@@ -20,7 +20,7 @@ export default function StudentResultsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('results').select('*, subject:subjects(*)').eq('student_id', profile?.id).order('created_at', { ascending: false });
+    const { data } = await supabase.from('results').select('*, subject:subjects!subject_id(*)').eq('student_id', profile?.id).order('created_at', { ascending: false });
     if (data) setResults(data);
     setLoading(false);
   }

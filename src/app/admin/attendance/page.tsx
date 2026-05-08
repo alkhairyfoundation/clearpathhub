@@ -27,7 +27,7 @@ export default function AdminAttendancePage() {
   useEffect(() => { fetchAttendance(); }, [date, selectedClass]);
 
   async function fetchClasses() {
-    const { data } = await supabase.from('classes').select('id, name').order('level');
+    const { data } = await supabase.from('classes').select('id, name').order('level', { ascending: true });
     if (data) setClasses(data);
   }
 
@@ -35,7 +35,7 @@ export default function AdminAttendancePage() {
     setLoading(true);
     let query = supabase.from('attendance').select('*, student:profiles!student_id(first_name, last_name, email), class:classes!class_id(name)').eq('date', date);
     if (selectedClass !== 'all') query = query.eq('class_id', selectedClass);
-    const { data, error } = await query.order('student.first_name');
+    const { data, error } = await query.order('student.first_name', { ascending: true });
     if (error) setError(error.message);
     if (data) {
       setAttendance(data);

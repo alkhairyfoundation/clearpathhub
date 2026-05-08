@@ -37,7 +37,7 @@ function ApplyPageContent() {
       setCodeValid(true);
       setCodeData(codeData);
       setExam(codeData.exam);
-      const { data: questionsData } = await supabase.from('entrance_questions').select('*').eq('exam_id', codeData.exam_id).order('created_at');
+      const { data: questionsData } = await supabase.from('entrance_questions').select('*').eq('exam_id', codeData.exam_id).order('created_at', { ascending: true });
       if (questionsData) setQuestions(questionsData);
     }
     setLoading(false);
