@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { useRouter, useParams } from 'next/navigation';
-import { Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Loader2, ArrowLeft } from 'lucide-react';
+  import { useAuth } from '@/context/AuthContext';
+  import { supabase } from '@/lib/supabase';
+  import { useRouter, useParams } from 'next/navigation';
+  import { Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Loader2, ArrowLeft, FileText } from 'lucide-react';
 
 function gradeQuestion(question: any, answer: any): boolean {
   if (answer === undefined || answer === null) return false;

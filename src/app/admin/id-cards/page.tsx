@@ -273,10 +273,10 @@ export default function AdminIDCardsPage() {
       frontCtx.fillText('STUDENT ID CARD', frontCanvas.width/2, 80);
       
       if (selectedStudent.profile?.avatar_url) {
-        const img = new Image();
+        const img = document.createElement('img');
         img.crossOrigin = 'anonymous';
         img.src = selectedStudent.profile.avatar_url;
-        await new Promise(r => img.onload = r);
+        await new Promise(resolve => { img.onload = () => resolve(true); img.onerror = () => resolve(false); });
         frontCtx.save();
         frontCtx.beginPath();
         frontCtx.arc(frontCanvas.width/2, 240, 80, 0, Math.PI * 2);
@@ -293,9 +293,9 @@ export default function AdminIDCardsPage() {
       frontCtx.font = '20px Arial';
       frontCtx.fillText(`Adm No: ${selectedStudent.admission_number}`, frontCanvas.width/2, 480);
 
-      const qrImg = new Image();
-      qrImg.src = qrCodeUrl;
-      await new Promise(r => qrImg.onload = r);
+const qrImg = document.createElement('img');
+        qrImg.src = qrCodeUrl;
+        await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
       frontCtx.drawImage(qrImg, frontCanvas.width/2 - 100, 520, 200, 200);
     }
 
@@ -325,9 +325,9 @@ export default function AdminIDCardsPage() {
       }
 
       if (qrBackUrl) {
-        const qrImg = new Image();
+        const qrImg = document.createElement('img');
         qrImg.src = qrBackUrl;
-        await new Promise(r => qrImg.onload = r);
+        await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
         backCtx.drawImage(qrImg, backCanvas.width/2 - 60, 350, 120, 120);
       }
 

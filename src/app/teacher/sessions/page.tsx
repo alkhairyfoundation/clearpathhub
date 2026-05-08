@@ -105,58 +105,39 @@ export default function TeacherSessionsPage() {
       if (editingSession) {
         const { error } = await supabase.from('sessions').update(data).eq('id', editingSession.id);
         if (error) throw new Error(error.message);
+      } else {
+        const { data: newSession, error: sessionError } = await supabase.from('sessions').insert(data).select().single();
+        if (sessionError) throw new Error(sessionError.message);
+      }
+
       // Save checkpoints
       if (checkpoints.length > 0) {
-        const quizData = {
-          session_id: editingSession.id,
-          title: `${formData.title} - Checkpoints`,
-          passing_score: 50,
-          time_limit: formData.duration,
-        };
-        const { data: quiz } = await supabase.from('quizzes').insert(quizData).select().single();
-        if (quiz) {
-          await supabase.from('quiz_questions').delete().eq('quiz_id', quiz.id);
-          const questions = checkpoints.map(cp => ({
-            quiz_id: quiz.id,
-            question: cp.question,
-            options: cp.options,
-            correct_answer: cp.correct_answer,
-            points: cp.points || 1,
-            question_type: cp.question_type || 'multiple_choice',
-            timestamp_seconds: cp.timestamp_seconds,
-            is_checkpoint: true,
-            order_index: checkpoints.indexOf(cp),
-          }));
-          await supabase.from('quiz_questions').insert(questions);
+        const sessionId = editingSession?.id;
+        if (sessionId) {
+          const quizData = {
+            session_id: sessionId,
+            title: `${formData.title} - Checkpoints`,
+            passing_score: 50,
+            time_limit: formData.duration,
+          };
+          const { data: quiz } = await supabase.from('quizzes').insert(quizData).select().single();
+          if (quiz) {
+            await supabase.from('quiz_questions').delete().eq('quiz_id', quiz.id);
+            const questions = checkpoints.map(cp => ({
+              quiz_id: quiz.id,
+              question: cp.question,
+              options: cp.options,
+              correct_answer: cp.correct_answer,
+              points: cp.points || 1,
+              question_type: cp.question_type || 'multiple_choice',
+              timestamp_seconds: cp.timestamp_seconds,
+              is_checkpoint: true,
+              order_index: checkpoints.indexOf(cp),
+            }));
+            await supabase.from('quiz_questions').insert(questions);
+          }
         }
       }
-    } else {
-      const { data: newSession, error: sessionError } = await supabase.from('sessions').insert(data).select().single();
-      if (sessionError) throw new Error(sessionError.message);
-      if (newSession && checkpoints.length > 0) {
-        const quizData = {
-          session_id: newSession.id,
-          title: `${formData.title} - Checkpoints`,
-          passing_score: 50,
-          time_limit: formData.duration,
-        };
-        const { data: quiz } = await supabase.from('quizzes').insert(quizData).select().single();
-        if (quiz) {
-          const questions = checkpoints.map(cp => ({
-            quiz_id: quiz.id,
-            question: cp.question,
-            options: cp.options,
-            correct_answer: cp.correct_answer,
-            points: cp.points || 1,
-            question_type: cp.question_type || 'multiple_choice',
-            timestamp_seconds: cp.timestamp_seconds,
-            is_checkpoint: true,
-            order_index: checkpoints.indexOf(cp),
-          }));
-          await supabase.from('quiz_questions').insert(questions);
-        }
-      }
-    }
 
     // Save lesson notes if provided
     if (selectedSessionForLesson && lessonNotes) {
@@ -173,11 +154,13 @@ export default function TeacherSessionsPage() {
     setShowModal(false);
     setShowLessonModal(false);
     setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', duration: 30 });
-    fetchData();
     setEditingSession(null);
     setCheckpoints([]);
     setLessonNotes('');
     fetchData();
+    } catch (err: any) {
+      setError(err.message);
+    }
   }
 
   async function handleDelete(id: string) {

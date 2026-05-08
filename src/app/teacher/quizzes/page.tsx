@@ -100,9 +100,6 @@ export default function TeacherQuizzesPage() {
       setError(err.message);
     }
   }
-    setQuestions([]);
-    fetchData();
-  }
 
   async function handleDelete(id: string) {
     if (confirm('Delete this quiz?')) { await supabase.from('quizzes').delete().eq('id', id); fetchData(); }
