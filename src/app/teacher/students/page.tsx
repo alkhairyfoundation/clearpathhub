@@ -6,8 +6,9 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, 
-  GraduationCap, Link2, Eye, Users, BookOpen
+  GraduationCap, Link2, Eye, Users, BookOpen, ArrowLeft
 } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
 import type { Student, Profile } from '@/types';
 
 export default function TeacherStudentsPage() {
@@ -23,6 +24,8 @@ export default function TeacherStudentsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [newCredentials, setNewCredentials] = useState({ email: '', password: '', admissionNumber: '' });
 
   const [formData, setFormData] = useState({
     email: '',
@@ -128,6 +131,12 @@ export default function TeacherStudentsPage() {
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Failed to create student');
         setSuccess('Student created successfully');
+        setNewCredentials({
+          email: formData.email,
+          password: formData.password,
+          admissionNumber: result.admission_number || '',
+        });
+        setShowCredentialsModal(true);
       }
 
       fetchData();
@@ -165,13 +174,19 @@ export default function TeacherStudentsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">My Students</h1>
-          <p className="text-slate-500 mt-1">Add and manage your students</p>
-        </div>
+    <DashboardLayout title="My Students" subtitle="Add and manage your students">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">My Students</h1>
+              <p className="text-slate-500 mt-1">Add and manage your students</p>
+            </div>
+          </div>
         <button onClick={openCreateModal} className="btn-primary flex items-center gap-2">
           <Plus size={16} /> Add Student
         </button>
@@ -394,9 +409,49 @@ export default function TeacherStudentsPage() {
                 </button>
               </div>
             </form>
+      </div>
+    </div>
+      )}
+
+      {/* Credentials Modal */}
+      {showCredentialsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
+            <div className="p-5 border-b border-slate-200">
+              <h3 className="text-lg font-bold text-slate-900">Student Created Successfully</h3>
+              <p className="text-sm text-slate-500 mt-1">Please save these login credentials</p>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs text-amber-700 font-medium mb-2"> Save these credentials now. You won't be able to see the password again.</p>
+              </div>
+              <div>
+                <label className="label text-xs text-slate-500 uppercase font-semibold">Login Email</label>
+                <input type="text" value={newCredentials.email} readOnly className="input bg-slate-50 font-mono text-sm" />
+              </div>
+              <div>
+                <label className="label text-xs text-slate-500 uppercase font-semibold">Password</label>
+                <input type="text" value={newCredentials.password} readOnly className="input bg-slate-50 font-mono text-sm" />
+              </div>
+              {newCredentials.admissionNumber && (
+                <div>
+                  <label className="label text-xs text-slate-500 uppercase font-semibold">Admission Number</label>
+                  <input type="text" value={newCredentials.admissionNumber} readOnly className="input bg-slate-50 font-mono text-sm" />
+                </div>
+              )}
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-blue-700 font-medium">Login URL: <span className="font-mono">/login</span></p>
+              </div>
+            </div>
+            <div className="p-5 border-t border-slate-200">
+              <button onClick={() => setShowCredentialsModal(false)} className="btn-primary w-full">
+                I've Saved the Credentials
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+      </div>
+  </DashboardLayout>
   );
 }

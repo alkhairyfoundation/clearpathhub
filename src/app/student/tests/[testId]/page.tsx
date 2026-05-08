@@ -1,10 +1,33 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Eye, EyeOff, Loader2, ImageIcon } from 'lucide-react';
+
+function gradeQuestion(question: any, answer: any): boolean {
+  if (answer === undefined || answer === null) return false;
+  switch (question.question_type) {
+    case 'multiple_choice':
+    case 'true_false':
+      return answer === question.correct_answer;
+    case 'fill_blank': {
+      const correct = question.options?.[question.correct_answer];
+      if (!correct) return false;
+      return answer.toString().toLowerCase().trim() === correct.toString().toLowerCase().trim();
+    }
+    case 'multiple_selection': {
+      const a = Array.isArray(answer) ? [...answer].sort() : [];
+      const c = Array.isArray(question.correct_answer) ? [...question.correct_answer].sort() : [];
+      return JSON.stringify(a) === JSON.stringify(c);
+    }
+    case 'short_answer':
+      return false;
+    default:
+      return answer === question.correct_answer;
+  }
+}
 
 export default function StudentTakeTestPage() {
   const { profile } = useAuth();
@@ -23,6 +46,10 @@ export default function StudentTakeTestPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
+  const [tabSwitches, setTabSwitches] = useState(0);
+  const [fullscreenExits, setFullscreenExits] = useState(0);
+  const [securityEvents, setSecurityEvents] = useState<any[]>([]);
+  const activityRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
@@ -38,6 +65,72 @@ export default function StudentTakeTestPage() {
     return () => clearInterval(timer);
   }, [started, submitted, timeLeft]);
 
+  useEffect(() => {
+    if (!started || submitted) return;
+    function handleVisibility() {
+      if (document.hidden) {
+        setTabSwitches(prev => {
+          const next = prev + 1;
+          setSecurityEvents(events => [...events, { type: 'tab_switch', time: new Date().toISOString(), count: next }]);
+          if (test?.prevent_tab_switch && next >= (test?.max_tab_switches || 3)) {
+            handleSubmit();
+          }
+          return next;
+        });
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [started, submitted, test]);
+
+  useEffect(() => {
+    if (!started || submitted) return;
+    function handleFullscreenChange() {
+      if (!document.fullscreenElement) {
+        setFullscreenExits(prev => {
+          const next = prev + 1;
+          setSecurityEvents(events => [...events, { type: 'fullscreen_exit', time: new Date().toISOString(), count: next }]);
+          return next;
+        });
+        if (test?.require_fullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      }
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [started, submitted, test]);
+
+  useEffect(() => {
+    if (!started || submitted) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'u', 's', 'p'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        setSecurityEvents(events => [...events, { type: 'keyboard_shortcut', key: e.key, time: new Date().toISOString() }]);
+      }
+      if (e.key === 'PrintScreen') {
+        setSecurityEvents(events => [...events, { type: 'screenshot', time: new Date().toISOString() }]);
+      }
+    }
+    function handleContextMenu(e: MouseEvent) {
+      e.preventDefault();
+    }
+    function handleCopy(e: ClipboardEvent) {
+      e.preventDefault();
+      setSecurityEvents(events => [...events, { type: 'copy_attempt', time: new Date().toISOString() }]);
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('paste', (e: ClipboardEvent) => e.preventDefault());
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('paste', (e: ClipboardEvent) => e.preventDefault());
+    };
+  }, [started, submitted]);
+
   async function fetchTest() {
     const [testRes, questionsRes] = await Promise.all([
       supabase.from('tests').select('*, subject:subjects(name), class:classes(name)').eq('id', testId).eq('is_published', true).single(),
@@ -47,7 +140,13 @@ export default function StudentTakeTestPage() {
       setTest(testRes.data);
       setTimeLeft((testRes.data.duration_minutes || 30) * 60);
     }
-    if (questionsRes.data) setQuestions(questionsRes.data);
+    if (questionsRes.data) {
+      let qs = questionsRes.data;
+      if (testRes.data?.shuffle_questions) {
+        qs = [...qs].sort(() => Math.random() - 0.5);
+      }
+      setQuestions(qs);
+    }
     setLoading(false);
   }
 
@@ -69,22 +168,54 @@ export default function StudentTakeTestPage() {
     });
   }
 
+  function handleMultipleSelection(qIdx: number, optIdx: number) {
+    const current = Array.isArray(answers[qIdx]) ? [...answers[qIdx]] : [];
+    const pos = current.indexOf(optIdx);
+    if (pos >= 0) current.splice(pos, 1);
+    else current.push(optIdx);
+    handleAnswer(qIdx, current.sort());
+  }
+
+  function getAnsweredCount(): number {
+    return questions.filter((_, i) => answers[i] !== undefined && answers[i] !== null && answers[i] !== '').length;
+  }
+
   async function handleSubmit() {
     if (!test || !profile) return;
     setSubmitting(true);
     let correct = 0;
     questions.forEach((q, i) => {
-      if (q.question_type === 'multiple_choice' && answers[i] === q.correct_answer) correct++;
+      if (gradeQuestion(q, answers[i])) correct++;
     });
     const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
-    await supabase.from('test_attempts').insert({
+
+    const startedAt = new Date(Date.now() - ((test.duration_minutes || 30) * 60 - timeLeft) * 1000);
+
+    const { data: attempt } = await supabase.from('test_attempts').insert({
       test_id: testId,
       student_id: profile.id,
       answers,
       score: finalScore,
+      passed: finalScore >= (test.passing_score || 50),
+      tab_switches: tabSwitches,
+      fullscreen_exits: fullscreenExits,
       time_taken: (test.duration_minutes || 30) * 60 - timeLeft,
-      created_at: new Date().toISOString()
-    });
+      started_at: startedAt.toISOString(),
+      completed_at: new Date().toISOString(),
+    }).select().single();
+
+    if (attempt && securityEvents.length > 0) {
+      const logs = securityEvents.map(e => ({
+        attempt_id: attempt.id,
+        student_id: profile.id,
+        event_type: e.type,
+        event_data: { key: e.key, count: e.count },
+        severity: e.type === 'tab_switch' || e.type === 'fullscreen_exit' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
+        created_at: e.time,
+      }));
+      await supabase.from('exam_activity_logs').insert(logs);
+    }
+
     setScore(finalScore);
     setSubmitted(true);
     setSubmitting(false);
@@ -96,14 +227,22 @@ export default function StudentTakeTestPage() {
 
   if (submitted) return (
     <div className="max-w-2xl mx-auto card text-center">
-      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><Check size={40} className="text-green-600" /></div>
+      <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${score !== null && score >= (test.passing_score || 50) ? 'bg-green-100' : 'bg-red-100'}`}>
+        {score !== null && score >= (test.passing_score || 50) ? <Check size={40} className="text-green-600" /> : <AlertTriangle size={40} className="text-red-600" />}
+      </div>
       <h1 className="text-2xl font-bold text-slate-900 mb-2">Test Submitted!</h1>
       <p className="text-slate-500 mb-6">Your answers have been recorded</p>
       <div className="bg-slate-50 rounded-xl p-6 mb-6">
         <p className="text-sm text-slate-500 mb-1">Your Score</p>
-        <p className={`text-5xl font-bold ${score && score >= (test.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{score}%</p>
+        <p className={`text-5xl font-bold ${score !== null && score >= (test.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{score}%</p>
         <p className="text-sm text-slate-500 mt-2">Passing Score: {test.passing_score || 50}%</p>
+        <p className="text-sm text-slate-400 mt-1">{getAnsweredCount()} of {questions.length} answered</p>
       </div>
+      {tabSwitches > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-700">
+          Tab switches detected: {tabSwitches}
+        </div>
+      )}
       <button onClick={() => router.push('/student')} className="btn-primary">Back to Dashboard</button>
     </div>
   );
@@ -112,12 +251,13 @@ export default function StudentTakeTestPage() {
     <div className="max-w-2xl mx-auto card">
       <h1 className="text-2xl font-bold text-slate-900 mb-2">{test.title}</h1>
       <p className="text-slate-500 mb-6">{test.description}</p>
+      {test.subject && <p className="text-sm text-slate-500 mb-4">Subject: {test.subject.name} | Class: {test.class?.name}</p>}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-slate-50 rounded-lg p-4 text-center"><Clock size={24} className="mx-auto text-blue-600 mb-2" /><p className="text-lg font-bold">{test.duration_minutes} min</p><p className="text-xs text-slate-500">Duration</p></div>
         <div className="bg-slate-50 rounded-lg p-4 text-center"><Flag size={24} className="mx-auto text-purple-600 mb-2" /><p className="text-lg font-bold">{questions.length}</p><p className="text-xs text-slate-500">Questions</p></div>
       </div>
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-        <p className="text-sm text-amber-800"><strong>Instructions:</strong> The timer starts when you click Begin. You can flag questions to review later. Auto-submit when time runs out.</p>
+        <p className="text-sm text-amber-800"><strong>Instructions:</strong> The timer starts when you click Begin. You can flag questions to review later. Auto-submit when time runs out. Do not switch tabs during the test.</p>
       </div>
       <button onClick={() => setStarted(true)} className="btn-primary w-full">Begin Test</button>
     </div>
@@ -127,7 +267,7 @@ export default function StudentTakeTestPage() {
   if (!question) return <div className="card text-center"><p>No questions in this test</p></div>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between">
         <button onClick={() => { if (confirm('Leave test? Progress will be lost.')) router.push('/student'); }} className="flex items-center gap-2 text-slate-600 hover:text-slate-800"><ArrowLeft size={18} />Exit</button>
         <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono font-bold ${timeLeft < 60 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-800'}`}><Clock size={16} />{formatTime(timeLeft)}</div>
@@ -138,13 +278,26 @@ export default function StudentTakeTestPage() {
           <span className="text-sm text-slate-500">Question {currentQ + 1} of {questions.length}</span>
           <button onClick={() => toggleFlag(currentQ)} className={`flex items-center gap-1 text-sm ${flagged.has(currentQ) ? 'text-amber-600' : 'text-slate-400'}`}><Flag size={14} />{flagged.has(currentQ) ? 'Flagged' : 'Flag'}</button>
         </div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-6">{question.question}</h2>
+
+        <div className="flex items-center gap-2 mb-2">
+          <h2 className="text-lg font-semibold text-slate-900">{question.question}</h2>
+        </div>
+
+        {question.question_image && (
+          <div className="mb-4">
+            <img src={question.question_image} alt="Question illustration" className="max-h-64 rounded-lg border object-contain" />
+          </div>
+        )}
 
         {question.question_type === 'multiple_choice' && question.options && (
           <div className="space-y-3">
             {question.options.map((opt: string, i: number) => (
               <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${answers[currentQ] === i ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                <span className="font-semibold mr-2">{String.fromCharCode(65 + i)}.</span> {opt}
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-semibold text-sm flex-shrink-0">{String.fromCharCode(65 + i)}</span>
+                  <span className="flex-1">{opt}</span>
+                  {question.option_images?.[i] && <img src={question.option_images[i]} alt="" className="w-10 h-10 rounded object-cover" />}
+                </div>
               </button>
             ))}
           </div>
@@ -153,22 +306,54 @@ export default function StudentTakeTestPage() {
         {question.question_type === 'true_false' && (
           <div className="grid grid-cols-2 gap-3">
             {['True', 'False'].map((opt, i) => (
-              <button key={i} onClick={() => handleAnswer(currentQ, i === 0)} className={`p-6 rounded-xl text-center font-semibold border-2 transition-all ${answers[currentQ] === (i === 0) ? 'border-blue-500 bg-blue-50' : 'border-slate-200'}`}>{opt}</button>
+              <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`p-6 rounded-xl text-center font-semibold border-2 transition-all ${answers[currentQ] === i ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>{opt}</button>
             ))}
           </div>
         )}
 
-        {question.question_type === 'short_answer' && (
-          <textarea value={answers[currentQ] || ''} onChange={(e) => handleAnswer(currentQ, e.target.value)} className="input" rows={4} placeholder="Type your answer..." />
+        {question.question_type === 'fill_blank' && (
+          <div>
+            <input type="text" value={answers[currentQ] || ''} onChange={(e) => handleAnswer(currentQ, e.target.value)} className="input text-lg" placeholder="Type your answer..." autoComplete="off" />
+            <p className="text-xs text-slate-400 mt-1">Fill in the blank with the correct word or phrase.</p>
+          </div>
         )}
 
-        <div className="flex items-center justify-between mt-6">
+        {question.question_type === 'short_answer' && (
+          <div>
+            <textarea value={answers[currentQ] || ''} onChange={(e) => handleAnswer(currentQ, e.target.value)} className="input" rows={4} placeholder="Write your answer..." />
+            <p className="text-xs text-slate-400 mt-1">Your teacher will review and grade this answer.</p>
+          </div>
+        )}
+
+        {question.question_type === 'multiple_selection' && question.options && (
+          <div className="space-y-3">
+            {question.options.map((opt: string, i: number) => {
+              const selected = Array.isArray(answers[currentQ]) && answers[currentQ].includes(i);
+              return (
+                <button key={i} onClick={() => handleMultipleSelection(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${selected ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'border-blue-500 bg-blue-500' : 'border-slate-300'}`}>
+                      {selected && <Check size={14} className="text-white" />}
+                    </div>
+                    <span className="flex-1">{opt}</span>
+                  </div>
+                </button>
+              );
+            })}
+            <p className="text-xs text-slate-400">Select all that apply.</p>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mt-6 pt-4 border-t">
           <button onClick={() => setCurrentQ(prev => Math.max(0, prev - 1))} disabled={currentQ === 0} className="btn-outline flex items-center gap-2 disabled:opacity-50"><ChevronLeft size={16} />Previous</button>
-          {currentQ === questions.length - 1 ? (
-            <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex items-center gap-2">{submitting ? <Loader2 size={16} className="animate-spin" /> : 'Submit Test'}</button>
-          ) : (
-            <button onClick={() => setCurrentQ(prev => Math.min(questions.length - 1, prev + 1))} className="btn-primary flex items-center gap-2">Next<ChevronRight size={16} /></button>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400">{getAnsweredCount()}/{questions.length} answered</span>
+            {currentQ === questions.length - 1 ? (
+              <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex items-center gap-2">{submitting ? <Loader2 size={16} className="animate-spin" /> : 'Submit Test'}</button>
+            ) : (
+              <button onClick={() => setCurrentQ(prev => Math.min(questions.length - 1, prev + 1))} className="btn-primary flex items-center gap-2">Next<ChevronRight size={16} /></button>
+            )}
+          </div>
         </div>
       </div>
 

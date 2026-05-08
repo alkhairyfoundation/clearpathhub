@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { FileText, Download, Eye, Paperclip } from 'lucide-react';
+import { FileText, Download, Eye, Paperclip, ArrowLeft } from 'lucide-react';
 
 export default function StudentLessonsPage() {
   const { profile } = useAuth();
@@ -29,7 +29,15 @@ export default function StudentLessonsPage() {
   return (
     <DashboardLayout title="Lesson Notes" subtitle="Download and view lesson materials">
       <div className="space-y-6">
-        <div><h1 className="text-2xl font-bold text-slate-800">Lesson Notes</h1><p className="text-slate-500">Download and view lesson materials</p></div>
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Lesson Notes</h1>
+            <p className="text-slate-500">Download and view lesson materials</p>
+          </div>
+        </div>
         
         {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

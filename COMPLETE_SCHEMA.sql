@@ -139,10 +139,14 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
   quiz_id UUID REFERENCES quizzes(id) ON DELETE CASCADE,
   question TEXT NOT NULL,
   question_image TEXT,
+  option_images TEXT[],
   options TEXT[] NOT NULL,
   correct_answer INTEGER NOT NULL CHECK (correct_answer BETWEEN 0 AND 3),
   points INTEGER DEFAULT 1,
-  question_type TEXT DEFAULT 'multiple_choice' CHECK (question_type IN ('multiple_choice', 'true_false', 'fill_blank')),
+  question_type TEXT DEFAULT 'multiple_choice' CHECK (question_type IN ('multiple_choice', 'true_false', 'fill_blank', 'short_answer', 'multiple_selection')),
+  order_index INTEGER DEFAULT 0,
+  timestamp_seconds INTEGER DEFAULT 0,
+  is_checkpoint BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -153,14 +157,19 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
   student_id UUID REFERENCES profiles(id),
   score INTEGER NOT NULL,
   passed BOOLEAN NOT NULL,
-  answers INTEGER[],
+  answers JSONB,
   started_at TIMESTAMP DEFAULT NOW(),
-  completed_at TIMESTAMP
+  completed_at TIMESTAMP,
+  time_taken INTEGER,
+  ip_address TEXT,
+  user_agent TEXT,
+  device_info TEXT
 );
 
 -- LESSONS (Notes)
 CREATE TABLE IF NOT EXISTS lessons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID REFERENCES sessions(id) ON DELETE CASCADE,
   subject_id UUID REFERENCES subjects(id),
   teacher_id UUID REFERENCES profiles(id),
   title TEXT NOT NULL,
@@ -236,6 +245,21 @@ CREATE TABLE IF NOT EXISTS results (
   grade TEXT,
   remarks TEXT,
   entered_by UUID REFERENCES profiles(id),
+  term TEXT,
+  academic_year TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- EXAM ACTIVITY LOGS (Security Monitoring)
+CREATE TABLE IF NOT EXISTS exam_activity_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  attempt_id UUID REFERENCES test_attempts(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES profiles(id),
+  event_type TEXT NOT NULL CHECK (event_type IN ('tab_switch', 'fullscreen_exit', 'copy_attempt', 'paste_attempt', 'screenshot', 'right_click', 'keyboard_shortcut', 'multiple_device', 'heartbeat_timeout')),
+  event_data JSONB,
+  severity TEXT DEFAULT 'low' CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+  ip_address TEXT,
+  user_agent TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -401,6 +425,12 @@ CREATE TABLE IF NOT EXISTS tests (
   passing_score INTEGER DEFAULT 50,
   is_published BOOLEAN DEFAULT false,
   allow_image BOOLEAN DEFAULT true,
+  shuffle_questions BOOLEAN DEFAULT false,
+  shuffle_options BOOLEAN DEFAULT false,
+  require_fullscreen BOOLEAN DEFAULT false,
+  prevent_tab_switch BOOLEAN DEFAULT false,
+  max_tab_switches INTEGER DEFAULT 3,
+  allow_camera BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -413,8 +443,9 @@ CREATE TABLE IF NOT EXISTS test_questions (
   option_images TEXT[],
   correct_answer INTEGER NOT NULL,
   points INTEGER DEFAULT 1,
-  question_type TEXT DEFAULT 'multiple_choice',
+  question_type TEXT DEFAULT 'multiple_choice' CHECK (question_type IN ('multiple_choice', 'true_false', 'fill_blank', 'short_answer', 'multiple_selection')),
   subject TEXT,
+  order_index INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -426,7 +457,13 @@ CREATE TABLE IF NOT EXISTS test_attempts (
   passed BOOLEAN NOT NULL,
   answers JSONB,
   started_at TIMESTAMP DEFAULT NOW(),
-  completed_at TIMESTAMP
+  completed_at TIMESTAMP,
+  time_taken INTEGER,
+  ip_address TEXT,
+  user_agent TEXT,
+  device_info TEXT,
+  tab_switches INTEGER DEFAULT 0,
+  fullscreen_exits INTEGER DEFAULT 0
 );
 
 -- ============================================================================

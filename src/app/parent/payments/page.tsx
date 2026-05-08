@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, DollarSign, CheckCircle, Clock, AlertCircle, CreditCard } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
 
 export default function ParentPaymentsPage() {
   const { profile } = useAuth();
@@ -54,14 +55,15 @@ export default function ParentPaymentsPage() {
   if (loading) return <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-800">Payments & Fees</h1>
-          <p className="text-slate-500">Track school fees and payment history</p>
+    <DashboardLayout title="Payments & Fees" subtitle="Track school fees and payment history">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-slate-800">Payments & Fees</h1>
+            <p className="text-slate-500">Track school fees and payment history</p>
+          </div>
         </div>
-      </div>
 
       {children.length === 0 ? (
         <div className="bg-white rounded-xl p-12 text-center"><DollarSign className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No children linked to your account</p></div>
@@ -116,5 +118,6 @@ export default function ParentPaymentsPage() {
         </>
       )}
     </div>
+  </DashboardLayout>
   );
 }

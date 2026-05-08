@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Search, X, CheckCircle, XCircle, Clock, UserCheck, Users, Loader2 } from 'lucide-react';
+import { Plus, Search, X, CheckCircle, XCircle, Clock, UserCheck, Users, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function TeacherAttendancePage() {
   const { profile } = useAuth();
@@ -78,7 +78,15 @@ export default function TeacherAttendancePage() {
     <DashboardLayout title="Take Attendance" subtitle="Mark student attendance for your class">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div><h1 className="text-2xl font-bold text-slate-800">Take Attendance</h1><p className="text-slate-500">Mark student attendance for your class</p></div>
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">Take Attendance</h1>
+              <p className="text-slate-500">Mark student attendance for your class</p>
+            </div>
+          </div>
         </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, uploadFile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit, Trash2, X, FileText, Check, Clock, Upload, Image, Paperclip, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, X, FileText, Check, Clock, Upload, Image, Paperclip, Loader2, ArrowLeft } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
 
 export default function TeacherHomeworkPage() {
   const { profile } = useAuth();
@@ -97,56 +98,54 @@ export default function TeacherHomeworkPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-slate-800">Homework</h1><p className="text-slate-500">Manage homework assignments with attachments</p></div>
-        <button onClick={() => { setEditingHomework(null); setFormData({ title: '', description: '', subject_id: '', class_id: '', due_date: '', total_marks: 100, homework_type: 'assignment' }); setAttachmentFiles([]); setAttachmentUrls([]); setShowModal(true); }} className="btn-primary flex items-center gap-2"><Plus size={20} />Add Homework</button>
-      </div>
+    <DashboardLayout title="Homework" subtitle="Manage homework assignments with attachments">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">Homework</h1>
+              <p className="text-slate-500">Manage homework assignments with attachments</p>
+            </div>
+          </div>
+          <button onClick={() => { setEditingHomework(null); setFormData({ title: '', description: '', subject_id: '', class_id: '', due_date: '', total_marks: 100, homework_type: 'assignment' }); setAttachmentFiles([]); setAttachmentUrls([]); setShowModal(true); }} className="btn-primary flex items-center gap-2"><Plus size={20} />Add Homework</button>
+        </div>
 
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        {loading ? <div className="p-12 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div></div> : homework.length === 0 ? <div className="p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No homework found</p><button onClick={() => setShowModal(true)} className="btn-primary mt-4">Add Homework</button></div> : (
-          <table className="w-full">
-            <thead className="bg-gray-50"><tr><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Title</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Type</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Subject</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Class</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Due</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Marks</th><th className="text-right py-3 px-6 text-sm font-medium text-slate-500">Actions</th></tr></thead>
-            <tbody>{homework.map((hw) => (<tr key={hw.id} className="border-t hover:bg-gray-50"><td className="py-4 px-6 font-medium text-slate-800">{hw.title}</td><td className="py-4 px-6"><span className="flex items-center gap-1 text-sm text-slate-600">{getTypeIcon(hw.homework_type || 'assignment')}<span className="capitalize">{hw.homework_type || 'assignment'}</span></span></td><td className="py-4 px-6 text-slate-600">{hw.subject?.name || '-'}</td><td className="py-4 px-6 text-slate-600">{hw.class?.name || '-'}</td><td className="py-4 px-6 text-slate-600">{hw.due_date ? new Date(hw.due_date).toLocaleDateString() : '-'}</td><td className="py-4 px-6 text-slate-600">{hw.total_marks}</td><td className="py-4 px-6 text-right"><div className="flex items-center justify-end gap-1"><button onClick={() => { setEditingHomework(hw); setFormData({ title: hw.title, description: hw.description || '', subject_id: hw.subject_id || '', class_id: hw.class_id || '', due_date: hw.due_date || '', total_marks: hw.total_marks, homework_type: hw.homework_type || 'assignment' }); setAttachmentUrls(hw.attachments || []); setAttachmentFiles([]); setShowModal(true); }} className="p-2 hover:bg-gray-100 rounded-lg"><Edit size={16} className="text-slate-600" /></button><button onClick={() => handleDelete(hw.id)} className="p-2 hover:bg-gray-100 rounded-lg"><Trash2 size={16} className="text-red-500" /></button></div></td></tr>))}</tbody>
-          </table>
+        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+          {loading ? <div className="p-12 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div></div> : homework.length === 0 ? <div className="p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No homework found</p><button onClick={() => setShowModal(true)} className="btn-primary mt-4">Add First Homework</button></div> : (
+            <table className="w-full">
+              <thead className="bg-slate-50"><tr><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Title</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Type</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Subject</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Class</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Due</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Marks</th><th className="text-right py-3 px-6 text-sm font-medium text-slate-500">Actions</th></tr></thead>
+              <tbody>{homework.map((hw) => (<tr key={hw.id} className="border-t hover:bg-slate-50"><td className="py-4 px-6 font-medium text-slate-800">{hw.title}</td><td className="py-4 px-6"><span className="flex items-center gap-1 text-sm text-slate-600">{getTypeIcon(hw.homework_type || 'assignment')}<span className="capitalize">{hw.homework_type || 'assignment'}</span></span></td><td className="py-4 px-6 text-slate-600">{hw.subject?.name || '-'}</td><td className="py-4 px-6 text-slate-600">{hw.class?.name || '-'}</td><td className="py-4 px-6 text-slate-600">{hw.due_date ? new Date(hw.due_date).toLocaleDateString() : '-'}</td><td className="py-4 px-6 text-slate-600">{hw.total_marks}</td><td className="py-4 px-6 text-right"><div className="flex items-center justify-end gap-1"><button onClick={() => { setEditingHomework(hw); setFormData({ title: hw.title, description: hw.description || '', subject_id: hw.subject_id || '', class_id: hw.class_id || '', due_date: hw.due_date || '', total_marks: hw.total_marks, homework_type: hw.homework_type || 'assignment' }); setAttachmentUrls(hw.attachments || []); setAttachmentFiles([]); setShowModal(true); }} className="p-2 hover:bg-gray-100 rounded-lg"><Edit size={16} className="text-slate-600" /></button><button onClick={() => handleDelete(hw.id)} className="p-2 hover:bg-gray-100 rounded-lg"><Trash2 size={16} className="text-red-500" /></button></div></td></tr>))}</tbody>
+            </table>
+          )}
+        </div>
+
+        {showModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800">{editingHomework ? 'Edit' : 'New'} Homework</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button></div>
+              <div className="p-6 space-y-4">
+                <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="input" /></div>
+                <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="input" rows={3}></textarea></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="label">Subject</label><select value={formData.subject_id} onChange={(e) => setFormData({...formData, subject_id: e.target.value})} className="input"><option value="">Select Subject</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+                  <div><label className="label">Class</label><select value={formData.class_id} onChange={(e) => setFormData({...formData, class_id: e.target.value})} className="input"><option value="">Select Class</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="label">Due Date</label><input type="date" value={formData.due_date} onChange={(e) => setFormData({...formData, due_date: e.target.value})} className="input" /></div>
+                  <div><label className="label">Total Marks</label><input type="number" value={formData.total_marks} onChange={(e) => setFormData({...formData, total_marks: parseInt(e.target.value)})} className="input" /></div>
+                </div>
+                <div><label className="label">Type</label><select value={formData.homework_type} onChange={(e) => setFormData({...formData, homework_type: e.target.value})} className="input"><option value="assignment">Assignment</option><option value="essay">Essay</option><option value="quiz">Quiz</option><option value="project">Project</option><option value="reading">Reading</option></select></div>
+                <div><label className="label">Attachments</label><input type="file" multiple onChange={(e) => setAttachmentFiles(Array.from(e.target.files || []))} className="input" /></div>
+                {attachmentUrls.length > 0 && <div className="text-sm text-slate-600"><p className="font-medium mb-2">Current Attachments:</p>{attachmentUrls.map((url, i) => <div key={i} className="flex items-center gap-2"><a href={url} target="_blank" className="text-blue-600 hover:underline">Attachment {i + 1}</a></div>)}</div>}
+              </div>
+              <div className="flex justify-end gap-3 p-6 border-t"><button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button><button onClick={handleSave} disabled={uploading} className="btn-primary disabled:opacity-50">{uploading ? 'Uploading...' : editingHomework ? 'Update' : 'Create'}</button></div>
+            </div>
+          </div>
         )}
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10"><h2 className="text-lg font-semibold text-slate-800">{editingHomework ? 'Edit' : 'New'} Homework</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button></div>
-            <div className="p-6 space-y-4">
-              <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Homework title" /></div>
-              <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={3} placeholder="Instructions" /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="label">Type</label><select value={formData.homework_type} onChange={(e) => setFormData({ ...formData, homework_type: e.target.value })} className="input"><option value="assignment">Assignment</option><option value="essay">Essay</option><option value="quiz">Quiz</option><option value="project">Project</option><option value="reading">Reading</option></select></div>
-                <div><label className="label">Total Marks</label><input type="number" value={formData.total_marks} onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })} className="input" /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4"><div><label className="label">Subject</label><select value={formData.subject_id} onChange={(e) => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div><div><label className="label">Class</label><select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input"><option value="">Select</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div></div>
-              <div><label className="label">Due Date</label><input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} className="input" /></div>
-              <div>
-                <label className="label">Attachments</label>
-                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center">
-                  <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp4" onChange={handleFileUpload} className="hidden" id="file-upload" />
-                  <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center"><Upload size={24} className="text-slate-400 mb-2" /><span className="text-sm text-slate-500">Click to upload files</span><span className="text-xs text-slate-400">PDF, DOC, JPG, PNG, MP4</span></label>
-                </div>
-                {(attachmentFiles.length > 0 || attachmentUrls.length > 0) && (
-                  <div className="mt-3 space-y-2">
-                    {attachmentUrls.map((url, i) => (
-                      <div key={`existing-${i}`} className="flex items-center justify-between p-2 bg-slate-50 rounded"><span className="text-sm truncate flex-1">{url.split('/').pop()}</span><button onClick={() => removeAttachment(i)} className="p-1 text-red-500"><X size={14} /></button></div>
-                    ))}
-                    {attachmentFiles.map((file, i) => (
-                      <div key={`new-${i}`} className="flex items-center justify-between p-2 bg-blue-50 rounded"><span className="text-sm truncate flex-1">{file.name}</span><button onClick={() => removeAttachment(i)} className="p-1 text-red-500"><X size={14} /></button></div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 p-6 border-t"><button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button><button onClick={handleSave} disabled={uploading} className="btn-primary flex items-center gap-2">{uploading ? <><Loader2 size={16} className="animate-spin" />Saving...</> : (editingHomework ? 'Update' : 'Create')}</button></div>
-          </div>
-        </div>
-      )}
-    </div>
+    </DashboardLayout>
   );
 }

@@ -120,14 +120,15 @@ export default function ImportExportPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">Import / Export</h1>
-          <p className="text-slate-500 mt-1">Bulk data operations and report generation</p>
+    <DashboardLayout title="Import / Export" subtitle="Bulk data operations and report generation">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-slate-900">Import / Export</h1>
+            <p className="text-slate-500 mt-1">Bulk data operations and report generation</p>
+          </div>
         </div>
-      </div>
 
       {importSuccess && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-slide-down">
@@ -175,6 +176,7 @@ export default function ImportExportPage() {
         }} className="btn-primary flex items-center gap-2"><Download size={18} />Download Template</button>
       </div>
     </div>
+  </DashboardLayout>
   );
 }
 

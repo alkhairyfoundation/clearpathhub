@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit, Trash2, X, BookOpen, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, X, BookOpen, Loader2, ArrowLeft } from 'lucide-react';
 import type { Department } from '@/types';
 import DashboardLayout from '@/components/DashboardLayout';
 
@@ -67,9 +67,14 @@ export default function AdminDepartmentsPage() {
     <DashboardLayout title="Departments" subtitle="Manage school departments">
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Departments</h1>
-            <p className="text-slate-500 mt-1">Manage school departments</p>
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Departments</h1>
+              <p className="text-slate-500 mt-1">Manage school departments</p>
+            </div>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
             <Plus size={18} /> Add Department

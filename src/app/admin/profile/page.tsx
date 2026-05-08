@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Clock, MapPin } from 'lucide-react';
+import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Clock, MapPin, ArrowLeft } from 'lucide-react';
 import type { SchoolSettings } from '@/types';
 
 export default function AdminProfilePage() {
@@ -99,9 +99,14 @@ export default function AdminProfilePage() {
   return (
     <DashboardLayout title="My Profile" subtitle="Manage your account settings">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-        <p className="text-slate-500 mt-1">Manage your account settings</p>
+      <div className="flex items-center gap-4">
+        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+          <ArrowLeft size={20} className="text-slate-600" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
+          <p className="text-slate-500 mt-1">Manage your account settings</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

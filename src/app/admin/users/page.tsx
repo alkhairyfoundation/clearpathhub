@@ -46,6 +46,8 @@ function AdminUsersPageContent() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [newCredentials, setNewCredentials] = useState({ email: '', password: '' });
 
   const [formData, setFormData] = useState<UserFormData>({
     email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '',
@@ -137,6 +139,8 @@ function AdminUsersPageContent() {
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Failed to create user');
         setSuccess('User created successfully');
+        setNewCredentials({ email: formData.email, password: formData.password });
+        setShowCredentialsModal(true);
       }
 
       fetchUsers();
@@ -156,9 +160,16 @@ function AdminUsersPageContent() {
 
     setDeleting(user.id);
     try {
-      const { error: deleteError } = await supabase.from('profiles').delete().eq('id', user.id);
-      if (deleteError) throw new Error(deleteError.message);
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'DELETE',
+      });
+
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || 'Failed to delete user');
+
       setUsers(users.filter(u => u.id !== user.id));
+      setSuccess('User deleted successfully');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -512,6 +523,39 @@ function AdminUsersPageContent() {
                   {saving ? <><Loader2 size={16} className="animate-spin" />Linking...</> : `Link ${selectedStudentIds.length} Student${selectedStudentIds.length !== 1 ? 's' : ''}`}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Credentials Modal */}
+      {showCredentialsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
+            <div className="p-5 border-b border-slate-200">
+              <h3 className="text-lg font-bold text-slate-900">User Created Successfully</h3>
+              <p className="text-sm text-slate-500 mt-1">Please save these login credentials</p>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs text-amber-700 font-medium mb-2">⚠️ Save these credentials now. You won't be able to see the password again.</p>
+              </div>
+              <div>
+                <label className="label text-xs text-slate-500 uppercase font-semibold">Login Email</label>
+                <input type="text" value={newCredentials.email} readOnly className="input bg-slate-50 font-mono text-sm" />
+              </div>
+              <div>
+                <label className="label text-xs text-slate-500 uppercase font-semibold">Password</label>
+                <input type="text" value={newCredentials.password} readOnly className="input bg-slate-50 font-mono text-sm" />
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-blue-700 font-medium">Login URL: <span className="font-mono">/login</span></p>
+              </div>
+            </div>
+            <div className="p-5 border-t border-slate-200">
+              <button onClick={() => setShowCredentialsModal(false)} className="btn-primary w-full">
+                I've Saved the Credentials
+              </button>
             </div>
           </div>
         </div>

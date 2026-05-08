@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Activity, Star, Edit, Trash2, X, Send, Calendar, User } from 'lucide-react';
+import { Plus, Activity, Star, Edit, Trash2, X, Send, Calendar, User, ArrowLeft } from 'lucide-react';
 
 export default function TeacherBehaviorPage() {
   const { profile } = useAuth();
@@ -63,7 +63,15 @@ export default function TeacherBehaviorPage() {
     <DashboardLayout title="Behavioral Reports" subtitle="Weekly behavior reports for students">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div><h1 className="text-2xl font-bold text-slate-800">Behavioral Reports</h1><p className="text-slate-500">Weekly behavior reports for students</p></div>
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">Behavioral Reports</h1>
+              <p className="text-slate-500">Weekly behavior reports for students</p>
+            </div>
+          </div>
           <button onClick={() => { getWeekRange(); setShowModal(true); }} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Report</button>
         </div>
 

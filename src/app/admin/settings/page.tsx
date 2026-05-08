@@ -56,20 +56,23 @@ export default function AdminSettingsPage() {
 
   if (fetching) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
-      </div>
+      <DashboardLayout title="School Settings" subtitle="Configure school details and appearance">
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">School Settings</h1>
-          <p className="text-slate-500 mt-1">Configure school details and appearance</p>
-        </div>
+    <DashboardLayout title="School Settings" subtitle="Configure school details and appearance">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">School Settings</h1>
+            <p className="text-slate-500 mt-1">Configure school details and appearance</p>
+          </div>
         <button onClick={handleSave} disabled={loading} className="btn-primary flex items-center gap-2 disabled:opacity-50">
           {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
           {loading ? 'Saving...' : 'Save Changes'}
@@ -212,5 +215,6 @@ export default function AdminSettingsPage() {
         </div>
       </div>
     </div>
+  </DashboardLayout>
   );
 }

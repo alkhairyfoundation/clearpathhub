@@ -31,6 +31,22 @@ export default function AdminEntranceExamsPage() {
     question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: ''
   });
 
+  const QUESTION_TYPES = [
+    { value: 'multiple_choice', label: 'Multiple Choice' },
+    { value: 'true_false', label: 'True / False' },
+    { value: 'fill_blank', label: 'Fill in the Blank' },
+    { value: 'short_answer', label: 'Short Answer' },
+  ];
+
+  function resetQuestionDefaults(type: string) {
+    let opts = ['', '', '', ''];
+    let correct: any = 0;
+    if (type === 'true_false') { opts = ['True', 'False']; correct = 0; }
+    else if (type === 'fill_blank') { opts = []; correct = 0; }
+    else if (type === 'short_answer') { opts = []; correct = 0; }
+    setQuestionData({ ...questionData, options: opts, correct_answer: correct, question_type: type });
+  }
+
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchData();
@@ -59,9 +75,17 @@ export default function AdminEntranceExamsPage() {
   async function handleAddQuestion() {
     if (!selectedExam) return;
     setSaving(true);
-    const { error } = await supabase.from('entrance_questions').insert({
-      ...questionData, exam_id: selectedExam.id, options: JSON.stringify(questionData.options)
-    });
+    const payload: any = {
+      exam_id: selectedExam.id,
+      question: questionData.question,
+      options: questionData.options,
+      correct_answer: questionData.correct_answer,
+      points: questionData.points || 1,
+      question_type: questionData.question_type || 'multiple_choice',
+      subject: questionData.subject || null,
+    };
+    if (questionData.question_image) payload.question_image = questionData.question_image;
+    const { error } = await supabase.from('entrance_questions').insert(payload);
     if (!error) {
       setQuestionData({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
       const { data } = await supabase.from('entrance_questions').select('*').eq('exam_id', selectedExam.id);
@@ -217,10 +241,34 @@ export default function AdminEntranceExamsPage() {
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
               <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10"><h3 className="text-lg font-bold text-slate-900">Questions — {selectedExam.title}</h3><button onClick={() => setShowQuestionModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
               <div className="p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1"><label className="label">Question Type</label></div>
+                  <select value={questionData.question_type} onChange={e => resetQuestionDefaults(e.target.value)} className="input w-48">
+                    {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
                 <div><label className="label">Question</label><textarea value={questionData.question} onChange={e => setQuestionData({...questionData, question: e.target.value})} className="input" rows={3} /></div>
                 <div><label className="label">Subject</label><input type="text" value={questionData.subject} onChange={e => setQuestionData({...questionData, subject: e.target.value})} className="input" placeholder="e.g., Mathematics" /></div>
-                <div><label className="label">Options (select the correct one)</label>{questionData.options.map((opt, i) => (<div key={i} className="flex items-center gap-2 mb-2"><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} /><input type="text" value={opt} onChange={e => { const opts = [...questionData.options]; opts[i] = e.target.value; setQuestionData({...questionData, options: opts}); }} className="input flex-1" placeholder={`Option ${i + 1}`} /></div>))}</div>
-                {questions.length > 0 && (<div className="mt-4"><h4 className="font-semibold text-slate-700 mb-2">{questions.length} Questions Added</h4><div className="space-y-2 max-h-48 overflow-y-auto">{questions.map((q, i) => (<div key={q.id} className="p-3 bg-slate-50 rounded-lg text-sm"><span className="font-medium">{i + 1}.</span> {q.question}</div>))}</div></div>)}
+
+                {questionData.question_type === 'multiple_choice' && (
+                  <div><label className="label">Options (select the correct one)</label>{questionData.options.map((opt, i) => (<div key={i} className="flex items-center gap-2 mb-2"><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} /><input type="text" value={opt} onChange={e => { const opts = [...questionData.options]; opts[i] = e.target.value; setQuestionData({...questionData, options: opts}); }} className="input flex-1" placeholder={`Option ${i + 1}`} /></div>))}</div>
+                )}
+
+                {questionData.question_type === 'true_false' && (
+                  <div><label className="label">Correct Answer</label><div className="grid grid-cols-2 gap-2">{['True', 'False'].map((opt, i) => (<label key={i} className={`p-3 rounded-lg border-2 cursor-pointer text-center ${questionData.correct_answer === i ? 'border-blue-500 bg-blue-50' : 'border-slate-200'}`}><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} className="sr-only" /><span className="font-medium">{opt}</span></label>))}</div></div>
+                )}
+
+                {questionData.question_type === 'fill_blank' && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">Students will type the answer. Include <code className="bg-blue-100 px-1 rounded">___</code> in the question text where the blank should be.</div>
+                )}
+
+                {questionData.question_type === 'short_answer' && (
+                  <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-700">Students will write a short answer. This requires manual grading.</div>
+                )}
+
+
+
+                {questions.length > 0 && (<div className="mt-4"><h4 className="font-semibold text-slate-700 mb-2">{questions.length} Questions Added</h4><div className="space-y-2 max-h-48 overflow-y-auto">{questions.map((q, i) => (<div key={q.id} className="p-3 bg-slate-50 rounded-lg text-sm"><span className="font-medium">{i + 1}.</span> {q.question} <span className="text-xs text-slate-400">({q.question_type})</span></div>))}</div></div>)}
               </div>
               <div className="flex justify-end gap-3 p-5 border-t border-slate-200 sticky bottom-0 bg-white"><button onClick={() => setShowQuestionModal(false)} className="btn-ghost">Close</button><button onClick={handleAddQuestion} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Adding...' : 'Add Question'}</button></div>
             </div>

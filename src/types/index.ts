@@ -132,9 +132,15 @@ export interface QuizQuestion {
   id: string;
   quiz_id: string;
   question: string;
+  question_image?: string;
+  option_images?: string[];
   options: string[];
   correct_answer: number;
   points: number;
+  question_type?: 'multiple_choice' | 'true_false' | 'fill_blank' | 'short_answer' | 'multiple_selection';
+  order_index?: number;
+  timestamp_seconds?: number;
+  is_checkpoint?: boolean;
   created_at: string;
 }
 
@@ -144,9 +150,13 @@ export interface QuizAttempt {
   student_id: string;
   score: number;
   passed: boolean;
-  answers: number[];
+  answers: any;
   started_at: string;
   completed_at?: string;
+  time_taken?: number;
+  ip_address?: string;
+  user_agent?: string;
+  device_info?: string;
 }
 
 export interface Lesson {
@@ -215,6 +225,20 @@ export interface Result {
   grade?: string;
   remarks?: string;
   entered_by?: string;
+  term?: string;
+  academic_year?: string;
+  created_at: string;
+}
+
+export interface ExamActivityLog {
+  id: string;
+  attempt_id: string;
+  student_id: string;
+  event_type: 'tab_switch' | 'fullscreen_exit' | 'copy_attempt' | 'paste_attempt' | 'screenshot' | 'right_click' | 'keyboard_shortcut' | 'multiple_device' | 'heartbeat_timeout';
+  event_data?: any;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  ip_address?: string;
+  user_agent?: string;
   created_at: string;
 }
 
@@ -362,6 +386,12 @@ export interface Test {
   passing_score: number;
   is_published: boolean;
   allow_image: boolean;
+  shuffle_questions?: boolean;
+  shuffle_options?: boolean;
+  require_fullscreen?: boolean;
+  prevent_tab_switch?: boolean;
+  max_tab_switches?: number;
+  allow_camera?: boolean;
   created_at: string;
 }
 
@@ -374,8 +404,9 @@ export interface TestQuestion {
   option_images?: string[];
   correct_answer: number;
   points: number;
-  question_type: 'multiple_choice' | 'true_false' | 'fill_blank' | 'short_answer';
+  question_type: 'multiple_choice' | 'true_false' | 'fill_blank' | 'short_answer' | 'multiple_selection';
   subject?: string;
+  order_index?: number;
   created_at: string;
 }
 
@@ -388,6 +419,12 @@ export interface TestAttempt {
   answers: any;
   started_at: string;
   completed_at?: string;
+  time_taken?: number;
+  ip_address?: string;
+  user_agent?: string;
+  device_info?: string;
+  tab_switches?: number;
+  fullscreen_exits?: number;
 }
 
 export interface TeacherEvaluation {

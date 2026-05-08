@@ -12,8 +12,33 @@ interface VideoCheckpoint {
   id?: string;
   timestamp_seconds: number;
   question: string;
+  question_image?: string;
   options: string[];
-  correct_answer: number;
+  option_images?: string[];
+  correct_answer: any;
+  points: number;
+  question_type: string;
+}
+
+const CHECKPOINT_TYPES = [
+  { value: 'multiple_choice', label: 'Multiple Choice' },
+  { value: 'true_false', label: 'True / False' },
+  { value: 'fill_blank', label: 'Fill in the Blank' },
+  { value: 'short_answer', label: 'Short Answer' },
+  { value: 'multiple_selection', label: 'Multiple Selection' },
+] as const;
+
+function getDefaultOptionsForType(type: string): string[] {
+  switch (type) {
+    case 'true_false': return ['True', 'False'];
+    case 'fill_blank': return [];
+    case 'short_answer': return [];
+    default: return ['', '', '', ''];
+  }
+}
+
+function getDefaultCorrectForType(type: string): any {
+  return type === 'multiple_selection' ? [] : 0;
 }
 
 export default function TeacherSessionsPage() {
@@ -83,7 +108,11 @@ export default function TeacherSessionsPage() {
             question: cp.question,
             options: cp.options,
             correct_answer: cp.correct_answer,
-            points: 1,
+            points: cp.points || 1,
+            question_type: cp.question_type || 'multiple_choice',
+            timestamp_seconds: cp.timestamp_seconds,
+            is_checkpoint: true,
+            order_index: checkpoints.indexOf(cp),
           }));
           await supabase.from('quiz_questions').insert(questions);
         }
@@ -104,7 +133,11 @@ export default function TeacherSessionsPage() {
             question: cp.question,
             options: cp.options,
             correct_answer: cp.correct_answer,
-            points: 1,
+            points: cp.points || 1,
+            question_type: cp.question_type || 'multiple_choice',
+            timestamp_seconds: cp.timestamp_seconds,
+            is_checkpoint: true,
+            order_index: checkpoints.indexOf(cp),
           }));
           await supabase.from('quiz_questions').insert(questions);
         }
@@ -146,20 +179,36 @@ export default function TeacherSessionsPage() {
     setCheckpoints([...checkpoints, {
       timestamp_seconds: newTimestamp,
       question: '',
-      options: ['', '', '', ''],
-      correct_answer: 0,
+      options: getDefaultOptionsForType('multiple_choice'),
+      correct_answer: getDefaultCorrectForType('multiple_choice'),
+      points: 1,
+      question_type: 'multiple_choice',
     }]);
   }
 
   function updateCheckpoint(index: number, field: string, value: any) {
     const updated = [...checkpoints];
     (updated[index] as any)[field] = value;
+    if (field === 'question_type') {
+      updated[index].options = getDefaultOptionsForType(value);
+      updated[index].correct_answer = getDefaultCorrectForType(value);
+    }
     setCheckpoints(updated);
   }
 
   function updateCheckpointOption(index: number, optIndex: number, value: string) {
     const updated = [...checkpoints];
     updated[index].options[optIndex] = value;
+    setCheckpoints(updated);
+  }
+
+  function toggleCheckpointMultiSelect(index: number, optIndex: number) {
+    const updated = [...checkpoints];
+    const current = Array.isArray(updated[index].correct_answer) ? [...updated[index].correct_answer] : [];
+    const pos = current.indexOf(optIndex);
+    if (pos >= 0) current.splice(pos, 1);
+    else current.push(optIndex);
+    updated[index].correct_answer = current.sort();
     setCheckpoints(updated);
   }
 
@@ -323,9 +372,14 @@ export default function TeacherSessionsPage() {
                       <div key={i} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm font-medium text-blue-700">Checkpoint {i + 1}</span>
-                          <button type="button" onClick={() => removeCheckpoint(i)} className="text-red-500 hover:text-red-700">
-                            <Trash2 size={16} />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <select value={cp.question_type} onChange={(e) => updateCheckpoint(i, 'question_type', e.target.value)} className="input text-xs py-1 w-36">
+                              {CHECKPOINT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                            <button type="button" onClick={() => removeCheckpoint(i)} className="text-red-500 hover:text-red-700">
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           <div className="col-span-2">
@@ -350,30 +404,82 @@ export default function TeacherSessionsPage() {
                             value={cp.question} 
                             onChange={(e) => updateCheckpoint(i, 'question', e.target.value)}
                             className="input"
-                            placeholder="What is the correct answer?"
+                            placeholder="Enter checkpoint question"
                           />
                         </div>
-                        <div>
-                          <label className="label text-xs">Options (select correct answer)</label>
-                          {cp.options.map((opt, optI) => (
-                            <div key={optI} className="flex items-center gap-2 mb-2">
-                              <input 
-                                type="radio" 
-                                name={`correct-${i}`}
-                                checked={cp.correct_answer === optI}
-                                onChange={() => updateCheckpoint(i, 'correct_answer', optI)}
-                                className="w-4 h-4"
-                              />
-                              <input 
-                                type="text" 
-                                value={opt} 
-                                onChange={(e) => updateCheckpointOption(i, optI, e.target.value)}
-                                className="input flex-1"
-                                placeholder={`Option ${optI + 1}`}
-                              />
+
+                        {cp.question_type === 'true_false' && (
+                          <div>
+                            <label className="label text-xs">Correct Answer</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {['True', 'False'].map((opt, j) => (
+                                <label key={j} className={`p-2 rounded-lg border-2 cursor-pointer text-center text-sm transition-all ${cp.correct_answer === j ? 'border-blue-500 bg-blue-100' : 'border-slate-200 bg-white'}`}>
+                                  <input type="radio" name={`cp-tf-${i}`} checked={cp.correct_answer === j} onChange={() => updateCheckpoint(i, 'correct_answer', j)} className="sr-only" />
+                                  <span className="font-medium">{opt}</span>
+                                </label>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        )}
+
+                        {cp.question_type === 'fill_blank' && (
+                          <div className="p-3 bg-white rounded-lg border text-sm text-slate-600">
+                            Students will type the answer. The blank is represented by <code className="bg-slate-200 px-1 rounded">___</code> in the question text.
+                          </div>
+                        )}
+
+                        {cp.question_type === 'short_answer' && (
+                          <div className="p-3 bg-white rounded-lg border text-sm text-slate-600">
+                            Students will write a short answer. This requires manual review.
+                          </div>
+                        )}
+
+                        {cp.question_type === 'multiple_choice' && (
+                          <div>
+                            <label className="label text-xs">Options (select correct answer)</label>
+                            {cp.options.map((opt, optI) => (
+                              <div key={optI} className="flex items-center gap-2 mb-2">
+                                <input 
+                                  type="radio" 
+                                  name={`cp-correct-${i}`}
+                                  checked={cp.correct_answer === optI}
+                                  onChange={() => updateCheckpoint(i, 'correct_answer', optI)}
+                                  className="w-4 h-4 flex-shrink-0"
+                                />
+                                <input 
+                                  type="text" 
+                                  value={opt} 
+                                  onChange={(e) => updateCheckpointOption(i, optI, e.target.value)}
+                                  className="input flex-1"
+                                  placeholder={`Option ${optI + 1}`}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {cp.question_type === 'multiple_selection' && (
+                          <div>
+                            <label className="label text-xs">Options (check correct answers)</label>
+                            {cp.options.map((opt, optI) => (
+                              <div key={optI} className="flex items-center gap-2 mb-2">
+                                <input 
+                                  type="checkbox"
+                                  checked={Array.isArray(cp.correct_answer) && cp.correct_answer.includes(optI)}
+                                  onChange={() => toggleCheckpointMultiSelect(i, optI)}
+                                  className="w-4 h-4 flex-shrink-0"
+                                />
+                                <input 
+                                  type="text" 
+                                  value={opt} 
+                                  onChange={(e) => updateCheckpointOption(i, optI, e.target.value)}
+                                  className="input flex-1"
+                                  placeholder={`Option ${optI + 1}`}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

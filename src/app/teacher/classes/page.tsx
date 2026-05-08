@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { GraduationCap, Users, BookOpen, Plus, Edit, Trash2, X, Search, Clock, Calendar } from 'lucide-react';
+import { GraduationCap, Users, BookOpen, Plus, Edit, Trash2, X, Search, Clock, Calendar, ArrowLeft } from 'lucide-react';
 
 export default function TeacherClassesPage() {
   const { profile } = useAuth();
@@ -79,7 +79,15 @@ export default function TeacherClassesPage() {
     <DashboardLayout title="My Classes" subtitle="Manage your classes and view student rosters">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div><h1 className="text-2xl font-bold text-slate-800">My Classes</h1><p className="text-slate-500">Manage your classes and view student rosters</p></div>
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">My Classes</h1>
+              <p className="text-slate-500">Manage your classes and view student rosters</p>
+            </div>
+          </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Add Class</button>
         </div>
 

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase, uploadFile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Upload, Check, Clock, FileText, Paperclip, Image, FileVideo, ExternalLink, Loader2 } from 'lucide-react';
+import { Upload, Check, Clock, FileText, Paperclip, Image, FileVideo, ExternalLink, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function StudentHomeworkPage() {
   const { profile } = useAuth();
@@ -83,7 +83,15 @@ export default function StudentHomeworkPage() {
   return (
     <DashboardLayout title="Homework" subtitle="View and submit homework assignments">
       <div className="space-y-6">
-        <div><h1 className="text-2xl font-bold text-slate-800">Homework</h1><p className="text-slate-500">View and submit homework assignments</p></div>
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Homework</h1>
+            <p className="text-slate-500">View and submit homework assignments</p>
+          </div>
+        </div>
         
         {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : (
         <div className="space-y-4">

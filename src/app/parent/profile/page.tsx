@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Users, GraduationCap, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Users, GraduationCap, TrendingUp, AlertTriangle, ArrowLeft } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
 import type { Student, Attendance, Result, BehavioralReport } from '@/types';
 
 export default function ParentProfilePage() {
@@ -69,11 +70,17 @@ export default function ParentProfilePage() {
   if (!profile) return null;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-        <p className="text-slate-500 mt-1">Manage your account and monitor your children</p>
-      </div>
+    <DashboardLayout title="My Profile" subtitle="Manage your account and monitor your children">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
+            <p className="text-slate-500 mt-1">Manage your account and monitor your children</p>
+          </div>
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="card text-center">
@@ -181,5 +188,6 @@ export default function ParentProfilePage() {
         </div>
       </div>
     </div>
+  </DashboardLayout>
   );
 }

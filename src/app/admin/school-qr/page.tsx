@@ -156,23 +156,26 @@ export default function AdminSchoolQRPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
-      </div>
+      <DashboardLayout title="School QR Code" subtitle="Generate and download the school identity QR code">
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-          <ArrowLeft size={20} className="text-slate-600" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">School QR Code</h1>
-          <p className="text-slate-500 mt-1">Generate and download the school identity QR code</p>
+    <DashboardLayout title="School QR Code" subtitle="Generate and download the school identity QR code">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-slate-900">School QR Code</h1>
+            <p className="text-slate-500 mt-1">Generate and download the school identity QR code</p>
+          </div>
         </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 card">
@@ -278,7 +281,8 @@ export default function AdminSchoolQRPage() {
             </div>
           </div>
         </div>
-      )}
+        )}
     </div>
+  </DashboardLayout>
   );
 }

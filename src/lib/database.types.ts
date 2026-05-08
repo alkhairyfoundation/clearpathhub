@@ -361,27 +361,45 @@ export interface Database {
           id: string;
           quiz_id: string;
           question: string;
+          question_image?: string | null;
+          option_images?: string[] | null;
           options: string[];
           correct_answer: number;
           points: number;
+          question_type?: string | null;
+          order_index?: number | null;
+          timestamp_seconds?: number | null;
+          is_checkpoint?: boolean | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           quiz_id: string;
           question: string;
+          question_image?: string | null;
+          option_images?: string[] | null;
           options: string[];
           correct_answer: number;
           points?: number;
+          question_type?: string | null;
+          order_index?: number | null;
+          timestamp_seconds?: number | null;
+          is_checkpoint?: boolean | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           quiz_id?: string;
           question?: string;
+          question_image?: string | null;
+          option_images?: string[] | null;
           options?: string[];
           correct_answer?: number;
           points?: number;
+          question_type?: string | null;
+          order_index?: number | null;
+          timestamp_seconds?: number | null;
+          is_checkpoint?: boolean | null;
           created_at?: string;
         };
       };
@@ -788,6 +806,41 @@ export interface Database {
           is_active?: boolean;
           issued_at?: string;
           expires_at?: string | null;
+        };
+      };
+      exam_activity_logs: {
+        Row: {
+          id: string;
+          attempt_id: string;
+          student_id: string;
+          event_type: string;
+          event_data: any;
+          severity: string;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          attempt_id: string;
+          student_id: string;
+          event_type: string;
+          event_data?: any;
+          severity?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          attempt_id?: string;
+          student_id?: string;
+          event_type?: string;
+          event_data?: any;
+          severity?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
         };
       };
     };
