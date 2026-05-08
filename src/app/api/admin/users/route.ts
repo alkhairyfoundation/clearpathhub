@@ -5,17 +5,17 @@ export async function POST(request: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (sessionError || !session) {
-      console.error('Session error:', sessionError);
+    if (userError || !user) {
+      console.error('Auth error:', userError);
       return NextResponse.json({ success: false, error: 'Unauthorized - Please log in again' }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
     
     if (profileError || profile?.role !== 'admin') {
@@ -74,15 +74,15 @@ export async function GET(request: Request) {
     const role = searchParams.get('role');
     const search = searchParams.get('search');
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
     
     if (profileError || profile?.role !== 'admin') {

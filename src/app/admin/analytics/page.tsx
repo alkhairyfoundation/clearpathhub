@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   BarChart3, TrendingUp, Users, GraduationCap, BookOpen, UserCheck,
-  Award, AlertTriangle, ArrowUp, ArrowDown, Download
+  Award, AlertTriangle, ArrowUp, ArrowDown, Download, Search, X, User
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
@@ -41,6 +41,12 @@ export default function AdminAnalyticsPage() {
   const [attendanceTrend, setAttendanceTrend] = useState<any[]>([]);
   const [recentResults, setRecentResults] = useState<any[]>([]);
   const [atRiskStudents, setAtRiskStudents] = useState<any[]>([]);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentList, setStudentList] = useState<any[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [studentResults, setStudentResults] = useState<any[]>([]);
+  const [studentAttendance, setStudentAttendance] = useState<any[]>([]);
+  const [studentLoading, setStudentLoading] = useState(false);
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -344,6 +350,108 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
         )}
+
+        {/* Student Drill-Down Section */}
+        <div className="card border-l-4 border-blue-500">
+          <div className="flex items-center gap-2 mb-4">
+            <User className="text-blue-600" size={20} />
+            <h2 className="text-lg font-bold text-slate-900">Individual Student Analytics</h2>
+          </div>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text" placeholder="Search student by name..."
+              value={studentSearch}
+              onChange={async (e) => {
+                setStudentSearch(e.target.value);
+                if (e.target.value.length >= 2) {
+                  const { data } = await supabase.from('profiles').select('id, first_name, last_name, email').eq('role', 'student').or(`first_name.ilike.%${e.target.value}%,last_name.ilike.%${e.target.value}%`).limit(10);
+                  setStudentList(data || []);
+                } else { setStudentList([]); }
+              }}
+              className="input pl-10"
+            />
+            {selectedStudent && (
+              <button onClick={() => { setSelectedStudent(null); setStudentResults([]); setStudentAttendance([]); setStudentSearch(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded">
+                <X size={16} className="text-slate-400" />
+              </button>
+            )}
+          </div>
+
+          {studentList.length > 0 && !selectedStudent && (
+            <div className="border border-slate-200 rounded-lg mb-4 max-h-48 overflow-y-auto">
+              {studentList.map(s => (
+                <button key={s.id} className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 border-b border-slate-100 last:border-b-0 text-left" onClick={async () => {
+                  setSelectedStudent(s); setStudentList([]); setStudentSearch(`${s.first_name} ${s.last_name}`); setStudentLoading(true);
+                  const [resRes, attRes] = await Promise.all([
+                    supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', s.id).order('created_at', { ascending: false }),
+                    supabase.from('attendance').select('*').eq('student_id', s.id).order('date', { ascending: false }).limit(30),
+                  ]);
+                  setStudentResults(resRes.data || []); setStudentAttendance(attRes.data || []); setStudentLoading(false);
+                }}>
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">{s.first_name?.[0]}{s.last_name?.[0]}</div>
+                  <div><p className="text-sm font-medium text-slate-800">{s.first_name} {s.last_name}</p><p className="text-xs text-slate-500">{s.email}</p></div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {selectedStudent && (
+            <div className="space-y-4">
+              {studentLoading ? (
+                <div className="text-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div></div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-blue-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Total Exams</p><p className="text-xl font-bold text-slate-900">{studentResults.length}</p></div>
+                    <div className="bg-green-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Avg Score</p><p className="text-xl font-bold text-slate-900">{studentResults.length > 0 ? Math.round(studentResults.reduce((a: number, r: any) => a + r.score, 0) / studentResults.length) : 0}%</p></div>
+                    <div className="bg-amber-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Attendance</p><p className="text-xl font-bold text-slate-900">{studentAttendance.length > 0 ? Math.round((studentAttendance.filter((a: any) => a.status === 'present').length / studentAttendance.length) * 100) : 0}%</p></div>
+                    <div className="bg-purple-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Pass Rate</p><p className="text-xl font-bold text-slate-900">{studentResults.length > 0 ? Math.round((studentResults.filter((r: any) => r.score >= 50).length / studentResults.length) * 100) : 0}%</p></div>
+                  </div>
+
+                  {studentResults.length > 0 && (
+                    <>
+                      <h3 className="font-semibold text-slate-800">Subject Scores</h3>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <BarChart data={(() => {
+                          const bySubj: Record<string, number[]> = {};
+                          studentResults.forEach((r: any) => { const n = r.subject?.name || 'Other'; if (!bySubj[n]) bySubj[n] = []; bySubj[n].push(r.score); });
+                          return Object.entries(bySubj).map(([name, scores]) => ({ name, avg: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) }));
+                        })()}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} />
+                          <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#64748b' }} />
+                          <Tooltip />
+                          <Bar dataKey="avg" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Avg Score" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                      <h3 className="font-semibold text-slate-800 mt-4">Recent Results</h3>
+                      <div className="overflow-x-auto"><table className="w-full"><thead className="bg-slate-50"><tr>
+                        <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Subject</th>
+                        <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Type</th>
+                        <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Score</th>
+                        <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Date</th>
+                      </tr></thead><tbody className="divide-y divide-slate-100">
+                        {studentResults.slice(0, 15).map((r: any) => (
+                          <tr key={r.id} className="hover:bg-slate-50">
+                            <td className="py-2 px-3 text-sm">{r.subject?.name || '-'}</td>
+                            <td className="py-2 px-3 text-sm text-slate-500">{r.exam_type}</td>
+                            <td className="py-2 px-3"><span className={`text-sm font-semibold ${r.score >= 50 ? 'text-green-600' : 'text-red-600'}`}>{r.score}%</span></td>
+                            <td className="py-2 px-3 text-sm text-slate-500">{new Date(r.created_at).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                      </tbody></table></div>
+                    </>
+                  )}
+
+                  {studentResults.length === 0 && <p className="text-sm text-slate-400 text-center py-4">No results found for this student.</p>}
+                </>
+              )}
+            </div>
+          )}
+
+          {!selectedStudent && !studentSearch && <p className="text-sm text-slate-400 text-center py-4">Search for a student to view detailed analytics</p>}
+        </div>
       </div>
     </DashboardLayout>
   );

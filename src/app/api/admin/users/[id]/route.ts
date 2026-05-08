@@ -4,13 +4,13 @@ import { createSupabaseServerClient, createSupabaseAdminClient } from '@/lib/sup
 async function verifyAdmin() {
   try {
     const supabase = await createSupabaseServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return null;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
     if (profile?.role === 'admin') return supabase;

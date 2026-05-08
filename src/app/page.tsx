@@ -27,6 +27,10 @@ export default function Home() {
               <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
               <a href="#why" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Why Us</a>
               <a href="#process" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
+              <Link href="/apply" className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1">
+                <FileText size={14} />
+                Entrance Exam
+              </Link>
             </div>
             <div className="flex items-center gap-3">
               <Link href="/login" className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 font-medium transition-colors">
@@ -80,10 +84,10 @@ export default function Home() {
                   <GraduationCap size={20} />
                   Access Your Portal
                 </Link>
-                <a href="#features" className="btn-outline border-white/20 text-white px-8 py-4 flex items-center justify-center gap-2 hover:bg-white/10 hover:border-white/30 hover:text-white">
-                  Explore Features
-                  <ArrowRight size={18} />
-                </a>
+                <Link href="/apply" className="btn-outline border-white/20 text-white px-8 py-4 flex items-center justify-center gap-2 hover:bg-white/10 hover:border-white/30 hover:text-white">
+                  <FileText size={18} />
+                  Take Entrance Exam
+                </Link>
               </div>
 
               <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
