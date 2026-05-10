@@ -81,7 +81,7 @@ function LoginPageContent() {
 
       // Direct redirect based on role from signIn response
       if (profile?.role) {
-        console.log('Redirecting to:', profile.role);
+        console.log('Redirecting to:', '/' + profile.role);
         const roleRoutes: Record<string, string> = {
           admin: '/admin',
           teacher: '/teacher',
@@ -92,7 +92,8 @@ function LoginPageContent() {
         
         const targetRoute = roleRoutes[profile.role];
         if (targetRoute) {
-          router.push(targetRoute);
+          // Use window.location for guaranteed full page navigation
+          window.location.href = targetRoute;
           return;
         }
       } else {
@@ -100,7 +101,7 @@ function LoginPageContent() {
       }
 
       // Fallback to portal
-      router.push(redirect || '/portal');
+      window.location.href = redirect || '/portal';
       
     } catch (err: any) {
       console.error('Login exception:', err);
