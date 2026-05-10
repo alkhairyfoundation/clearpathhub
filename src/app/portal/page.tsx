@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ export default function PortalPage() {
   const { profile, loading } = useAuth();
   const router = useRouter();
   const [timedOut, setTimedOut] = useState(false);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -20,9 +21,20 @@ export default function PortalPage() {
   }, [loading, profile]);
 
   useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+
     if (!loading && !profile) {
       router.push('/login');
-    } else if (profile) {
+    } else if (profile && profile.role) {
+      const validRoles = ['admin', 'teacher', 'student', 'parent', 'accountant'];
+      if (!validRoles.includes(profile.role)) {
+        router.push('/login');
+        return;
+      }
+      
       switch (profile.role) {
         case 'admin':
           router.push('/admin');

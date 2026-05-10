@@ -1,16 +1,4 @@
 #!/usr/bin/env node
-/**
- * ClearPath Edu Hub - Database Seeder
- * Seeds the Supabase database with an initial admin account
- * 
- * Usage: node scripts/seed.js [admin-password]
- * 
- * Environment variables required:
- * - NEXT_PUBLIC_SUPABASE_URL
- * - SUPABASE_SERVICE_ROLE_KEY
- * 
- * If no password is provided, defaults to 'Admin@123'
- */
 
 const crypto = require('crypto');
 
@@ -109,46 +97,31 @@ async function seed() {
 
     const users = [
       {
-        email: 'admin@clearpatheduhub.com',
-        password: DEFAULT_ADMIN_PASSWORD,
-        firstName: 'System',
-        lastName: 'Administrator',
+        email: 'admin@clearpath.com',
+        password: 'admin123',
+        firstName: 'Admin',
+        lastName: 'User',
         role: 'admin',
         phone: '+2340000000000',
       },
-      {
-        email: 'teacher@clearpatheduhub.com',
-        password: DEFAULT_ADMIN_PASSWORD,
-        firstName: 'John',
-        lastName: 'Teacher',
-        role: 'teacher',
-        phone: '+2340000000001',
-      },
-      {
-        email: 'student@clearpatheduhub.com',
-        password: DEFAULT_ADMIN_PASSWORD,
-        firstName: 'Jane',
-        lastName: 'Student',
-        role: 'student',
-        phone: '+2340000000002',
-      },
-      {
-        email: 'parent@clearpatheduhub.com',
-        password: DEFAULT_ADMIN_PASSWORD,
-        firstName: 'Parent',
-        lastName: 'Guardian',
-        role: 'parent',
-        phone: '+2340000000003',
-      },
-      {
-        email: 'accountant@clearpatheduhub.com',
-        password: DEFAULT_ADMIN_PASSWORD,
-        firstName: 'Finance',
-        lastName: 'Manager',
-        role: 'accountant',
-        phone: '+2340000000004',
-      },
     ];
+
+    // Delete existing admin user first (if any)
+    console.log('Checking for existing admin user...');
+    const { data: existingAdmins } = await supabaseAdmin
+      .from('profiles')
+      .select('id, email')
+      .eq('role', 'admin');
+    
+    if (existingAdmins && existingAdmins.length > 0) {
+      console.log(`Found ${existingAdmins.length} existing admin(s), deleting...`);
+      for (const admin of existingAdmins) {
+        await supabaseAdmin.auth.admin.deleteUser(admin.id);
+        await supabaseAdmin.from('profiles').delete().eq('id', admin.id);
+        console.log(`  Deleted: ${admin.email}`);
+      }
+    }
+    console.log();
 
     console.log('Creating users...\n');
     
@@ -183,9 +156,7 @@ async function seed() {
     if (successful > 0 || skipped > 0) {
       console.log('LOGIN CREDENTIALS:');
       console.log('-'.repeat(60));
-      users.forEach(u => {
-        console.log(`  ${u.role.toUpperCase().padEnd(12)} ${u.email} / ${u.password}`);
-      });
+      console.log(`  ADMIN:       ${users[0].email} / ${users[0].password}`);
       console.log();
     }
 
