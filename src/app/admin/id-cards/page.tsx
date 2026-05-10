@@ -515,7 +515,7 @@ const qrImg = document.createElement('img');
         {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
         {loading ? (
-          <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+          <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
         ) : filtered.length === 0 ? (
           <div className="card text-center py-16">
             <Users className="mx-auto text-slate-300 mb-4" size={48} />

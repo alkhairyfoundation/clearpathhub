@@ -39,11 +39,11 @@ export default function AdminDashboard() {
   const [atRiskStudents, setAtRiskStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-     if (loading) return;
-     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
-     fetchDashboard();
-   }, [profile, loading]);
+  useEffect(() => {
+    if (!profile) return;
+    if (profile.role !== 'admin') { router.push('/login'); return; }
+    fetchDashboard();
+  }, [profile]);
 
   async function fetchDashboard() {
     setLoading(true);
@@ -151,7 +151,7 @@ useEffect(() => {
   }
 
   const statsCards = [
-    { title: 'Total Students', value: stats.students, icon: <GraduationCap size={24} />, href: '/admin/users?role=student', bg: 'bg-blue-50', iconBg: 'bg-blue-600', text: 'text-blue-600' },
+    { title: 'Total Students', value: stats.students, icon: <GraduationCap size={24} />, href: '/admin/users?role=student', bg: 'bg-primary-50', iconBg: 'bg-primary-600', text: 'text-primary-600' },
     { title: 'Teachers', value: stats.teachers, icon: <Users size={24} />, href: '/admin/users?role=teacher', bg: 'bg-emerald-50', iconBg: 'bg-emerald-600', text: 'text-emerald-600' },
     { title: 'Parents', value: stats.parents, icon: <UserCheck size={24} />, href: '/admin/users?role=parent', bg: 'bg-purple-50', iconBg: 'bg-purple-600', text: 'text-purple-600' },
     { title: 'Attendance Rate', value: `${stats.attendanceRate}%`, icon: <TrendingUp size={24} />, href: '/admin/attendance', bg: 'bg-amber-50', iconBg: 'bg-amber-600', text: 'text-amber-600' },
@@ -185,7 +185,7 @@ useEffect(() => {
         <div className="lg:col-span-2 card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-900">Attendance Trend</h2>
-            <Link href="/admin/attendance" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+            <Link href="/admin/attendance" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
               View all <ArrowRight size={14} />
             </Link>
           </div>
@@ -214,7 +214,7 @@ useEffect(() => {
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
           <div className="space-y-2">
             {[
-              { label: 'Manage Users', href: '/admin/users', icon: <Users size={18} />, color: 'text-blue-600 bg-blue-50' },
+              { label: 'Manage Users', href: '/admin/users', icon: <Users size={18} />, color: 'text-primary-600 bg-primary-50' },
               { label: 'Manage Classes', href: '/admin/classes', icon: <GraduationCap size={18} />, color: 'text-emerald-600 bg-emerald-50' },
               { label: 'Announcements', href: '/admin/announcements', icon: <Megaphone size={18} />, color: 'text-purple-600 bg-purple-50' },
               { label: 'ID Cards', href: '/admin/id-cards', icon: <QrCode size={18} />, color: 'text-amber-600 bg-amber-50' },
@@ -247,7 +247,7 @@ useEffect(() => {
             ) : (
               recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 flex-shrink-0">
                     {activity.icon}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -279,14 +279,14 @@ useEffect(() => {
                 <div key={announcement.id} className={`p-3 rounded-lg border-l-4 ${
                   announcement.priority === 'urgent' ? 'bg-red-50 border-red-500' :
                   announcement.priority === 'high' ? 'bg-amber-50 border-amber-500' :
-                  'bg-blue-50 border-blue-500'
+                  'bg-primary-50 border-primary-500'
                 }`}>
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-medium text-slate-800 text-sm truncate">{announcement.title}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       announcement.priority === 'urgent' ? 'bg-red-100 text-red-700' :
                       announcement.priority === 'high' ? 'bg-amber-100 text-amber-700' :
-                      announcement.priority === 'normal' ? 'bg-blue-100 text-blue-700' :
+                      announcement.priority === 'normal' ? 'bg-primary-100 text-primary-700' :
                       'bg-slate-100 text-slate-700'
                     }`}>{announcement.priority}</span>
                   </div>

@@ -274,7 +274,7 @@ function AdminUsersPageContent() {
                 key={role}
                 onClick={() => setSelectedRole(role)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  selectedRole === role ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  selectedRole === role ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 {role === 'all' ? 'All' : roleConfig[role]?.label || role}
@@ -300,7 +300,7 @@ function AdminUsersPageContent() {
       <div className="card overflow-hidden p-0">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="text-center py-16 text-slate-400">
@@ -326,7 +326,7 @@ function AdminUsersPageContent() {
                   <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                        <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                           {user.first_name[0]?.toUpperCase()}{user.last_name[0]?.toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -368,10 +368,10 @@ function AdminUsersPageContent() {
                         )}
                         <button
                           onClick={() => openEditModal(user)}
-                          className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 hover:bg-primary-50 rounded-lg transition-colors"
                           title="Edit"
                         >
-                          <Edit size={15} className="text-blue-600" />
+                          <Edit size={15} className="text-primary-600" />
                         </button>
                         <button
                           onClick={() => handleDelete(user)}
@@ -447,7 +447,7 @@ function AdminUsersPageContent() {
               ) : (
                 <div>
                   <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" checked={resetPasswordMode} onChange={(e) => { setResetPasswordMode(e.target.checked); if (!e.target.checked) setFormData({ ...formData, password: '' }); }} className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <input type="checkbox" checked={resetPasswordMode} onChange={(e) => { setResetPasswordMode(e.target.checked); if (!e.target.checked) setFormData({ ...formData, password: '' }); }} className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
                     <span className="text-sm font-medium text-slate-700">Reset Password</span>
                   </label>
                   {resetPasswordMode && (
@@ -498,7 +498,7 @@ function AdminUsersPageContent() {
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
                   {viewingUser.first_name[0]?.toUpperCase()}{viewingUser.last_name[0]?.toUpperCase()}
                 </div>
                 <div>
@@ -637,8 +637,8 @@ function AdminUsersPageContent() {
                 <label className="label text-xs text-slate-500 uppercase font-semibold">Password</label>
                 <input type="text" value={newCredentials.password} readOnly className="input bg-slate-50 font-mono text-sm" />
               </div>
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="text-xs text-blue-700 font-medium">Login URL: <span className="font-mono">/login</span></p>
+              <div className="p-3 bg-primary-50 rounded-lg">
+                <p className="text-xs text-primary-700 font-medium">Login URL: <span className="font-mono">/login</span></p>
               </div>
             </div>
             <div className="p-5 border-t border-slate-200">
@@ -658,7 +658,7 @@ export default function AdminUsersPage() {
     <DashboardLayout title="User Management" subtitle="Manage school users and permissions">
       <Suspense fallback={
         <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div>
         </div>
       }>
         <AdminUsersPageContent />

@@ -135,7 +135,7 @@ export default function TeacherLessonsPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center"><FileText className="text-emerald-600" size={24} /></div>
                 <div className="flex gap-1">
-                  <button onClick={() => openQuizManager(lesson)} className="p-2 hover:bg-blue-50 rounded-lg" title="Manage Quiz"><HelpCircle size={16} className="text-blue-500" /></button>
+                  <button onClick={() => openQuizManager(lesson)} className="p-2 hover:bg-primary-50 rounded-lg" title="Manage Quiz"><HelpCircle size={16} className="text-primary-500" /></button>
                   <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-gray-100 rounded-lg"><Trash2 size={16} className="text-red-500" /></button>
                 </div>
               </div>

@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, TrendingUp, UserCheck, Award, FileText, Calendar, Download, ChevronDown } from 'lucide-react';
+import { ArrowLeft, TrendingUp, UserCheck, Award, FileText, Calendar, Download, ChevronDown, Brain, BookOpen } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -40,11 +40,13 @@ function WeeklyReportContent() {
           const weekEnd = new Date(weekStart);
           weekEnd.setDate(weekStart.getDate() + 7);
 
-          const [attendanceRes, resultsRes, homeworkRes, behaviorRes] = await Promise.all([
+          const [attendanceRes, resultsRes, homeworkRes, behaviorRes, quizRes, testRes] = await Promise.all([
             supabase.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', weekStart.toISOString().split('T')[0]).lt('date', weekEnd.toISOString().split('T')[0]),
             supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
             supabase.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', selectedChild.profile_id).gte('submitted_at', weekStart.toISOString()).lt('submitted_at', weekEnd.toISOString()),
             supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
+            supabase.from('quiz_attempts').select('*, quiz:quizzes!quiz_id(title)').eq('student_id', selectedChild.profile_id).gte('completed_at', weekStart.toISOString()).lt('completed_at', weekEnd.toISOString()),
+            supabase.from('test_attempts').select('*, test:tests!test_id(title)').eq('student_id', selectedChild.profile_id).gte('completed_at', weekStart.toISOString()).lt('completed_at', weekEnd.toISOString()),
           ]);
 
         const totalAttendance = attendanceRes.data?.length || 0;
@@ -60,8 +62,10 @@ function WeeklyReportContent() {
           avgScore,
           homework: homeworkRes.data || [],
           behavior: behaviorRes.data || [],
-          positiveNotes: behaviorRes.data?.filter(b => b.type === 'positive').length || 0,
-          concerns: behaviorRes.data?.filter(b => b.type === 'concern' || b.type === 'warning').length || 0,
+          quizzes: quizRes.data || [],
+          tests: testRes.data || [],
+          positiveNotes: behaviorRes.data?.filter((b: any) => b.type === 'positive').length || 0,
+          concerns: behaviorRes.data?.filter((b: any) => b.type === 'concern' || b.type === 'warning').length || 0,
         });
         }
       }
@@ -109,7 +113,7 @@ function WeeklyReportContent() {
     doc.save(`weekly-report-${child.profile?.first_name}-${report.weekStart}.pdf`);
   }
 
-  if (loading) return <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>;
+  if (loading) return <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>;
 
   return (
     <div className="space-y-6">
@@ -129,8 +133,8 @@ function WeeklyReportContent() {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="card"><div className="flex items-center gap-3 mb-2"><UserCheck size={20} className="text-green-600" /><span className="text-sm text-slate-500">Attendance</span></div><p className="text-2xl font-bold text-green-600">{report.attendance.rate}%</p></div>
-            <div className="card"><div className="flex items-center gap-3 mb-2"><TrendingUp size={20} className="text-blue-600" /><span className="text-sm text-slate-500">Avg Score</span></div><p className="text-2xl font-bold text-blue-600">{report.avgScore}%</p></div>
-            <div className="card"><div className="flex items-center gap-3 mb-2"><FileText size={20} className="text-purple-600" /><span className="text-sm text-slate-500">Homework</span></div><p className="text-2xl font-bold text-purple-600">{report.homework.length}</p></div>
+            <div className="card"><div className="flex items-center gap-3 mb-2"><TrendingUp size={20} className="text-primary-600" /><span className="text-sm text-slate-500">Avg Score</span></div><p className="text-2xl font-bold text-primary-600">{report.avgScore}%</p></div>
+            <div className="card"><div className="flex items-center gap-3 mb-2"><Brain size={20} className="text-purple-600" /><span className="text-sm text-slate-500">Quizzes/Tests</span></div><p className="text-2xl font-bold text-purple-600">{report.quizzes.length + report.tests.length}</p></div>
             <div className="card"><div className="flex items-center gap-3 mb-2"><Award size={20} className="text-amber-600" /><span className="text-sm text-slate-500">Positive</span></div><p className="text-2xl font-bold text-amber-600">{report.positiveNotes}</p></div>
           </div>
 
@@ -143,6 +147,12 @@ function WeeklyReportContent() {
               )}
               {report.homework.length > 0 && (
                 <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3">Homework Submitted</h3><div className="space-y-2">{report.homework.map((h: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{h.homework?.title}</span><span className="text-xs text-slate-500">{h.homework?.subject?.name}</span></div>))}</div></div>
+              )}
+              {report.quizzes.length > 0 && (
+                <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3 flex items-center gap-2"><Brain size={16} className="text-purple-600" />Quizzes Taken</h3><div className="space-y-2">{report.quizzes.map((q: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{q.quiz?.title || 'Quiz'}</span><span className={`font-semibold text-sm ${q.score >= 70 ? 'text-green-600' : q.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{q.score}%</span></div>))}</div></div>
+              )}
+              {report.tests.length > 0 && (
+                <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3 flex items-center gap-2"><BookOpen size={16} className="text-blue-600" />Tests Taken</h3><div className="space-y-2">{report.tests.map((t: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{t.test?.title || 'Test'}</span><span className={`font-semibold text-sm ${t.score >= 70 ? 'text-green-600' : t.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{t.score}%</span></div>))}</div></div>
               )}
               {report.behavior.length > 0 && (
                 <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3">Behavior Notes</h3><div className="space-y-2">{report.behavior.map((b: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{b.title}</span><span className="text-xs text-slate-500">{b.teacher?.first_name}</span></div>))}</div></div>
@@ -160,7 +170,7 @@ function WeeklyReportContent() {
 
 export default function ParentWeeklyReportPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>}>
       <WeeklyReportContent />
     </Suspense>
   );

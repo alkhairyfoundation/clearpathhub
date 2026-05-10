@@ -107,7 +107,7 @@ export default function AdminEvaluationPage() {
   );
 
   const taskTypeIcons: Record<string, { bg: string; color: string }> = {
-    reading: { bg: 'bg-blue-100', color: 'text-blue-600' }, study: { bg: 'bg-purple-100', color: 'text-purple-600' },
+    reading: { bg: 'bg-primary-100', color: 'text-primary-600' }, study: { bg: 'bg-purple-100', color: 'text-purple-600' },
     project: { bg: 'bg-green-100', color: 'text-green-600' }, research: { bg: 'bg-amber-100', color: 'text-amber-600' },
   };
 
@@ -130,7 +130,7 @@ export default function AdminEvaluationPage() {
         {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total Tasks</span><BookOpen size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-slate-900">{tasks.length}</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total Tasks</span><BookOpen size={16} className="text-primary-600" /></div><p className="text-2xl font-bold text-slate-900">{tasks.length}</p></div>
         <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Pending</span><Clock size={16} className="text-amber-600" /></div><p className="text-2xl font-bold text-amber-600">{pendingTasks.length}</p></div>
         <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Graded</span><CheckCircle size={16} className="text-green-600" /></div><p className="text-2xl font-bold text-green-600">{gradedTasks.length}</p></div>
         <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Evaluations</span><Star size={16} className="text-purple-600" /></div><p className="text-2xl font-bold text-purple-600">{evaluations.length}</p></div>
@@ -139,7 +139,7 @@ export default function AdminEvaluationPage() {
       <div className="card">
         <div className="flex gap-1 mb-6 bg-slate-100 rounded-lg p-1">
           {(['tasks', 'evaluations', 'leaderboard'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
@@ -148,7 +148,7 @@ export default function AdminEvaluationPage() {
         {activeTab === 'tasks' && (
           <>
             <div className="relative mb-4"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input type="text" placeholder="Search tasks..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
-            {loading ? <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div> :
+            {loading ? <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div> :
             filteredTasks.length === 0 ? <div className="text-center py-16"><BookOpen className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500">No tasks assigned yet</p></div> :
             <div className="space-y-3">
               {filteredTasks.map(task => {
@@ -166,11 +166,11 @@ export default function AdminEvaluationPage() {
                       {task.status === 'pending' && (
                         <div className="flex gap-1">
                           {[70, 80, 90, 100].map(grade => (
-                            <button key={grade} onClick={() => handleGradeTask(task.id, grade)} className="px-2 py-1 text-xs bg-white border border-slate-200 rounded hover:bg-blue-50 hover:border-blue-300">{grade}</button>
+                            <button key={grade} onClick={() => handleGradeTask(task.id, grade)} className="px-2 py-1 text-xs bg-white border border-slate-200 rounded hover:bg-primary-50 hover:border-primary-300">{grade}</button>
                           ))}
                         </div>
                       )}
-                      {task.status === 'graded' && <span className="font-bold text-blue-600">{task.admin_grade}/100</span>}
+                      {task.status === 'graded' && <span className="font-bold text-primary-600">{task.admin_grade}/100</span>}
                     </div>
                   </div>
                 );

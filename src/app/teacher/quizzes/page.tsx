@@ -254,7 +254,7 @@ export default function TeacherQuizzesPage() {
                     {q.question_type === 'true_false' && (
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         {['True', 'False'].map((opt, j) => (
-                          <label key={j} className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-all ${q.correct_answer === j ? 'border-blue-500 bg-blue-50' : 'border-slate-200'}`}>
+                          <label key={j} className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-all ${q.correct_answer === j ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
                             <input type="radio" name={`tf-${i}`} checked={q.correct_answer === j} onChange={() => updateQuestion(i, 'correct_answer', j)} className="sr-only" />
                             <span className="font-medium">{opt}</span>
                           </label>
@@ -263,8 +263,8 @@ export default function TeacherQuizzesPage() {
                     )}
 
                     {q.question_type === 'fill_blank' && (
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                        Students will type the answer. The blank is represented by <code className="bg-blue-100 px-1 rounded">___</code> in the question text.
+                      <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700">
+                        Students will type the answer. The blank is represented by <code className="bg-primary-100 px-1 rounded">___</code> in the question text.
                       </div>
                     )}
 
@@ -307,7 +307,7 @@ export default function TeacherQuizzesPage() {
                         const updated = [...questions];
                         updated[i].options.push('');
                         setQuestions(updated);
-                      }} className="text-xs text-blue-600 hover:text-blue-800">+ Add option</button>
+                      }} className="text-xs text-primary-600 hover:text-primary-800">+ Add option</button>
                     )}
                   </div>
                 ))}

@@ -71,7 +71,7 @@ useEffect(() => {
   }
 
   const quickActions = [
-    { label: 'Take Attendance', href: '/teacher/attendance', icon: <UserCheck size={18} />, color: 'bg-blue-50 text-blue-600 hover:bg-blue-100' },
+    { label: 'Take Attendance', href: '/teacher/attendance', icon: <UserCheck size={18} />, color: 'bg-primary-50 text-primary-600 hover:bg-primary-100' },
     { label: 'Scan Student ID', href: '/teacher/scan-id', icon: <QrCode size={18} />, color: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' },
     { label: 'Record Results', href: '/teacher/results', icon: <Award size={18} />, color: 'bg-purple-50 text-purple-600 hover:bg-purple-100' },
     { label: 'Behavior Report', href: '/teacher/behavior', icon: <Activity size={18} />, color: 'bg-orange-50 text-orange-600 hover:bg-orange-100' },
@@ -81,12 +81,12 @@ useEffect(() => {
     <DashboardLayout title="Teacher Dashboard" subtitle={`Bismillah! Welcome back, ${profile?.first_name} ${profile?.last_name}`}>
       {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm mb-4">{error}</div>}
       {loading ? (
-        <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
+        <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { title: 'My Subjects', value: stats.subjects, icon: <BookOpen size={24} />, href: '/teacher/classes', bg: 'bg-blue-100', color: 'text-blue-600' },
+              { title: 'My Subjects', value: stats.subjects, icon: <BookOpen size={24} />, href: '/teacher/classes', bg: 'bg-primary-100', color: 'text-primary-600' },
               { title: 'Classes', value: stats.classes, icon: <GraduationCap size={24} />, href: '/teacher/classes', bg: 'bg-emerald-100', color: 'text-emerald-600' },
               { title: 'Video Lessons', value: stats.sessions, icon: <Video size={24} />, href: '/teacher/sessions', bg: 'bg-purple-100', color: 'text-purple-600' },
               { title: 'Pending Tasks', value: stats.pendingHomework + stats.pendingQuizzes, icon: <ClipboardList size={24} />, href: '/teacher/homework', bg: 'bg-amber-100', color: 'text-amber-600' },
@@ -111,9 +111,9 @@ useEffect(() => {
                 <div className="space-y-3">
                   {recentActivity.map(session => (
                     <div key={session.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><Video size={20} className="text-blue-600" /></div>
+                      <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"><Video size={20} className="text-primary-600" /></div>
                       <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 truncate">{session.title}</p><p className="text-xs text-slate-500">{session.class?.name || 'No class'} • {new Date(session.created_at).toLocaleDateString()}</p></div>
-                      <Link href="/teacher/sessions" className="text-blue-600 hover:text-blue-700"><ArrowRight size={16} /></Link>
+                      <Link href="/teacher/sessions" className="text-primary-600 hover:text-primary-700"><ArrowRight size={16} /></Link>
                     </div>
                   ))}
                 </div>
@@ -161,7 +161,7 @@ useEffect(() => {
               ) : (
                 <div className="space-y-3">
                   {announcements.map(a => (
-                    <div key={a.id} className={`p-3 rounded-lg border-l-4 ${a.priority === 'urgent' ? 'bg-red-50 border-red-500' : a.priority === 'high' ? 'bg-amber-50 border-amber-500' : 'bg-blue-50 border-blue-500'}`}>
+                    <div key={a.id} className={`p-3 rounded-lg border-l-4 ${a.priority === 'urgent' ? 'bg-red-50 border-red-500' : a.priority === 'high' ? 'bg-amber-50 border-amber-500' : 'bg-primary-50 border-primary-500'}`}>
                       <p className="font-semibold text-sm text-slate-900">{a.title}</p>
                       <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">{a.content}</p>
                       <p className="text-xs text-slate-400 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>

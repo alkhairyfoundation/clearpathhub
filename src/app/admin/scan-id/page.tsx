@@ -67,6 +67,7 @@ export default function AdminScanIDPage() {
       
       setLastScanned(student);
       setScanHistory(prev => [student, ...prev.slice(0, 19)]);
+      stopCamera();
     } else {
       alert('Student not found with admission number: ' + admissionNumber);
     }
@@ -147,7 +148,7 @@ export default function AdminScanIDPage() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-slate-800">Manual Entry</h2>
-              <QrCode className="text-blue-600" size={24} />
+              <QrCode className="text-primary-600" size={24} />
             </div>
 
             <form onSubmit={handleManualEntry} className="space-y-4">

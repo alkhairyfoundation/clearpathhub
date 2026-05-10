@@ -25,11 +25,17 @@ const navItems = {
     { href: '/admin/departments', label: 'Departments', icon: Building2 },
     { href: '/admin/attendance', label: 'Attendance', icon: UserCheck },
     { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
+    { href: '/admin/lessons', label: 'Lesson Notes', icon: FileText },
+    { href: '/admin/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/admin/tests', label: 'Tests', icon: TestTube2 },
     { href: '/admin/evaluation', label: 'Teacher Evaluation', icon: ClipboardList },
     { href: '/admin/entrance-exams', label: 'Entrance Exams', icon: FileCheck },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/admin/id-cards', label: 'ID Cards', icon: QrCode },
+    { href: '/admin/id-cards', label: 'Student ID Cards', icon: QrCode },
+    { href: '/admin/scan-id', label: 'Scan Student ID', icon: ScanLine },
+    { href: '/admin/staff-id-cards', label: 'Staff ID Cards', icon: QrCode },
+    { href: '/admin/school-qr', label: 'School QR Code', icon: QrCode },
+    { href: '/admin/staff-qr', label: 'Staff Attendance QR', icon: ScanLine },
     { href: '/admin/import-export', label: 'Import/Export', icon: Upload },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
   ],
@@ -39,6 +45,7 @@ const navItems = {
     { href: '/teacher/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/teacher/lessons', label: 'Lessons', icon: FileText },
     { href: '/teacher/homework', label: 'Homework', icon: Clipboard },
+    { href: '/teacher/tests', label: 'Tests', icon: TestTube2 },
     { href: '/teacher/quizzes', label: 'Quizzes', icon: Award },
     { href: '/teacher/results', label: 'Results', icon: BarChart3 },
     { href: '/teacher/attendance', label: 'Attendance', icon: UserCheck },
@@ -51,6 +58,7 @@ const navItems = {
     { href: '/student/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/student/lessons', label: 'Lessons', icon: FileText },
     { href: '/student/homework', label: 'Homework', icon: Clipboard },
+    { href: '/student/quizzes', label: 'Quizzes', icon: Award },
     { href: '/student/results', label: 'Results', icon: BarChart3 },
     { href: '/student/attendance', label: 'Attendance', icon: UserCheck },
     { href: '/student/id-card', label: 'My ID Card', icon: QrCode },
@@ -100,7 +108,7 @@ export default function MobileNav({ role }: MobileNavProps) {
           </button>
           
           <Link href={role === 'admin' ? '/admin' : `/${role}`} className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-lg flex items-center justify-center">
               <GraduationCap className="text-white" size={16} />
             </div>
             <span className="font-bold text-slate-900">ClearPath</span>
@@ -121,7 +129,7 @@ export default function MobileNav({ role }: MobileNavProps) {
             <div className="p-4 border-b border-slate-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-xl flex items-center justify-center">
                     <GraduationCap className="text-white" size={20} />
                   </div>
                   <div>
@@ -141,7 +149,7 @@ export default function MobileNav({ role }: MobileNavProps) {
             {/* User Info */}
             <div className="p-4 border-b border-slate-100 bg-slate-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                <div className="w-10 h-10 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-full flex items-center justify-center text-white font-semibold text-sm">
                   {profile?.first_name?.[0]}{profile?.last_name?.[0]}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -162,7 +170,7 @@ export default function MobileNav({ role }: MobileNavProps) {
                     onClick={() => setIsOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-primary-600 text-white'
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >

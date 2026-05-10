@@ -352,9 +352,9 @@ export default function AdminAnalyticsPage() {
         )}
 
         {/* Student Drill-Down Section */}
-        <div className="card border-l-4 border-blue-500">
+        <div className="card border-l-4 border-primary-500">
           <div className="flex items-center gap-2 mb-4">
-            <User className="text-blue-600" size={20} />
+            <User className="text-primary-600" size={20} />
             <h2 className="text-lg font-bold text-slate-900">Individual Student Analytics</h2>
           </div>
           <div className="relative mb-4">
@@ -389,7 +389,7 @@ export default function AdminAnalyticsPage() {
                   ]);
                   setStudentResults(resRes.data || []); setStudentAttendance(attRes.data || []); setStudentLoading(false);
                 }}>
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">{s.first_name?.[0]}{s.last_name?.[0]}</div>
+                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 font-bold text-xs">{s.first_name?.[0]}{s.last_name?.[0]}</div>
                   <div><p className="text-sm font-medium text-slate-800">{s.first_name} {s.last_name}</p><p className="text-xs text-slate-500">{s.email}</p></div>
                 </button>
               ))}
@@ -399,11 +399,11 @@ export default function AdminAnalyticsPage() {
           {selectedStudent && (
             <div className="space-y-4">
               {studentLoading ? (
-                <div className="text-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div></div>
+                <div className="text-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div></div>
               ) : (
                 <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-blue-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Total Exams</p><p className="text-xl font-bold text-slate-900">{studentResults.length}</p></div>
+                    <div className="bg-primary-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Total Exams</p><p className="text-xl font-bold text-slate-900">{studentResults.length}</p></div>
                     <div className="bg-green-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Avg Score</p><p className="text-xl font-bold text-slate-900">{studentResults.length > 0 ? Math.round(studentResults.reduce((a: number, r: any) => a + r.score, 0) / studentResults.length) : 0}%</p></div>
                     <div className="bg-amber-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Attendance</p><p className="text-xl font-bold text-slate-900">{studentAttendance.length > 0 ? Math.round((studentAttendance.filter((a: any) => a.status === 'present').length / studentAttendance.length) * 100) : 0}%</p></div>
                     <div className="bg-purple-50 p-3 rounded-lg"><p className="text-xs text-slate-500">Pass Rate</p><p className="text-xl font-bold text-slate-900">{studentResults.length > 0 ? Math.round((studentResults.filter((r: any) => r.score >= 50).length / studentResults.length) * 100) : 0}%</p></div>

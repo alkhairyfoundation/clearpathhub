@@ -324,6 +324,10 @@ export interface EntranceExam {
   total_questions: number;
   is_published: boolean;
   is_active: boolean;
+  shuffle_questions?: boolean;
+  require_fullscreen?: boolean;
+  prevent_tab_switch?: boolean;
+  max_tab_switches?: number;
   created_by?: string;
   created_at: string;
 }

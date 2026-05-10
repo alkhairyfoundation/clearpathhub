@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar } from 'lucide-react';
 import jsQR from 'jsqr';
+import DashboardLayout from '@/components/DashboardLayout';
 
 export default function StaffScanQRPage() {
   const { profile, loading } = useAuth();
@@ -104,18 +105,12 @@ export default function StaffScanQRPage() {
   }
 
   return (
+    <DashboardLayout title="Scan Attendance QR" subtitle="Scan the school QR code to mark your attendance">
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-800">Scan Attendance QR</h1>
-          <p className="text-slate-500">Scan the school QR code to mark your attendance</p>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card text-center">
-          <QrCode size={48} className="mx-auto text-blue-600 mb-4" />
+          <QrCode size={48} className="mx-auto text-primary-600 mb-4" />
           <h2 className="text-lg font-semibold text-slate-800 mb-2">Scan QR Code</h2>
           <p className="text-sm text-slate-500 mb-6">Point your camera at the school QR code displayed at the entrance</p>
           {!showCamera ? (
@@ -171,5 +166,6 @@ export default function StaffScanQRPage() {
         </div>
       )}
     </div>
+    </DashboardLayout>
   );
 }

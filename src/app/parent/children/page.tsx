@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Users, Award, UserCheck, DollarSign, Bell, BookOpen, TrendingUp, ArrowLeft } from 'lucide-react';
+import { Users, Award, UserCheck, DollarSign, Bell, BookOpen, TrendingUp, ArrowLeft, Brain, FileText, GraduationCap } from 'lucide-react';
 
 export default function ParentChildrenPage() {
   const { profile } = useAuth();
@@ -34,13 +34,24 @@ export default function ParentChildrenPage() {
         setChildren(data);
         const stats: Record<string, any> = {};
         for (const child of data) {
-          const [resultsRes, attendanceRes] = await Promise.all([
+          const [resultsRes, attendanceRes, quizRes, testRes, homeworkRes] = await Promise.all([
             supabase.from('results').select('score, subject:subjects!subject_id(name)').eq('student_id', child.profile_id).order('created_at', { ascending: false }).limit(10),
             supabase.from('attendance').select('status').eq('student_id', child.profile_id).order('date', { ascending: false }).limit(30),
+            supabase.from('quiz_attempts').select('id, score').eq('student_id', child.profile_id),
+            supabase.from('test_attempts').select('id, score').eq('student_id', child.profile_id),
+            supabase.from('homework_submissions').select('id, marks').eq('student_id', child.profile_id),
           ]);
           const avgScore = resultsRes.data?.length ? Math.round(resultsRes.data.reduce((s: number, r: any) => s + (r.score || 0), 0) / resultsRes.data.length) : 0;
           const attendanceRate = attendanceRes.data?.length ? Math.round((attendanceRes.data.filter((a: any) => a.status === 'present').length / attendanceRes.data.length) * 100) : 0;
-          stats[child.id] = { avgScore, attendanceRate, totalResults: resultsRes.data?.length || 0, totalAttendance: attendanceRes.data?.length || 0 };
+          stats[child.id] = {
+            avgScore,
+            attendanceRate,
+            totalResults: resultsRes.data?.length || 0,
+            totalAttendance: attendanceRes.data?.length || 0,
+            totalQuizzes: quizRes.data?.length || 0,
+            totalTests: testRes.data?.length || 0,
+            totalHomework: homeworkRes.data?.length || 0,
+          };
         }
         setChildStats(stats);
       }
@@ -65,7 +76,7 @@ export default function ParentChildrenPage() {
           </div>
         </div>
 
-      {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : children.length === 0 ? (
+      {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div> : children.length === 0 ? (
         <div className="bg-white rounded-xl p-12 text-center"><Users className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No children linked to your account</p><p className="text-sm text-slate-400 mt-1">Contact the school admin to link your children</p></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -74,14 +85,17 @@ export default function ParentChildrenPage() {
             return (
               <div key={child.id} className="bg-white rounded-xl shadow-md p-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xl font-bold">{child.profile?.first_name?.[0]}{child.profile?.last_name?.[0]}</div>
+                  <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-xl font-bold">{child.profile?.first_name?.[0]}{child.profile?.last_name?.[0]}</div>
                   <div><h3 className="font-semibold text-slate-800 text-lg">{child.profile?.first_name} {child.profile?.last_name}</h3><p className="text-sm text-slate-500">{child.admission_number} &bull; {child.class?.name}</p></div>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg"><TrendingUp className="mx-auto text-blue-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.avgScore}%</p><p className="text-xs text-slate-500">Average</p></div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg"><UserCheck className="mx-auto text-green-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.attendanceRate}%</p><p className="text-xs text-slate-500">Attendance</p></div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg"><BookOpen className="mx-auto text-purple-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalResults}</p><p className="text-xs text-slate-500">Results</p></div>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="text-center p-3 bg-primary-50 rounded-lg"><TrendingUp className="mx-auto text-primary-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.avgScore}%</p><p className="text-xs text-slate-500">Average</p></div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg"><UserCheck className="mx-auto text-green-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.attendanceRate}%</p><p className="text-xs text-slate-500">Attendance</p></div>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg"><Brain className="mx-auto text-purple-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalQuizzes}</p><p className="text-xs text-slate-500">Quizzes</p></div>
+                  <div className="text-center p-3 bg-blue-50 rounded-lg"><BookOpen className="mx-auto text-blue-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalTests}</p><p className="text-xs text-slate-500">Tests</p></div>
+                  <div className="text-center p-3 bg-amber-50 rounded-lg"><FileText className="mx-auto text-amber-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalHomework}</p><p className="text-xs text-slate-500">Homework</p></div>
+                  <div className="text-center p-3 bg-slate-50 rounded-lg"><GraduationCap className="mx-auto text-slate-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalResults}</p><p className="text-xs text-slate-500">Results</p></div>
                 </div>
                 
                 <div className="flex gap-2">

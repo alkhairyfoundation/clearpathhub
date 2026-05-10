@@ -170,7 +170,7 @@ export default function AdminSessionsPage() {
         {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
         {loading ? (
-          <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+          <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
         ) : filtered.length === 0 ? (
           <div className="card text-center py-16">
             <Video className="mx-auto text-slate-300 mb-4" size={48} />
@@ -186,8 +186,8 @@ export default function AdminSessionsPage() {
                     <PlayCircle className="text-white" size={24} />
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => openCheckpoints(session)} className="p-2 hover:bg-blue-50 rounded-lg" title="Manage Checkpoints">
-                      <Clock size={16} className="text-blue-600" />
+                    <button onClick={() => openCheckpoints(session)} className="p-2 hover:bg-primary-50 rounded-lg" title="Manage Checkpoints">
+                      <Clock size={16} className="text-primary-600" />
                     </button>
                     <button onClick={() => handleDeleteSession(session.id)} className="p-2 hover:bg-red-50 rounded-lg">
                       <Trash2 size={16} className="text-red-500" />
@@ -251,7 +251,7 @@ export default function AdminSessionsPage() {
                 <button onClick={() => setShowCheckpointModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
               </div>
               <div className="p-5 space-y-4">
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700">
                   <p className="font-medium">Video Checkpoints</p>
                   <p className="mt-1">Add questions at specific timestamps. Students must answer correctly to continue watching.</p>
                 </div>
@@ -296,7 +296,7 @@ export default function AdminSessionsPage() {
                         <div key={cp.id} className="p-3 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                              <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
                                 {formatDuration(cp.timestamp_seconds)}
                               </span>
                               <span className="text-xs text-slate-400">{cp.points} pts</span>

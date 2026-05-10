@@ -227,7 +227,7 @@ export default function StudentTakeTestPage() {
     setSubmitting(false);
   }
 
-  if (loading) return <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>;
+  if (loading) return <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>;
 
   if (!test) return <div className="card text-center"><AlertTriangle size={48} className="mx-auto text-yellow-500 mb-4" /><h2 className="text-xl font-bold">Test Not Found</h2><p className="text-slate-500">This test may not be published yet.</p></div>;
 
@@ -259,7 +259,7 @@ export default function StudentTakeTestPage() {
       <p className="text-slate-500 mb-6">{test.description}</p>
       {test.subject && <p className="text-sm text-slate-500 mb-4">Subject: {test.subject.name} | Class: {test.class?.name}</p>}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-slate-50 rounded-lg p-4 text-center"><Clock size={24} className="mx-auto text-blue-600 mb-2" /><p className="text-lg font-bold">{test.duration_minutes} min</p><p className="text-xs text-slate-500">Duration</p></div>
+        <div className="bg-slate-50 rounded-lg p-4 text-center"><Clock size={24} className="mx-auto text-primary-600 mb-2" /><p className="text-lg font-bold">{test.duration_minutes} min</p><p className="text-xs text-slate-500">Duration</p></div>
         <div className="bg-slate-50 rounded-lg p-4 text-center"><Flag size={24} className="mx-auto text-purple-600 mb-2" /><p className="text-lg font-bold">{questions.length}</p><p className="text-xs text-slate-500">Questions</p></div>
       </div>
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
@@ -338,7 +338,7 @@ export default function StudentTakeTestPage() {
               return (
                 <button key={i} onClick={() => handleMultipleSelection(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${selected ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'border-blue-500 bg-blue-500' : 'border-slate-300'}`}>
+                    <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'border-primary-500 bg-primary-500' : 'border-slate-300'}`}>
                       {selected && <Check size={14} className="text-white" />}
                     </div>
                     <span className="flex-1">{opt}</span>
@@ -367,7 +367,7 @@ export default function StudentTakeTestPage() {
         <h3 className="text-sm font-semibold text-slate-900 mb-3">Question Navigator</h3>
         <div className="flex flex-wrap gap-2">
           {questions.map((_, i) => (
-            <button key={i} onClick={() => setCurrentQ(i)} className={`w-10 h-10 rounded-lg text-sm font-semibold transition-all ${i === currentQ ? 'bg-blue-600 text-white' : answers[i] !== undefined ? 'bg-green-100 text-green-700' : flagged.has(i) ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{i + 1}</button>
+            <button key={i} onClick={() => setCurrentQ(i)} className={`w-10 h-10 rounded-lg text-sm font-semibold transition-all ${i === currentQ ? 'bg-primary-600 text-white' : answers[i] !== undefined ? 'bg-green-100 text-green-700' : flagged.has(i) ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{i + 1}</button>
           ))}
         </div>
       </div>

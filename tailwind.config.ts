@@ -61,9 +61,18 @@ const config: Config = {
           800: "#938788",
           900: "#626266",
         },
+        cp: {
+          green: "#063b29",
+          "green-light": "#0a5e3f",
+          gold: "#b3922f",
+          "gold-light": "#c9a83a",
+          cream: "#f5f0e8",
+        },
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        playfair: ["Playfair Display", "serif"],
+        montserrat: ["Montserrat", "sans-serif"],
       },
     },
   },

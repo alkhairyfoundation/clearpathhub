@@ -65,19 +65,34 @@ export default function StudentTakeEntranceExamPage() {
   }, [started, submitted, timeLeft]);
 
   useEffect(() => {
-    if (!started || submitted) return;
+    if (!started || submitted || !exam) return;
     function handleVisibility() {
       if (document.hidden) {
         setTabSwitches(prev => {
           const next = prev + 1;
           setSecurityEvents(events => [...events, { type: 'tab_switch', time: new Date().toISOString(), count: next }]);
+          if (exam?.prevent_tab_switch && next >= (exam?.max_tab_switches || 3)) {
+            handleSubmit();
+          }
           return next;
         });
       }
     }
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [started, submitted]);
+  }, [started, submitted, exam]);
+
+  useEffect(() => {
+    if (!started || submitted) return;
+    function handleFullscreenChange() {
+      if (!document.fullscreenElement && exam?.require_fullscreen) {
+        setSecurityEvents(events => [...events, { type: 'fullscreen_exit', time: new Date().toISOString() }]);
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [started, submitted, exam]);
 
   useEffect(() => {
     if (!started || submitted) return;
@@ -90,11 +105,14 @@ export default function StudentTakeEntranceExamPage() {
     function handleContextMenu(e: MouseEvent) {
       e.preventDefault();
     }
+    function handleCopy(e: ClipboardEvent) { e.preventDefault(); }
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('copy', handleCopy);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('copy', handleCopy);
     };
   }, [started, submitted]);
 
@@ -122,6 +140,9 @@ export default function StudentTakeEntranceExamPage() {
 
     if (questionsData) {
       let qs = questionsData;
+      if (appData.exam?.shuffle_questions) {
+        qs = [...qs].sort(() => Math.random() - 0.5);
+      }
       setQuestions(qs);
     }
     setLoading(false);
@@ -166,7 +187,7 @@ export default function StudentTakeEntranceExamPage() {
     });
     const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
 
-    const { error } = await supabase
+    const { data: updatedApp, error } = await supabase
       .from('entrance_applications')
       .update({
         exam_score: finalScore,
@@ -174,7 +195,21 @@ export default function StudentTakeEntranceExamPage() {
         completed_at: new Date().toISOString(),
         security_events: securityEvents
       })
-      .eq('id', applicationId);
+      .eq('id', applicationId)
+      .select('id')
+      .single();
+
+    if (securityEvents.length > 0) {
+      const logs = securityEvents.map(e => ({
+        attempt_id: applicationId,
+        student_id: profile?.id,
+        event_type: e.type,
+        event_data: { key: e.key, count: e.count },
+        severity: e.type === 'tab_switch' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
+        created_at: e.time,
+      }));
+      await supabase.from('exam_activity_logs').insert(logs);
+    }
 
     setScore(finalScore);
     setSubmitted(true);
@@ -247,7 +282,7 @@ export default function StudentTakeEntranceExamPage() {
           </p>
         </div>
 
-        <button onClick={() => setStarted(true)} className="btn-primary w-full">
+        <button onClick={() => { setStarted(true); if (exam?.require_fullscreen) document.documentElement.requestFullscreen().catch(() => {}); }} className="btn-primary w-full">
           Begin Entrance Exam
         </button>
       </div>

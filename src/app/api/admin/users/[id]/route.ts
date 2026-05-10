@@ -22,16 +22,15 @@ async function verifyAdmin() {
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   try {
-    const adminClient = createSupabaseAdminClient();
+    const supabase = await verifyAdmin();
+    if (!supabase) {
+      return NextResponse.json({ success: false, error: 'Unauthorized - Admin access required' }, { status: 401 });
+    }
 
+    const adminClient = createSupabaseAdminClient();
     const { error: authError } = await adminClient.auth.admin.deleteUser(params.id);
     if (authError) {
       return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
-    }
-
-    const { error: profileDeleteError } = await adminClient.from('profiles').delete().eq('id', params.id);
-    if (profileDeleteError) {
-      console.error('Profile delete warning (auth user already deleted):', profileDeleteError);
     }
 
     return NextResponse.json({ success: true, message: 'User deleted successfully' });

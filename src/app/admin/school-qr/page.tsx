@@ -158,7 +158,7 @@ export default function AdminSchoolQRPage() {
     return (
       <DashboardLayout title="School QR Code" subtitle="Generate and download the school identity QR code">
         <div className="flex items-center justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div>
         </div>
       </DashboardLayout>
     );
@@ -192,7 +192,7 @@ export default function AdminSchoolQRPage() {
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-slate-900">{schoolSettings?.school_name || 'Mastery Engine'}</h3>
                 {schoolSettings?.school_address && <p className="text-slate-500 text-sm">{schoolSettings.school_address}</p>}
-                {schoolSettings?.school_motto && <p className="text-blue-600 italic text-sm mt-1">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
+                {schoolSettings?.school_motto && <p className="text-primary-600 italic text-sm mt-1">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
               </div>
               <div className="flex flex-wrap gap-3 justify-center">
                 <button onClick={downloadPNG} className="btn-primary flex items-center gap-2">
@@ -211,7 +211,7 @@ export default function AdminSchoolQRPage() {
             </div>
           ) : (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-600 border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary-600 border-t-transparent"></div>
             </div>
           )}
         </div>
@@ -242,7 +242,7 @@ export default function AdminSchoolQRPage() {
             </div>
           </div>
 
-          <div className="card bg-blue-50 border-blue-200">
+          <div className="card bg-primary-50 border-primary-200">
             <h3 className="font-bold text-slate-900 mb-2">Usage</h3>
             <ul className="text-sm text-slate-700 space-y-1 list-disc list-inside">
               <li>Print and display at school entrance</li>
@@ -265,13 +265,13 @@ export default function AdminSchoolQRPage() {
               </button>
             </div>
             <div className="p-6 text-center">
-              <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 text-white">
+              <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl p-6 text-white">
                 <h3 className="text-xl font-bold mb-1">{schoolSettings?.school_name || 'Mastery Engine'}</h3>
-                {schoolSettings?.school_address && <p className="text-blue-200 text-sm">{schoolSettings.school_address}</p>}
+                {schoolSettings?.school_address && <p className="text-primary-200 text-sm">{schoolSettings.school_address}</p>}
                 <div className="mt-4 inline-block bg-white rounded-lg p-3">
                   {qrCodeUrl && <img src={qrCodeUrl} alt="QR" className="w-40 h-40" />}
                 </div>
-                {schoolSettings?.school_motto && <p className="text-blue-200 italic text-sm mt-4">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
+                {schoolSettings?.school_motto && <p className="text-primary-200 italic text-sm mt-4">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
               </div>
             </div>
             <div className="flex justify-end gap-3 p-5 border-t border-slate-200">

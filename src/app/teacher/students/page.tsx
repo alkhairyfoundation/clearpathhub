@@ -238,7 +238,7 @@ export default function TeacherStudentsPage() {
       <div className="card overflow-hidden p-0">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div>
           </div>
         ) : filteredStudents.length === 0 ? (
           <div className="text-center py-16 text-slate-400">
@@ -263,7 +263,7 @@ export default function TeacherStudentsPage() {
                   <tr key={student.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                        <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                           {student.profile?.first_name?.[0]?.toUpperCase()}{student.profile?.last_name?.[0]?.toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -281,10 +281,10 @@ export default function TeacherStudentsPage() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEditModal(student)}
-                          className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 hover:bg-primary-50 rounded-lg transition-colors"
                           title="Edit"
                         >
-                          <Edit size={15} className="text-blue-600" />
+                          <Edit size={15} className="text-primary-600" />
                         </button>
                         <button
                           onClick={() => handleDelete(student)}
@@ -443,8 +443,8 @@ export default function TeacherStudentsPage() {
                   <input type="text" value={newCredentials.admissionNumber} readOnly className="input bg-slate-50 font-mono text-sm" />
                 </div>
               )}
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="text-xs text-blue-700 font-medium">Login URL: <span className="font-mono">/login</span></p>
+              <div className="p-3 bg-primary-50 rounded-lg">
+                <p className="text-xs text-primary-700 font-medium">Login URL: <span className="font-mono">/login</span></p>
               </div>
             </div>
             <div className="p-5 border-t border-slate-200">

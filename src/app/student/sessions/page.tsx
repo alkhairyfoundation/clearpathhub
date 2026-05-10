@@ -253,7 +253,7 @@ export default function StudentSessionsPage() {
         <div><h1 className="text-2xl font-bold text-slate-800">Video Lessons</h1><p className="text-slate-500">Watch lessons and complete checkpoint quizzes to unlock content</p></div>
         
         {loading ? (
-        <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+        <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sessions.map((session) => {
@@ -309,7 +309,7 @@ export default function StudentSessionsPage() {
                       const answered = checkpointAnswers[currentCheckpoint.id] !== undefined;
                       const isCorrect = i === currentCheckpoint.correct_answer;
                       return (
-                        <button key={i} onClick={() => !answered && handleCheckpointAnswer(i)} disabled={answered} className={`w-full p-4 rounded-lg text-left border transition-colors ${answered ? (isCorrect ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500') : 'hover:border-blue-500 hover:bg-blue-50'}`}>
+                        <button key={i} onClick={() => !answered && handleCheckpointAnswer(i)} disabled={answered} className={`w-full p-4 rounded-lg text-left border transition-colors ${answered ? (isCorrect ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500') : 'hover:border-primary-500 hover:bg-primary-50'}`}>
                           <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt}
                           {answered && isCorrect && <CheckCircle size={16} className="float-right text-green-600" />}
                           {answered && !isCorrect && checkpointAnswers[currentCheckpoint.id] === false && i === currentCheckpoint.correct_answer && <CheckCircle size={16} className="float-right text-green-600" />}

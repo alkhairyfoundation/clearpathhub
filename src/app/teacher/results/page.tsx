@@ -128,10 +128,10 @@ export default function TeacherResultsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-blue-600" />Subject Performance</h3>
+                <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-primary-600" />Subject Performance</h3>
                 {subjectSummary.length === 0 ? <p className="text-sm text-slate-500">No data</p> : (
                   <div className="space-y-3">{subjectSummary.map(s => (
-                    <div key={s.id}><div className="flex justify-between text-sm mb-1"><span>{s.name}</span><span className={`font-bold ${s.avg >= 70 ? 'text-green-600' : s.avg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{s.avg}%</span></div><div className="w-full bg-slate-100 rounded-full h-2"><div className="h-2 rounded-full bg-blue-500" style={{ width: `${s.avg}%` }} /></div></div>
+                    <div key={s.id}><div className="flex justify-between text-sm mb-1"><span>{s.name}</span><span className={`font-bold ${s.avg >= 70 ? 'text-green-600' : s.avg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{s.avg}%</span></div><div className="w-full bg-slate-100 rounded-full h-2"><div className="h-2 rounded-full bg-primary-500" style={{ width: `${s.avg}%` }} /></div></div>
                   ))}</div>
                 )}
               </div>
@@ -140,7 +140,7 @@ export default function TeacherResultsPage() {
                 <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><Award size={18} className="text-purple-600" />Grade Distribution</h3>
                 <div className="space-y-2">{gradeDist.filter(g => g.count > 0).map(g => {
                   const pct = Math.round((g.count / results.length) * 100);
-                  return (<div key={g.grade} className="flex items-center gap-3"><span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold bg-slate-100">{g.grade}</span><div className="flex-1 bg-slate-100 rounded-full h-3"><div className="h-3 rounded-full bg-blue-500" style={{ width: `${pct}%` }} /></div><span className="text-sm text-slate-500 w-8 text-right">{g.count}</span></div>);
+                  return (<div key={g.grade} className="flex items-center gap-3"><span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold bg-slate-100">{g.grade}</span><div className="flex-1 bg-slate-100 rounded-full h-3"><div className="h-3 rounded-full bg-primary-500" style={{ width: `${pct}%` }} /></div><span className="text-sm text-slate-500 w-8 text-right">{g.count}</span></div>);
                 })}</div>
               </div>
             </div>
@@ -167,7 +167,7 @@ export default function TeacherResultsPage() {
         )}
 
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          {loading ? <div className="p-12 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div></div> : results.length === 0 ? <div className="p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No results yet</p></div> : (
+          {loading ? <div className="p-12 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div></div> : results.length === 0 ? <div className="p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No results yet</p></div> : (
             <table className="w-full">
               <thead className="bg-gray-50"><tr><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Student</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Subject</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Exam</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Score</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Grade</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Date</th></tr></thead>
               <tbody>{results.map((r) => (<tr key={r.id} className="border-t hover:bg-gray-50"><td className="py-4 px-6">{r.student?.first_name} {r.student?.last_name}</td><td className="py-4 px-6">{r.subject?.name || '-'}</td><td className="py-4 px-6 capitalize">{r.exam_type}</td><td className="py-4 px-6 font-bold">{r.score}</td><td className="py-4 px-6"><span className={`px-2 py-1 rounded text-xs font-medium ${r.grade?.includes('A') ? 'bg-green-100 text-green-700' : r.grade?.includes('F') ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>{r.grade}</span></td><td className="py-4 px-6 text-slate-500">{new Date(r.created_at).toLocaleDateString()}</td></tr>))}</tbody>

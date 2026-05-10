@@ -349,7 +349,7 @@ export default function TeacherSessionsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                      <HelpCircle size={18} className="text-blue-600" />
+                      <HelpCircle size={18} className="text-primary-600" />
                       Video Checkpoints
                     </h3>
                     <p className="text-sm text-slate-500">Set questions at specific timestamps during the video</p>
@@ -367,9 +367,9 @@ export default function TeacherSessionsPage() {
                 ) : (
                   <div className="space-y-4">
                     {checkpoints.map((cp, i) => (
-                      <div key={i} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div key={i} className="p-4 bg-primary-50 rounded-lg border border-primary-200">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium text-blue-700">Checkpoint {i + 1}</span>
+                          <span className="text-sm font-medium text-primary-700">Checkpoint {i + 1}</span>
                           <div className="flex items-center gap-2">
                             <select value={cp.question_type} onChange={(e) => updateCheckpoint(i, 'question_type', e.target.value)} className="input text-xs py-1 w-36">
                               {CHECKPOINT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -411,7 +411,7 @@ export default function TeacherSessionsPage() {
                             <label className="label text-xs">Correct Answer</label>
                             <div className="grid grid-cols-2 gap-2">
                               {['True', 'False'].map((opt, j) => (
-                                <label key={j} className={`p-2 rounded-lg border-2 cursor-pointer text-center text-sm transition-all ${cp.correct_answer === j ? 'border-blue-500 bg-blue-100' : 'border-slate-200 bg-white'}`}>
+                                <label key={j} className={`p-2 rounded-lg border-2 cursor-pointer text-center text-sm transition-all ${cp.correct_answer === j ? 'border-primary-500 bg-primary-100' : 'border-slate-200 bg-white'}`}>
                                   <input type="radio" name={`cp-tf-${i}`} checked={cp.correct_answer === j} onChange={() => updateCheckpoint(i, 'correct_answer', j)} className="sr-only" />
                                   <span className="font-medium">{opt}</span>
                                 </label>

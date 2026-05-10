@@ -32,7 +32,8 @@ export default function AdminEntranceExamsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     title: '', description: '', level: '', academic_year: new Date().getFullYear().toString(),
-    exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 10
+    exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 10,
+    shuffle_questions: false, require_fullscreen: false, prevent_tab_switch: false, max_tab_switches: 3
   });
   const [questionData, setQuestionData] = useState({
     question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: ''
@@ -420,6 +421,15 @@ export default function AdminEntranceExamsPage() {
                   <div><label className="label">Pass %</label><input type="number" value={formData.passing_score} onChange={e => setFormData({...formData, passing_score: parseInt(e.target.value)})} className="input" /></div>
                 </div>
                 <div><label className="label">Description</label><textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="input" rows={3} /></div>
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold text-slate-800 mb-3 text-sm">Security Settings</h4>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.shuffle_questions} onChange={(e) => setFormData({ ...formData, shuffle_questions: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700">Shuffle Questions</p><p className="text-xs text-slate-400">Display questions in random order for each applicant</p></div></label>
+                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.require_fullscreen} onChange={(e) => setFormData({ ...formData, require_fullscreen: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700">Require Fullscreen</p><p className="text-xs text-slate-400">Force fullscreen mode during the exam</p></div></label>
+                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.prevent_tab_switch} onChange={(e) => setFormData({ ...formData, prevent_tab_switch: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700">Prevent Tab Switching</p><p className="text-xs text-slate-400">Auto-submit if applicant switches tabs too many times</p></div></label>
+                    {formData.prevent_tab_switch && <div><label className="label text-xs">Max Allowed Tab Switches</label><input type="number" value={formData.max_tab_switches} onChange={(e) => setFormData({ ...formData, max_tab_switches: parseInt(e.target.value) })} className="input" min={1} max={10} /></div>}
+                  </div>
+                </div>
               </div>
               <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
                 <button onClick={() => setShowExamModal(false)} className="btn-ghost">Cancel</button>

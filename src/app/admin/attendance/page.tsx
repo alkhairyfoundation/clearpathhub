@@ -103,7 +103,7 @@ export default function AdminAttendancePage() {
         </h2>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
+          <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>
         ) : attendance.length === 0 ? (
           <div className="text-center py-16">
             <UserCheck className="mx-auto text-slate-300 mb-4" size={48} />

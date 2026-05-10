@@ -98,7 +98,7 @@ export default function AdminStaffIDCardsPage() {
     switch (role) {
       case 'teacher': return { bg: 'bg-emerald-600', label: 'Teacher' };
       case 'accountant': return { bg: 'bg-amber-600', label: 'Accountant' };
-      case 'admin': return { bg: 'bg-blue-600', label: 'Administrator' };
+      case 'admin': return { bg: 'bg-primary-600', label: 'Administrator' };
       default: return { bg: 'bg-slate-600', label: role };
     }
   }
@@ -224,7 +224,7 @@ export default function AdminStaffIDCardsPage() {
         {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
         {loading ? (
-          <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+          <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
         ) : filtered.length === 0 ? (
           <div className="card text-center py-16">
             <Users className="mx-auto text-slate-300 mb-4" size={48} />
@@ -238,7 +238,7 @@ export default function AdminStaffIDCardsPage() {
                 <div key={member.id} className="card hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center font-bold text-white">
+                      <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center font-bold text-white">
                         {member.first_name?.[0]}{member.last_name?.[0]}
                       </div>
                       <div>
@@ -278,7 +278,7 @@ export default function AdminStaffIDCardsPage() {
                 <div className="flex flex-wrap justify-center gap-8 mb-6">
                   {/* Front */}
                   <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
-                    <div className="bg-gradient-to-r from-blue-700 to-blue-900 text-white p-5 text-center">
+                    <div className="bg-gradient-to-r from-primary-700 to-primary-900 text-white p-5 text-center">
                       <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
                       <h3 className="text-lg font-bold mt-1">STAFF ID CARD</h3>
                       <p className="text-xs opacity-80">{schoolSettings?.academic_year || '2024-2025'}</p>
@@ -287,7 +287,7 @@ export default function AdminStaffIDCardsPage() {
                       {selectedStaff.avatar_url ? (
                         <img src={selectedStaff.avatar_url} alt="Photo" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 mb-4" />
                       ) : (
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-3xl font-bold text-white mb-4">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-3xl font-bold text-white mb-4">
                           {selectedStaff.first_name?.[0]}{selectedStaff.last_name?.[0]}
                         </div>
                       )}
@@ -307,7 +307,7 @@ export default function AdminStaffIDCardsPage() {
 
                   {/* Back */}
                   <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
-                    <div className="bg-gradient-to-r from-blue-700 to-blue-900 text-white p-5 text-center">
+                    <div className="bg-gradient-to-r from-primary-700 to-primary-900 text-white p-5 text-center">
                       <h3 className="text-lg font-bold">INFORMATION</h3>
                     </div>
                     <div className="p-5 space-y-4">

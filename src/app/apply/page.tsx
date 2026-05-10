@@ -167,17 +167,17 @@ function ApplyPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50 to-slate-100">
       {/* Header */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200/60 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25">
               <GraduationCap className="text-white" size={22} />
             </div>
             <div>
               <h1 className="font-bold text-slate-900 text-lg leading-tight">ClearPath</h1>
-              <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider -mt-0.5">Edu Hub</p>
+              <p className="text-[10px] font-semibold text-primary-600 uppercase tracking-wider -mt-0.5">Edu Hub</p>
             </div>
           </Link>
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
@@ -205,8 +205,8 @@ function ApplyPageContent() {
             {!codeValid && !exam ? (
               <div className="space-y-6">
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="text-blue-600" size={36} />
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="text-primary-600" size={36} />
                   </div>
                   <h2 className="text-xl font-bold text-slate-800">Enter Exam Code</h2>
                   <p className="text-slate-500 mt-1">You need an exam code from the school to proceed</p>
@@ -243,7 +243,7 @@ function ApplyPageContent() {
                   <p className="text-sm text-slate-600 text-center bg-slate-50 p-4 rounded-xl">{exam.description}</p>
                 )}
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                  <div className="bg-primary-50 p-4 rounded-xl border border-primary-100">
                     <p className="text-slate-500 text-xs uppercase font-semibold">Duration</p>
                     <p className="font-bold text-lg text-slate-900">{exam.duration_minutes} min</p>
                   </div>
@@ -296,7 +296,7 @@ function ApplyPageContent() {
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200/60 p-8">
             <div className="flex items-center justify-between mb-6">
               <span className="font-medium text-slate-600">Question {currentQuestion + 1} of {questions.length}</span>
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${timeRemaining <= 5 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${timeRemaining <= 5 ? 'bg-red-100 text-red-700' : 'bg-primary-100 text-primary-700'}`}>
                 <Clock size={16} />
                 <span>{timeRemaining} min left</span>
               </div>
@@ -304,7 +304,7 @@ function ApplyPageContent() {
 
             {/* Progress bar */}
             <div className="w-full bg-slate-100 rounded-full h-2 mb-6">
-              <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}></div>
+              <div className="bg-primary-600 h-2 rounded-full transition-all" style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}></div>
             </div>
             
             {questions[currentQuestion] && (
@@ -321,7 +321,7 @@ function ApplyPageContent() {
                       onClick={() => setAnswers({ ...answers, [currentQuestion]: i })}
                       className={`w-full p-4 rounded-xl text-left border-2 transition-all ${
                         answers[currentQuestion] === i
-                          ? 'border-blue-500 bg-blue-50 shadow-sm'
+                          ? 'border-primary-500 bg-primary-50 shadow-sm'
                           : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
@@ -362,7 +362,7 @@ function ApplyPageContent() {
                       onClick={() => setCurrentQuestion(i)}
                       className={`w-8 h-8 rounded-full text-xs font-semibold transition-all ${
                         i === currentQuestion
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-primary-600 text-white'
                           : answers[i] !== undefined
                           ? 'bg-green-100 text-green-700 border border-green-300'
                           : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -410,8 +410,8 @@ function ApplyPageContent() {
 export default function ApplyPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-primary-50 to-slate-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     }>
       <ApplyPageContent />

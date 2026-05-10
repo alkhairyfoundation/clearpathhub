@@ -146,7 +146,7 @@ export default function AdminLessonsPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center"><FileText className="text-emerald-600" size={24} /></div>
                 <div className="flex gap-1">
-                  <button onClick={() => openQuizManager(lesson)} className="p-2 hover:bg-blue-50 rounded-lg" title="Manage Quiz"><HelpCircle size={16} className="text-blue-500" /></button>
+                  <button onClick={() => openQuizManager(lesson)} className="p-2 hover:bg-primary-50 rounded-lg" title="Manage Quiz"><HelpCircle size={16} className="text-primary-500" /></button>
                   <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-gray-100 rounded-lg"><Trash2 size={16} className="text-red-500" /></button>
                 </div>
               </div>
@@ -192,7 +192,7 @@ export default function AdminLessonsPage() {
                 <button onClick={() => setShowQuizModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700">
                   <p className="font-medium">Lesson Quiz</p>
                   <p className="mt-1">Add quiz questions that students must answer after reading this lesson note.</p>
                 </div>

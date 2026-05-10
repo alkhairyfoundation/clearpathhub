@@ -81,17 +81,17 @@ function LoginPageContent() {
   return (
     <div className="min-h-screen flex bg-slate-50">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/20 via-transparent to-transparent" />
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-cp-green via-cp-green to-slate-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cp-gold/20 via-transparent to-transparent" />
         
         <div className="relative flex flex-col justify-center px-12 xl:px-16">
           <Link href="/" className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+            <div className="w-12 h-12 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-xl flex items-center justify-center shadow-lg shadow-cp-gold/25">
               <GraduationCap className="text-white" size={24} />
             </div>
             <div>
               <h1 className="font-bold text-white text-xl">ClearPath</h1>
-              <p className="text-[11px] font-semibold text-blue-400 uppercase tracking-wider -mt-0.5">Edu Hub</p>
+              <p className="text-[11px] font-semibold text-cp-gold uppercase tracking-wider -mt-0.5">Edu Hub</p>
             </div>
           </Link>
 
@@ -107,8 +107,8 @@ function LoginPageContent() {
 
           <div className="space-y-6">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Shield className="text-blue-400" size={20} />
+              <div className="w-10 h-10 bg-cp-gold/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Shield className="text-cp-gold" size={20} />
               </div>
               <div>
                 <h4 className="font-semibold text-white mb-1">Mastery Gates</h4>
@@ -150,12 +150,12 @@ function LoginPageContent() {
             
             {/* Mobile logo */}
             <div className="lg:hidden flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <div className="w-10 h-10 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-xl flex items-center justify-center shadow-lg shadow-cp-gold/25">
                 <GraduationCap className="text-white" size={22} />
               </div>
               <div>
                 <h1 className="font-bold text-slate-900 text-lg">ClearPath</h1>
-                <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider -mt-0.5">Edu Hub</p>
+                <p className="text-[10px] font-semibold text-cp-gold uppercase tracking-wider -mt-0.5">Edu Hub</p>
               </div>
             </div>
 
@@ -255,7 +255,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold"></div>
       </div>
     }>
       <LoginPageContent />

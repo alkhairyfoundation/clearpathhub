@@ -5,15 +5,15 @@ export async function POST(request: Request) {
   try {
     const supabase = await createSupabaseServerClient();
     
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized - Please log in again' }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, id')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
     
     if (profileError || profile?.role !== 'teacher') {
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     }
 
     const { email, password, first_name, last_name, class_id, phone } = await request.json();
+    let admissionNumber = '';
     
     if (!email || !password || !first_name || !last_name || !class_id) {
       return NextResponse.json({ success: false, error: 'Email, password, first name, last name, and class are required' }, { status: 400 });
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
         .from('students')
         .select('*', { count: 'exact', head: true });
       
-      const admissionNumber = `${admissionPrefix}${String((count || 0) + 1).padStart(4, '0')}`;
+      admissionNumber = `${admissionPrefix}${String((count || 0) + 1).padStart(4, '0')}`;
       
       const { error: studentError } = await adminClient.from('students').insert({
         profile_id: authData.user.id,
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       message: 'Student created successfully',
-      admission_number: `STD${String(Date.now()).slice(-4)}`,
+      admission_number: admissionNumber,
       user: authData.user 
     });
   } catch (error: any) {
@@ -112,15 +113,15 @@ export async function GET(request: Request) {
     const class_id = searchParams.get('class_id');
     const search = searchParams.get('search');
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
     
     if (profile?.role !== 'teacher' && profile?.role !== 'admin') {
