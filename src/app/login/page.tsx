@@ -42,7 +42,8 @@ function LoginPageContent() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showBismillah, setShowBismillah] = useState(true);
-  const { signIn, user } = useAuth();
+  const [redirected, setRedirected] = useState(false);
+  const { signIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
@@ -54,12 +55,7 @@ function LoginPageContent() {
     }
   }, []);
 
-  // Check if already logged in
-  useEffect(() => {
-    if (user) {
-      router.push('/portal');
-    }
-  }, [user, router]);
+  // Don't check for existing session - always show login form first time
 
   function handleBismillahDismiss() {
     localStorage.setItem('bismillah-dismissed', 'true');
@@ -72,9 +68,12 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
-      const { error, profile } = await signIn(email, password);
+      console.log('Attempting login for:', email);
+      const { error, profile, user } = await signIn(email, password);
+      console.log('Login result:', { error, hasProfile: !!profile, profileRole: profile?.role, hasUser: !!user });
       
       if (error) {
+        console.error('Login error:', error.message);
         setError(error.message);
         setLoading(false);
         return;
@@ -82,6 +81,7 @@ function LoginPageContent() {
 
       // Direct redirect based on role from signIn response
       if (profile?.role) {
+        console.log('Redirecting to:', profile.role);
         const roleRoutes: Record<string, string> = {
           admin: '/admin',
           teacher: '/teacher',
@@ -95,12 +95,15 @@ function LoginPageContent() {
           router.push(targetRoute);
           return;
         }
+      } else {
+        console.log('No profile or role, going to portal. Profile:', profile);
       }
 
       // Fallback to portal
       router.push(redirect || '/portal');
       
     } catch (err: any) {
+      console.error('Login exception:', err);
       setError(err?.message || 'An unexpected error occurred during login');
       setLoading(false);
     }

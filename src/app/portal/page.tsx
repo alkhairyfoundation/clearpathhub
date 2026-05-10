@@ -1,70 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link';
 
 export default function PortalPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    
-    console.log('Portal check:', { user: !!user, profile: !!profile, loading });
-
-    // Allow redirect if user and profile exist, even if loading is still true
-    if (!user) {
-      router.push('/login');
-      return;
+    // Immediate redirect if we have user and profile
+    if (user && profile && profile.role) {
+      const routes: Record<string, string> = {
+        admin: '/admin',
+        teacher: '/teacher',
+        student: '/student',
+        parent: '/parent',
+        accountant: '/accountant',
+      };
+      
+      const route = routes[profile.role];
+      if (route) {
+        router.replace(route);
+      }
+    } else if (user && !profile) {
+      // User exists but no profile - redirect to login with error
+      router.replace('/login?error=no_profile');
+    } else if (!user) {
+      // No user - go to login
+      router.replace('/login');
     }
-
-    if (!profile) {
-      router.push('/login?error=profile_not_found');
-      return;
-    }
-
-    if (!profile.role) {
-      router.push('/login?error=no_role');
-      return;
-    }
-
-    const roleRoutes: Record<string, string> = {
-      admin: '/admin',
-      teacher: '/teacher',
-      student: '/student',
-      parent: '/parent',
-      accountant: '/accountant',
-    };
-
-    const targetRoute = roleRoutes[profile.role];
-    if (targetRoute) {
-      router.push(targetRoute);
-    } else {
-      router.push('/login?error=invalid_role');
-    }
-  }, [user, profile, loading, ready, router]);
-
-  // Show loading only if no user or no profile yet
-if (!user || !profile) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mb-4"></div>
-        <p className="text-slate-600">Loading portal...</p>
-      </div>
-    );
-  }
+  }, [user, profile, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
-        <p className="text-slate-600">Redirecting to your dashboard...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mx-auto mb-4"></div>
+        <p className="text-slate-600">Redirecting...</p>
       </div>
     </div>
   );
