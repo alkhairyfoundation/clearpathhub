@@ -42,11 +42,10 @@ function LoginPageContent() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showBismillah, setShowBismillah] = useState(true);
-  const { signIn, user, profile, loading: authLoading } = useAuth();
+  const { signIn, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const dismissed = localStorage.getItem('bismillah-dismissed');
@@ -55,16 +54,12 @@ function LoginPageContent() {
     }
   }, []);
 
+  // Check if already logged in
   useEffect(() => {
-    if (!initialized) {
-      setInitialized(true);
-      return;
+    if (user) {
+      router.push('/portal');
     }
-
-    if (!authLoading && user && profile) {
-      router.push(redirect || '/portal');
-    }
-  }, [user, profile, authLoading, redirect, router, initialized]);
+  }, [user, router]);
 
   function handleBismillahDismiss() {
     localStorage.setItem('bismillah-dismissed', 'true');
@@ -77,11 +72,34 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
+      const { error, profile } = await signIn(email, password);
+      
       if (error) {
         setError(error.message);
         setLoading(false);
+        return;
       }
+
+      // Direct redirect based on role from signIn response
+      if (profile?.role) {
+        const roleRoutes: Record<string, string> = {
+          admin: '/admin',
+          teacher: '/teacher',
+          student: '/student',
+          parent: '/parent',
+          accountant: '/accountant',
+        };
+        
+        const targetRoute = roleRoutes[profile.role];
+        if (targetRoute) {
+          router.push(targetRoute);
+          return;
+        }
+      }
+
+      // Fallback to portal
+      router.push(redirect || '/portal');
+      
     } catch (err: any) {
       setError(err?.message || 'An unexpected error occurred during login');
       setLoading(false);

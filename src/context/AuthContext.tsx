@@ -10,7 +10,7 @@ interface AuthContextType {
   profile: Profile | null;
   setProfile: (profile: Profile | null) => void;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; user?: User; profile?: Profile }>;
   signUp: (email: string, password: string, role: UserRole, firstName: string, lastName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -23,40 +23,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    let isMounted = true;
+
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
         if (error) {
           console.error('Error getting session:', error);
           setLoading(false);
           return;
         }
 
-        console.log('Initial session:', session ? 'exists' : 'none');
-        setUser(session?.user ?? null);
-        
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          setUser(session.user);
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          if (isMounted) {
+            setProfile(data);
+            setLoading(false);
+          }
         } else {
-          setLoading(false);
+          if (isMounted) setLoading(false);
         }
       } catch (err) {
         console.error('Session error:', err);
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     getInitialSession();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event, session ? 'with session' : 'no session');
+      if (!isMounted) return;
       
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          setUser(session.user);
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          setProfile(data);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -65,36 +80,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-async function fetchProfile(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        setProfile(null);
-      } else if (data) {
-        console.log('Profile found:', data.role);
-        setProfile(data);
-      } else {
-        console.warn('No profile found for user:', userId);
-        setProfile(null);
-      }
-    } catch (err) {
-      console.error('Error fetching profile:', err);
-      setProfile(null);
-} finally {
-      setLoading(false);
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function signIn(email: string, password: string) {
     setLoading(true);
     try {
@@ -102,14 +93,24 @@ async function fetchProfile(userId: string) {
         email,
         password,
       });
+      
       if (error) {
         setLoading(false);
         return { error };
       }
+      
       if (data.user) {
         setUser(data.user);
-        await fetchProfile(data.user.id);
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        
+        setProfile(profileData);
+        return { error: null, user: data.user, profile: profileData ?? undefined };
       }
+      
       return { error: null };
     } catch (err: any) {
       setLoading(false);
