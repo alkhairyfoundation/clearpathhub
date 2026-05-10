@@ -18,7 +18,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, title, subtitle }: DashboardLayoutProps) {
-  const { profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -30,10 +30,10 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
   });
 
   useEffect(() => {
-    if (!loading && !profile) {
+    if (!loading && !user && !profile) {
       router.push('/login');
     }
-  }, [loading, profile, router]);
+  }, [loading, user, profile, router]);
 
   const handleSignOut = async () => {
     await signOut();

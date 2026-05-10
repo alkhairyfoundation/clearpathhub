@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile, UserRole } from '@/types';
@@ -22,6 +22,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  async function onAuthReady(userId: string) {
+    await fetchProfile(userId);
+    if (_resolveAuthReadyRef.current) {
+      _resolveAuthReadyRef.current(true);
+      _resolveAuthReadyRef.current = null;
+    }
+  }
+
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
@@ -32,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        await onAuthReady(session.user.id);
       } else {
         setLoading(false);
       }
@@ -46,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        await onAuthReady(session.user.id);
       } else {
         setProfile(null);
         setLoading(false);
@@ -76,12 +84,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const _resolveAuthReadyRef = useRef<((value: boolean) => void) | null>(null);
+
+  function _makeAuthReadyPromise() {
+    return new Promise<boolean>((resolve) => { _resolveAuthReadyRef.current = resolve; });
+  }
+
   async function signIn(email: string, password: string) {
     try {
+      const authReady = _makeAuthReadyPromise();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      if (!error) {
+        await authReady;
+      }
       return { error };
     } catch (err: any) {
       return { error: err?.message ? new Error(err.message) : new Error('Network error during login. Check your connection and try again.') };
