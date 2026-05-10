@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error };
       }
       if (data.user) {
+        setUser(data.user);
         await fetchProfile(data.user.id);
       }
       return { error: null };

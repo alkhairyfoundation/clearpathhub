@@ -42,11 +42,11 @@ function LoginPageContent() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showBismillah, setShowBismillah] = useState(true);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   const { signIn, user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const dismissed = localStorage.getItem('bismillah-dismissed');
@@ -56,10 +56,15 @@ function LoginPageContent() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && user && profile && loginSuccess) {
+    if (!initialized) {
+      setInitialized(true);
+      return;
+    }
+
+    if (!authLoading && user && profile) {
       router.push(redirect || '/portal');
     }
-  }, [user, profile, authLoading, loginSuccess, redirect, router]);
+  }, [user, profile, authLoading, redirect, router, initialized]);
 
   function handleBismillahDismiss() {
     localStorage.setItem('bismillah-dismissed', 'true');
@@ -76,8 +81,6 @@ function LoginPageContent() {
       if (error) {
         setError(error.message);
         setLoading(false);
-      } else {
-        setLoginSuccess(true);
       }
     } catch (err: any) {
       setError(err?.message || 'An unexpected error occurred during login');
@@ -85,12 +88,12 @@ function LoginPageContent() {
     }
   }
 
-  if (loginSuccess && authLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading your profile...</p>
+          <p className="text-slate-600">Signing you in...</p>
         </div>
       </div>
     );
