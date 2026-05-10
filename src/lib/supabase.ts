@@ -1,15 +1,40 @@
 import { createBrowserClient } from '@supabase/ssr';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+function getUrl() { return process.env.NEXT_PUBLIC_SUPABASE_URL || ''; }
+function getKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''; }
 
-// Browser client (for client components)
-export function createSupabaseBrowserClient() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+let _client: ReturnType<typeof createBrowserClient> | null = null;
+
+function getClient() {
+  if (!_client) {
+    const url = getUrl();
+    const key = getKey();
+    if (!url || !key) {
+      if (typeof window === 'undefined') return null;
+      throw new Error('Your project URL and Key are required to create a Supabase client!');
+    }
+    _client = createBrowserClient(url, key);
+  }
+  return _client;
 }
 
-// Default client (for backward compatibility)
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+// Browser client factory (for client components)
+export function createSupabaseBrowserClient() {
+  return createBrowserClient(getUrl(), getKey());
+}
+
+// Lazy supabase — created on first property access, not at module import time.
+// This prevents build-time prerendering failures (e.g. _not-found) when env vars aren't available.
+export const supabase: ReturnType<typeof createBrowserClient> = new Proxy({} as any, {
+  get(_, prop) {
+    const c = getClient();
+    if (!c) {
+      return (...args: any[]) => { throw new Error(`supabase.${String(prop)}() is not available during server-side rendering`); };
+    }
+    const val = (c as any)[prop];
+    return typeof val === 'function' ? val.bind(c) : val;
+  },
+});
 
 // Storage bucket names
 export const STORAGE_BUCKETS = {
