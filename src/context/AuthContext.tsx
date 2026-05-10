@@ -25,15 +25,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('Error getting session:', error);
-      }
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+          setLoading(false);
+          return;
+        }
 
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
+        console.log('Initial session:', session ? 'exists' : 'none');
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Session error:', err);
         setLoading(false);
       }
     };
@@ -42,12 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
+      console.log('Auth event:', event, session ? 'with session' : 'no session');
+      
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
         setProfile(null);
         setLoading(false);
       }
@@ -56,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  async function fetchProfile(userId: string) {
+async function fetchProfile(userId: string) {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -66,16 +78,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Error fetching profile:', error);
-      } else {
+        setProfile(null);
+      } else if (data) {
+        console.log('Profile found:', data.role);
         setProfile(data);
+      } else {
+        console.warn('No profile found for user:', userId);
+        setProfile(null);
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
-    } finally {
+      setProfile(null);
+} finally {
       setLoading(false);
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function signIn(email: string, password: string) {
     setLoading(true);
     try {
