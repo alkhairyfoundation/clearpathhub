@@ -87,7 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function signIn(email: string, password: string) {
-    setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -95,7 +94,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       if (error) {
-        setLoading(false);
         return { error };
       }
       
@@ -113,7 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       return { error: null };
     } catch (err: any) {
-      setLoading(false);
       return { error: err?.message ? new Error(err.message) : new Error('Network error during login. Check your connection and try again.') };
     }
   }

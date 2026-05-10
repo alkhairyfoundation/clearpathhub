@@ -19,10 +19,7 @@ export default function PortalPage() {
     
     console.log('Portal check:', { user: !!user, profile: !!profile, loading });
 
-    if (loading) {
-      return;
-    }
-
+    // Allow redirect if user and profile exist, even if loading is still true
     if (!user) {
       router.push('/login');
       return;
@@ -54,7 +51,8 @@ export default function PortalPage() {
     }
   }, [user, profile, loading, ready, router]);
 
-  if (loading || !ready) {
+  // Show loading only if no user or no profile yet
+if (!user || !profile) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mb-4"></div>
@@ -66,7 +64,6 @@ export default function PortalPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mx-auto mb-4"></div>
         <p className="text-slate-600">Redirecting to your dashboard...</p>
       </div>
     </div>
