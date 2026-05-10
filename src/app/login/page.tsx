@@ -64,13 +64,17 @@ function LoginPageContent() {
     setError('');
     setLoading(true);
 
-    const { error } = await signIn(email, password);
-    
-    if (error) {
-      setError(error.message);
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      } else {
+        router.push(redirect || '/portal');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'An unexpected error occurred during login');
       setLoading(false);
-    } else {
-      router.push(redirect || '/portal');
     }
   }
 
