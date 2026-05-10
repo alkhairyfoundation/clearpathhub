@@ -6,19 +6,19 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
 export default function PortalPage() {
-  const { profile, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
   const [timedOut, setTimedOut] = useState(false);
   const mountedRef = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (loading && !profile) {
+      if (loading && !profile && user) {
         setTimedOut(true);
       }
     }, 15000);
     return () => clearTimeout(timer);
-  }, [loading, profile]);
+  }, [loading, profile, user]);
 
   useEffect(() => {
     if (!mountedRef.current) {
@@ -26,8 +26,10 @@ export default function PortalPage() {
       return;
     }
 
-    if (!loading && !profile) {
+    if (!loading && !user) {
       router.push('/login');
+    } else if (!loading && user && !profile) {
+      router.push('/login?error=profile_not_found');
     } else if (profile && profile.role) {
       const validRoles = ['admin', 'teacher', 'student', 'parent', 'accountant'];
       if (!validRoles.includes(profile.role)) {
