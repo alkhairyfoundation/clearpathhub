@@ -92,8 +92,8 @@ function LoginPageContent() {
         
         const targetRoute = roleRoutes[profile.role];
         if (targetRoute) {
-          // Use window.location for guaranteed full page navigation
-          window.location.href = targetRoute;
+          // Use replace to avoid history issues
+          router.replace(targetRoute);
           return;
         }
       } else {
@@ -101,7 +101,7 @@ function LoginPageContent() {
       }
 
       // Fallback to portal
-      window.location.href = redirect || '/portal';
+      router.replace(redirect || '/portal');
       
     } catch (err: any) {
       console.error('Login exception:', err);

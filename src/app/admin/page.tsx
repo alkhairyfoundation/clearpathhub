@@ -27,7 +27,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
     students: 0, teachers: 0, parents: 0, staff: 0,
@@ -40,10 +40,33 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!profile) return;
-    if (profile.role !== 'admin') { router.push('/login'); return; }
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
+    if (!profile) {
+      router.push('/login');
+      return;
+    }
+    
+    if (profile.role !== 'admin') {
+      router.push('/login');
+      return;
+    }
+    
     fetchDashboard();
-  }, [profile]);
+  }, [profile, authLoading, router]);
+
+  // Show loading while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   async function fetchDashboard() {
     setLoading(true);
