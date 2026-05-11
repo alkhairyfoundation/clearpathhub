@@ -32,12 +32,12 @@ export async function middleware(request: NextRequest) {
 
   if (!user) {
     const url = request.nextUrl.clone();
-    const protectedPaths = ['/admin', '/teacher', '/student', '/parent', '/accountant', '/dashboard'];
-    const isProtected = protectedPaths.some(p => url.pathname.startsWith(p));
+    const pathname = url.pathname;
     
-    if (isProtected && !url.pathname.startsWith('/api')) {
+    // Only protect API routes that require admin privileges
+    // Let client-side handle page protection after login
+    if (pathname.startsWith('/api/admin/')) {
       url.pathname = '/login';
-      url.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }
   }
@@ -47,12 +47,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/admin/:path*',
-    '/teacher/:path*',
-    '/student/:path*',
-    '/parent/:path*',
-    '/accountant/:path*',
     '/api/admin/:path*',
   ],
 };
