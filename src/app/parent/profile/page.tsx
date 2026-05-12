@@ -38,11 +38,11 @@ export default function ParentProfilePage() {
     if (students) {
       setChildren(students);
       const statsPromises = students.map(async (child) => {
-        const { data: attendance } = await supabase.from('attendance').select('status').eq('student_id', child.id);
-        const attendanceRate = attendance && attendance.length > 0 ? Math.round((attendance.filter(a => a.status === 'present' || a.status === 'late').length / attendance.length) * 100) : 0;
-        const { data: results } = await supabase.from('results').select('score').eq('student_id', child.id);
-        const avgScore = results && results.length > 0 ? Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length) : 0;
-        const { count: pendingBehavior } = await supabase.from('behavioral_reports').select('*', { count: 'exact', head: true }).eq('student_id', child.id).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+        const { data: attendance } = await supabase.from('attendance').select('status').eq('student_id', child.profile_id);
+        const attendanceRate = attendance && attendance.length > 0 ? Math.round((attendance.filter((a: any) => a.status === 'present' || a.status === 'late').length / attendance.length) * 100) : 0;
+        const { data: results } = await supabase.from('results').select('score').eq('student_id', child.profile_id);
+        const avgScore = results && results.length > 0 ? Math.round(results.reduce((sum: number, r: any) => sum + r.score, 0) / results.length) : 0;
+        const { count: pendingBehavior } = await supabase.from('behavioral_reports').select('*', { count: 'exact', head: true }).eq('student_id', child.profile_id).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
         return { id: child.id, attendance: attendanceRate, avgScore, pendingBehavior: pendingBehavior || 0 };
       });
       const stats = await Promise.all(statsPromises);

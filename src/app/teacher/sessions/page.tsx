@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, CheckCircle, AlertCircle, HelpCircle, Pause, BookOpen } from 'lucide-react';
 import type { Session, Subject } from '@/types';
+import FileUpload from '@/components/FileUpload';
+import { STORAGE_BUCKETS } from '@/lib/supabase';
 
 interface VideoCheckpoint {
   id?: string;
@@ -328,16 +330,39 @@ export default function TeacherSessionsPage() {
                   {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="label">Video Type</label>
-                <select value={formData.video_type} onChange={(e) => setFormData({ ...formData, video_type: e.target.value as any })} className="input">
-                  <option value="youtube">YouTube</option>
-                  <option value="upload">Direct Upload</option>
-                </select>
-              </div>
-              <div>
-                <label className="label">{formData.video_type === 'youtube' ? 'YouTube URL' : 'Video URL'}</label>
-                <input type="url" value={formData.video_url} onChange={(e) => setFormData({ ...formData, video_url: e.target.value })} className="input" placeholder={formData.video_type === 'youtube' ? 'https://youtube.com/watch?v=...' : 'https://...'} />
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" checked={formData.video_type === 'youtube'} onChange={() => setFormData({ ...formData, video_type: 'youtube' })} />
+                    <span className="text-sm font-medium">YouTube Link</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" checked={formData.video_type === 'upload'} onChange={() => setFormData({ ...formData, video_type: 'upload' })} />
+                    <span className="text-sm font-medium">Upload Video</span>
+                  </label>
+                </div>
+
+                {formData.video_type === 'youtube' ? (
+                  <div>
+                    <label className="label">YouTube URL *</label>
+                    <input type="url" value={formData.video_url} onChange={(e) => setFormData({ ...formData, video_url: e.target.value })} className="input" placeholder="https://youtube.com/watch?v=..." />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="label">Video File *</label>
+                    <FileUpload
+                      bucket={STORAGE_BUCKETS.VIDEOS}
+                      onUpload={(url) => setFormData({ ...formData, video_url: url })}
+                      label=""
+                      accept="video/*"
+                      helperText="Upload MP4, WebM up to 50MB"
+                      defaultValue={formData.video_url}
+                    />
+                    {formData.video_url && (
+                      <p className="text-xs text-slate-500 mt-2 truncate">Uploaded: {formData.video_url}</p>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="label">Duration (minutes)</label>

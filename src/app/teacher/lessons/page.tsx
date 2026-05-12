@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, FileText, Trash2, X, ArrowLeft, Paperclip, Search, HelpCircle, Loader2 } from 'lucide-react';
 import type { Lesson, Subject } from '@/types';
+import FileUpload from '@/components/FileUpload';
+import { STORAGE_BUCKETS } from '@/lib/supabase';
 
 export default function TeacherLessonsPage() {
   const { profile } = useAuth();
@@ -158,7 +160,40 @@ export default function TeacherLessonsPage() {
                 <div><label className="label">Title *</label><input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Lesson title" /></div>
                 <div><label className="label">Subject</label><select value={formData.subject_id} onChange={e => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select Subject</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
                 <div><label className="label">Content</label><textarea value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} className="input" rows={8} placeholder="Lesson content..." /></div>
-                <div><label className="label">Attachments (URLs)</label><input type="text" value={formData.attachments} onChange={e => setFormData({ ...formData, attachments: e.target.value })} className="input" placeholder="URL1, URL2" /></div>
+                
+                <div className="space-y-3">
+                  <label className="label">Attachments</label>
+                  <FileUpload
+                    bucket={STORAGE_BUCKETS.LESSONS}
+                    onUpload={(url) => {
+                      const current = formData.attachments ? formData.attachments.split(',').filter(Boolean) : [];
+                      setFormData({ ...formData, attachments: [...current, url].join(',') });
+                    }}
+                    label=""
+                    accept="*"
+                    helperText="Upload PDFs, Images, or Documents"
+                  />
+                  
+                  {formData.attachments && formData.attachments.split(',').filter(Boolean).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.attachments.split(',').filter(Boolean).map((url, i) => (
+                        <div key={i} className="flex items-center gap-2 p-2 bg-slate-100 rounded-lg text-xs group">
+                          <Paperclip size={12} className="text-slate-400" />
+                          <span className="max-w-[150px] truncate">{url.split('/').pop()}</span>
+                          <button 
+                            onClick={() => {
+                              const filtered = formData.attachments.split(',').filter(Boolean).filter((_, idx) => idx !== i);
+                              setFormData({ ...formData, attachments: filtered.join(',') });
+                            }}
+                            className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-3 p-6 border-t">
                 <button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button>

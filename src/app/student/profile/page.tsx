@@ -27,7 +27,7 @@ export default function StudentProfilePage() {
   const [attendanceRate, setAttendanceRate] = useState(0);
   const [homeworkStats, setHomeworkStats] = useState({ submitted: 0, total: 0 });
   const [averageScore, setAverageScore] = useState(0);
-  const [recentResults, setRecentResults] = useState<Result[]>([]);
+  const [recentResults, setRecentResults] = useState<any[]>([]);
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
@@ -43,21 +43,24 @@ export default function StudentProfilePage() {
       setStudentInfo(student);
       if (student.class) setStudentClass(student.class);
       if (student.class_id) {
-        const { data: attendance } = await supabase.from('attendance').select('status').eq('student_id', student.id);
-        if (attendance && attendance.length > 0) {
-          const present = attendance.filter(a => a.status === 'present' || a.status === 'late').length;
-          setAttendanceRate(Math.round((present / attendance.length) * 100));
+        const [attendanceRes, homeworkRes, resultsRes] = await Promise.all([
+          supabase.from('attendance').select('status').eq('student_id', profile!.id),
+          supabase.from('homework_submissions').select('id').eq('student_id', profile!.id),
+          supabase.from('results').select('*, subject:subjects(name)').eq('student_id', profile!.id).order('created_at', { ascending: false }).limit(5),
+        ]);
+
+        if (attendanceRes.data && attendanceRes.data.length > 0) {
+          const present = attendanceRes.data.filter((a: any) => a.status === 'present' || a.status === 'late').length;
+          setAttendanceRate(Math.round((present / attendanceRes.data.length) * 100));
         }
 
-        const { data: homework } = await supabase.from('homework_submissions').select('id').eq('student_id', student.id);
         const { count: totalHomework } = await supabase.from('homework').select('*', { count: 'exact', head: true }).eq('class_id', student.class_id);
-        setHomeworkStats({ submitted: (homework || []).length, total: totalHomework || 0 });
+        setHomeworkStats({ submitted: (homeworkRes.data || []).length, total: totalHomework || 0 });
 
-        const { data: results } = await supabase.from('results').select('*').eq('student_id', student.id).order('created_at', { ascending: false }).limit(5);
-        if (results) {
-          setRecentResults(results);
-          if (results.length > 0) {
-            const avg = Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length);
+        if (resultsRes.data) {
+          setRecentResults(resultsRes.data);
+          if (resultsRes.data.length > 0) {
+            const avg = Math.round(resultsRes.data.reduce((sum: number, r: any) => sum + r.score, 0) / resultsRes.data.length);
             setAverageScore(avg);
           }
         }
@@ -165,7 +168,7 @@ export default function StudentProfilePage() {
                 {recentResults.map(r => (
                   <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div>
-                      <p className="font-medium text-slate-900 text-sm">Subject #{r.subject_id?.slice(0, 8)}</p>
+                      <p className="font-medium text-slate-900 text-sm">{r.subject?.name || `Subject #${r.subject_id?.slice(0, 8)}`}</p>
                       <p className="text-xs text-slate-400">{r.exam_type.toUpperCase()} • {new Date(r.created_at).toLocaleDateString()}</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm font-bold ${r.score >= 50 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{r.score}%</span>

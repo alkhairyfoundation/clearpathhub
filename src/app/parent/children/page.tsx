@@ -5,7 +5,17 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
+import Link from 'next/link';
 import { Users, Award, UserCheck, DollarSign, Bell, BookOpen, TrendingUp, ArrowLeft, Brain, FileText, GraduationCap } from 'lucide-react';
+
+function groupBy<T extends Record<string, any>>(arr: T[], key: string): Record<string, T[]> {
+  return arr.reduce((acc: Record<string, T[]>, item: T) => {
+    const k = String(item[key]);
+    if (!acc[k]) acc[k] = [];
+    acc[k].push(item);
+    return acc;
+  }, {});
+}
 
 export default function ParentChildrenPage() {
   const { profile } = useAuth();
@@ -33,25 +43,39 @@ export default function ParentChildrenPage() {
       if (data) {
         setChildren(data);
         const stats: Record<string, any> = {};
-        for (const child of data) {
+        const profileIds = data.map(c => c.profile_id);
+
+        if (profileIds.length > 0) {
           const [resultsRes, attendanceRes, quizRes, testRes, homeworkRes] = await Promise.all([
-            supabase.from('results').select('score, subject:subjects!subject_id(name)').eq('student_id', child.profile_id).order('created_at', { ascending: false }).limit(10),
-            supabase.from('attendance').select('status').eq('student_id', child.profile_id).order('date', { ascending: false }).limit(30),
-            supabase.from('quiz_attempts').select('id, score').eq('student_id', child.profile_id),
-            supabase.from('test_attempts').select('id, score').eq('student_id', child.profile_id),
-            supabase.from('homework_submissions').select('id, marks').eq('student_id', child.profile_id),
+            supabase.from('results').select('student_id, score').in('student_id', profileIds),
+            supabase.from('attendance').select('student_id, status').in('student_id', profileIds),
+            supabase.from('quiz_attempts').select('student_id, id, score').in('student_id', profileIds),
+            supabase.from('test_attempts').select('student_id, id, score').in('student_id', profileIds),
+            supabase.from('homework_submissions').select('student_id, id, marks').in('student_id', profileIds),
           ]);
-          const avgScore = resultsRes.data?.length ? Math.round(resultsRes.data.reduce((s: number, r: any) => s + (r.score || 0), 0) / resultsRes.data.length) : 0;
-          const attendanceRate = attendanceRes.data?.length ? Math.round((attendanceRes.data.filter((a: any) => a.status === 'present').length / attendanceRes.data.length) * 100) : 0;
-          stats[child.id] = {
-            avgScore,
-            attendanceRate,
-            totalResults: resultsRes.data?.length || 0,
-            totalAttendance: attendanceRes.data?.length || 0,
-            totalQuizzes: quizRes.data?.length || 0,
-            totalTests: testRes.data?.length || 0,
-            totalHomework: homeworkRes.data?.length || 0,
-          };
+
+          const resultsByChild = groupBy(resultsRes.data || [], 'student_id');
+          const attendanceByChild = groupBy(attendanceRes.data || [], 'student_id');
+          const quizByChild = groupBy(quizRes.data || [], 'student_id');
+          const testByChild = groupBy(testRes.data || [], 'student_id');
+          const homeworkByChild = groupBy(homeworkRes.data || [], 'student_id');
+
+          for (const child of data) {
+            const pid = child.profile_id;
+            const childResults = resultsByChild[pid] || [];
+            const childAttendance = attendanceByChild[pid] || [];
+            const avgScore = childResults.length ? Math.round(childResults.reduce((s: number, r: any) => s + (r.score || 0), 0) / childResults.length) : 0;
+            const attendanceRate = childAttendance.length ? Math.round((childAttendance.filter((a: any) => a.status === 'present').length / childAttendance.length) * 100) : 0;
+            stats[child.id] = {
+              avgScore,
+              attendanceRate,
+              totalResults: childResults.length,
+              totalAttendance: childAttendance.length,
+              totalQuizzes: (quizByChild[pid] || []).length,
+              totalTests: (testByChild[pid] || []).length,
+              totalHomework: (homeworkByChild[pid] || []).length,
+            };
+          }
         }
         setChildStats(stats);
       }
@@ -98,9 +122,9 @@ export default function ParentChildrenPage() {
                   <div className="text-center p-3 bg-slate-50 rounded-lg"><GraduationCap className="mx-auto text-slate-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalResults}</p><p className="text-xs text-slate-500">Results</p></div>
                 </div>
                 
-                <div className="flex gap-2">
-                  <a href={`/parent/progress?child=${child.id}`} className="flex-1 btn-outline text-center py-2">Progress</a>
-                  <a href={`/parent/behavior?child=${child.id}`} className="flex-1 btn-outline text-center py-2">Behavior</a>
+                  <div className="flex gap-2">
+                  <Link href={`/parent/progress?child=${child.id}`} className="flex-1 btn-outline text-center py-2">Progress</Link>
+                  <Link href={`/parent/behavior?child=${child.id}`} className="flex-1 btn-outline text-center py-2">Behavior</Link>
                 </div>
               </div>
             );

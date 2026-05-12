@@ -81,7 +81,7 @@ function AdminUsersPageContent() {
   }
 
   async function fetchAvailableStudents() {
-    const { data } = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name)');
+    const { data } = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), parent:profiles!parent_id(first_name, last_name)');
     if (data) setAvailableStudents(data);
   }
 
@@ -184,6 +184,21 @@ function AdminUsersPageContent() {
     } finally {
       setDeleting(null);
     }
+  }
+
+  async function handleUnlinkStudent(studentId: string) {
+    if (!linkingParent) return;
+    if (!window.confirm('Remove this student from the parent?')) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('students').update({ parent_id: null }).eq('id', studentId);
+      if (error) throw new Error(error.message);
+      setSuccess('Student unlinked successfully');
+      fetchAvailableStudents();
+    } catch (err: any) {
+      setError(err.message);
+    }
+    setSaving(false);
   }
 
   async function handleLinkStudents() {
@@ -557,8 +572,41 @@ function AdminUsersPageContent() {
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
-              <p className="text-sm text-slate-600">Select students to link to this parent account:</p>
+              <div className="p-5 space-y-4">
+              <p className="text-sm text-slate-600">Manage students linked to {linkingParent.first_name} {linkingParent.last_name}:</p>
+
+              {/* Currently linked students */}
+              {(() => {
+                const linkedStudents = availableStudents.filter(s => s.parent_id === linkingParent.id);
+                if (linkedStudents.length > 0) {
+                  return (
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Currently Linked</h4>
+                      <div className="space-y-2 mb-4">
+                        {linkedStudents.map((student) => (
+                          <div key={student.id} className="flex items-center gap-3 p-3 rounded-lg border border-emerald-200 bg-emerald-50">
+                            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              {student.profile?.first_name?.[0] || '?'}
+                            </div>
+                            <span className="font-medium text-sm text-slate-800 flex-1">
+                              {student.profile?.first_name} {student.profile?.last_name}
+                            </span>
+                            <span className="text-xs text-slate-400">{student.admission_number}</span>
+                            <button
+                              onClick={() => handleUnlinkStudent(student.id)}
+                              disabled={saving}
+                              className="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 hover:bg-red-50 rounded"
+                            >
+                              Unlink
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               {availableStudents.length === 0 ? (
                 <div className="text-center py-8 text-slate-400">
@@ -566,39 +614,46 @@ function AdminUsersPageContent() {
                   <p className="text-sm">No students found. Create students first.</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {availableStudents.map((student) => {
-                    const isSelected = selectedStudentIds.includes(student.id);
-                    return (
-                      <label
-                        key={student.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                          isSelected ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedStudentIds([...selectedStudentIds, student.id]);
-                            } else {
-                              setSelectedStudentIds(selectedStudentIds.filter(id => id !== student.id));
-                            }
-                          }}
-                          className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                        />
-                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                          {student.profile?.first_name?.[0] || '?'}
-                        </div>
-                        <span className="font-medium text-sm text-slate-800">
-                          {student.profile?.first_name} {student.profile?.last_name}
-                        </span>
-                        <span className="ml-auto text-xs text-slate-400">{student.admission_number}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+                <>
+                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">All Students</h4>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {availableStudents.map((student) => {
+                      const isSelected = selectedStudentIds.includes(student.id);
+                      return (
+                        <label
+                          key={student.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            isSelected ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={!!student.parent_id && student.parent_id !== linkingParent.id}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedStudentIds([...selectedStudentIds, student.id]);
+                              } else {
+                                setSelectedStudentIds(selectedStudentIds.filter(id => id !== student.id));
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 disabled:opacity-40"
+                          />
+                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            {student.profile?.first_name?.[0] || '?'}
+                          </div>
+                          <span className="font-medium text-sm text-slate-800 flex-1">
+                            {student.profile?.first_name} {student.profile?.last_name}
+                          </span>
+                          <span className="text-xs text-slate-400">{student.admission_number}</span>
+                          {student.parent && student.parent_id !== linkingParent.id && (
+                            <span className="text-xs text-amber-600">(linked to {student.parent.first_name})</span>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </>
               )}
 
               <div className="flex gap-3 pt-2">

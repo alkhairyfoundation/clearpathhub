@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, UserCheck, BookOpen, 
   Calendar, BarChart3, Settings, QrCode, Megaphone, FileText, 
   Shield, DollarSign, ClipboardList, Award, Activity, ScanLine,
-  Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard
+  Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, HelpCircle, Brain
 } from 'lucide-react';
 import type { UserRole } from '@/types';
 
@@ -18,6 +18,9 @@ const navItems = {
   admin: [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/users', label: 'User Management', icon: Users },
+    { href: '/admin/academic-sessions', label: 'Academic Sessions', icon: Calendar },
+    { href: '/admin/scheme-of-work', label: 'Scheme of Work', icon: Clipboard },
+    { href: '/admin/question-bank', label: 'Question Bank', icon: HelpCircle },
     { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
     { href: '/admin/subjects', label: 'Subjects', icon: BookOpen },
     { href: '/admin/departments', label: 'Departments', icon: Building2 },
@@ -40,6 +43,8 @@ const navItems = {
   teacher: [
     { href: '/teacher', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/teacher/classes', label: 'My Classes', icon: GraduationCap },
+    { href: '/teacher/scheme-of-work', label: 'Scheme of Work', icon: Clipboard },
+    { href: '/teacher/question-bank', label: 'Question Bank', icon: HelpCircle },
     { href: '/teacher/students', label: 'My Students', icon: Users },
     { href: '/teacher/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/teacher/lessons', label: 'Lesson Notes', icon: FileText },
@@ -54,6 +59,8 @@ const navItems = {
   ],
   student: [
     { href: '/student', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/student/practice', label: 'Daily Practice', icon: Brain },
+    { href: '/student/practice/history', label: 'Practice History', icon: BarChart3 },
     { href: '/student/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/student/lessons', label: 'Lessons', icon: FileText },
     { href: '/student/homework', label: 'Homework', icon: Clipboard },

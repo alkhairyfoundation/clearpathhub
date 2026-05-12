@@ -44,7 +44,7 @@ useEffect(() => {
             supabase.from('quiz_attempts').select('id, score, passed, completed_at, quiz:quizzes!quiz_id(title)').in('student_id', childIds).order('completed_at', { ascending: false }),
             supabase.from('test_attempts').select('id, score, passed, completed_at, test:tests!test_id(title), tab_switches, fullscreen_exits').in('student_id', childIds).order('completed_at', { ascending: false }),
             supabase.from('homework_submissions').select('id, marks, submitted_at, homework:homework!homework_id(title, subject:subjects!subject_id(name))').in('student_id', childIds).order('submitted_at', { ascending: false }),
-            supabase.from('behavioral_reports').select('id, severity, title, created_at').in('student_id', childIds).order('created_at', { ascending: false }),
+            supabase.from('behavioral_reports').select('id, rating, behavior, created_at').in('student_id', childIds).order('created_at', { ascending: false }),
             supabase.from('exam_activity_logs').select('id, event_type, severity, created_at').in('student_id', childIds).order('created_at', { ascending: false }),
             supabase.from('invoices').select('id, amount, status').in('student_id', childIds).eq('status', 'pending'),
           ]);
@@ -60,7 +60,7 @@ useEffect(() => {
           (quizData.data || []).slice(0, 5).forEach((q: any) => activity.push({ type: 'quiz', label: `${q.quiz?.title || 'Quiz'} - ${q.score}%`, time: q.completed_at, icon: 'quiz', href: '/parent/progress' }));
           (testData.data || []).slice(0, 5).forEach((t: any) => activity.push({ type: 'test', label: `${t.test?.title || 'Test'} - ${t.score}%`, time: t.completed_at, icon: 'test', href: '/parent/progress' }));
           (homeworkData.data || []).slice(0, 5).forEach((h: any) => activity.push({ type: 'homework', label: `${h.homework?.title || 'Homework'}${h.marks != null ? ` - ${h.marks} marks` : ''}`, time: h.submitted_at, icon: 'homework', href: '/parent/progress' }));
-          (behaviorData.data || []).slice(0, 5).forEach((b: any) => activity.push({ type: 'behavior', label: b.title || 'Behavior report', time: b.created_at, icon: 'behavior', href: '/parent/behavior' }));
+          (behaviorData.data || []).slice(0, 5).forEach((b: any) => activity.push({ type: 'behavior', label: b.behavior || `Rating: ${b.rating}/5`, time: b.created_at, icon: 'behavior', href: '/parent/behavior' }));
           (examLogsData.data || []).slice(0, 5).forEach((e: any) => activity.push({ type: 'security', label: `Security: ${e.event_type}`, time: e.created_at, icon: 'security', href: '/parent/behavior' }));
           activity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
           setRecentActivity(activity.slice(0, 10));

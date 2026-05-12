@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { Save, Shield, Palette, FileText, Image, Check, AlertCircle, Loader2 } from 'lucide-react';
 import type { SchoolSettings } from '@/types';
 import DashboardLayout from '@/components/DashboardLayout';
+import FileUpload from '@/components/FileUpload';
+import { STORAGE_BUCKETS } from '@/lib/supabase';
 
 export default function AdminSettingsPage() {
   const { profile } = useAuth();
@@ -192,24 +194,24 @@ export default function AdminSettingsPage() {
             <h2 className="text-lg font-semibold text-slate-900">School Logo</h2>
           </div>
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
-              {settings.school_logo ? (
-                <div className="relative">
-                  <img src={settings.school_logo} alt="School Logo" className="w-24 h-24 mx-auto object-contain rounded-lg" />
-                  <button onClick={() => setSettings({ ...settings, school_logo: '' })} className="mt-3 text-sm text-red-600 hover:text-red-700 font-medium">Remove Logo</button>
-                </div>
-              ) : (
-                <>
-                  <Image className="mx-auto text-slate-300 mb-2" size={48} />
-                  <p className="text-sm text-slate-500 mb-1">Upload your school logo</p>
-                  <p className="text-xs text-slate-400">Recommended: 200x200px PNG or JPG</p>
-                </>
-              )}
-            </div>
-            <div>
-              <label className="label">Logo URL</label>
-              <input type="url" value={settings.school_logo || ''} onChange={(e) => setSettings({ ...settings, school_logo: e.target.value })} className="input" placeholder="https://..." />
-            </div>
+            <FileUpload
+              bucket={STORAGE_BUCKETS.AVATARS}
+              onUpload={(url) => setSettings({ ...settings, school_logo: url })}
+              defaultValue={settings.school_logo}
+              label="Logo Upload"
+              helperText="Recommended: 200x200px PNG or JPG"
+            />
+            {settings.school_logo && (
+              <div className="pt-2">
+                <label className="label">Current Logo URL</label>
+                <input 
+                  type="url" 
+                  value={settings.school_logo} 
+                  readOnly 
+                  className="input bg-slate-50 text-xs text-slate-500" 
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -7,24 +7,49 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Bell, Calendar, AlertTriangle, Info } from 'lucide-react';
 
+const PAGE_SIZE = 10;
+
 export default function ParentAnnouncementsPage() {
   const { profile } = useAuth();
   const router = useRouter();
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     if (!profile || profile.role !== 'parent') { router.push('/login'); return; }
-    fetchData();
+    setAnnouncements([]);
+    setPage(0);
+    setHasMore(true);
+    fetchData(0, true);
   }, [profile]);
 
-  async function fetchData() {
-    setLoading(true);
-    const query = supabase.from('announcements').select('*').in('audience', ['all', 'parents']).order('created_at', { ascending: false });
-    const { data } = await query;
-    if (data) setAnnouncements(data);
-    setLoading(false);
+  async function fetchData(pageNum: number, reset = false) {
+    if (reset) setLoading(true);
+    else setLoadingMore(true);
+    const from = pageNum * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('*', { count: 'exact' })
+      .in('audience', ['all', 'parents'])
+      .order('created_at', { ascending: false })
+      .range(from, to);
+    if (!error && data) {
+      setAnnouncements(prev => reset ? data : [...prev, ...data]);
+      setHasMore(data.length === PAGE_SIZE);
+    }
+    if (reset) setLoading(false);
+    else setLoadingMore(false);
+  }
+
+  function loadMore() {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchData(nextPage);
   }
 
   const filtered = filter === 'all' ? announcements : announcements.filter(a => a.priority === filter);
@@ -76,6 +101,13 @@ export default function ParentAnnouncementsPage() {
               {ann.content && <p className="text-slate-600 mt-3">{ann.content}</p>}
             </div>
           ))}
+          {hasMore && filtered.length >= PAGE_SIZE && (
+            <div className="text-center pt-2">
+              <button onClick={loadMore} disabled={loadingMore} className="btn-outline px-6">
+                {loadingMore ? 'Loading...' : 'Load More'}
+              </button>
+            </div>
+          )}
         </div>
         )}
       </div>

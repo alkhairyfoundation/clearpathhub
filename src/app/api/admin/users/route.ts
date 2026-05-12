@@ -58,6 +58,26 @@ export async function POST(request: Request) {
         await adminClient.auth.admin.deleteUser(authData.user.id);
         return NextResponse.json({ success: false, error: profileError.message }, { status: 500 });
       }
+
+      if (role === 'student') {
+        const admissionPrefix = 'STD';
+        const { count } = await adminClient
+          .from('students')
+          .select('*', { count: 'exact', head: true });
+        const admissionNumber = `${admissionPrefix}${String((count || 0) + 1).padStart(4, '0')}`;
+
+        const { error: studentError } = await adminClient.from('students').insert({
+          profile_id: authData.user.id,
+          admission_number: admissionNumber,
+          class_id: null,
+          parent_id: null,
+        });
+
+        if (studentError) {
+          await adminClient.auth.admin.deleteUser(authData.user.id);
+          return NextResponse.json({ success: false, error: studentError.message }, { status: 500 });
+        }
+      }
     }
 
     return NextResponse.json({ success: true, message: 'User created successfully', user: authData.user });

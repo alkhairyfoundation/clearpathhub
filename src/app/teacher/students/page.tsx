@@ -44,14 +44,24 @@ export default function TeacherStudentsPage() {
   async function fetchData() {
     setLoading(true);
     try {
+      // First get classes where teacher has subjects
+      const { data: subjectData } = await supabase
+        .from('subjects')
+        .select('class_id')
+        .eq('teacher_id', profile?.id);
+      
+      const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+
       const [studentsRes, classesRes] = await Promise.all([
         supabase
           .from('students')
           .select('*, profile:profiles!profile_id(first_name, last_name, email, phone), class:classes!class_id(name)')
+          .in('class_id', teacherClassIds)
           .order('created_at', { ascending: false }),
         supabase
           .from('classes')
           .select('id, name, level')
+          .in('id', teacherClassIds)
           .order('level'),
       ]);
       if (studentsRes.error) throw new Error(studentsRes.error.message);

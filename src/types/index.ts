@@ -27,6 +27,56 @@ export interface SchoolSettings {
   term: string;
   session_start?: string;
   session_end?: string;
+  current_session_id?: string;
+  current_term_id?: string;
+}
+
+export interface AcademicSession {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  is_current: boolean;
+  created_at: string;
+  terms?: Term[];
+}
+
+export interface Term {
+  id: string;
+  session_id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  current_week: number;
+  is_current: boolean;
+  created_at: string;
+  session?: AcademicSession;
+}
+
+export interface TermWeek {
+  id: string;
+  term_id: string;
+  week_number: number;
+  start_date: string;
+  end_date: string;
+  label?: string;
+}
+
+export interface SchemeOfWork {
+  id: string;
+  term_id: string;
+  class_id: string;
+  subject_id: string;
+  week_number: number;
+  topic: string;
+  subtopics: string[];
+  learning_objectives: string[];
+  resources?: string;
+  created_at: string;
+  updated_at: string;
+  class?: Class;
+  subject?: Subject;
+  term?: Term;
 }
 
 export interface Department {
@@ -76,6 +126,7 @@ export interface Student {
   created_at: string;
   profile?: Profile;
   class?: Class;
+  parent?: Profile;
 }
 
 export interface Staff {
@@ -103,7 +154,12 @@ export interface Session {
   duration?: number;
   is_published: boolean;
   created_at: string;
+  class_id?: string;
+  term_id?: string;
+  week_no?: number;
+  topic?: string;
   subject?: Subject;
+  class?: Class;
   quiz?: Quiz[];
 }
 
@@ -168,6 +224,11 @@ export interface Lesson {
   attachments?: string[];
   is_published: boolean;
   created_at: string;
+  class_id?: string;
+  term_id?: string;
+  week_no?: number;
+  topic?: string;
+  class?: Class;
 }
 
 export interface Homework {
@@ -652,6 +713,129 @@ export interface Notification {
   created_at: string;
   recipient?: Profile;
   sender?: Profile;
+}
+
+export interface PracticeSession {
+  id: string;
+  student_id: string;
+  term_id?: string;
+  date: string;
+  goal_type: 'current_week' | 'weak_area' | 'spaced_revision' | 'challenge' | 'mixed';
+  total_questions: number;
+  answered_questions: number;
+  correct_answers: number;
+  score?: number;
+  duration_seconds: number;
+  status: 'in_progress' | 'completed' | 'abandoned';
+  created_at: string;
+  completed_at?: string;
+}
+
+export interface PracticeAttempt {
+  id: string;
+  session_id: string;
+  student_id: string;
+  question_source: 'bank' | 'quiz' | 'test';
+  source_id?: string;
+  question_text: string;
+  question_type: string;
+  options: any;
+  correct_answer: number;
+  selected_answer?: number;
+  is_correct?: boolean;
+  time_taken: number;
+  difficulty: string;
+  topic?: string;
+  subtopic?: string;
+  explanation?: string;
+  created_at: string;
+}
+
+export interface DailyGoal {
+  id: string;
+  student_id: string;
+  date: string;
+  target_questions: number;
+  target_score: number;
+  completed_questions: number;
+  achieved_score?: number;
+  status: 'pending' | 'completed' | 'missed';
+  created_at: string;
+}
+
+export interface LearningStreak {
+  id: string;
+  student_id: string;
+  current_streak: number;
+  longest_streak: number;
+  last_activity_date?: string;
+}
+
+export interface Badge {
+  id: string;
+  student_id: string;
+  badge_type: string;
+  badge_data?: any;
+  awarded_at: string;
+}
+
+export interface MasteryScore {
+  id: string;
+  student_id: string;
+  subject_id: string;
+  topic: string;
+  subtopic: string;
+  mastery_score: number;
+  accuracy: number;
+  consistency: number;
+  recency: number;
+  difficulty_progress: number;
+  level: 'needs_support' | 'developing' | 'good_progress' | 'mastered';
+  total_attempts: number;
+  correct_attempts: number;
+  last_practiced_at?: string;
+  created_at: string;
+  updated_at: string;
+  subject?: Subject;
+}
+
+export interface ReviewSchedule {
+  id: string;
+  student_id: string;
+  subject_id: string;
+  topic: string;
+  subtopic: string;
+  next_review_date: string;
+  interval_days: number;
+  last_reviewed_at?: string;
+  created_at: string;
+  updated_at: string;
+  subject?: Subject;
+}
+
+export interface QuestionBank {
+  id: string;
+  subject_id: string;
+  class_id?: string;
+  term_id?: string;
+  topic: string;
+  subtopic: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  question_type: 'multiple_choice' | 'true_false' | 'fill_blank' | 'short_answer' | 'multiple_selection';
+  question: string;
+  question_image?: string;
+  options: string[];
+  option_images?: string[];
+  correct_answer: number;
+  points: number;
+  explanation?: string;
+  tags: string[];
+  status: 'draft' | 'published' | 'archived';
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  subject?: Subject;
+  class?: Class;
 }
 
 export interface CommunicationGroup {

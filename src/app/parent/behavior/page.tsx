@@ -12,6 +12,7 @@ function BehaviorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const childId = searchParams.get('child');
+  const [children, setChildren] = useState<any[]>([]);
   const [child, setChild] = useState<any>(null);
   const [reports, setReports] = useState<any[]>([]);
   const [examActivityLogs, setExamActivityLogs] = useState<any[]>([]);
@@ -29,11 +30,12 @@ function BehaviorContent() {
       const childrenRes = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
       if (childrenRes.error) throw new Error(childrenRes.error.message);
       if (childrenRes.data?.length) {
+        setChildren(childrenRes.data);
         const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
         if (selectedChild) {
           setChild(selectedChild);
           const [reportsRes, examLogsRes] = await Promise.all([
-            supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20),
+            supabase.from('behavioral_reports').select('*').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20),
             supabase.from('exam_activity_logs').select('*').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20),
           ]);
           if (reportsRes.data) setReports(reportsRes.data);
@@ -46,22 +48,16 @@ function BehaviorContent() {
     setLoading(false);
   }
 
-  function getIcon(type: string) {
-    switch (type) {
-      case 'positive': return <CheckCircle size={18} className="text-green-600" />;
-      case 'warning': return <AlertTriangle size={18} className="text-yellow-600" />;
-      case 'concern': return <Star size={18} className="text-red-600" />;
-      default: return <Heart size={18} className="text-primary-600" />;
-    }
+  function getIcon(rating: number) {
+    if (rating >= 4) return <CheckCircle size={18} className="text-green-600" />;
+    if (rating >= 3) return <AlertTriangle size={18} className="text-yellow-600" />;
+    return <Star size={18} className="text-red-600" />;
   }
 
-  function getBg(type: string) {
-    switch (type) {
-      case 'positive': return 'bg-green-50 border-green-200';
-      case 'warning': return 'bg-yellow-50 border-yellow-200';
-      case 'concern': return 'bg-red-50 border-red-200';
-      default: return 'bg-primary-50 border-primary-200';
-    }
+  function getBg(rating: number) {
+    if (rating >= 4) return 'bg-green-50 border-green-200';
+    if (rating >= 3) return 'bg-yellow-50 border-yellow-200';
+    return 'bg-red-50 border-red-200';
   }
 
   if (loading) return <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>;
@@ -73,8 +69,25 @@ function BehaviorContent() {
           <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-800">Behavior Reports</h1>
-            <p className="text-slate-500">{child ? `${child.profile?.first_name} ${child.profile?.last_name}` : ''}</p>
+            <p className="text-slate-500">View behavior and exam security events</p>
           </div>
+          {children.length > 1 && (
+            <select
+              value={child?.id || ''}
+              onChange={(e) => {
+                const newChild = children.find(c => c.id === e.target.value);
+                if (newChild) {
+                  setChild(newChild);
+                  router.replace(`/parent/behavior?child=${newChild.id}`);
+                }
+              }}
+              className="input max-w-[200px]"
+            >
+              {children.map(c => (
+                <option key={c.id} value={c.id}>{c.profile?.first_name} {c.profile?.last_name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
       {!child ? (
@@ -130,12 +143,17 @@ function BehaviorContent() {
             ) : (
               <div className="space-y-4">
                 {reports.map(report => (
-                  <div key={report.id} className={`p-4 rounded-xl border ${getBg(report.type || 'general')}`}>
+                  <div key={report.id} className={`p-4 rounded-xl border ${getBg(report.rating)}`}>
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-3">{getIcon(report.type || 'general')}<div><p className="font-semibold text-slate-800">{report.title || 'Behavior Report'}</p><p className="text-xs text-slate-500">By {report.teacher?.first_name} {report.teacher?.last_name} &bull; {new Date(report.created_at).toLocaleDateString()}</p></div></div>
-                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white/80 capitalize">{report.type || 'general'}</span>
+                      <div className="flex items-center gap-3">{getIcon(report.rating)}<div><p className="font-semibold text-slate-800">{report.behavior || `Rating: ${report.rating}/5`}</p><p className="text-xs text-slate-500">Week {report.week_start?.slice(0, 10)} to {report.week_end?.slice(0, 10)} &bull; {new Date(report.created_at).toLocaleDateString()}</p></div></div>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white/80 capitalize">{report.rating}/5</span>
                     </div>
-                    {report.description && <p className="text-sm text-slate-600 mt-2">{report.description}</p>}
+                    {report.teacher_notes && <p className="text-sm text-slate-600 mt-2">{report.teacher_notes}</p>}
+                    <div className="flex gap-4 mt-2 text-xs text-slate-500">
+                      <span>Punctuality: {report.punctuality}/5</span>
+                      <span>Participation: {report.class_participation}/5</span>
+                      <span>Homework: {report.homework_completion}/5</span>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -22,8 +22,13 @@ export default function StudentQuizzesPage() {
 
   async function fetchData() {
     setLoading(true);
+    const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+    let quizzesQuery = supabase.from('quizzes').select('*, session:sessions!session_id(title, subject:subjects!subject_id(name))');
+    if (student?.class_id) {
+      quizzesQuery = quizzesQuery.or(`class_id.eq.${student.class_id},class_id.is.null`);
+    }
     const [quizzesRes, attemptsRes] = await Promise.all([
-      supabase.from('quizzes').select('*, session:sessions!session_id(title, subject:subjects!subject_id(name))').order('created_at', { ascending: false }),
+      quizzesQuery.order('created_at', { ascending: false }),
       supabase.from('quiz_attempts').select('*').eq('student_id', profile?.id),
     ]);
     if (quizzesRes.data) setQuizzes(quizzesRes.data);

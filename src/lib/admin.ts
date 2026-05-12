@@ -4,6 +4,10 @@ import crypto from 'crypto';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+// DEPRECATED: This library is no longer used by API routes.
+// Admin operations now use inline logic in src/app/api/admin/users/route.ts.
+// Keep for reference but prefer the API route pattern for new code.
+
 // Admin client for privileged operations
 export const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
   auth: {

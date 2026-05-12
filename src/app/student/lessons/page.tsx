@@ -12,6 +12,7 @@ export default function StudentLessonsPage() {
   const router = useRouter();
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
 
   useEffect(() => {
@@ -21,8 +22,19 @@ export default function StudentLessonsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('lessons').select('*, subject:subjects(*)').eq('is_published', true).order('created_at', { ascending: false });
-    if (data) setLessons(data);
+    setError('');
+    try {
+      const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+      let query = supabase.from('lessons').select('*, subject:subjects(*)').eq('is_published', true);
+      if (student?.class_id) {
+        query = query.or(`class_id.eq.${student.class_id},class_id.is.null`);
+      }
+      const { data, error: err } = await query.order('created_at', { ascending: false });
+      if (err) throw new Error(err.message);
+      if (data) setLessons(data);
+    } catch (err: any) {
+      setError(err.message);
+    }
     setLoading(false);
   }
 
@@ -39,6 +51,7 @@ export default function StudentLessonsPage() {
           </div>
         </div>
         
+        {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{error}</div>}
         {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {lessons.length === 0 ? <div className="col-span-full bg-white rounded-xl p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No lessons available</p></div> :

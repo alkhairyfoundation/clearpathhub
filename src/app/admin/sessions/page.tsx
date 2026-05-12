@@ -6,6 +6,9 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, FileText, Trash2, X, Eye, ArrowLeft, Video, Clock, Users, BookOpen, Loader2, Search, PlayCircle } from 'lucide-react';
+import type { Subject } from '@/types';
+import FileUpload from '@/components/FileUpload';
+import { STORAGE_BUCKETS } from '@/lib/supabase';
 
 export default function AdminSessionsPage() {
   const { profile } = useAuth();
@@ -219,10 +222,45 @@ export default function AdminSessionsPage() {
               </div>
               <div className="p-5 space-y-4">
                 <div><label className="label">Title *</label><input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Lesson title" /></div>
-                <div><label className="label">Video URL *</label><input type="url" value={formData.video_url} onChange={e => setFormData({ ...formData, video_url: e.target.value })} className="input" placeholder="https://youtube.com/watch?v=..." /></div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" checked={formData.video_type === 'youtube'} onChange={() => setFormData({ ...formData, video_type: 'youtube' })} />
+                      <span className="text-sm font-medium">YouTube Link</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" checked={formData.video_type === 'upload'} onChange={() => setFormData({ ...formData, video_type: 'upload' })} />
+                      <span className="text-sm font-medium">Upload Video</span>
+                    </label>
+                  </div>
+
+                  {formData.video_type === 'youtube' ? (
+                    <div>
+                      <label className="label">YouTube URL *</label>
+                      <input type="url" value={formData.video_url} onChange={e => setFormData({ ...formData, video_url: e.target.value })} className="input" placeholder="https://youtube.com/watch?v=..." />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="label">Video File *</label>
+                      <FileUpload
+                        bucket={STORAGE_BUCKETS.VIDEOS}
+                        onUpload={(url) => setFormData({ ...formData, video_url: url })}
+                        label=""
+                        accept="video/*"
+                        helperText="Upload MP4, WebM up to 50MB"
+                        defaultValue={formData.video_url}
+                      />
+                      {formData.video_url && (
+                        <p className="text-xs text-slate-500 mt-2 truncate">Uploaded: {formData.video_url}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className="label">Video Type</label><select value={formData.video_type} onChange={e => setFormData({ ...formData, video_type: e.target.value as any })} className="input"><option value="youtube">YouTube</option><option value="upload">Uploaded</option></select></div>
                   <div><label className="label">Duration (minutes)</label><input type="number" value={formData.duration} onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })} className="input" /></div>
+                  <div></div>
                 </div>
                 <div><label className="label">Subject</label><select value={formData.subject_id} onChange={e => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select Subject</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
                 <div><label className="label">Teacher</label><select value={formData.teacher_id} onChange={e => setFormData({ ...formData, teacher_id: e.target.value })} className="input"><option value="">Select Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>

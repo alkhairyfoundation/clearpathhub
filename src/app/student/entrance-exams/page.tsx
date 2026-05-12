@@ -21,13 +21,17 @@ export default function StudentEntranceExamsPage() {
 
   async function fetchApplications() {
     setLoading(true);
-    const { data } = await supabase
-      .from('entrance_applications')
-      .select('*, exam:entrance_exams(*)')
-      .order('created_at', { ascending: false });
-    
-    if (data) setApplications(data);
-    setLoading(false);
+    try {
+      if (!profile?.email) return;
+      const { data } = await supabase
+        .from('entrance_applications')
+        .select('*, exam:entrance_exams(*)')
+        .eq('email', profile.email)
+        .order('created_at', { ascending: false });
+      if (data) setApplications(data);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function getStatusBadge(status: string) {

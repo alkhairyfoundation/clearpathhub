@@ -60,6 +60,8 @@ export interface Database {
           term: string;
           session_start: string | null;
           session_end: string | null;
+          current_session_id: string | null;
+          current_term_id: string | null;
         };
         Insert: {
           id?: string;
@@ -76,6 +78,8 @@ export interface Database {
           term?: string;
           session_start?: string | null;
           session_end?: string | null;
+          current_session_id?: string | null;
+          current_term_id?: string | null;
         };
         Update: {
           id?: string;
@@ -92,6 +96,8 @@ export interface Database {
           term?: string;
           session_start?: string | null;
           session_end?: string | null;
+          current_session_id?: string | null;
+          current_term_id?: string | null;
         };
       };
       departments: {
@@ -267,6 +273,10 @@ export interface Database {
           attachments: string[] | null;
           is_published: boolean;
           created_at: string;
+          class_id: string | null;
+          term_id: string | null;
+          week_no: number | null;
+          topic: string | null;
         };
         Insert: {
           id?: string;
@@ -277,6 +287,10 @@ export interface Database {
           attachments?: string[] | null;
           is_published?: boolean;
           created_at?: string;
+          class_id?: string | null;
+          term_id?: string | null;
+          week_no?: number | null;
+          topic?: string | null;
         };
         Update: {
           id?: string;
@@ -287,6 +301,10 @@ export interface Database {
           attachments?: string[] | null;
           is_published?: boolean;
           created_at?: string;
+          class_id?: string | null;
+          term_id?: string | null;
+          week_no?: number | null;
+          topic?: string | null;
         };
       };
       sessions: {
@@ -301,6 +319,10 @@ export interface Database {
           duration: number | null;
           is_published: boolean;
           created_at: string;
+          class_id: string | null;
+          term_id: string | null;
+          week_no: number | null;
+          topic: string | null;
         };
         Insert: {
           id?: string;
@@ -313,6 +335,10 @@ export interface Database {
           duration?: number | null;
           is_published?: boolean;
           created_at?: string;
+          class_id?: string | null;
+          term_id?: string | null;
+          week_no?: number | null;
+          topic?: string | null;
         };
         Update: {
           id?: string;
@@ -325,6 +351,10 @@ export interface Database {
           duration?: number | null;
           is_published?: boolean;
           created_at?: string;
+          class_id?: string | null;
+          term_id?: string | null;
+          week_no?: number | null;
+          topic?: string | null;
         };
       };
       quizzes: {
@@ -841,6 +871,483 @@ export interface Database {
           ip_address?: string | null;
           user_agent?: string | null;
           created_at?: string;
+        };
+      };
+      academic_sessions: {
+        Row: {
+          id: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+          is_current: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+          is_current?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          start_date?: string;
+          end_date?: string;
+          is_current?: boolean;
+          created_at?: string;
+        };
+      };
+      terms: {
+        Row: {
+          id: string;
+          session_id: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+          current_week: number;
+          is_current: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+          current_week?: number;
+          is_current?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          name?: string;
+          start_date?: string;
+          end_date?: string;
+          current_week?: number;
+          is_current?: boolean;
+          created_at?: string;
+        };
+      };
+      term_weeks: {
+        Row: {
+          id: string;
+          term_id: string;
+          week_number: number;
+          start_date: string;
+          end_date: string;
+          label: string | null;
+        };
+        Insert: {
+          id?: string;
+          term_id: string;
+          week_number: number;
+          start_date: string;
+          end_date: string;
+          label?: string | null;
+        };
+        Update: {
+          id?: string;
+          term_id?: string;
+          week_number?: number;
+          start_date?: string;
+          end_date?: string;
+          label?: string | null;
+        };
+      };
+      question_bank: {
+        Row: {
+          id: string;
+          subject_id: string;
+          class_id: string | null;
+          term_id: string | null;
+          topic: string;
+          subtopic: string;
+          difficulty: string;
+          question_type: string;
+          question: string;
+          question_image: string | null;
+          options: any;
+          option_images: any;
+          correct_answer: number;
+          points: number;
+          explanation: string | null;
+          tags: any;
+          status: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          subject_id: string;
+          class_id?: string | null;
+          term_id?: string | null;
+          topic: string;
+          subtopic?: string;
+          difficulty?: string;
+          question_type?: string;
+          question: string;
+          question_image?: string | null;
+          options?: any;
+          option_images?: any;
+          correct_answer: number;
+          points?: number;
+          explanation?: string | null;
+          tags?: any;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          subject_id?: string;
+          class_id?: string | null;
+          term_id?: string | null;
+          topic?: string;
+          subtopic?: string;
+          difficulty?: string;
+          question_type?: string;
+          question?: string;
+          question_image?: string | null;
+          options?: any;
+          option_images?: any;
+          correct_answer?: number;
+          points?: number;
+          explanation?: string | null;
+          tags?: any;
+          status?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      practice_sessions: {
+        Row: {
+          id: string;
+          student_id: string;
+          term_id: string | null;
+          date: string;
+          goal_type: string;
+          total_questions: number;
+          answered_questions: number;
+          correct_answers: number;
+          score: number | null;
+          duration_seconds: number;
+          status: string;
+          created_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          term_id?: string | null;
+          date?: string;
+          goal_type?: string;
+          total_questions?: number;
+          answered_questions?: number;
+          correct_answers?: number;
+          score?: number | null;
+          duration_seconds?: number;
+          status?: string;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          term_id?: string | null;
+          date?: string;
+          goal_type?: string;
+          total_questions?: number;
+          answered_questions?: number;
+          correct_answers?: number;
+          score?: number | null;
+          duration_seconds?: number;
+          status?: string;
+          created_at?: string;
+          completed_at?: string | null;
+        };
+      };
+      practice_attempts: {
+        Row: {
+          id: string;
+          session_id: string;
+          student_id: string;
+          question_source: string;
+          source_id: string | null;
+          question_text: string;
+          question_type: string;
+          options: any;
+          correct_answer: number;
+          selected_answer: number | null;
+          is_correct: boolean | null;
+          time_taken: number;
+          difficulty: string;
+          topic: string | null;
+          subtopic: string | null;
+          explanation: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          session_id: string;
+          student_id: string;
+          question_source?: string;
+          source_id?: string | null;
+          question_text: string;
+          question_type?: string;
+          options?: any;
+          correct_answer: number;
+          selected_answer?: number | null;
+          is_correct?: boolean | null;
+          time_taken?: number;
+          difficulty?: string;
+          topic?: string | null;
+          subtopic?: string | null;
+          explanation?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          session_id?: string;
+          student_id?: string;
+          question_source?: string;
+          source_id?: string | null;
+          question_text?: string;
+          question_type?: string;
+          options?: any;
+          correct_answer?: number;
+          selected_answer?: number | null;
+          is_correct?: boolean | null;
+          time_taken?: number;
+          difficulty?: string;
+          topic?: string | null;
+          subtopic?: string | null;
+          explanation?: string | null;
+          created_at?: string;
+        };
+      };
+      daily_goals: {
+        Row: {
+          id: string;
+          student_id: string;
+          date: string;
+          target_questions: number;
+          target_score: number;
+          completed_questions: number;
+          achieved_score: number | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          date?: string;
+          target_questions?: number;
+          target_score?: number;
+          completed_questions?: number;
+          achieved_score?: number | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          date?: string;
+          target_questions?: number;
+          target_score?: number;
+          completed_questions?: number;
+          achieved_score?: number | null;
+          status?: string;
+          created_at?: string;
+        };
+      };
+      learning_streaks: {
+        Row: {
+          id: string;
+          student_id: string;
+          current_streak: number;
+          longest_streak: number;
+          last_activity_date: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          current_streak?: number;
+          longest_streak?: number;
+          last_activity_date?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          current_streak?: number;
+          longest_streak?: number;
+          last_activity_date?: string | null;
+          updated_at?: string;
+        };
+      };
+      badges: {
+        Row: {
+          id: string;
+          student_id: string;
+          badge_type: string;
+          badge_data: any;
+          awarded_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          badge_type: string;
+          badge_data?: any;
+          awarded_at?: string;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          badge_type?: string;
+          badge_data?: any;
+          awarded_at?: string;
+        };
+      };
+      mastery_scores: {
+        Row: {
+          id: string;
+          student_id: string;
+          subject_id: string;
+          topic: string;
+          subtopic: string;
+          mastery_score: number | null;
+          accuracy: number | null;
+          consistency: number | null;
+          recency: number | null;
+          difficulty_progress: number | null;
+          level: string;
+          total_attempts: number;
+          correct_attempts: number;
+          last_practiced_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          subject_id: string;
+          topic: string;
+          subtopic?: string;
+          mastery_score?: number | null;
+          accuracy?: number | null;
+          consistency?: number | null;
+          recency?: number | null;
+          difficulty_progress?: number | null;
+          level?: string;
+          total_attempts?: number;
+          correct_attempts?: number;
+          last_practiced_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          subject_id?: string;
+          topic?: string;
+          subtopic?: string;
+          mastery_score?: number | null;
+          accuracy?: number | null;
+          consistency?: number | null;
+          recency?: number | null;
+          difficulty_progress?: number | null;
+          level?: string;
+          total_attempts?: number;
+          correct_attempts?: number;
+          last_practiced_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      scheme_of_work: {
+        Row: {
+          id: string;
+          term_id: string;
+          class_id: string;
+          subject_id: string;
+          week_number: number;
+          topic: string;
+          subtopics: any;
+          learning_objectives: any;
+          resources: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          term_id: string;
+          class_id: string;
+          subject_id: string;
+          week_number: number;
+          topic: string;
+          subtopics?: any;
+          learning_objectives?: any;
+          resources?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          term_id?: string;
+          class_id?: string;
+          subject_id?: string;
+          week_number?: number;
+          topic?: string;
+          subtopics?: any;
+          learning_objectives?: any;
+          resources?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      review_schedule: {
+        Row: {
+          id: string;
+          student_id: string;
+          subject_id: string;
+          topic: string;
+          subtopic: string;
+          next_review_date: string;
+          interval_days: number;
+          last_reviewed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          subject_id: string;
+          topic: string;
+          subtopic?: string;
+          next_review_date: string;
+          interval_days?: number;
+          last_reviewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          subject_id?: string;
+          topic?: string;
+          subtopic?: string;
+          next_review_date?: string;
+          interval_days?: number;
+          last_reviewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };

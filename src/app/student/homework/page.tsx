@@ -25,8 +25,13 @@ export default function StudentHomeworkPage() {
 
   async function fetchData() {
     setLoading(true);
+    const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+    let hwQuery = supabase.from('homework').select('*, subject:subjects(*), class:classes(*)');
+    if (student?.class_id) {
+      hwQuery = hwQuery.or(`class_id.eq.${student.class_id},class_id.is.null`);
+    }
     const [hwRes, subRes] = await Promise.all([
-      supabase.from('homework').select('*, subject:subjects(*), class:classes(*)').order('due_date', { ascending: true }),
+      hwQuery.order('due_date', { ascending: true }),
       supabase.from('homework_submissions').select('*, homework:homework(*)').eq('student_id', profile?.id).order('submitted_at', { ascending: false }),
     ]);
     if (hwRes.data) setHomework(hwRes.data);
@@ -56,7 +61,6 @@ export default function StudentHomeworkPage() {
       homework_id: homeworkId,
       student_id: profile?.id,
       submission_url: url || uploadedUrls.join(','),
-      submission_files: uploadedUrls.length > 0 ? uploadedUrls : null,
       submitted_at: new Date().toISOString()
     });
     setSubmissionUrls(prev => ({ ...prev, [homeworkId]: '' }));
@@ -140,11 +144,11 @@ export default function StudentHomeworkPage() {
                       <div className="flex items-center gap-2 text-green-700"><Check size={18} /><span>Submitted on {new Date(submitted.submitted_at).toLocaleDateString()}</span></div>
                       {submitted.marks !== null && submitted.marks !== undefined && <p className="text-sm text-green-600 mt-1">Marks: {submitted.marks}/{hw.total_marks}</p>}
                       {submitted.feedback && <p className="text-sm text-green-600 mt-1">Feedback: {submitted.feedback}</p>}
-                      {submitted.submission_files && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {submitted.submission_files.map((url: string, i: number) => (
-                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-green-600 hover:underline">{getFileIcon(url)}{url.split('/').pop()}</a>
-                          ))}
+                      {submitted.submission_url && (
+                        <div className="mt-2">
+                          <a href={submitted.submission_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-green-600 hover:underline">
+                            <ExternalLink size={12} /> View Submission
+                          </a>
                         </div>
                       )}
                     </div>
@@ -164,7 +168,7 @@ export default function StudentHomeworkPage() {
                           ))}
                         </div>
                       )}
-                      <button onClick={() => handleSubmit(hw.id)} disabled={submitting[hw.id]} className="btn-primary w-full flex items-center justify-center gap-2">{submitting[hw.id] ? <><Loader2 size={16} className="animate-spin" />Submitting...</> : <><Upload size={18} />Submit</>}</button>
+                      <button onClick={() => handleSubmit(hw.id)} disabled={submitting[hw.id] || isOverdue(hw.due_date)} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50">{submitting[hw.id] ? <><Loader2 size={16} className="animate-spin" />Submitting...</> : <><Upload size={18} />Submit</>}</button>
                     </div>
                   )}
                 </div>

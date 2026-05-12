@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const getInitialSession = async () => {
       try {
+        setLoading(true);
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!isMounted) return;
@@ -39,18 +40,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (session?.user) {
           setUser(session.user);
-          const { data } = await supabase
+          // Fetch profile
+          const { data, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
+          
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+          }
           
           if (isMounted) {
             setProfile(data);
             setLoading(false);
           }
         } else {
-          if (isMounted) setLoading(false);
+          if (isMounted) {
+            setUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
         }
       } catch (err) {
         console.error('Session error:', err);
@@ -61,6 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
       if (!isMounted) return;
       
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -71,12 +83,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
-          setProfile(data);
+          
+          if (isMounted) {
+            setProfile(data);
+            setLoading(false);
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setProfile(null);
         setLoading(false);
+      } else if (event === 'USER_UPDATED') {
+        if (session?.user) setUser(session.user);
       }
     });
 

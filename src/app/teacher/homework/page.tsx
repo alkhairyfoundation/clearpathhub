@@ -6,6 +6,8 @@ import { supabase, uploadFile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, X, FileText, Check, Clock, Upload, Image, Paperclip, Loader2, ArrowLeft } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import FileUpload from '@/components/FileUpload';
+import { STORAGE_BUCKETS } from '@/lib/supabase';
 
 export default function TeacherHomeworkPage() {
   const { profile } = useAuth();
@@ -48,32 +50,20 @@ export default function TeacherHomeworkPage() {
     setLoading(false);
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files) return;
-    const files = Array.from(e.target.files);
-    setAttachmentFiles(prev => [...prev, ...files]);
-  }
-
   function removeAttachment(index: number) {
-    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
     setAttachmentUrls(prev => prev.filter((_, i) => i !== index));
   }
 
   async function handleSave() {
     setUploading(true);
-    const uploadedUrls: string[] = [...attachmentUrls];
-    for (const file of attachmentFiles) {
-      const { url } = await uploadFile('homework', file, `homework-${Date.now()}`);
-      if (url) uploadedUrls.push(url);
-    }
-
+    setError('');
     const data = {
       ...formData,
       subject_id: formData.subject_id || null,
       class_id: formData.class_id || null,
       teacher_id: profile?.id,
       due_date: formData.due_date || null,
-      attachments: uploadedUrls.length > 0 ? uploadedUrls : null,
+      attachments: attachmentUrls.length > 0 ? attachmentUrls : null,
       homework_type: formData.homework_type,
     };
 
@@ -145,8 +135,34 @@ export default function TeacherHomeworkPage() {
                   <div><label className="label">Total Marks</label><input type="number" value={formData.total_marks} onChange={(e) => setFormData({...formData, total_marks: parseInt(e.target.value)})} className="input" /></div>
                 </div>
                 <div><label className="label">Type</label><select value={formData.homework_type} onChange={(e) => setFormData({...formData, homework_type: e.target.value})} className="input"><option value="assignment">Assignment</option><option value="essay">Essay</option><option value="quiz">Quiz</option><option value="project">Project</option><option value="reading">Reading</option></select></div>
-                <div><label className="label">Attachments</label><input type="file" multiple onChange={(e) => setAttachmentFiles(Array.from(e.target.files || []))} className="input" /></div>
-                {attachmentUrls.length > 0 && <div className="text-sm text-slate-600"><p className="font-medium mb-2">Current Attachments:</p>{attachmentUrls.map((url, i) => <div key={i} className="flex items-center gap-2"><a href={url} target="_blank" className="text-blue-600 hover:underline">Attachment {i + 1}</a></div>)}</div>}
+                
+                <div className="space-y-3">
+                  <label className="label">Attachments</label>
+                  <FileUpload
+                    bucket={STORAGE_BUCKETS.HOMEWORK}
+                    onUpload={(url) => setAttachmentUrls(prev => [...prev, url])}
+                    label=""
+                    accept="*"
+                    helperText="Upload reference documents or templates"
+                  />
+                  
+                  {attachmentUrls.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {attachmentUrls.map((url, i) => (
+                        <div key={i} className="flex items-center gap-2 p-2 bg-slate-100 rounded-lg text-xs group">
+                          <Paperclip size={12} className="text-slate-400" />
+                          <span className="max-w-[150px] truncate">{url.split('/').pop()}</span>
+                          <button 
+                            onClick={() => removeAttachment(i)}
+                            className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-3 p-6 border-t"><button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button><button onClick={handleSave} disabled={uploading} className="btn-primary disabled:opacity-50">{uploading ? 'Uploading...' : editingHomework ? 'Update' : 'Create'}</button></div>
             </div>

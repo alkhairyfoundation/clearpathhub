@@ -69,7 +69,15 @@ function LoginPageContent() {
 
     try {
       console.log('Attempting login for:', email);
-      const { error, profile, user } = await signIn(email, password);
+      // Add a timeout to avoid eternal loading if the request hangs
+      const signInPromise = signIn(email, password);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timed out. Please try again.')), 15000)
+      );
+
+      const result = await Promise.race([signInPromise, timeoutPromise]) as any;
+      const { error, profile, user } = result;
+      
       console.log('Login result:', { error, hasProfile: !!profile, profileRole: profile?.role, hasUser: !!user });
       
       if (error) {
@@ -79,9 +87,9 @@ function LoginPageContent() {
         return;
       }
 
-      // Direct redirect based on role from signIn response
+      // If we reach here, login was successful
       if (profile?.role) {
-        console.log('Redirecting to:', '/' + profile.role);
+        console.log('Redirecting to role dashboard:', '/' + profile.role);
         const roleRoutes: Record<string, string> = {
           admin: '/admin',
           teacher: '/teacher',
@@ -92,15 +100,14 @@ function LoginPageContent() {
         
         const targetRoute = roleRoutes[profile.role];
         if (targetRoute) {
-          // Use replace to avoid history issues
           router.replace(targetRoute);
+          // We don't set loading(false) here to avoid flicker before redirect
           return;
         }
-      } else {
-        console.log('No profile or role, going to portal. Profile:', profile);
       }
 
-      // Fallback to portal
+      // Fallback to portal or original redirect
+      console.log('Falling back to redirect:', redirect || '/portal');
       router.replace(redirect || '/portal');
       
     } catch (err: any) {

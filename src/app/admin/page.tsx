@@ -9,7 +9,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import {
   Users, GraduationCap, UserCheck, BarChart3, TrendingUp, ArrowRight,
   BookOpen, Award, Activity, DollarSign, QrCode, Megaphone, Settings, FileText,
-  AlertTriangle, Clock, ChevronRight
+  AlertTriangle, Clock, ChevronRight, Video
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
@@ -176,12 +176,15 @@ export default function AdminDashboard() {
   const statsCards = [
     { title: 'Total Students', value: stats.students, icon: <GraduationCap size={24} />, href: '/admin/users?role=student', bg: 'bg-primary-50', iconBg: 'bg-primary-600', text: 'text-primary-600' },
     { title: 'Teachers', value: stats.teachers, icon: <Users size={24} />, href: '/admin/users?role=teacher', bg: 'bg-emerald-50', iconBg: 'bg-emerald-600', text: 'text-emerald-600' },
-    { title: 'Parents', value: stats.parents, icon: <UserCheck size={24} />, href: '/admin/users?role=parent', bg: 'bg-purple-50', iconBg: 'bg-purple-600', text: 'text-purple-600' },
-    { title: 'Attendance Rate', value: `${stats.attendanceRate}%`, icon: <TrendingUp size={24} />, href: '/admin/attendance', bg: 'bg-amber-50', iconBg: 'bg-amber-600', text: 'text-amber-600' },
+    { title: 'Attendance', value: `${stats.attendanceRate}%`, icon: <TrendingUp size={24} />, href: '/admin/attendance', bg: 'bg-amber-50', iconBg: 'bg-amber-600', text: 'text-amber-600' },
     { title: 'Avg Score', value: `${stats.avgScore}%`, icon: <BarChart3 size={24} />, href: '/admin/analytics', bg: 'bg-rose-50', iconBg: 'bg-rose-600', text: 'text-rose-600' },
-    { title: 'Classes', value: stats.totalClasses, icon: <FileText size={24} />, href: '/admin/classes', bg: 'bg-cyan-50', iconBg: 'bg-cyan-600', text: 'text-cyan-600' },
-    { title: 'Subjects', value: stats.totalSubjects, icon: <BookOpen size={24} />, href: '/admin/subjects', bg: 'bg-indigo-50', iconBg: 'bg-indigo-600', text: 'text-indigo-600' },
-    { title: 'At Risk', value: atRiskStudents.length, icon: <AlertTriangle size={24} />, href: '/admin/analytics', bg: 'bg-red-50', iconBg: 'bg-red-600', text: 'text-red-600' },
+  ];
+
+  const secondaryStats = [
+    { label: 'Classes', value: stats.totalClasses, href: '/admin/classes' },
+    { label: 'Subjects', value: stats.totalSubjects, href: '/admin/subjects' },
+    { label: 'Parents', value: stats.parents, href: '/admin/users?role=parent' },
+    { label: 'At Risk', value: atRiskStudents.length, href: '/admin/analytics', color: 'text-red-600' },
   ];
 
   return (
@@ -189,15 +192,26 @@ export default function AdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsCards.map((card, index) => (
-          <Link key={index} href={card.href} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-all hover:border-slate-300">
+          <Link key={index} href={card.href} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-all hover:border-slate-300 relative overflow-hidden group">
+            <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:opacity-[0.06] transition-opacity ${card.iconBg}`} />
             <div className="flex items-center justify-between mb-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${card.iconBg}`}>
                 <span className="text-white">{card.icon}</span>
               </div>
-              <ChevronRight size={16} className="text-slate-400" />
+              <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
             </div>
             <h3 className="text-sm font-medium text-slate-500">{card.title}</h3>
             <p className="text-2xl font-bold text-slate-900 mt-1">{card.value}</p>
+          </Link>
+        ))}
+      </div>
+
+      {/* Secondary Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {secondaryStats.map((stat, i) => (
+          <Link key={i} href={stat.href} className="bg-white p-4 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
+            <span className="text-sm text-slate-500">{stat.label}</span>
+            <span className={`font-bold ${stat.color || 'text-slate-700'}`}>{stat.value}</span>
           </Link>
         ))}
       </div>
@@ -233,23 +247,24 @@ export default function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="card">
+        <div className="card h-full">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
             {[
-              { label: 'Manage Users', href: '/admin/users', icon: <Users size={18} />, color: 'text-primary-600 bg-primary-50' },
-              { label: 'Manage Classes', href: '/admin/classes', icon: <GraduationCap size={18} />, color: 'text-emerald-600 bg-emerald-50' },
-              { label: 'Announcements', href: '/admin/announcements', icon: <Megaphone size={18} />, color: 'text-purple-600 bg-purple-50' },
+              { label: 'Users', href: '/admin/users', icon: <Users size={18} />, color: 'text-primary-600 bg-primary-50' },
+              { label: 'Classes', href: '/admin/classes', icon: <GraduationCap size={18} />, color: 'text-emerald-600 bg-emerald-50' },
+              { label: 'Sessions', href: '/admin/sessions', icon: <Video size={18} />, color: 'text-purple-600 bg-purple-50' },
+              { label: 'Lessons', href: '/admin/lessons', icon: <BookOpen size={18} />, color: 'text-blue-600 bg-blue-50' },
+              { label: 'Tests', href: '/admin/tests', icon: <FileText size={18} />, color: 'text-orange-600 bg-orange-50' },
               { label: 'ID Cards', href: '/admin/id-cards', icon: <QrCode size={18} />, color: 'text-amber-600 bg-amber-50' },
               { label: 'Analytics', href: '/admin/analytics', icon: <BarChart3 size={18} />, color: 'text-rose-600 bg-rose-50' },
               { label: 'Settings', href: '/admin/settings', icon: <Settings size={18} />, color: 'text-slate-600 bg-slate-50' },
             ].map((action, index) => (
-              <Link key={index} href={action.href} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color}`}>
+              <Link key={index} href={action.href} className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all text-center">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${action.color}`}>
                   {action.icon}
                 </div>
-                <span className="font-medium text-slate-700 text-sm">{action.label}</span>
-                <ChevronRight size={14} className="ml-auto text-slate-400" />
+                <span className="font-medium text-slate-700 text-xs">{action.label}</span>
               </Link>
             ))}
           </div>
