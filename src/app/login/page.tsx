@@ -68,28 +68,15 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
-      console.log('Attempting login for:', email);
-      // Add a timeout to avoid eternal loading if the request hangs
-      const signInPromise = signIn(email, password);
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Login timed out. Please try again.')), 15000)
-      );
+      const { error, profile } = await signIn(email, password);
 
-      const result = await Promise.race([signInPromise, timeoutPromise]) as any;
-      const { error, profile, user } = result;
-      
-      console.log('Login result:', { error, hasProfile: !!profile, profileRole: profile?.role, hasUser: !!user });
-      
       if (error) {
-        console.error('Login error:', error.message);
         setError(error.message);
         setLoading(false);
         return;
       }
 
-      // If we reach here, login was successful
       if (profile?.role) {
-        console.log('Redirecting to role dashboard:', '/' + profile.role);
         const roleRoutes: Record<string, string> = {
           admin: '/admin',
           teacher: '/teacher',
@@ -97,22 +84,16 @@ function LoginPageContent() {
           parent: '/parent',
           accountant: '/accountant',
         };
-        
         const targetRoute = roleRoutes[profile.role];
         if (targetRoute) {
           router.replace(targetRoute);
-          // We don't set loading(false) here to avoid flicker before redirect
           return;
         }
       }
 
-      // Fallback to portal or original redirect
-      console.log('Falling back to redirect:', redirect || '/portal');
       router.replace(redirect || '/portal');
-      
     } catch (err: any) {
-      console.error('Login exception:', err);
-      setError(err?.message || 'An unexpected error occurred during login');
+      setError(err?.message || 'An unexpected error occurred');
       setLoading(false);
     }
   }

@@ -30,56 +30,52 @@ function fallbackProfile(user: User): Profile {
   };
 }
 
+async function fetchProfile(userId: string): Promise<Profile | null> {
+  const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+  return data || null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function resolveProfile(currentUser: User): Promise<Profile> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', currentUser.id)
-      .maybeSingle();
-
-    if (data && !error) return data;
-
-    const fb = fallbackProfile(currentUser);
-
-    (async () => {
-      await supabase.from('profiles').insert({
-        id: fb.id, email: fb.email,
-        first_name: fb.first_name, last_name: fb.last_name, role: fb.role,
-      });
-    })();
-
-    return fb;
-  }
-
   useEffect(() => {
     let isMounted = true;
+    let initTimedOut = false;
 
-    // Restore session from localStorage on mount
+    // Safety timeout: never block the UI for more than 5 seconds
+    const safetyTimer = setTimeout(() => {
+      if (!isMounted) return;
+      initTimedOut = true;
+      setLoading(false);
+    }, 5000);
+
     (async () => {
+      // Restore session from localStorage
       const { data: { session } } = await supabase.auth.getSession();
       if (!isMounted) return;
+
       if (session?.user) {
         setUser(session.user);
-        const p = await resolveProfile(session.user);
-        if (isMounted) setProfile(p);
+        const p = await fetchProfile(session.user.id);
+        if (isMounted) {
+          setProfile(p || fallbackProfile(session.user));
+        }
       }
-      if (isMounted) setLoading(false);
+
+      clearTimeout(safetyTimer);
+      if (isMounted && !initTimedOut) setLoading(false);
     })();
 
-    // Listen for auth changes after mount
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
-      if (event === 'INITIAL_SESSION') return; // handled by getSession above
+      if (event === 'INITIAL_SESSION') return;
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           setUser(session.user);
-          const p = await resolveProfile(session.user);
-          if (isMounted) setProfile(p);
+          const p = await fetchProfile(session.user.id);
+          if (isMounted) setProfile(p || fallbackProfile(session.user));
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null); setProfile(null); setLoading(false);
@@ -97,12 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) return { error };
       if (data.user) {
         setUser(data.user);
-        const profileData = await resolveProfile(data.user);
+        const p = await fetchProfile(data.user.id);
+        const profileData = p || fallbackProfile(data.user);
         setProfile(profileData);
+        setLoading(false);
         return { error: null, user: data.user, profile: profileData };
       }
+      setLoading(false);
       return { error: null };
     } catch (err: any) {
+      setLoading(false);
       return { error: err?.message ? new Error(err.message) : new Error('Network error during login.') };
     }
   }
@@ -113,10 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: { first_name: firstName, last_name: lastName, role } },
     });
     if (error) return { error };
-    if (data.user && data.session) {
-      const p = await resolveProfile(data.user);
-      setProfile(p);
-    }
     return { error: null };
   }
 
