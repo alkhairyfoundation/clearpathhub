@@ -56,7 +56,7 @@ export default function AccountantDashboard() {
     const { data } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
     if (!data?.length) { alert('No transactions to export'); return; }
     const headers = Object.keys(data[0]).join(',');
-    const rows = data.map(row => Object.values(row).map(v => typeof v === 'object' ? JSON.stringify(v) : String(v || '')).join(',')).join('\n');
+    const rows = data.map((row: Record<string, any>) => Object.values(row).map(v => typeof v === 'object' ? JSON.stringify(v) : String(v || '')).join(',')).join('\n');
     const blob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'transactions_export.csv'; a.click();

@@ -1,31 +1,43 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyClient = SupabaseClient<any, 'public', any>;
 
 function getUrl() { return process.env.NEXT_PUBLIC_SUPABASE_URL || ''; }
 function getKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''; }
 
-let _client: ReturnType<typeof createBrowserClient> | null = null;
+let _client: SupabaseClient | null = null;
 
-function getClient() {
+function getClient(): AnyClient {
   if (!_client) {
     const url = getUrl();
     const key = getKey();
     if (!url || !key) {
-      if (typeof window === 'undefined') return null;
+      if (typeof window === 'undefined') return null as unknown as AnyClient;
       throw new Error('Your project URL and Key are required to create a Supabase client!');
     }
-    _client = createBrowserClient(url, key);
+    _client = createClient(url, key, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    }) as unknown as SupabaseClient;
   }
-  return _client;
+  return _client as unknown as AnyClient;
 }
 
-// Browser client factory (for client components)
-export function createSupabaseBrowserClient() {
-  return createBrowserClient(getUrl(), getKey());
+export function createSupabaseBrowserClient(): AnyClient {
+  return createClient(getUrl(), getKey(), {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }) as unknown as AnyClient;
 }
 
-// Lazy supabase — created on first property access, not at module import time.
-// This prevents build-time prerendering failures (e.g. _not-found) when env vars aren't available.
-export const supabase: ReturnType<typeof createBrowserClient> = new Proxy({} as any, {
+export const supabase: AnyClient = new Proxy({} as any, {
   get(_, prop) {
     const c = getClient();
     if (!c) {
@@ -36,7 +48,6 @@ export const supabase: ReturnType<typeof createBrowserClient> = new Proxy({} as 
   },
 });
 
-// Storage bucket names
 export const STORAGE_BUCKETS = {
   AVATARS: 'avatars',
   DOCUMENTS: 'documents',
@@ -46,7 +57,6 @@ export const STORAGE_BUCKETS = {
   LESSONS: 'lessons',
 } as const;
 
-// Helper function to upload files
 export async function uploadFile(
   bucket: string,
   file: File,
@@ -70,7 +80,6 @@ export async function uploadFile(
   }
 }
 
-// Helper function to delete files
 export async function deleteFile(
   bucket: string,
   filePath: string
@@ -86,7 +95,6 @@ export async function deleteFile(
   }
 }
 
-// Get public URL for a file
 export function getStorageUrl(bucket: string, filePath: string): string {
   const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
   return data.publicUrl;
