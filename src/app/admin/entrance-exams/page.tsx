@@ -315,7 +315,7 @@ async function handleCreateExam() {
     if (questionData.question_image) payload.question_image = questionData.question_image;
     const { error } = await supabase.from('entrance_questions').insert(payload);
     if (!error) {
-      setQuestionData({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
+      setQuestionData({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: '' });
       const { data } = await supabase.from('entrance_questions').select('*').eq('exam_id', selectedExam.id);
       if (data) setQuestions(data);
     }
