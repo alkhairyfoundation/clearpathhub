@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
+      if (event === 'INITIAL_SESSION') return; // handled by init()
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           setUser(session.user);
@@ -100,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     try {
+      // Clear stale session first to avoid cookie corruption
+      await supabase.auth.signOut();
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return { error };
       if (data.user) {

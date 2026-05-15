@@ -31,7 +31,7 @@ export default function AdminQuestionBankPage() {
   async function fetchData() {
     setLoading(true);
     const [qRes, sRes] = await Promise.all([
-      supabase.from('question_bank').select('*, subject:subjects!subject_id(name, code), creator:profiles!created_by(first_name, last_name)').order('created_at', { ascending: false }),
+      supabase.from('question_bank').select('*, subject:subjects(name, code), creator:profiles(first_name, last_name)').order('created_at', { ascending: false }),
       supabase.from('subjects').select('*').order('name'),
     ]);
     if (!qRes.error && qRes.data) setQuestions(qRes.data);
@@ -124,7 +124,7 @@ export default function AdminQuestionBankPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${q.status === 'draft' ? 'bg-amber-100 text-amber-700' : q.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>{q.status}</span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${q.difficulty === 'easy' ? 'bg-green-100 text-green-700' : q.difficulty === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{q.difficulty}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${q.difficulty_level === 'easy' ? 'bg-green-100 text-green-700' : q.difficulty_level === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{q.difficulty_level}</span>
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">{q.question_type.replace('_', ' ')}</span>
                       <span className="text-xs text-slate-400">{q.subject?.name}</span>
                       {q.creator && (

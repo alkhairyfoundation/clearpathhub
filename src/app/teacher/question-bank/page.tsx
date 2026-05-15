@@ -45,7 +45,7 @@ export default function TeacherQuestionBankPage() {
   async function fetchData() {
     setLoading(true);
     const [qRes, sRes, cRes] = await Promise.all([
-      supabase.from('question_bank').select('*, subject:subjects!subject_id(name, code)').eq('created_by', profile?.id).order('created_at', { ascending: false }),
+      supabase.from('question_bank').select('*, subject:subjects(name, code)').or('created_by.eq.' + (profile?.id || '') + ',created_by.is.null').order('created_at', { ascending: false }),
       supabase.from('subjects').select('*, class:classes!class_id(name)').eq('teacher_id', profile?.id).order('name'),
       supabase.from('classes').select('*').order('level'),
     ]);
@@ -65,7 +65,7 @@ export default function TeacherQuestionBankPage() {
     setEditing(q);
     setForm({
       subject_id: q.subject_id, class_id: q.class_id || '', topic: q.topic, subtopic: q.subtopic || '',
-      difficulty: q.difficulty, question_type: q.question_type,
+      difficulty: q.difficulty_level, question_type: q.question_type,
       question: q.question, options: q.options.length >= 4 ? q.options : [...q.options, ...Array(4 - q.options.length).fill('')],
       correct_answer: q.correct_answer, explanation: q.explanation || '', tags: Array.isArray(q.tags) ? q.tags.join(', ') : '',
     });
@@ -146,7 +146,7 @@ export default function TeacherQuestionBankPage() {
   const filteredQuestions = questions.filter(q => {
     if (search && !q.question.toLowerCase().includes(search.toLowerCase()) && !q.topic.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterSubject && q.subject_id !== filterSubject) return false;
-    if (filterDifficulty && q.difficulty !== filterDifficulty) return false;
+    if (filterDifficulty && q.difficulty_level !== filterDifficulty) return false;
     if (filterStatus && q.status !== filterStatus) return false;
     return true;
   });
@@ -231,7 +231,7 @@ export default function TeacherQuestionBankPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadge(q.status)}`}>{q.status}</span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${getDifficultyBadge(q.difficulty)}`}>{q.difficulty}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${getDifficultyBadge(q.difficulty_level)}`}>{q.difficulty_level}</span>
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">{q.question_type.replace('_', ' ')}</span>
                       <span className="text-xs text-slate-400">{q.subject?.name || 'No subject'}</span>
                     </div>

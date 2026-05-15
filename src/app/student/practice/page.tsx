@@ -75,7 +75,7 @@ export default function StudentPracticePage() {
 
       if (priorityTopics.size > 0) {
         const { data: adaptiveQuestions, error: qErr } = await supabase
-          .from('question_bank').select('*').eq('status', 'published')
+          .from('question_bank').select('*').in('status', ['published', 'active'])
           .in('topic', Array.from(priorityTopics)).limit(QUESTIONS_PER_SESSION);
         if (qErr) throw qErr;
         if (adaptiveQuestions) selectedQuestions = adaptiveQuestions;
@@ -84,7 +84,7 @@ export default function StudentPracticePage() {
       // Fallback: any published question if not enough adaptive ones
       if (selectedQuestions.length < QUESTIONS_PER_SESSION) {
         const { data: fallback } = await supabase
-          .from('question_bank').select('*').eq('status', 'published')
+          .from('question_bank').select('*').in('status', ['published', 'active'])
           .limit(QUESTIONS_PER_SESSION - selectedQuestions.length);
         if (fallback) selectedQuestions.push(...fallback);
       }
@@ -151,7 +151,7 @@ export default function StudentPracticePage() {
         options: q.options, correct_answer: q.correct_answer,
         selected_answer: selectedAnswer, is_correct: isCorrect,
         time_taken: Math.floor((Date.now() - startTime) / 1000),
-        difficulty: q.difficulty || 'medium', topic: q.topic || '', subtopic: q.subtopic || '',
+        difficulty: q.difficulty_level || 'medium', topic: q.topic || '', subtopic: q.subtopic || '',
         explanation: q.explanation || null,
         question_source: 'bank', source_id: q.id,
       });
