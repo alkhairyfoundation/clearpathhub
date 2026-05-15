@@ -529,8 +529,8 @@ async function handleCreateExam() {
      // In a real implementation, this would generate PDF reports
      // For now, we'll show a message that this would be implemented
       alert('PDF report generation functionality would be implemented here in a production system. '
-            'This would generate detailed reports for selected students or groups of students '
-            'with mastery levels, topic breakdowns, and recommendations.');
+        + 'This would generate detailed reports for selected students or groups of students '
+        + 'with mastery levels, topic breakdowns, and recommendations.');
    }
    
    function viewAnalyticsDetails(record: any) {
