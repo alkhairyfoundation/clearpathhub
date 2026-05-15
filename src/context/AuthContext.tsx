@@ -117,12 +117,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (data.user) {
         setUser(data.user);
-        const { data: profileData } = await supabase
+        let { data: profileData } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .maybeSingle();
-        
+
+        if (!profileData) {
+          try {
+            const res = await fetch('/api/auth/create-profile', { method: 'POST' });
+            if (res.ok) {
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', data.user.id)
+                .maybeSingle();
+              profileData = newProfile;
+            }
+          } catch (fetchErr) {
+            console.error('Error auto-creating profile:', fetchErr);
+          }
+        }
+
         setProfile(profileData);
         return { error: null, user: data.user, profile: profileData ?? undefined };
       }
