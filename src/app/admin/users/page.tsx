@@ -7,8 +7,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   Plus, Search, Edit, Trash2, Users, GraduationCap, UserCheck, UserMinus,
-  DollarSign, X, Loader2, AlertCircle, Check, UserPlus, Link2, Eye
+  DollarSign, X, Loader2, AlertCircle, Check, UserPlus, Link2, Eye, Upload
 } from 'lucide-react';
+import BulkStudentUpload from '@/components/BulkStudentUpload';
 import type { Profile, UserRole, Student } from '@/types';
 
 const roleConfig: Record<UserRole, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
@@ -50,6 +51,7 @@ function AdminUsersPageContent() {
   const [newCredentials, setNewCredentials] = useState({ email: '', password: '' });
   const [viewingUser, setViewingUser] = useState<Profile | null>(null);
   const [resetPasswordMode, setResetPasswordMode] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
 
   const [formData, setFormData] = useState<UserFormData>({
     email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '',
@@ -262,6 +264,9 @@ function AdminUsersPageContent() {
           </button>
           <button onClick={() => openCreateModal('student')} className="btn-accent flex items-center gap-2">
             <UserPlus size={16} /> Add Student
+          </button>
+          <button onClick={() => setShowBulkModal(true)} className="btn-outline flex items-center gap-2">
+            <Upload size={16} /> Bulk Import
           </button>
           <button onClick={() => openCreateModal('parent')} className="btn-outline flex items-center gap-2">
             <UserPlus size={16} /> Add Parent
@@ -671,6 +676,9 @@ function AdminUsersPageContent() {
           </div>
         </div>
       )}
+
+      {/* Bulk Import Modal */}
+      <BulkStudentUpload isOpen={showBulkModal} onClose={() => { setShowBulkModal(false); fetchUsers(); }} role="admin" onSuccess={(count) => setSuccess(`${count} students imported successfully`)} />
 
       {/* Credentials Modal */}
       {showCredentialsModal && (

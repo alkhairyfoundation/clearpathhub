@@ -6,9 +6,10 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, 
-  GraduationCap, Link2, Eye, Users, BookOpen, ArrowLeft
+  GraduationCap, Link2, Eye, Users, BookOpen, ArrowLeft, Upload
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import BulkStudentUpload from '@/components/BulkStudentUpload';
 import type { Student, Profile } from '@/types';
 
 export default function TeacherStudentsPage() {
@@ -26,6 +27,7 @@ export default function TeacherStudentsPage() {
   const [success, setSuccess] = useState('');
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [newCredentials, setNewCredentials] = useState({ email: '', password: '', admissionNumber: '' });
+  const [showBulkModal, setShowBulkModal] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -201,9 +203,14 @@ export default function TeacherStudentsPage() {
               <p className="text-slate-500 mt-1">Add and manage your students</p>
             </div>
           </div>
-        <button onClick={openCreateModal} className="btn-primary flex items-center gap-2">
-          <Plus size={16} /> Add Student
-        </button>
+        <div className="flex gap-2">
+          <button onClick={openCreateModal} className="btn-primary flex items-center gap-2">
+            <Plus size={16} /> Add Student
+          </button>
+          <button onClick={() => setShowBulkModal(true)} className="btn-outline flex items-center gap-2">
+            <Upload size={16} /> Bulk Upload
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -426,6 +433,9 @@ export default function TeacherStudentsPage() {
       </div>
     </div>
       )}
+
+      {/* Bulk Upload Modal */}
+      <BulkStudentUpload isOpen={showBulkModal} onClose={() => { setShowBulkModal(false); fetchData(); }} role="teacher" onSuccess={(count) => setSuccess(`${count} students imported successfully`)} />
 
       {/* Credentials Modal */}
       {showCredentialsModal && (

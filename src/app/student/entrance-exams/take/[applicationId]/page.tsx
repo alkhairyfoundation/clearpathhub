@@ -7,27 +7,31 @@ import { useEffect, useState, useRef } from 'react';
   import { Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Loader2, ArrowLeft, FileText } from 'lucide-react';
 
 function gradeQuestion(question: any, answer: any): boolean {
-  if (answer === undefined || answer === null) return false;
-  switch (question.question_type) {
-    case 'multiple_choice':
-    case 'true_false':
-      return answer === question.correct_answer;
-    case 'fill_blank': {
-      const correct = question.options?.[question.correct_answer];
-      if (!correct) return false;
-      return answer.toString().toLowerCase().trim() === correct.toString().toLowerCase().trim();
-    }
-    case 'multiple_selection': {
-      const a = Array.isArray(answer) ? [...answer].sort() : [];
-      const c = Array.isArray(question.correct_answer) ? [...question.correct_answer].sort() : [];
-      return JSON.stringify(a) === JSON.stringify(c);
-    }
-    case 'short_answer':
-      return false;
-    default:
-      return answer === question.correct_answer;
-  }
-}
+   if (answer === undefined || answer === null) return false;
+   switch (question.question_type) {
+     case 'multiple_choice':
+     case 'MCQ':
+       return answer === question.correct_answer;
+     case 'true_false':
+     case 'TRUE_FALSE':
+       return answer === question.correct_answer;
+     case 'fill_blank':
+     case 'FILL_IN_THE_GAP': {
+       const correct = question.options?.[question.correct_answer];
+       if (!correct) return false;
+       return answer.toString().toLowerCase().trim() === correct.toString().toLowerCase().trim();
+     }
+     case 'multiple_selection': {
+       const a = Array.isArray(answer) ? [...answer].sort() : [];
+       const c = Array.isArray(question.correct_answer) ? [...question.correct_answer].sort() : [];
+       return JSON.stringify(a) === JSON.stringify(c);
+     }
+     case 'short_answer':
+       return false;
+     default:
+       return answer === question.correct_answer;
+   }
+ }
 
 export default function StudentTakeEntranceExamPage() {
   const { profile } = useAuth();
@@ -178,43 +182,70 @@ export default function StudentTakeEntranceExamPage() {
     return questions.filter((_, i) => answers[i] !== undefined && answers[i] !== null && answers[i] !== '').length;
   }
 
-  async function handleSubmit() {
-    if (!exam || !profile) return;
-    setSubmitting(true);
-    let correct = 0;
-    questions.forEach((q, i) => {
-      if (gradeQuestion(q, answers[i])) correct++;
-    });
-    const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
+async function handleSubmit() {
+     if (!exam || !profile) return;
+     setSubmitting(true);
+     let correct = 0;
+     questions.forEach((q, i) => {
+       if (gradeQuestion(q, answers[i])) correct++;
+     });
+     const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
+     
+     // Determine mastery level based on score
+     let masteryLevel: 'POOR' | 'GOOD' | 'EXCELLENT' | 'PROFICIENT' | 'MASTERED';
+     if (finalScore >= 90) masteryLevel = 'MASTERED';
+     else if (finalScore >= 80) masteryLevel = 'PROFICIENT';
+     else if (finalScore >= 70) masteryLevel = 'EXCELLENT';
+     else if (finalScore >= 60) masteryLevel = 'GOOD';
+     else masteryLevel = 'POOR';
 
-    const { data: updatedApp, error } = await supabase
-      .from('entrance_applications')
-      .update({
-        exam_score: finalScore,
-        status: finalScore >= (exam.passing_score || 50) ? 'passed' : 'failed',
-        completed_at: new Date().toISOString(),
-        security_events: securityEvents
-      })
-      .eq('id', applicationId)
-      .select('id')
-      .single();
+     const { data: updatedApp, error } = await supabase
+       .from('entrance_applications')
+       .update({
+         exam_score: finalScore,
+         status: finalScore >= (exam.passing_score || 50) ? 'passed' : 'failed',
+         mastery_level: masteryLevel,
+         completed_at: new Date().toISOString(),
+         security_events: securityEvents
+       })
+       .eq('id', applicationId)
+       .select()
+       .single();
 
-    if (securityEvents.length > 0) {
-      const logs = securityEvents.map(e => ({
-        attempt_id: applicationId,
-        student_id: profile?.id,
-        event_type: e.type,
-        event_data: { key: e.key, count: e.count },
-        severity: e.type === 'tab_switch' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
-        created_at: e.time,
-      }));
-      await supabase.from('exam_activity_logs').insert(logs);
-    }
+     if (error) throw new Error(error.message);
+     
+     // Insert analytics record
+     try {
+       await supabase.from('student_analytics').insert({
+         application_id: applicationId,
+         subject: 'COMBINED', // In a real system, we'd track per subject
+         score: finalScore,
+         mastery_level: masteryLevel,
+         topic_performance: {}, // Would be populated with per-topic data in a real system
+         time_taken: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft) / 60), // Minutes taken
+         security_events_count: securityEvents.length
+       });
+     } catch (analyticsError) {
+       console.error('Failed to insert analytics record:', analyticsError);
+       // Don't fail the submission if analytics fails
+     }
 
-    setScore(finalScore);
-    setSubmitted(true);
-    setSubmitting(false);
-  }
+     if (securityEvents.length > 0) {
+       const logs = securityEvents.map(e => ({
+         attempt_id: applicationId,
+         student_id: profile?.id,
+         event_type: e.type,
+         event_data: { key: e.key, count: e.count },
+         severity: e.type === 'tab_switch' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
+         created_at: e.time,
+       }));
+       await supabase.from('exam_activity_logs').insert(logs);
+     }
+
+     setScore(finalScore);
+     setSubmitted(true);
+     setSubmitting(false);
+   }
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">

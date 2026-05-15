@@ -193,7 +193,7 @@ export interface QuizQuestion {
   options: string[];
   correct_answer: number;
   points: number;
-  question_type?: 'multiple_choice' | 'true_false' | 'fill_blank' | 'short_answer' | 'multiple_selection';
+   question_type?: 'multiple_choice' | 'true_false' | 'fill_blank' | 'multiple_selection';
   order_index?: number;
   timestamp_seconds?: number;
   is_checkpoint?: boolean;
