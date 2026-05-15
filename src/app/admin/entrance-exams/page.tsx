@@ -35,10 +35,10 @@ export default function AdminEntranceExamsPage() {
      exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 40,
      shuffle_questions: false, require_fullscreen: false, prevent_tab_switch: false, max_tab_switches: 3
    });
-   const [questionData, setQuestionData] = useState({
-     question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '',
-     difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: ''
-   });
+    const [questionData, setQuestionData] = useState({
+      question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '',
+      level: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: ''
+    });
    const [admissionData, setAdmissionData] = useState({
      status: '', admitted_class: '', notes: ''
    });
@@ -315,7 +315,7 @@ async function handleCreateExam() {
     if (questionData.question_image) payload.question_image = questionData.question_image;
     const { error } = await supabase.from('entrance_questions').insert(payload);
     if (!error) {
-      setQuestionData({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: '' });
+      setQuestionData({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', level: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: '' });
       const { data } = await supabase.from('entrance_questions').select('*').eq('exam_id', selectedExam.id);
       if (data) setQuestions(data);
     }
@@ -870,7 +870,7 @@ async function handleCreateExam() {
                          {q.question_type === 'MCQ' && q.options && (
                            <div className="mt-3 space-y-2">
                              <p className="font-medium text-slate-700">Options:</p>
-                             {q.options.map((opt, i) => (
+                              {q.options.map((opt: string, i: number) => (
                                <div key={i} className="flex items-center gap-2 text-sm">
                                  <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-semibold text-sm flex-shrink-0">{String.fromCharCode(65 + i)}</span>
                                  <span className="flex-1">{opt}</span>
@@ -963,7 +963,7 @@ async function handleCreateExam() {
                      {['POOR', 'GOOD', 'EXCELLENT', 'PROFICIENT', 'MASTERED'].map(level => (
                        <div key={level} className="p-4 bg-slate-50 rounded-lg text-center">
                          <p className="text-sm font-medium text-slate-700">{level}</p>
-                         <p className="text-2xl font-bold">{analyticsMasteryDistribution[level] || 0}</p>
+                          <p className="text-2xl font-bold">{(analyticsMasteryDistribution as Record<string, number>)[level] || 0}</p>
                        </div>
                      ))}
                    </div>
@@ -1102,21 +1102,21 @@ async function handleCreateExam() {
 
                 {questionData.question_type === 'multiple_choice' && (
                   <div><label className="label">Options (select the correct one)</label>
-                    {questionData.options.map((opt, i) => (
-                      <div key={i} className="flex items-center gap-2 mb-2">
-                        <input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} />
-                        <input type="text" value={opt} onChange={e => { const opts = [...questionData.options]; opts[i] = e.target.value; setQuestionData({...questionData, options: opts}); }} className="input flex-1" placeholder={`Option ${i + 1}`} />
-                      </div>
-                    ))}
+                     {questionData.options.map((opt: string, i: number) => (
+                       <div key={i} className="flex items-center gap-2 mb-2">
+                         <input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} />
+                         <input type="text" value={opt} onChange={e => { const opts = [...questionData.options]; opts[i] = e.target.value; setQuestionData({...questionData, options: opts}); }} className="input flex-1" placeholder={`Option ${i + 1}`} />
+                       </div>
+                     ))}
                   </div>
                 )}
 
                 {questionData.question_type === 'true_false' && (
                   <div><label className="label">Correct Answer</label>
                     <div className="grid grid-cols-2 gap-2">
-                      {['True', 'False'].map((opt, i) => (
-                        <label key={i} className={`p-3 rounded-lg border-2 cursor-pointer text-center ${questionData.correct_answer === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
-                          <input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} className="sr-only" />
+                       {['True', 'False'].map((opt: string, i: number) => (
+                         <label key={i} className={`p-3 rounded-lg border-2 cursor-pointer text-center ${questionData.correct_answer === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
+                           <input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} className="sr-only" />
                           <span className="font-medium">{opt}</span>
                         </label>
                       ))}
@@ -1140,7 +1140,7 @@ async function handleCreateExam() {
                   <div className="mt-4">
                     <h4 className="font-semibold text-slate-700 mb-2">{questions.length} Questions Added</h4>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {questions.map((q, i) => (
+                       {questions.map((q: any, i: number) => (
                         <div key={q.id} className="p-3 bg-slate-50 rounded-lg text-sm">
                           <span className="font-medium">{i + 1}.</span> {q.question} <span className="text-xs text-slate-400">({q.question_type})</span>
                         </div>
@@ -1421,7 +1421,7 @@ async function handleCreateExam() {
                  
                  {editingQuestion?.question_type === 'MCQ' || questionData.question_type === 'MCQ' && (
                    <div><label className="label">Options (select the correct one)</label>
-                     {(editingQuestion?.options || questionData.options || ['', '', '', '']).map((opt, i) => (
+                      {(editingQuestion?.options || questionData.options || ['', '', '', '']).map((opt: string, i: number) => (
                        <div key={i} className="flex items-center gap-2 mb-2">
                          <input 
                            type="radio" 
@@ -1455,7 +1455,7 @@ async function handleCreateExam() {
                  {editingQuestion?.question_type === 'TRUE_FALSE' || questionData.question_type === 'TRUE_FALSE' && (
                    <div><label className="label">Correct Answer</label>
                      <div className="grid grid-cols-2 gap-2">
-                       {['True', 'False'].map((opt, i) => (
+                        {['True', 'False'].map((opt: string, i: number) => (
                          <label key={i} className={`p-3 rounded-lg border-2 cursor-pointer text-center ${(editingQuestion?.correct_answer || questionData.correct_answer) === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
                            <input 
                              type="radio" 
