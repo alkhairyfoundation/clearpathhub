@@ -27,7 +27,10 @@ type UserFormData = {
   last_name: string;
   role: UserRole;
   phone: string;
+  class_id: string;
 };
+
+type ClassOption = { id: string; name: string; level: number };
 
 function AdminUsersPageContent() {
   const { profile } = useAuth();
@@ -53,8 +56,9 @@ function AdminUsersPageContent() {
   const [resetPasswordMode, setResetPasswordMode] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
 
+  const [classes, setClasses] = useState<ClassOption[]>([]);
   const [formData, setFormData] = useState<UserFormData>({
-    email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '',
+    email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '', class_id: '',
   });
 
   // Student-specific fields for linking
@@ -87,14 +91,21 @@ function AdminUsersPageContent() {
     if (data) setAvailableStudents(data);
   }
 
-  function openCreateModal(role?: UserRole) {
+  async function openCreateModal(role?: UserRole) {
     setEditingUser(null);
     setError('');
     setSuccess('');
+    const selectedRole = role || 'teacher';
     setFormData({
       email: '', password: '', first_name: '', last_name: '',
-      role: role || 'teacher', phone: '',
+      role: selectedRole, phone: '', class_id: '',
     });
+    if (selectedRole === 'student') {
+      const { data } = await supabase.from('classes').select('id, name, level').order('name');
+      setClasses(data || []);
+    } else {
+      setClasses([]);
+    }
     setShowModal(true);
   }
 
@@ -105,8 +116,9 @@ function AdminUsersPageContent() {
     setResetPasswordMode(false);
     setFormData({
       email: user.email, password: '', first_name: user.first_name,
-      last_name: user.last_name, role: user.role, phone: user.phone || '',
+      last_name: user.last_name, role: user.role, phone: user.phone || '', class_id: '',
     });
+    setClasses([]);
     setShowModal(true);
   }
 
@@ -494,6 +506,18 @@ function AdminUsersPageContent() {
                 <label className="label">Phone (optional)</label>
                 <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" placeholder="+234..." />
               </div>
+
+              {formData.role === 'student' && (
+                <div>
+                  <label className="label">Class</label>
+                  <select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input">
+                    <option value="">Select Class</option>
+                    {classes.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} (Level {c.level})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-2">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-ghost flex-1">Cancel</button>

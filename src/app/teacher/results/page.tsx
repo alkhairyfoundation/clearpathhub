@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Award, Save, ArrowLeft, BarChart3, Users, TrendingUp, AlertTriangle } from 'lucide-react';
 import type { Result, Subject, Profile } from '@/types';
+import SendResultButton from '@/components/SendResultButton';
 
 export default function TeacherResultsPage() {
   const { profile } = useAuth();
@@ -156,10 +157,32 @@ export default function TeacherResultsPage() {
               <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><Users size={18} className="text-green-600" />Student Performance Summary</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b text-left text-slate-500"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Results</th><th className="py-2 pr-4">Average</th><th className="py-2 pr-4">Status</th></tr></thead>
-                  <tbody>{studentSummary.map(s => (
-                    <tr key={s.id} className="border-b last:border-0 hover:bg-slate-50"><td className="py-2 pr-4 font-medium text-slate-800">{s.name}</td><td className="py-2 pr-4 text-slate-500">{s.count}</td><td className={`py-2 pr-4 font-bold ${s.avg >= 70 ? 'text-green-600' : s.avg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{s.avg}%</td><td className="py-2 pr-4">{s.avg >= 70 ? <span className="text-green-600 text-xs font-medium">Good</span> : s.avg >= 50 ? <span className="text-amber-600 text-xs font-medium">Average</span> : <span className="text-red-600 text-xs font-medium">At Risk</span>}</td></tr>
-                  ))}</tbody>
+                  <thead><tr className="border-b text-left text-slate-500"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Results</th><th className="py-2 pr-4">Average</th><th className="py-2 pr-4">Status</th><th className="py-2 pr-4"></th></tr></thead>
+                  <tbody>{studentSummary.map(s => {
+                    const studentRes = results.filter(r => r.student?.id === s.id).map(r => ({
+                      subject_name: r.subject?.name || 'Unknown',
+                      exam_type: r.exam_type,
+                      score: r.score,
+                      grade: r.grade || '',
+                    }));
+                    return (
+                      <tr key={s.id} className="border-b last:border-0 hover:bg-slate-50">
+                        <td className="py-2 pr-4 font-medium text-slate-800">{s.name}</td>
+                        <td className="py-2 pr-4 text-slate-500">{s.count}</td>
+                        <td className={`py-2 pr-4 font-bold ${s.avg >= 70 ? 'text-green-600' : s.avg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{s.avg}%</td>
+                        <td className="py-2 pr-4">{s.avg >= 70 ? <span className="text-green-600 text-xs font-medium">Good</span> : s.avg >= 50 ? <span className="text-amber-600 text-xs font-medium">Average</span> : <span className="text-red-600 text-xs font-medium">At Risk</span>}</td>
+                        <td className="py-2 pr-4">
+                          {studentRes.length > 0 && (
+                            <SendResultButton
+                              studentId={s.id}
+                              studentName={s.name}
+                              results={studentRes}
+                            />
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}</tbody>
                 </table>
               </div>
             </div>

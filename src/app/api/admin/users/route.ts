@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 403 });
     }
 
-    const { email, password, first_name, last_name, role, phone } = await request.json();
+    const { email, password, first_name, last_name, role, phone, class_id } = await request.json();
     if (!email || !password || !first_name || !last_name || !role) {
       return NextResponse.json({ success: false, error: 'All fields are required' }, { status: 400 });
     }
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         const { error: studentError } = await adminClient.from('students').insert({
           profile_id: authData.user.id,
           admission_number: admissionNumber,
-          class_id: null,
+          class_id: class_id || null,
           parent_id: null,
         });
 

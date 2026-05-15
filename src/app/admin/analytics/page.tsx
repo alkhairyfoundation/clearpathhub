@@ -10,6 +10,7 @@ import {
   Award, AlertTriangle, ArrowUp, ArrowDown, Download, Search, X, User
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import SendResultButton from '@/components/SendResultButton';
 
 const COLORS = ['#b3922f', '#063b29', '#10b981', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#f59e0b', '#ec4899'];
 
@@ -425,7 +426,19 @@ export default function AdminAnalyticsPage() {
                           <Bar dataKey="avg" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Avg Score" />
                         </BarChart>
                       </ResponsiveContainer>
-                      <h3 className="font-semibold text-slate-800 mt-4">Recent Results</h3>
+                      <div className="flex items-center justify-between mt-4">
+                        <h3 className="font-semibold text-slate-800">Recent Results</h3>
+                        <SendResultButton
+                          studentId={selectedStudent.id}
+                          studentName={`${selectedStudent.first_name} ${selectedStudent.last_name}`}
+                          results={studentResults.map((r: any) => ({
+                            subject_name: r.subject?.name || 'Unknown',
+                            exam_type: r.exam_type,
+                            score: r.score,
+                            grade: r.grade || '',
+                          }))}
+                        />
+                      </div>
                       <div className="overflow-x-auto"><table className="w-full"><thead className="bg-slate-50"><tr>
                         <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Subject</th>
                         <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Type</th>
