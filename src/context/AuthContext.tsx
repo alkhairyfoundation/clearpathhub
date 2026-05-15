@@ -17,6 +17,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function ensureProfile(userId: string, accessToken: string): Promise<Profile | null> {
+  try {
+    const res = await fetch('/api/auth/create-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token: accessToken }),
+    });
+    if (res.ok) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      return data;
+    }
+  } catch (fetchErr) {
+    console.error('Error auto-creating profile:', fetchErr);
+  }
+  return null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -29,9 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setLoading(true);
         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
         if (!isMounted) return;
-        
+
         if (error) {
           console.error('Error getting session:', error);
           setLoading(false);
@@ -40,17 +61,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (session?.user) {
           setUser(session.user);
-          // Fetch profile
-          const { data, error: profileError } = await supabase
+          let { data, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
-          
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
+
+          if (!data && !profileError && session.access_token) {
+            data = await ensureProfile(session.user.id, session.access_token);
           }
-          
+
           if (isMounted) {
             setProfile(data);
             setLoading(false);
@@ -72,18 +92,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
-      
+
       if (!isMounted) return;
-      
+
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           setUser(session.user);
-          const { data } = await supabase
+          let { data } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .maybeSingle();
-          
+
+          if (!data && session.access_token) {
+            data = await ensureProfile(session.user.id, session.access_token);
+          }
+
           if (isMounted) {
             setProfile(data);
             setLoading(false);
@@ -110,11 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
       });
-      
+
       if (error) {
         return { error };
       }
-      
+
       if (data.user) {
         setUser(data.user);
         let { data: profileData } = await supabase
@@ -124,25 +148,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .maybeSingle();
 
         if (!profileData) {
-          try {
-            const res = await fetch('/api/auth/create-profile', { method: 'POST' });
-            if (res.ok) {
-              const { data: newProfile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', data.user.id)
-                .maybeSingle();
-              profileData = newProfile;
-            }
-          } catch (fetchErr) {
-            console.error('Error auto-creating profile:', fetchErr);
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            profileData = await ensureProfile(data.user.id, session.access_token);
           }
         }
 
         setProfile(profileData);
         return { error: null, user: data.user, profile: profileData ?? undefined };
       }
-      
+
       return { error: null };
     } catch (err: any) {
       return { error: err?.message ? new Error(err.message) : new Error('Network error during login. Check your connection and try again.') };
