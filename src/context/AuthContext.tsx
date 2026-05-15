@@ -36,7 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function resolveProfile(currentUser: User): Promise<Profile> {
-    // Try fetching from profiles table
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -45,10 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (data && !error) return data;
 
-    // Table broken or row missing — build from auth metadata
     const fb = fallbackProfile(currentUser);
 
-    // Best-effort background insert so the row exists when DB is fixed
     (async () => {
       await supabase.from('profiles').insert({
         id: fb.id, email: fb.email,
@@ -62,32 +59,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    const init = async () => {
-      try {
-        setLoading(true);
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (!isMounted) return;
-        if (error) { console.error(error); setLoading(false); return; }
-        if (session?.user) {
-          setUser(session.user);
-          const p = await resolveProfile(session.user);
-          if (isMounted) { setProfile(p); setLoading(false); }
-        } else {
-          if (isMounted) { setUser(null); setProfile(null); setLoading(false); }
-        }
-      } catch { if (isMounted) setLoading(false); }
-    };
+    // Restore session from localStorage on mount
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!isMounted) return;
+      if (session?.user) {
+        setUser(session.user);
+        const p = await resolveProfile(session.user);
+        if (isMounted) setProfile(p);
+      }
+      if (isMounted) setLoading(false);
+    })();
 
-    init();
-
+    // Listen for auth changes after mount
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
-      if (event === 'INITIAL_SESSION') return; // handled by init()
+      if (event === 'INITIAL_SESSION') return; // handled by getSession above
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           setUser(session.user);
           const p = await resolveProfile(session.user);
-          if (isMounted) { setProfile(p); setLoading(false); }
+          if (isMounted) setProfile(p);
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null); setProfile(null); setLoading(false);
@@ -101,8 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     try {
-      // Clear stale session first to avoid cookie corruption
-      await supabase.auth.signOut();
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return { error };
       if (data.user) {
