@@ -17,46 +17,47 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function buildProfileInsert(user: User) {
-  const metadata = user.user_metadata || {};
+function fallbackProfile(user: User): Profile {
+  const m = user.user_metadata || {};
   return {
     id: user.id,
     email: user.email || '',
-    first_name: metadata.first_name || '',
-    last_name: metadata.last_name || '',
-    role: (metadata.role || 'student') as UserRole,
+    first_name: m.first_name || '',
+    last_name: m.last_name || '',
+    role: (m.role || 'student') as UserRole,
+    created_at: user.created_at,
+    updated_at: user.created_at,
   };
-}
-
-async function fetchOrCreateProfile(user: User): Promise<Profile | null> {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  if (data) return data;
-
-  const insertData = buildProfileInsert(user);
-  const { error: insertError } = await supabase.from('profiles').insert(insertData);
-
-  if (insertError) {
-    console.error('Failed to create profile:', insertError);
-    return null;
-  }
-
-  const { data: newProfile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle();
-  return newProfile;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  async function resolveProfile(currentUser: User): Promise<Profile> {
+    // Try fetching from profiles table
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (data && !error) return data;
+
+    // Table broken or row missing — build from auth metadata
+    const fb = fallbackProfile(currentUser);
+
+    // Best-effort background insert so the row exists when DB is fixed
+    (async () => {
+      await supabase.from('profiles').insert({
+        id: fb.id, email: fb.email,
+        first_name: fb.first_name, last_name: fb.last_name, role: fb.role,
+      });
+    })();
+
+    return fb;
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -66,22 +67,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(true);
         const { data: { session }, error } = await supabase.auth.getSession();
         if (!isMounted) return;
-        if (error) {
-          console.error('Error getting session:', error);
-          setLoading(false);
-          return;
-        }
+        if (error) { console.error(error); setLoading(false); return; }
         if (session?.user) {
           setUser(session.user);
-          const p = await fetchOrCreateProfile(session.user);
+          const p = await resolveProfile(session.user);
           if (isMounted) { setProfile(p); setLoading(false); }
         } else {
           if (isMounted) { setUser(null); setProfile(null); setLoading(false); }
         }
-      } catch (err) {
-        console.error('Session error:', err);
-        if (isMounted) setLoading(false);
-      }
+      } catch { if (isMounted) setLoading(false); }
     };
 
     init();
@@ -91,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           setUser(session.user);
-          const p = await fetchOrCreateProfile(session.user);
+          const p = await resolveProfile(session.user);
           if (isMounted) { setProfile(p); setLoading(false); }
         }
       } else if (event === 'SIGNED_OUT') {
@@ -110,38 +104,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) return { error };
       if (data.user) {
         setUser(data.user);
-        const profileData = await fetchOrCreateProfile(data.user);
+        const profileData = await resolveProfile(data.user);
         setProfile(profileData);
-        return { error: null, user: data.user, profile: profileData ?? undefined };
+        return { error: null, user: data.user, profile: profileData };
       }
       return { error: null };
     } catch (err: any) {
-      return { error: err?.message ? new Error(err.message) : new Error('Network error during login. Check your connection and try again.') };
+      return { error: err?.message ? new Error(err.message) : new Error('Network error during login.') };
     }
   }
 
   async function signUp(email: string, password: string, role: UserRole, firstName: string, lastName: string) {
     const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { first_name: firstName, last_name: lastName, role },
-      },
+      email, password,
+      options: { data: { first_name: firstName, last_name: lastName, role } },
     });
     if (error) return { error };
-    if (data.user) {
-      if (data.session) {
-        const profileData = await fetchOrCreateProfile(data.user);
-        if (!profileData) return { error: new Error('Failed to create profile') };
-      }
+    if (data.user && data.session) {
+      const p = await resolveProfile(data.user);
+      setProfile(p);
     }
     return { error: null };
   }
 
   async function signOut() {
     await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
+    setUser(null); setProfile(null);
   }
 
   return (
@@ -152,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
-  return context;
+  const c = useContext(AuthContext);
+  if (!c) throw new Error('useAuth must be used within an AuthProvider');
+  return c;
 }
