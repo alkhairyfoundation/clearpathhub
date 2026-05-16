@@ -30,11 +30,19 @@ export default function AdminEntranceExamsPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-   const [formData, setFormData] = useState({
-     title: '', description: '', level: '', academic_year: new Date().getFullYear().toString(),
-     exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 40,
-     shuffle_questions: false, require_fullscreen: false, prevent_tab_switch: false, max_tab_switches: 3
-   });
+const [formData, setFormData] = useState({
+      title: '', description: '', level: '', subjects: [] as string[], academic_year: new Date().getFullYear().toString(),
+      exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 40,
+      shuffle_questions: false, require_fullscreen: false, prevent_tab_switch: false, max_tab_switches: 3
+    });
+
+    const SUBJECT_OPTIONS: Record<string, string[]> = {
+      'PRIMARY': ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'VERBAL REASONING', 'QUANTITATIVE REASONING'],
+      'JSS': ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PREVocational STUDIES'],
+      'SS1': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
+      'SS2': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
+      'SS3': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
+    };
     const [questionData, setQuestionData] = useState({
       question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '',
       level: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: ''
@@ -147,6 +155,8 @@ useEffect(() => {
 
 async function handleCreateExam() {
       if (!formData.title.trim()) { setError('Title is required'); return; }
+      if (!formData.level) { setError('Level is required'); return; }
+      if (!formData.subjects || formData.subjects.length === 0) { setError('Please select at least one subject'); return; }
       setError(''); setSaving(true);
       try {
         const { data: examData, error } = await supabase
@@ -157,9 +167,9 @@ async function handleCreateExam() {
         
         if (error) throw new Error(error.message);
         
-        // Auto-populate questions from question bank if exam has level specified
-        if (formData.level) {
-          await autoPopulateExamQuestions(examData.id, formData.level);
+        // Auto-populate questions from question bank if exam has level and subjects specified
+        if (formData.level && formData.subjects && formData.subjects.length > 0) {
+          await autoPopulateExamQuestions(examData.id, formData.level, formData.subjects);
         }
         
         setSuccess('Exam created and populated with questions');
@@ -172,18 +182,11 @@ async function handleCreateExam() {
       }
     }
     
-    async function autoPopulateExamQuestions(examId: string, level: string) {
+    async function autoPopulateExamQuestions(examId: string, level: string, subjects: string[]) {
       try {
-        // Determine subjects based on level
-        let subjects: string[] = [];
-        if (level === 'PRIMARY') {
-          subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'VERBAL REASONING', 'QUANTITATIVE REASONING'];
-        } else if (level === 'JSS') {
-          subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PREVocational STUDIES'];
-        } else if (level === 'SS1' || level === 'SS2' || level === 'SS3') {
-          subjects = ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'];
-        } else {
-          subjects = ['MATHEMATICS', 'ENGLISH'];
+        if (!subjects || subjects.length === 0) {
+          console.warn('No subjects selected for exam');
+          return;
         }
 
         const questionsPerSubject = Math.max(1, Math.floor(formData.total_questions / subjects.length));
@@ -612,7 +615,7 @@ async function handleCreateExam() {
             <h1 className="text-2xl font-bold text-slate-900">Entrance Exams & Admissions</h1>
             <p className="text-slate-500 mt-1">Manage applications and admit students</p>
           </div>
-          <button onClick={() => setShowExamModal(true)} className="btn-primary flex items-center gap-2">
+          <button onClick={() => { setFormData({ title: '', description: '', level: '', subjects: [], academic_year: new Date().getFullYear().toString(), exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 40, shuffle_questions: false, require_fullscreen: false, prevent_tab_switch: false, max_tab_switches: 3 }); setShowExamModal(true); }} className="btn-primary flex items-center gap-2">
             <Plus size={18} />Create Exam
           </button>
         </div>
@@ -742,7 +745,7 @@ async function handleCreateExam() {
               <div className="text-center py-16">
                 <FileText className="mx-auto text-slate-300 mb-4" size={48} />
                 <p className="font-medium text-slate-500">No exams created yet</p>
-                <button onClick={() => setShowExamModal(true)} className="btn-primary mt-4">Create First Exam</button>
+                <button onClick={() => { setFormData({ title: '', description: '', level: '', subjects: [], academic_year: new Date().getFullYear().toString(), exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 40, shuffle_questions: false, require_fullscreen: false, prevent_tab_switch: false, max_tab_switches: 3 }); setShowExamModal(true); }} className="btn-primary mt-4">Create First Exam</button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -1081,7 +1084,26 @@ async function handleCreateExam() {
               </div>
               <div className="p-5 space-y-4">
                 <div><label className="label">Exam Title</label><input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="input" /></div>
-                <div><label className="label">Level</label><select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value})} className="input"><option value="">Select Level</option><option value="PRIMARY">Primary (1-6)</option><option value="JSS">JSS (1-3)</option><option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option></select></div>
+                <div><label className="label">Level</label><select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value, subjects: SUBJECT_OPTIONS[e.target.value] || []})} className="input"><option value="">Select Level</option><option value="PRIMARY">Primary (1-6)</option><option value="JSS">JSS (1-3)</option><option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option></select></div>
+                {formData.level && (
+                  <div>
+                    <label className="label">Subjects</label>
+                    <div className="flex flex-wrap gap-2 p-2 border border-slate-200 rounded-lg bg-slate-50 max-h-32 overflow-y-auto">
+                      {(SUBJECT_OPTIONS[formData.level] || []).map(subject => (
+                        <label key={subject} className={`flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer text-sm transition-colors ${formData.subjects.includes(subject) ? 'bg-primary-500 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
+                          <input type="checkbox" checked={formData.subjects.includes(subject)} onChange={e => {
+                            const newSubjects = e.target.checked
+                              ? [...formData.subjects, subject]
+                              : formData.subjects.filter(s => s !== subject);
+                            setFormData({...formData, subjects: newSubjects});
+                          }} className="sr-only" />
+                          {subject}
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">{formData.subjects.length} selected • Questions will be distributed across selected subjects</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className="label">Academic Year</label><input type="text" value={formData.academic_year} onChange={e => setFormData({...formData, academic_year: e.target.value})} className="input" /></div>
                   <div><label className="label">Exam Date</label><input type="date" value={formData.exam_date} onChange={e => setFormData({...formData, exam_date: e.target.value})} className="input" /></div>
