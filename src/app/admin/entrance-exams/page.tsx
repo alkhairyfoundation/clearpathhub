@@ -325,10 +325,33 @@ async function handleCreateExam() {
   async function handleGenerateCode() {
     if (!selectedExam) return;
     setSaving(true);
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    let code = '';
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (attempts < maxAttempts) {
+      code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const { data: existing } = await supabase
+        .from('entrance_codes')
+        .select('id')
+        .eq('code', code)
+        .single();
+      
+      if (!existing) break;
+      attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+      setError('Failed to generate unique code. Please try again.');
+      setSaving(false);
+      return;
+    }
+    
     const { error } = await supabase.from('entrance_codes').insert({
-      code, exam_id: selectedExam.id, max_uses: 100, used_count: 0
+      code, exam_id: selectedExam.id, max_uses: 100, used_count: 0, is_active: true
     });
+    if (error) setError('Failed to generate code: ' + error.message);
     if (!error) fetchData();
     setSaving(false);
   }

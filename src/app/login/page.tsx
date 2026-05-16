@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Mail, Lock, Eye, EyeOff, GraduationCap, ArrowLeft, BookOpen, Shield, GraduationCap as StudentCap, Check } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Mail, Lock, Eye, EyeOff, GraduationCap, ArrowLeft, BookOpen, Shield, GraduationCap as StudentCap, Check, AlertCircle } from 'lucide-react';
 
 function BismillahPopup({ onClose }: { onClose: () => void }) {
   return (
@@ -35,6 +36,18 @@ function BismillahPopup({ onClose }: { onClose: () => void }) {
   );
 }
 
+async function clearStaleSession() {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.warn('Error clearing stale session:', error);
+    }
+    localStorage.removeItem('supabase.auth.token');
+  } catch (error) {
+    console.warn('Failed to clear stale session:', error);
+  }
+}
+
 function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,10 +56,11 @@ function LoginPageContent() {
   const [loading, setLoading] = useState(false);
   const [showBismillah, setShowBismillah] = useState(true);
   const [redirected, setRedirected] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, clearSession } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
+  const sessionError = searchParams.get('error');
 
   useEffect(() => {
     const dismissed = localStorage.getItem('bismillah-dismissed');
@@ -54,6 +68,14 @@ function LoginPageContent() {
       setShowBismillah(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (sessionError === 'session_expired') {
+      setError('Your session has expired. Please sign in again.');
+      clearSession();
+      clearStaleSession();
+    }
+  }, [sessionError, clearSession]);
 
   // Don't check for existing session - always show login form first time
 
@@ -68,6 +90,8 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
+      await clearStaleSession();
+      
       const { error, profile } = await signIn(email, password);
 
       if (error) {

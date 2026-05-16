@@ -63,6 +63,15 @@ function ApplyPageContent() {
         .single();
 
       if (codeResult && codeResult.exam) {
+        if (codeResult.used_count >= codeResult.max_uses) {
+          setError('This exam code has reached its maximum usage limit. Please contact the school for a new code.');
+          setCodeValid(false);
+          setCodeData(null);
+          setExam(null);
+          setLoading(false);
+          return;
+        }
+        
         setCodeValid(true);
         setCodeData(codeResult);
         setExam(codeResult.exam);

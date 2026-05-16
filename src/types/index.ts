@@ -228,6 +228,7 @@ export interface Lesson {
   term_id?: string;
   week_no?: number;
   topic?: string;
+  session_id?: string;
   class?: Class;
 }
 

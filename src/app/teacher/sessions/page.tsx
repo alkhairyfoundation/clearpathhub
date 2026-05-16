@@ -104,53 +104,81 @@ export default function TeacherSessionsPage() {
         is_published: true,
       };
 
+      let sessionId = editingSession?.id;
+
       if (editingSession) {
         const { error } = await supabase.from('sessions').update(data).eq('id', editingSession.id);
         if (error) throw new Error(error.message);
       } else {
         const { data: newSession, error: sessionError } = await supabase.from('sessions').insert(data).select().single();
         if (sessionError) throw new Error(sessionError.message);
+        if (newSession) sessionId = newSession.id;
       }
 
       // Save checkpoints
-      if (checkpoints.length > 0) {
-        const sessionId = editingSession?.id;
-        if (sessionId) {
-          const quizData = {
-            session_id: sessionId,
-            title: `${formData.title} - Checkpoints`,
-            passing_score: 50,
-            time_limit: formData.duration,
-          };
+      if (checkpoints.length > 0 && sessionId) {
+        const quizData = {
+          session_id: sessionId,
+          title: `${formData.title} - Checkpoints`,
+          passing_score: 50,
+          time_limit: formData.duration,
+        };
+        
+        const { data: existingQuiz } = await supabase
+          .from('quizzes')
+          .select('id')
+          .eq('session_id', sessionId)
+          .limit(1)
+          .single();
+
+        let quizId = existingQuiz?.id;
+        
+        if (!quizId) {
           const { data: quiz } = await supabase.from('quizzes').insert(quizData).select().single();
-          if (quiz) {
-            await supabase.from('quiz_questions').delete().eq('quiz_id', quiz.id);
-            const questions = checkpoints.map(cp => ({
-              quiz_id: quiz.id,
-              question: cp.question,
-              options: cp.options,
-              correct_answer: cp.correct_answer,
-              points: cp.points || 1,
-              question_type: cp.question_type || 'multiple_choice',
-              timestamp_seconds: cp.timestamp_seconds,
-              is_checkpoint: true,
-              order_index: checkpoints.indexOf(cp),
-            }));
-            await supabase.from('quiz_questions').insert(questions);
-          }
+          if (quiz) quizId = quiz.id;
+        }
+        
+        if (quizId) {
+          await supabase.from('quiz_questions').delete().eq('quiz_id', quizId);
+          const questions = checkpoints.map(cp => ({
+            quiz_id: quizId,
+            question: cp.question,
+            options: cp.options,
+            correct_answer: cp.correct_answer,
+            points: cp.points || 1,
+            question_type: cp.question_type || 'multiple_choice',
+            timestamp_seconds: cp.timestamp_seconds,
+            is_checkpoint: true,
+            order_index: checkpoints.indexOf(cp),
+          }));
+          await supabase.from('quiz_questions').insert(questions);
         }
       }
 
-    // Save lesson notes if provided
-    if (selectedSessionForLesson && lessonNotes) {
-      await supabase.from('lessons').insert({
-        subject_id: formData.subject_id || null,
-        teacher_id: profile?.id,
-        title: `${formData.title} - Notes`,
-        content: lessonNotes,
-        is_published: true,
-      });
-    }
+      // Save lesson notes if provided
+      if (lessonNotes && sessionId) {
+        const { data: existingLesson } = await supabase
+          .from('lessons')
+          .select('id')
+          .eq('session_id', sessionId)
+          .limit(1)
+          .single();
+
+        if (existingLesson) {
+          await supabase.from('lessons').update({
+            content: lessonNotes,
+          }).eq('id', existingLesson.id);
+        } else {
+          await supabase.from('lessons').insert({
+            subject_id: formData.subject_id || null,
+            teacher_id: profile?.id,
+            session_id: sessionId,
+            title: `${formData.title} - Notes`,
+            content: lessonNotes,
+            is_published: true,
+          });
+        }
+      }
 
     setSuccess(editingSession ? 'Session updated' : 'Session created');
     setShowModal(false);

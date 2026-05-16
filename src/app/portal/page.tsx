@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
 export default function PortalPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading, refreshSession } = useAuth();
   const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    // Immediate redirect if we have user and profile
+    if (loading || redirecting) return;
+
     if (user && profile && profile.role) {
       const routes: Record<string, string> = {
         admin: '/admin',
@@ -21,16 +23,28 @@ export default function PortalPage() {
       
       const route = routes[profile.role];
       if (route) {
+        setRedirecting(true);
         router.replace(route);
       }
     } else if (user && !profile) {
-      // User exists but no profile - redirect to login with error
+      setRedirecting(true);
       router.replace('/login?error=no_profile');
-    } else if (!user) {
-      // No user - go to login
+    } else if (!user && !loading) {
+      setRedirecting(true);
       router.replace('/login');
     }
-  }, [user, profile, router]);
+  }, [user, profile, loading, router, redirecting]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
