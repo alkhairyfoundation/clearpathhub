@@ -43,6 +43,7 @@ export function clearSupabaseCache() {
     const storage = getStorage();
     storage.removeItem('supabase.auth.token');
     sessionStorage.clear();
+    _client = null;
   } catch (e) {
     console.error('Error clearing supabase cache:', e);
   }

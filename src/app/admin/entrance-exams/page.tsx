@@ -184,7 +184,7 @@ async function handleCreateExam() {
         
         // Auto-populate questions from question bank if exam has level and subjects specified
         if (formData.level && formData.subjects && formData.subjects.length > 0) {
-          await autoPopulateExamQuestions(examData.id, formData.level, formData.subjects);
+          await autoPopulateExamQuestions(examData.id, formData.level, formData.subjects, formData.total_questions);
         }
         
         setSuccess('Exam created and populated with questions');
@@ -197,14 +197,15 @@ async function handleCreateExam() {
       }
     }
     
-    async function autoPopulateExamQuestions(examId: string, level: string, subjects: string[]) {
+    async function autoPopulateExamQuestions(examId: string, level: string, subjects: string[], totalQuestions?: number) {
       try {
         if (!subjects || subjects.length === 0) {
           console.warn('No subjects selected for exam');
           return;
         }
 
-        const questionsPerSubject = Math.max(1, Math.floor(formData.total_questions / subjects.length));
+        const questionCount = totalQuestions || formData.total_questions || 40;
+        const questionsPerSubject = Math.max(1, Math.floor(questionCount / subjects.length));
        
        let allSelectedQuestions: any[] = [];
        
@@ -279,17 +280,23 @@ async function handleCreateExam() {
          }
        }
        
-       // If we don't have enough questions, fill with any available questions for the level
-       if (allSelectedQuestions.length < formData.total_questions) {
-         const { data: additionalQuestions } = await supabase
-           .from('question_bank')
-           .select('*')
-           .eq('level', level)
-           .eq('is_active', true)
-           .not('id', 'in', allSelectedQuestions.map(q => q.id))
-           .order('difficulty_level', { ascending: false })
-           .limit(formData.total_questions - allSelectedQuestions.length);
-           
+        // If we don't have enough questions, fill with any available questions for the level
+        if (allSelectedQuestions.length < questionCount) {
+          const selectedIds = allSelectedQuestions.map(q => q.id);
+          let query = supabase
+            .from('question_bank')
+            .select('*')
+            .eq('level', level)
+            .eq('is_active', true)
+            .order('difficulty_level', { ascending: false });
+          
+          if (selectedIds.length > 0) {
+            query = query.not('id', 'in', selectedIds);
+          }
+          
+          const { data: additionalQuestions } = await query
+            .limit(questionCount - allSelectedQuestions.length);
+            
          if (additionalQuestions) {
            allSelectedQuestions = [...allSelectedQuestions, ...additionalQuestions];
          }
@@ -300,28 +307,42 @@ async function handleCreateExam() {
          allSelectedQuestions = allSelectedQuestions.sort(() => Math.random() - 0.5);
        }
        
-       // Insert selected questions into entrance_questions
-       if (allSelectedQuestions.length > 0) {
-         const questionsToInsert = allSelectedQuestions.map(q => ({
-           exam_id: examId,
-           question: q.question,
-           question_image: q.question_image,
-           options: q.options,
-           option_images: q.option_images,
-           correct_answer: q.correct_answer,
-           points: q.points,
-           question_type: q.question_type,
-           subject: q.subject,
-           difficulty_level: q.difficulty_level,
-           topic: q.topic,
-           subtopic: q.subtopic,
-           explanation: q.explanation
-         }));
-         
-         const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
-         if (error) throw new Error(`Failed to insert questions: ${error.message}`);
-       }
-} catch (error) {
+        // Insert selected questions into entrance_questions
+        if (allSelectedQuestions.length > 0) {
+          const questionsToInsert = allSelectedQuestions.map(q => ({
+            exam_id: examId,
+            question: q.question,
+            question_image: q.question_image,
+            options: q.options || [''],
+            correct_answer: q.correct_answer ?? 0,
+            points: q.points ?? 1,
+            question_type: q.question_type || 'multiple_choice',
+            subject: q.subject,
+            difficulty_level: q.difficulty_level,
+            topic: q.topic,
+            subtopic: q.subtopic,
+            explanation: q.explanation,
+          }));
+          
+          const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
+          if (error) {
+            if (error.message?.includes('Could not find') || error.message?.includes('column')) {
+              const minimalQuestions = allSelectedQuestions.map(q => ({
+                exam_id: examId,
+                question: q.question,
+                options: q.options || [''],
+                correct_answer: q.correct_answer ?? 0,
+                points: q.points ?? 1,
+                question_type: q.question_type || 'multiple_choice',
+              }));
+              const { error: fallbackError } = await supabase.from('entrance_questions').insert(minimalQuestions);
+              if (fallbackError) throw new Error(`Failed to insert questions: ${fallbackError.message}`);
+            } else {
+              throw new Error(`Failed to insert questions: ${error.message}`);
+            }
+          }
+         }
+         } catch (error) {
         console.error('Error auto-populating exam questions:', error);
         // Don't fail the exam creation if question population fails
         setWarning('Exam created but question auto-population had issues. You can add questions manually.');
@@ -352,7 +373,7 @@ async function handleCreateExam() {
     const totalQuestions = exam.total_questions || 40;
     
     try {
-      await autoPopulateExamQuestions(exam.id, level, subjects);
+      await autoPopulateExamQuestions(exam.id, level, subjects, totalQuestions);
       setSuccess('Questions populated successfully!');
       fetchData();
     } catch (error) {

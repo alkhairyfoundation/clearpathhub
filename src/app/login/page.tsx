@@ -42,10 +42,7 @@ async function clearStaleSession() {
   } catch (error) {
     console.warn('Error signing out:', error);
   }
-  if (typeof window !== 'undefined') {
-    localStorage.clear();
-    sessionStorage.clear();
-  }
+  clearSupabaseCache();
 }
 
 function LoginPageContent() {
@@ -90,11 +87,7 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
-      // Clear all cached session data before attempting login
-      if (typeof window !== 'undefined') {
-        localStorage.clear();
-        sessionStorage.clear();
-      }
+      await clearStaleSession();
       
       const { error, profile } = await signIn(email, password);
 
