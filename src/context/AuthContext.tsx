@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           // Only clear cache on specific errors that indicate invalid session
           // Don't clear on temporary network errors during refresh
-          if (error.message?.includes('invalid') || error.message?.includes('expired')) {
+          if (error && (error.message?.includes('invalid') || error.message?.includes('expired'))) {
             clearSession();
           }
         }
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (!mounted) return;
             if (refreshError || !refreshData.session) {
               // Only clear on specific refresh errors
-              if (refreshError.message?.includes('invalid') || refreshError.message?.includes('expired')) {
+              if (refreshError && (refreshError.message?.includes('invalid') || refreshError.message?.includes('expired'))) {
                 clearSession();
               }
               if (mounted) setLoading(false);
