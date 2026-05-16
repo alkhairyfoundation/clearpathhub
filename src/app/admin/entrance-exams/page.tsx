@@ -306,12 +306,44 @@ async function handleCreateExam() {
          const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
          if (error) throw new Error(`Failed to insert questions: ${error.message}`);
        }
-     } catch (error) {
-       console.error('Error auto-populating exam questions:', error);
-       // Don't fail the exam creation if question population fails
-       setWarning('Exam created but question auto-population had issues. You can add questions manually.');
-     }
-   }
+} catch (error) {
+        console.error('Error auto-populating exam questions:', error);
+        // Don't fail the exam creation if question population fails
+        setWarning('Exam created but question auto-population had issues. You can add questions manually.');
+      }
+    }
+
+  async function handlePopulateQuestions(exam: any) {
+    const level = exam.level;
+    let subjects: string[] = [];
+    
+    // Get subjects from exam or use default based on level
+    if (exam.subjects && Array.isArray(exam.subjects) && exam.subjects.length > 0) {
+      subjects = exam.subjects;
+    } else {
+      // Default subjects based on level
+      if (level === 'PRIMARY') {
+        subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'VERBAL REASONING', 'QUANTITATIVE REASONING'];
+      } else if (level === 'JSS') {
+        subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PREVocational STUDIES'];
+      } else if (level?.includes('SS')) {
+        subjects = ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'];
+      } else {
+        subjects = ['MATHEMATICS', 'ENGLISH'];
+      }
+    }
+
+    // Calculate total questions (use exam's total_questions or default to 40)
+    const totalQuestions = exam.total_questions || 40;
+    
+    try {
+      await autoPopulateExamQuestions(exam.id, level, subjects);
+      setSuccess('Questions populated successfully!');
+      fetchData();
+    } catch (error) {
+      setError('Failed to populate questions. Please add manually.');
+    }
+  }
 
   async function handleAddQuestion() {
     if (!selectedExam) return;
@@ -757,6 +789,15 @@ async function handleCreateExam() {
                         <p className="text-sm text-slate-500">{exam.level} • {exam.academic_year}</p>
                       </div>
                       <div className="flex gap-1">
+                        {(!exam.questions || exam.questions.length === 0) && (
+                          <button 
+                            onClick={() => handlePopulateQuestions(exam)} 
+                            className="p-2 hover:bg-amber-50 rounded-lg text-amber-600" 
+                            title="Auto-populate from Question Bank"
+                          >
+                            <Download size={16} />
+                          </button>
+                        )}
                         <button onClick={() => { setSelectedExam(exam); setShowQuestionModal(true); }} className="p-2 hover:bg-gray-100 rounded-lg" title="Add Questions">
                           <Hash size={16} className="text-slate-500" />
                         </button>
