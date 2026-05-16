@@ -58,17 +58,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError || !refreshData.session) {
-        clearSupabaseCache();
-        clearSession();
+        // Only clear on specific refresh errors that indicate invalid session
+        if (refreshError instanceof Error && (refreshError.message?.includes('invalid') || refreshError.message?.includes('expired'))) {
+          clearSession();
+        }
         return false;
       }
       setUser(refreshData.user);
       const p = await fetchProfile(refreshData.user!.id);
       setProfile(p || fallbackProfile(refreshData.user!));
       return true;
-    } catch {
-      clearSupabaseCache();
-      clearSession();
+    } catch (err) {
+      // Only clear on specific errors that indicate invalid session
+      if (err instanceof Error && (err.message?.includes('invalid') || err.message?.includes('expired'))) {
+        clearSession();
+      }
       return false;
     }
   }, [clearSession]);
@@ -86,7 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
 
         if (error) {
-          clearSupabaseCache();
+          // Only clear cache on specific errors that indicate invalid session
+          // Don't clear on temporary network errors during refresh
+          if (error.message?.includes('invalid') || error.message?.includes('expired')) {
+            clearSession();
+          }
         }
 
         if (session?.user) {
@@ -98,7 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
             if (!mounted) return;
             if (refreshError || !refreshData.session) {
-              clearSupabaseCache();
+              // Only clear on specific refresh errors
+              if (refreshError.message?.includes('invalid') || refreshError.message?.includes('expired')) {
+                clearSession();
+              }
               if (mounted) setLoading(false);
               return;
             }
@@ -111,8 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (mounted) setProfile(p || fallbackProfile(session.user));
           }
         }
-      } catch {
-        clearSupabaseCache();
+      } catch (err) {
+        // Only clear on specific errors that indicate invalid session
+        if (err instanceof Error && (err.message?.includes('invalid') || err.message?.includes('expired'))) {
+          clearSession();
+        }
+        // For other errors, don't clear session - they might be temporary
       }
       if (mounted) setLoading(false);
     })();

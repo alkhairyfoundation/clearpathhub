@@ -99,7 +99,7 @@ function ApplyPageContent() {
     await verifyCode(codeInput);
   }
 
-  async function startExam() {
+   async function startExam() {
     if (!exam || !formData.first_name || !formData.last_name || !formData.email || !formData.applied_class) {
       setError('Please fill all required fields');
       return;
@@ -114,7 +114,7 @@ function ApplyPageContent() {
           exam_id: exam.id,
           code_id: codeData?.id,
           ...formData,
-          status: 'pending'
+          status: 'assigned'  // Automatically assign exam when starting
         })
         .select()
         .single();

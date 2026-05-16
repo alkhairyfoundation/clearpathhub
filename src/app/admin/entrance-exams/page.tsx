@@ -1125,17 +1125,17 @@ async function handleCreateExam() {
            )}
          </div>
 
-        {/* Create Exam Modal */}
-        {showExamModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900">Create Entrance Exam</h3>
-                <button onClick={() => setShowExamModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                  <X size={20} className="text-slate-500" />
-                </button>
-              </div>
-              <div className="p-5 space-y-4">
+         {/* Create Exam Modal */}
+         {showExamModal && (
+           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] animate-scale-in">
+               <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+                 <h3 className="text-lg font-bold text-slate-900">Create Entrance Exam</h3>
+                 <button onClick={() => setShowExamModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+                   <X size={20} className="text-slate-500" />
+                 </button>
+               </div>
+               <div className="p-5 space-y-4 overflow-y-auto">
                 <div><label className="label">Exam Title</label><input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="input" /></div>
                 <div><label className="label">Level</label><select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value, subjects: SUBJECT_OPTIONS[e.target.value] || []})} className="input"><option value="">Select Level</option><option value="PRIMARY">Primary (1-6)</option><option value="JSS">JSS (1-3)</option><option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option></select></div>
                 {formData.level && (

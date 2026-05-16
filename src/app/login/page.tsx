@@ -54,26 +54,23 @@ function LoginPageContent() {
     if (dismissed) setShowBismillah(false);
   }, []);
 
-  useEffect(() => {
-    if (sessionError === 'session_expired') {
-      setError('Your session has expired. Please sign in again.');
-      clearSupabaseCache();
-    }
-  }, [sessionError]);
+   useEffect(() => {
+     if (sessionError === 'session_expired') {
+       setError('Your session has expired. Please sign in again.');
+     }
+   }, [sessionError]);
 
   function handleBismillahDismiss() {
     localStorage.setItem('bismillah-dismissed', 'true');
     setShowBismillah(false);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      clearSupabaseCache();
-      
       const { error, profile } = await signIn(email.trim(), password);
 
       if (error) {
