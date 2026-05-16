@@ -141,7 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      clearSupabaseCache();
       setLoading(true);
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -180,11 +179,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      clearSupabaseCache();
       await supabase.auth.signOut();
     } catch {
       // ignore
     }
+    clearSupabaseCache();
     setUser(null);
     setProfile(null);
   }, []);

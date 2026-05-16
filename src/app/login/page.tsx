@@ -74,7 +74,7 @@ function LoginPageContent() {
     try {
       clearSupabaseCache();
       
-      const { error, profile } = await signIn(email, password);
+      const { error, profile } = await signIn(email.trim(), password);
 
       if (error) {
         setError(error.message);

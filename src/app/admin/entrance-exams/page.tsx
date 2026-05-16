@@ -302,40 +302,21 @@ async function handleCreateExam() {
          allSelectedQuestions = allSelectedQuestions.sort(() => Math.random() - 0.5);
        }
        
-        // Insert selected questions into entrance_questions
-        if (allSelectedQuestions.length > 0) {
-          const questionsToInsert = allSelectedQuestions.map(q => ({
-            exam_id: examId,
-            question: q.question,
-            question_image: q.question_image,
-            options: q.options || [''],
-            correct_answer: q.correct_answer ?? 0,
-            points: q.points ?? 1,
-            question_type: q.question_type || 'multiple_choice',
-            subject: q.subject,
-            difficulty_level: q.difficulty_level,
-            topic: q.topic,
-            subtopic: q.subtopic,
-            explanation: q.explanation,
-          }));
-          
-          const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
-          if (error) {
-            if (error.message?.includes('Could not find') || error.message?.includes('column')) {
-              const minimalQuestions = allSelectedQuestions.map(q => ({
-                exam_id: examId,
-                question: q.question,
-                options: q.options || [''],
-                correct_answer: q.correct_answer ?? 0,
-                points: q.points ?? 1,
-                question_type: q.question_type || 'multiple_choice',
-              }));
-              const { error: fallbackError } = await supabase.from('entrance_questions').insert(minimalQuestions);
-              if (fallbackError) throw new Error(`Failed to insert questions: ${fallbackError.message}`);
-            } else {
-              throw new Error(`Failed to insert questions: ${error.message}`);
-            }
-          }
+         // Insert selected questions into entrance_questions
+         if (allSelectedQuestions.length > 0) {
+           const questionsToInsert = allSelectedQuestions.map(q => ({
+             exam_id: examId,
+             question: q.question,
+             options: q.options || [''],
+             correct_answer: q.correct_answer ?? 0,
+             points: q.points ?? 1,
+             question_type: q.question_type || 'multiple_choice',
+           }));
+           
+           const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
+           if (error) throw new Error(`Failed to insert questions: ${error.message}`);
+         } else {
+           setWarning('No questions found in question bank for the selected level and subjects.');
          }
          } catch (error) {
         console.error('Error auto-populating exam questions:', error);

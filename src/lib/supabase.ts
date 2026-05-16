@@ -5,28 +5,6 @@ type AnyClient = SupabaseClient<any, 'public', any>;
 function getUrl() { return process.env.NEXT_PUBLIC_SUPABASE_URL || ''; }
 function getKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''; }
 
-const STORAGE_KEY = 'sb-auth-token';
-
-function getStorage() {
-  return {
-    getItem: (key: string): string | null => {
-      if (typeof window === 'undefined') return null;
-      try { return localStorage.getItem(key); }
-      catch { return null; }
-    },
-    setItem: (key: string, value: string): void => {
-      if (typeof window === 'undefined') return;
-      try { localStorage.setItem(key, value); }
-      catch { /* quota exceeded */ }
-    },
-    removeItem: (key: string): void => {
-      if (typeof window === 'undefined') return;
-      try { localStorage.removeItem(key); }
-      catch { /* ignore */ }
-    },
-  };
-}
-
 function createClientInstance(): AnyClient {
   const url = getUrl();
   const key = getKey();
@@ -39,8 +17,6 @@ function createClientInstance(): AnyClient {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storageKey: STORAGE_KEY,
-      storage: getStorage(),
     },
   }) as unknown as AnyClient;
 }
@@ -49,16 +25,10 @@ function getClient(): AnyClient {
   if (typeof window === 'undefined') {
     return createClientInstance();
   }
-  // Clean up old storage key if present
-  try {
-    if (localStorage.getItem('supabase.auth.token')) {
-      localStorage.removeItem('supabase.auth.token');
-    }
-  } catch { /* ignore */ }
-  if (!(window as any).__supabaseClient) {
-    (window as any).__supabaseClient = createClientInstance();
+  if (!(window as any).__supabase) {
+    (window as any).__supabase = createClientInstance();
   }
-  return (window as any).__supabaseClient;
+  return (window as any).__supabase;
 }
 
 export const supabase: AnyClient = new Proxy({} as any, {
@@ -76,17 +46,10 @@ export function clearSupabaseCache() {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem(STORAGE_KEY);
     sessionStorage.clear();
-    delete (window as any).__supabaseClient;
   } catch (e) {
     console.error('Error clearing supabase cache:', e);
   }
-}
-
-export function getFreshClient(): AnyClient {
-  delete (window as any).__supabaseClient;
-  return createClientInstance();
 }
 
 export const STORAGE_BUCKETS = {
