@@ -161,7 +161,22 @@ async function handleCreateExam() {
       try {
         const { data: examData, error } = await supabase
           .from('entrance_exams')
-          .insert({ ...formData, created_by: profile?.id })
+          .insert({
+            title: formData.title,
+            description: formData.description,
+            level: formData.level,
+            academic_year: formData.academic_year,
+            exam_date: formData.exam_date,
+            duration_minutes: formData.duration_minutes,
+            passing_score: formData.passing_score,
+            total_questions: formData.total_questions,
+            shuffle_questions: formData.shuffle_questions,
+            require_fullscreen: formData.require_fullscreen,
+            prevent_tab_switch: formData.prevent_tab_switch,
+            max_tab_switches: formData.max_tab_switches,
+            is_published: true,
+            created_by: profile?.id,
+          })
           .select()
           .single();
         
