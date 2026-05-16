@@ -166,7 +166,7 @@ async function handleCreateExam() {
             description: formData.description,
             level: formData.level,
             academic_year: formData.academic_year,
-            exam_date: formData.exam_date,
+            exam_date: formData.exam_date || null,
             duration_minutes: formData.duration_minutes,
             passing_score: formData.passing_score,
             total_questions: formData.total_questions,
