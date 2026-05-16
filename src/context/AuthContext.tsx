@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { supabase, clearSupabaseCache } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile, UserRole } from '@/types';
@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
 
   const clearSession = useCallback(() => {
     setUser(null);
@@ -96,6 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearSession]);
 
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
     let isMounted = true;
     let initTimedOut = false;
 
@@ -103,9 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!isMounted) return;
       initTimedOut = true;
       setLoading(false);
-    }, 5000);
+    }, 8000);
 
-    (async () => {
+    const initAuth = async () => {
       try {
         if (typeof window !== 'undefined') {
           const storedToken = localStorage.getItem('supabase.auth.token');
@@ -115,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (parsed?.expires_at) {
                 const expiresAt = parsed.expires_at * 1000;
                 const now = Date.now();
-                if (now > expiresAt - 60000) {
+                if (now > expiresAt - 30000) {
                   clearSupabaseCache();
                 }
               }
@@ -125,12 +129,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
         if (!isMounted) return;
+
+        if (sessionError) {
+          console.error('Get session error:', sessionError);
+          clearSupabaseCache();
+        }
 
         if (session?.user) {
           if (isSessionExpired(session)) {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+            if (!isMounted) return;
+            
             if (refreshError || !refreshData.session) {
               clearSupabaseCache();
               clearTimeout(safetyTimer);
@@ -157,7 +169,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       clearTimeout(safetyTimer);
       if (isMounted && !initTimedOut) setLoading(false);
-    })();
+    };
+
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
@@ -184,12 +198,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn(email: string, password: string) {
     try {
+      clearSupabaseCache();
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
       if (error) {
         setLoading(false);
         return { error };
       }
+      
       if (data.user) {
         setUser(data.user);
         const p = await fetchProfile(data.user.id);
@@ -198,11 +219,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         return { error: null, user: data.user, profile: profileData };
       }
+      
       setLoading(false);
       return { error: null };
-    } catch (err: any) {
+    } catch (err: unknown) {
       setLoading(false);
-      return { error: err?.message ? new Error(err.message) : new Error('Network error during login.') };
+      const message = err instanceof Error ? err.message : 'Network error during login.';
+      return { error: new Error(message) };
     }
   }
 
@@ -217,6 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signOut() {
     try {
+      clearSupabaseCache();
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Sign out error:', error);

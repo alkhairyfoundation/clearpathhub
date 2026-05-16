@@ -44,6 +44,7 @@ async function clearStaleSession() {
   }
   clearSupabaseCache();
   sessionStorage.clear();
+  localStorage.clear();
 }
 
 function LoginPageContent() {

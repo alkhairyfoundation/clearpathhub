@@ -1,24 +1,54 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any, 'public', any>;
 
 function getUrl() { return process.env.NEXT_PUBLIC_SUPABASE_URL || ''; }
 function getKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''; }
 
-let _client: SupabaseClient | null = null;
+function getStorage() {
+  return {
+    getItem: (key: string): string | null => {
+      if (typeof window === 'undefined') return null;
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        console.warn('Storage getItem error:', e);
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      if (typeof window === 'undefined') return;
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        console.warn('Storage setItem error:', e);
+      }
+    },
+    removeItem: (key: string): void => {
+      if (typeof window === 'undefined') return;
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        console.warn('Storage removeItem error:', e);
+      }
+    },
+  };
+}
+
+let _client: AnyClient | null = null;
 
 export function clearSupabaseCache() {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.removeItem('supabase.auth.token');
+    const storage = getStorage();
+    storage.removeItem('supabase.auth.token');
     sessionStorage.clear();
   } catch (e) {
     console.error('Error clearing supabase cache:', e);
   }
 }
 
-export function getFreshClient(): AnyClient {
+function createClientInstance(): AnyClient {
   const url = getUrl();
   const key = getKey();
   if (!url || !key) {
@@ -31,79 +61,30 @@ export function getFreshClient(): AnyClient {
       autoRefreshToken: true,
       detectSessionInUrl: true,
       storageKey: 'supabase.auth.token',
-      storage: {
-        getItem: (key: string) => {
-          if (typeof window === 'undefined') return null;
-          return localStorage.getItem(key);
-        },
-        setItem: (key: string, value: string) => {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(key, value);
-          }
-        },
-        removeItem: (key: string) => {
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem(key);
-          }
-        },
-      },
+      storage: getStorage(),
     },
   }) as unknown as AnyClient;
 }
 
 function getClient(): AnyClient {
   if (!_client) {
-    const url = getUrl();
-    const key = getKey();
-    if (!url || !key) {
-      if (typeof window === 'undefined') return null as unknown as AnyClient;
-      throw new Error('Your project URL and Key are required to create a Supabase client!');
-    }
-    _client = createClient(url, key, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'supabase.auth.token',
-        storage: {
-          getItem: (key: string) => {
-            if (typeof window === 'undefined') return null;
-            return localStorage.getItem(key);
-          },
-          setItem: (key: string, value: string) => {
-            if (typeof window !== 'undefined') {
-              localStorage.setItem(key, value);
-            }
-          },
-          removeItem: (key: string) => {
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem(key);
-            }
-          },
-        },
-      },
-    }) as unknown as SupabaseClient;
+    _client = createClientInstance();
   }
-  return _client as unknown as AnyClient;
+  return _client;
 }
 
-export function createSupabaseBrowserClient(): AnyClient {
-  return createClient(getUrl(), getKey(), {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  }) as unknown as AnyClient;
+export function getFreshClient(): AnyClient {
+  _client = null;
+  return createClientInstance();
 }
 
 export const supabase: AnyClient = new Proxy({} as any, {
-  get(_, prop) {
+  get(_, prop: string) {
     const c = getClient();
     if (!c) {
-      return (...args: any[]) => { throw new Error(`supabase.${String(prop)}() is not available during server-side rendering`); };
+      return (...args: unknown[]) => { throw new Error(`supabase.${prop}() is not available during server-side rendering`); };
     }
-    const val = (c as any)[prop];
+    const val = (c as unknown as Record<string, unknown>)[prop];
     return typeof val === 'function' ? val.bind(c) : val;
   },
 });
