@@ -49,6 +49,12 @@ function getClient(): AnyClient {
   if (typeof window === 'undefined') {
     return createClientInstance();
   }
+  // Clean up old storage key if present
+  try {
+    if (localStorage.getItem('supabase.auth.token')) {
+      localStorage.removeItem('supabase.auth.token');
+    }
+  } catch { /* ignore */ }
   if (!(window as any).__supabaseClient) {
     (window as any).__supabaseClient = createClientInstance();
   }
@@ -69,6 +75,7 @@ export const supabase: AnyClient = new Proxy({} as any, {
 export function clearSupabaseCache() {
   if (typeof window === 'undefined') return;
   try {
+    localStorage.removeItem('supabase.auth.token');
     localStorage.removeItem(STORAGE_KEY);
     sessionStorage.clear();
     delete (window as any).__supabaseClient;
