@@ -282,27 +282,22 @@ async function handleCreateExam() {
        
         // If we don't have enough questions, fill with any available questions for the level
         if (allSelectedQuestions.length < questionCount) {
-          const selectedIds = allSelectedQuestions.map(q => q.id);
-          let query = supabase
+          const selectedIds = new Set(allSelectedQuestions.map(q => q.id));
+          const { data: additionalQuestions } = await supabase
             .from('question_bank')
             .select('*')
             .eq('level', level)
-            .eq('is_active', true)
-            .order('difficulty_level', { ascending: false });
-          
-          if (selectedIds.length > 0) {
-            query = query.not('id', 'in', selectedIds);
-          }
-          
-          const { data: additionalQuestions } = await query
-            .limit(questionCount - allSelectedQuestions.length);
+            .eq('is_active', true);
             
-         if (additionalQuestions) {
-           allSelectedQuestions = [...allSelectedQuestions, ...additionalQuestions];
-         }
-       }
-       
-       // Shuffle all selected questions to distribute difficulty levels throughout the exam
+          if (additionalQuestions) {
+            const remaining = additionalQuestions
+              .filter(q => !selectedIds.has(q.id))
+              .slice(0, questionCount - allSelectedQuestions.length);
+            allSelectedQuestions = [...allSelectedQuestions, ...remaining];
+          }
+        }
+        
+        // Shuffle all selected questions to distribute difficulty levels throughout the exam
        if (allSelectedQuestions.length > 0) {
          allSelectedQuestions = allSelectedQuestions.sort(() => Math.random() - 0.5);
        }
