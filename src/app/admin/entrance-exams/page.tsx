@@ -146,37 +146,47 @@ useEffect(() => {
   }
 
 async function handleCreateExam() {
-     if (!formData.title.trim()) { setError('Title is required'); return; }
-     setError(''); setSaving(true);
-     try {
-       const { data: examData, error } = await supabase
-         .from('entrance_exams')
-         .insert({ ...formData, created_by: profile?.id })
-         .select()
-         .single();
-       
-       if (error) throw new Error(error.message);
-       
-       // Auto-populate questions from question bank if exam has level and subjects specified
-       if (formData.level && (formData.level.includes('JSS') || formData.level.includes('SS'))) {
-         await autoPopulateExamQuestions(examData.id, formData.level);
-       }
-       
-       setSuccess('Exam created and populated with questions');
-       setShowExamModal(false);
-       fetchData();
-     } catch (err: any) {
-       setError(err.message || 'Failed to create exam');
-     } finally {
-       setSaving(false);
-     }
-   }
-   
-   async function autoPopulateExamQuestions(examId: string, level: string) {
-     try {
-       // Determine subjects based on level (for now, always English and Mathematics)
-       const subjects = ['ENGLISH', 'MATHEMATICS'];
-       const questionsPerSubject = Math.max(1, Math.floor(formData.total_questions / subjects.length));
+      if (!formData.title.trim()) { setError('Title is required'); return; }
+      setError(''); setSaving(true);
+      try {
+        const { data: examData, error } = await supabase
+          .from('entrance_exams')
+          .insert({ ...formData, created_by: profile?.id })
+          .select()
+          .single();
+        
+        if (error) throw new Error(error.message);
+        
+        // Auto-populate questions from question bank if exam has level specified
+        if (formData.level) {
+          await autoPopulateExamQuestions(examData.id, formData.level);
+        }
+        
+        setSuccess('Exam created and populated with questions');
+        setShowExamModal(false);
+        fetchData();
+      } catch (err: any) {
+        setError(err.message || 'Failed to create exam');
+      } finally {
+        setSaving(false);
+      }
+    }
+    
+    async function autoPopulateExamQuestions(examId: string, level: string) {
+      try {
+        // Determine subjects based on level
+        let subjects: string[] = [];
+        if (level === 'PRIMARY') {
+          subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'VERBAL REASONING', 'QUANTITATIVE REASONING'];
+        } else if (level === 'JSS') {
+          subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PREVocational STUDIES'];
+        } else if (level === 'SS1' || level === 'SS2' || level === 'SS3') {
+          subjects = ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'];
+        } else {
+          subjects = ['MATHEMATICS', 'ENGLISH'];
+        }
+
+        const questionsPerSubject = Math.max(1, Math.floor(formData.total_questions / subjects.length));
        
        let allSelectedQuestions: any[] = [];
        

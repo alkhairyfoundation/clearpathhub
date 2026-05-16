@@ -8,6 +8,49 @@ function getKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''; }
 
 let _client: SupabaseClient | null = null;
 
+export function clearSupabaseCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem('supabase.auth.token');
+    sessionStorage.clear();
+  } catch (e) {
+    console.error('Error clearing supabase cache:', e);
+  }
+}
+
+export function getFreshClient(): AnyClient {
+  const url = getUrl();
+  const key = getKey();
+  if (!url || !key) {
+    if (typeof window === 'undefined') return null as unknown as AnyClient;
+    throw new Error('Your project URL and Key are required to create a Supabase client!');
+  }
+  return createClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'supabase.auth.token',
+      storage: {
+        getItem: (key: string) => {
+          if (typeof window === 'undefined') return null;
+          return localStorage.getItem(key);
+        },
+        setItem: (key: string, value: string) => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(key, value);
+          }
+        },
+        removeItem: (key: string) => {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(key);
+          }
+        },
+      },
+    },
+  }) as unknown as AnyClient;
+}
+
 function getClient(): AnyClient {
   if (!_client) {
     const url = getUrl();
@@ -21,6 +64,23 @@ function getClient(): AnyClient {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: 'supabase.auth.token',
+        storage: {
+          getItem: (key: string) => {
+            if (typeof window === 'undefined') return null;
+            return localStorage.getItem(key);
+          },
+          setItem: (key: string, value: string) => {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(key, value);
+            }
+          },
+          removeItem: (key: string) => {
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem(key);
+            }
+          },
+        },
       },
     }) as unknown as SupabaseClient;
   }

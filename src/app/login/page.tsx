@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, clearSupabaseCache } from '@/lib/supabase';
 import { Mail, Lock, Eye, EyeOff, GraduationCap, ArrowLeft, BookOpen, Shield, GraduationCap as StudentCap, Check, AlertCircle } from 'lucide-react';
 
 function BismillahPopup({ onClose }: { onClose: () => void }) {
@@ -38,14 +38,12 @@ function BismillahPopup({ onClose }: { onClose: () => void }) {
 
 async function clearStaleSession() {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.warn('Error clearing stale session:', error);
-    }
-    localStorage.removeItem('supabase.auth.token');
+    await supabase.auth.signOut();
   } catch (error) {
-    console.warn('Failed to clear stale session:', error);
+    console.warn('Error signing out:', error);
   }
+  clearSupabaseCache();
+  sessionStorage.clear();
 }
 
 function LoginPageContent() {

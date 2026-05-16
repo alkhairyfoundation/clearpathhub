@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, clearSupabaseCache } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile, UserRole } from '@/types';
 
@@ -107,6 +107,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
+        if (typeof window !== 'undefined') {
+          const storedToken = localStorage.getItem('supabase.auth.token');
+          if (storedToken) {
+            try {
+              const parsed = JSON.parse(storedToken);
+              if (parsed?.expires_at) {
+                const expiresAt = parsed.expires_at * 1000;
+                const now = Date.now();
+                if (now > expiresAt - 60000) {
+                  clearSupabaseCache();
+                }
+              }
+            } catch (e) {
+              clearSupabaseCache();
+            }
+          }
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
 
@@ -114,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isSessionExpired(session)) {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
             if (refreshError || !refreshData.session) {
+              clearSupabaseCache();
               clearTimeout(safetyTimer);
               if (isMounted && !initTimedOut) setLoading(false);
               return;
@@ -133,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Initial session check error:', error);
+        clearSupabaseCache();
       }
 
       clearTimeout(safetyTimer);
