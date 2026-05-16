@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, clearSupabaseCache } from '@/lib/supabase';
+import { clearSupabaseCache } from '@/lib/supabase';
 import { Mail, Lock, Eye, EyeOff, GraduationCap, ArrowLeft, BookOpen, Shield, GraduationCap as StudentCap, Check, AlertCircle } from 'lucide-react';
 
 function BismillahPopup({ onClose }: { onClose: () => void }) {
@@ -36,15 +36,6 @@ function BismillahPopup({ onClose }: { onClose: () => void }) {
   );
 }
 
-async function clearStaleSession() {
-  try {
-    await supabase.auth.signOut();
-  } catch (error) {
-    console.warn('Error signing out:', error);
-  }
-  clearSupabaseCache();
-}
-
 function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -52,8 +43,7 @@ function LoginPageContent() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showBismillah, setShowBismillah] = useState(true);
-  const [redirected, setRedirected] = useState(false);
-  const { signIn, clearSession } = useAuth();
+  const { signIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
@@ -61,20 +51,15 @@ function LoginPageContent() {
 
   useEffect(() => {
     const dismissed = localStorage.getItem('bismillah-dismissed');
-    if (dismissed) {
-      setShowBismillah(false);
-    }
+    if (dismissed) setShowBismillah(false);
   }, []);
 
   useEffect(() => {
     if (sessionError === 'session_expired') {
       setError('Your session has expired. Please sign in again.');
-      clearSession();
-      clearStaleSession();
+      clearSupabaseCache();
     }
-  }, [sessionError, clearSession]);
-
-  // Don't check for existing session - always show login form first time
+  }, [sessionError]);
 
   function handleBismillahDismiss() {
     localStorage.setItem('bismillah-dismissed', 'true');
@@ -87,7 +72,7 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
-      await clearStaleSession();
+      clearSupabaseCache();
       
       const { error, profile } = await signIn(email, password);
 
@@ -119,17 +104,6 @@ function LoginPageContent() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mx-auto mb-4"></div>
-          <p className="text-slate-600">Signing you in...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (showBismillah) {
     return <BismillahPopup onClose={handleBismillahDismiss} />;
   }
@@ -156,133 +130,81 @@ function LoginPageContent() {
             <h2 className="text-4xl xl:text-5xl font-black text-white mb-6 leading-tight">
               The Mastery Engine
             </h2>
-            <p className="text-lg text-slate-300 leading-relaxed max-w-md">
-              Every student truly masters each lesson before moving forward. No skipping. No gaps. Just solid foundations.
+            <p className="text-lg text-white/70 leading-relaxed">
+              Your personalized learning platform designed to help students achieve academic excellence through structured assessments, targeted practice, and detailed performance analytics.
             </p>
           </div>
 
-          <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-cp-gold/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Shield className="text-cp-gold" size={20} />
-              </div>
-              <div>
-                <h4 className="font-semibold text-white mb-1">Mastery Gates</h4>
-                <p className="text-sm text-slate-400">Students must pass each quiz at 80% to unlock the next lesson</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <BookOpen className="text-emerald-400" size={20} />
-              </div>
-              <div>
-                <h4 className="font-semibold text-white mb-1">Smart Video Player</h4>
-                <p className="text-sm text-slate-400">Anti-skip protection ensures complete lesson consumption</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <StudentCap className="text-purple-400" size={20} />
-              </div>
-              <div>
-                <h4 className="font-semibold text-white mb-1">Class-Based Learning</h4>
-                <p className="text-sm text-slate-400">Organized by Year 1-6 with term-based reporting</p>
-              </div>
-            </div>
+          <div className="flex items-center gap-6 text-white/50 text-xs">
+            <div className="flex items-center gap-2"><Shield size={14} />Secure & Private</div>
+            <div className="flex items-center gap-2"><GraduationCap size={14} />Curriculum Aligned</div>
           </div>
         </div>
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-8">
-              <ArrowLeft size={16} />
-              Back to Home
-            </Link>
-            
-            {/* Mobile logo */}
-            <div className="lg:hidden flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-xl flex items-center justify-center shadow-lg shadow-cp-gold/25">
-                <GraduationCap className="text-white" size={22} />
+          <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-8 transition-colors lg:hidden">
+            <ArrowLeft size={18} />
+            <span className="text-sm font-medium">Back to Home</span>
+          </Link>
+
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+            <div className="text-center mb-8">
+              <div className="w-14 h-14 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cp-gold/25">
+                <GraduationCap className="text-white" size={24} />
               </div>
-              <div>
-                <h1 className="font-bold text-slate-900 text-lg">ClearPath</h1>
-                <p className="text-[10px] font-semibold text-cp-gold uppercase tracking-wider -mt-0.5">Edu Hub</p>
-              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Welcome Back</h2>
+              <p className="text-slate-500 text-sm mt-1">Sign in to continue your learning journey</p>
             </div>
 
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
-            <p className="text-slate-500">Sign in to your account to continue</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 sm:p-8">
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-start gap-3">
-                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <span>{error}</span>
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                <AlertCircle size={20} className="text-red-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="label" htmlFor="email">Email Address</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="input pl-10"
-                    placeholder="your@email.com"
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cp-gold/20 focus:border-cp-gold outline-none transition-all text-sm"
+                    placeholder="Enter your email"
                     required
-                    autoComplete="email"
+                    autoFocus
                   />
                 </div>
               </div>
 
               <div>
-                <label className="label" htmlFor="password">Password</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="input pl-10 pr-10"
+                    onChange={e => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cp-gold/20 focus:border-cp-gold outline-none transition-all text-sm"
                     placeholder="Enter your password"
                     required
-                    autoComplete="current-password"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary py-3 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button type="submit" disabled={loading} className="w-full btn-primary py-2.5 flex items-center justify-center gap-2 disabled:opacity-50">
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                     Signing in...
                   </>
                 ) : (
@@ -290,17 +212,7 @@ function LoginPageContent() {
                 )}
               </button>
             </form>
-
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <p className="text-center text-sm text-slate-500">
-                Contact your administrator for login credentials
-              </p>
-            </div>
           </div>
-
-          <p className="text-center text-xs text-slate-400 mt-8">
-            Built with purpose. Every student masters every lesson.
-          </p>
         </div>
       </div>
     </div>
@@ -308,13 +220,5 @@ function LoginPageContent() {
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold"></div>
-      </div>
-    }>
-      <LoginPageContent />
-    </Suspense>
-  );
+  return <Suspense><LoginPageContent /></Suspense>;
 }

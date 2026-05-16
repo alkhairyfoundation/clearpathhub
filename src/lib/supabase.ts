@@ -5,48 +5,26 @@ type AnyClient = SupabaseClient<any, 'public', any>;
 function getUrl() { return process.env.NEXT_PUBLIC_SUPABASE_URL || ''; }
 function getKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''; }
 
+const STORAGE_KEY = 'sb-auth-token';
+
 function getStorage() {
   return {
     getItem: (key: string): string | null => {
       if (typeof window === 'undefined') return null;
-      try {
-        return localStorage.getItem(key);
-      } catch (e) {
-        console.warn('Storage getItem error:', e);
-        return null;
-      }
+      try { return localStorage.getItem(key); }
+      catch { return null; }
     },
     setItem: (key: string, value: string): void => {
       if (typeof window === 'undefined') return;
-      try {
-        localStorage.setItem(key, value);
-      } catch (e) {
-        console.warn('Storage setItem error:', e);
-      }
+      try { localStorage.setItem(key, value); }
+      catch { /* quota exceeded */ }
     },
     removeItem: (key: string): void => {
       if (typeof window === 'undefined') return;
-      try {
-        localStorage.removeItem(key);
-      } catch (e) {
-        console.warn('Storage removeItem error:', e);
-      }
+      try { localStorage.removeItem(key); }
+      catch { /* ignore */ }
     },
   };
-}
-
-let _client: AnyClient | null = null;
-
-export function clearSupabaseCache() {
-  if (typeof window === 'undefined') return;
-  try {
-    const storage = getStorage();
-    storage.removeItem('supabase.auth.token');
-    sessionStorage.clear();
-    _client = null;
-  } catch (e) {
-    console.error('Error clearing supabase cache:', e);
-  }
 }
 
 function createClientInstance(): AnyClient {
@@ -54,41 +32,55 @@ function createClientInstance(): AnyClient {
   const key = getKey();
   if (!url || !key) {
     if (typeof window === 'undefined') return null as unknown as AnyClient;
-    throw new Error('Your project URL and Key are required to create a Supabase client!');
+    throw new Error('Supabase URL and Key required');
   }
   return createClient(url, key, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storageKey: 'supabase.auth.token',
+      storageKey: STORAGE_KEY,
       storage: getStorage(),
     },
   }) as unknown as AnyClient;
 }
 
 function getClient(): AnyClient {
-  if (!_client) {
-    _client = createClientInstance();
+  if (typeof window === 'undefined') {
+    return createClientInstance();
   }
-  return _client;
-}
-
-export function getFreshClient(): AnyClient {
-  _client = null;
-  return createClientInstance();
+  if (!(window as any).__supabaseClient) {
+    (window as any).__supabaseClient = createClientInstance();
+  }
+  return (window as any).__supabaseClient;
 }
 
 export const supabase: AnyClient = new Proxy({} as any, {
   get(_, prop: string) {
     const c = getClient();
     if (!c) {
-      return (...args: unknown[]) => { throw new Error(`supabase.${prop}() is not available during server-side rendering`); };
+      return (...args: unknown[]) => { throw new Error(`supabase.${prop}() not available during SSR`); };
     }
     const val = (c as unknown as Record<string, unknown>)[prop];
     return typeof val === 'function' ? val.bind(c) : val;
   },
 });
+
+export function clearSupabaseCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.clear();
+    delete (window as any).__supabaseClient;
+  } catch (e) {
+    console.error('Error clearing supabase cache:', e);
+  }
+}
+
+export function getFreshClient(): AnyClient {
+  delete (window as any).__supabaseClient;
+  return createClientInstance();
+}
 
 export const STORAGE_BUCKETS = {
   AVATARS: 'avatars',
@@ -109,13 +101,10 @@ export async function uploadFile(
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(fileName, file);
-
     if (error) throw error;
-
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
       .getPublicUrl(fileName);
-
     return { url: publicUrl, error: null };
   } catch (error) {
     return { url: null, error: error as Error };
@@ -130,7 +119,6 @@ export async function deleteFile(
     const { error } = await supabase.storage
       .from(bucket)
       .remove([filePath]);
-
     return { error };
   } catch (error) {
     return { error: error as Error };

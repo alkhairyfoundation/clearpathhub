@@ -37,25 +37,16 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
   try {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
     return data || null;
-  } catch (error) {
-    console.error('Error fetching profile:', error);
+  } catch {
     return null;
   }
-}
-
-function isSessionExpired(session: Session | null): boolean {
-  if (!session) return true;
-  const expiresAt = session.expires_at;
-  if (!expiresAt) return false;
-  const bufferTime = 60 * 1000;
-  return Date.now() > (expiresAt * 1000) - bufferTime;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const initializedRef = useRef(false);
+  const initialized = useRef(false);
 
   const clearSession = useCallback(() => {
     setUser(null);
@@ -65,124 +56,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('Session refresh error:', error);
-        return false;
-      }
-      
-      if (session && !isSessionExpired(session)) {
-        setUser(session.user);
-        const p = await fetchProfile(session.user.id);
-        setProfile(p || fallbackProfile(session.user));
-        return true;
-      }
-      
       const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError || !refreshData.session) {
-        console.error('Token refresh failed:', refreshError);
+        clearSupabaseCache();
         clearSession();
         return false;
       }
-      
       setUser(refreshData.user);
       const p = await fetchProfile(refreshData.user!.id);
       setProfile(p || fallbackProfile(refreshData.user!));
       return true;
-    } catch (error) {
-      console.error('Session refresh exception:', error);
+    } catch {
+      clearSupabaseCache();
       clearSession();
       return false;
     }
   }, [clearSession]);
 
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
+    if (initialized.current) return;
+    initialized.current = true;
 
-    let isMounted = true;
-    let initTimedOut = false;
+    let mounted = true;
 
-    const safetyTimer = setTimeout(() => {
-      if (!isMounted) return;
-      initTimedOut = true;
-      setLoading(false);
-    }, 8000);
-
-    const initAuth = async () => {
+    (async () => {
       try {
-        if (typeof window !== 'undefined') {
-          const storedToken = localStorage.getItem('supabase.auth.token');
-          if (storedToken) {
-            try {
-              const parsed = JSON.parse(storedToken);
-              if (parsed?.expires_at) {
-                const expiresAt = parsed.expires_at * 1000;
-                const now = Date.now();
-                if (now > expiresAt - 30000) {
-                  clearSupabaseCache();
-                }
-              }
-            } catch (e) {
-              clearSupabaseCache();
-            }
-          }
-        }
+        // Check if there's a stored session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (!mounted) return;
 
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (!isMounted) return;
-
-        if (sessionError) {
-          console.error('Get session error:', sessionError);
+        if (error) {
           clearSupabaseCache();
         }
 
         if (session?.user) {
-          if (isSessionExpired(session)) {
+          // Try to refresh if close to expiry
+          const expiresAt = session.expires_at;
+          const needsRefresh = expiresAt && (Date.now() > (expiresAt * 1000) - 120000);
+
+          if (needsRefresh) {
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-            if (!isMounted) return;
-            
+            if (!mounted) return;
             if (refreshError || !refreshData.session) {
               clearSupabaseCache();
-              clearTimeout(safetyTimer);
-              if (isMounted && !initTimedOut) setLoading(false);
+              if (mounted) setLoading(false);
               return;
             }
             setUser(refreshData.user);
             const p = await fetchProfile(refreshData.user!.id);
-            if (isMounted) {
-              setProfile(p || fallbackProfile(refreshData.user!));
-            }
+            if (mounted) setProfile(p || fallbackProfile(refreshData.user!));
           } else {
             setUser(session.user);
             const p = await fetchProfile(session.user.id);
-            if (isMounted) {
-              setProfile(p || fallbackProfile(session.user));
-            }
+            if (mounted) setProfile(p || fallbackProfile(session.user));
           }
         }
-      } catch (error) {
-        console.error('Initial session check error:', error);
+      } catch {
         clearSupabaseCache();
       }
-
-      clearTimeout(safetyTimer);
-      if (isMounted && !initTimedOut) setLoading(false);
-    };
-
-    initAuth();
+      if (mounted) setLoading(false);
+    })();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted) return;
-      
+      if (!mounted) return;
       if (event === 'INITIAL_SESSION') return;
-      
+
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           setUser(session.user);
           const p = await fetchProfile(session.user.id);
-          if (isMounted) setProfile(p || fallbackProfile(session.user));
+          if (mounted) setProfile(p || fallbackProfile(session.user));
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
@@ -193,24 +136,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => { isMounted = false; subscription.unsubscribe(); };
+    return () => { mounted = false; subscription.unsubscribe(); };
   }, [clearSession]);
 
-  async function signIn(email: string, password: string) {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       clearSupabaseCache();
       setLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
-      
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
       if (error) {
         setLoading(false);
         return { error };
       }
-      
+
       if (data.user) {
         setUser(data.user);
         const p = await fetchProfile(data.user.id);
@@ -219,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
         return { error: null, user: data.user, profile: profileData };
       }
-      
+
       setLoading(false);
       return { error: null };
     } catch (err: unknown) {
@@ -227,42 +167,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const message = err instanceof Error ? err.message : 'Network error during login.';
       return { error: new Error(message) };
     }
-  }
+  }, []);
 
-  async function signUp(email: string, password: string, role: UserRole, firstName: string, lastName: string) {
+  const signUp = useCallback(async (email: string, password: string, role: UserRole, firstName: string, lastName: string) => {
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: { data: { first_name: firstName, last_name: lastName, role } },
     });
     if (error) return { error };
     return { error: null };
-  }
+  }, []);
 
-  async function signOut() {
+  const signOut = useCallback(async () => {
     try {
       clearSupabaseCache();
       await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
+    } catch {
+      // ignore
     }
     setUser(null);
     setProfile(null);
-  }
+  }, []);
 
   const isAuthenticated = !!user && !!profile;
 
   return (
     <AuthContext.Provider value={{ 
-      user, 
-      profile, 
-      setProfile, 
-      loading, 
-      isAuthenticated,
-      signIn, 
-      signUp, 
-      signOut,
-      refreshSession,
-      clearSession,
+      user, profile, setProfile, loading, isAuthenticated,
+      signIn, signUp, signOut, refreshSession, clearSession,
     }}>
       {children}
     </AuthContext.Provider>
