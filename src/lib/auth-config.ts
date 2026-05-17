@@ -2,8 +2,11 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+// Prevent build failure if env vars are missing
+const isConfigured = supabaseUrl && supabaseAnonKey && supabaseUrl.includes('supabase');
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,33 +17,43 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       authorize: async (credentials) => {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: credentials.email,
-          password: credentials.password,
-        });
-
-        if (error || !data.user) {
-          console.error("Auth error:", error?.message);
+        if (!isConfigured) {
+          console.error("Supabase not configured - missing environment variables");
           return null;
         }
+        
+        if (!credentials?.email || !credentials?.password) return null;
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        try {
+          const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-        return {
-          id: data.user.id,
-          email: data.user.email,
-          role: profile?.role || 'student',
-          name: profile ? `${profile.first_name} ${profile.last_name}` : data.user.email,
-          image: profile?.avatar_url,
-        };
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          });
+
+          if (error || !data.user) {
+            console.error("Auth error:", error?.message);
+            return null;
+          }
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+
+          return {
+            id: data.user.id,
+            email: data.user.email,
+            role: profile?.role || 'student',
+            name: profile ? `${profile.first_name} ${profile.last_name}` : data.user.email,
+            image: profile?.avatar_url,
+          };
+        } catch (err) {
+          console.error("Authorize error:", err);
+          return null;
+        }
       }
     })
   ],
@@ -66,7 +79,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/login',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-do-not-use-in-production',
 };
 
 export default NextAuth(authOptions);
