@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const viewport: Viewport = {
   width: 'device-width',

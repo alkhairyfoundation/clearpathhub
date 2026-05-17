@@ -8,10 +8,15 @@ function getKey() { return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''; }
 function createClientInstance(): AnyClient {
   const url = getUrl();
   const key = getKey();
+  
+  // Return a dummy client if env vars are missing to prevent crashes
   if (!url || !key) {
-    if (typeof window === 'undefined') return null as unknown as AnyClient;
-    throw new Error('Supabase URL and Key required');
+    console.warn('Supabase credentials not configured - using fallback client');
+    return createClient('https://placeholder.supabase.co', 'placeholder', {
+      auth: { persistSession: false }
+    }) as unknown as AnyClient;
   }
+  
   return createClient(url, key, {
     auth: {
       persistSession: true,
