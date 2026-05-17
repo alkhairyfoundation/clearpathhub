@@ -26,27 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set loading based on session status
     if (status === 'loading') {
       setLoading(true);
-    } else {
-      setLoading(false);
-    }
-  }, [status]);
-
-  useEffect(() => {
-    if (session?.user && (session.user as any).id) {
-      fetchProfile((session.user as any).id);
-    } else {
+    } else if (status === 'unauthenticated') {
       setProfileState(null);
       setLoading(false);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    // If session is loaded (not loading) but no user, ensure loading is false
-    if (status === 'authenticated' && !session?.user) {
-      setLoading(false);
+    } else if (status === 'authenticated' && session?.user) {
+      fetchProfile((session.user as any).id);
     }
   }, [status, session]);
 
@@ -79,6 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result && result.error) {
         return { error: new Error(result.error), profile: null };
       }
+
+      // After NextAuth succeeds, sign in to Supabase directly to authenticate
+      // the browser's supabase client for all subsequent DB queries
+      const { error: supabaseError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (supabaseError) {
+        console.warn('Supabase client auth failed:', supabaseError.message);
+      }
+
       return { error: null, profile: null };
     } catch (err) {
       return { error: err instanceof Error ? err : new Error("An error occurred"), profile: null };

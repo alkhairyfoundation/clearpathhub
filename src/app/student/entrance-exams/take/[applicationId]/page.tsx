@@ -191,7 +191,6 @@ async function handleSubmit() {
      });
      const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
      
-     // Determine mastery level based on score
      let masteryLevel: 'POOR' | 'GOOD' | 'EXCELLENT' | 'PROFICIENT' | 'MASTERED';
      if (finalScore >= 90) masteryLevel = 'MASTERED';
      else if (finalScore >= 80) masteryLevel = 'PROFICIENT';
@@ -199,50 +198,63 @@ async function handleSubmit() {
      else if (finalScore >= 60) masteryLevel = 'GOOD';
      else masteryLevel = 'POOR';
 
-     const { data: updatedApp, error } = await supabase
-       .from('entrance_applications')
-       .update({
-         exam_score: finalScore,
-         status: finalScore >= (exam.passing_score || 50) ? 'passed' : 'failed',
-         mastery_level: masteryLevel,
-         completed_at: new Date().toISOString(),
-         security_events: securityEvents
-       })
-       .eq('id', applicationId)
-       .select()
-       .single();
+     const studentEmail = profile?.email || application?.email || '';
+     const status = finalScore >= (exam.passing_score || 50) ? 'passed' : 'failed';
 
-     if (error) throw new Error(error.message);
-     
-// Get student email from profile
-      const studentEmail = profile?.email || application?.email || '';
-      
-      // Insert analytics record
-      try {
-        await supabase.from('student_analytics').insert({
-          application_id: applicationId,
-          student_email: studentEmail,
-          subject: 'COMBINED',
-          score: finalScore,
-          mastery_level: masteryLevel,
-          topic_performance: {},
-          time_taken: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft) / 60),
-          security_events_count: securityEvents.length
-        });
-      } catch (analyticsError) {
-        console.error('Failed to insert analytics record:', analyticsError);
-      }
+     try {
+       await supabase
+         .from('entrance_applications')
+         .update({
+           exam_score: finalScore,
+           status,
+           mastery_level: masteryLevel,
+           completed_at: new Date().toISOString(),
+           answers: Object.entries(answers).map(([qIdx, ans]: [string, any]) => ({
+             question_index: parseInt(qIdx),
+             question: questions[parseInt(qIdx)]?.question,
+             question_type: questions[parseInt(qIdx)]?.question_type,
+             options: questions[parseInt(qIdx)]?.options,
+             correct_answer: questions[parseInt(qIdx)]?.correct_answer,
+             given_answer: ans,
+             is_correct: gradeQuestion(questions[parseInt(qIdx)], ans),
+             points: questions[parseInt(qIdx)]?.points || 1,
+           })),
+           security_events: securityEvents
+         })
+         .eq('id', applicationId);
+     } catch (err) {
+       console.error('Failed to save exam results:', err);
+     }
+
+     try {
+       await supabase.from('student_analytics').insert({
+         application_id: applicationId,
+         student_email: studentEmail,
+         subject: 'COMBINED',
+         score: finalScore,
+         mastery_level: masteryLevel,
+         topic_performance: {},
+         time_taken: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft) / 60),
+         security_events_count: securityEvents.length
+       });
+     } catch (analyticsError) {
+       console.error('Failed to insert analytics record:', analyticsError);
+     }
 
      if (securityEvents.length > 0) {
-       const logs = securityEvents.map(e => ({
-         attempt_id: applicationId,
-         student_id: profile?.id,
-         event_type: e.type,
-         event_data: { key: e.key, count: e.count },
-         severity: e.type === 'tab_switch' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
-         created_at: e.time,
-       }));
-       await supabase.from('exam_activity_logs').insert(logs);
+       try {
+         const logs = securityEvents.map(e => ({
+           attempt_id: applicationId,
+           student_id: profile?.id,
+           event_type: e.type,
+           event_data: { key: e.key, count: e.count },
+           severity: e.type === 'tab_switch' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
+           created_at: e.time,
+         }));
+         await supabase.from('exam_activity_logs').insert(logs);
+       } catch (logError) {
+         console.error('Failed to insert activity logs:', logError);
+       }
      }
 
      setScore(finalScore);

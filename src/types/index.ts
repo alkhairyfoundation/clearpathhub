@@ -433,7 +433,11 @@ export interface EntranceApplication {
   applied_class: string;
   previous_school?: string;
   exam_score?: number;
-  status: 'pending' | 'passed' | 'failed' | 'reviewed';
+  status: 'pending' | 'assigned' | 'passed' | 'failed' | 'admitted' | 'rejected' | 'banned';
+  mastery_level?: string;
+  completed_at?: string;
+  security_events?: any;
+  answers?: any;
   reviewed_by?: string;
   reviewed_at?: string;
   created_at: string;

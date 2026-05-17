@@ -79,44 +79,35 @@ function LoginPageContent() {
         return;
       }
 
-      // Wait for profile to load after successful sign-in
-      // Poll for profile until we get it (max 5 seconds)
-      let attempts = 0;
-      const maxAttempts = 50; // 50 * 100ms = 5 seconds
+      // Get supabase session (now available after signIn)
+      const { data: { session } } = await supabase.auth.getSession();
       
-      while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
         
-        if (session?.user) {
-          // Fetch profile directly
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profileData) {
-            const role = profileData.role;
-            const roleRoutes: Record<string, string> = {
-              admin: '/admin',
-              teacher: '/teacher',
-              student: '/student',
-              parent: '/parent',
-              accountant: '/accountant',
-            };
-            const targetRoute = roleRoutes[role];
-            if (targetRoute) {
-              router.replace(targetRoute);
-              return;
-            }
+        if (profileData) {
+          const role = profileData.role;
+          const roleRoutes: Record<string, string> = {
+            admin: '/admin',
+            teacher: '/teacher',
+            student: '/student',
+            parent: '/parent',
+            accountant: '/accountant',
+          };
+          const targetRoute = roleRoutes[role];
+          if (targetRoute) {
+            router.replace(targetRoute);
+            return;
           }
         }
-        attempts++;
       }
 
-      // If we couldn't get profile, just redirect to portal
-      router.replace(redirect || '/portal');
+      // Fallback: redirect to home (DashboardLayout will handle role-based redirect)
+      router.replace(redirect || '/');
     } catch (err: any) {
       setError(err?.message || 'An unexpected error occurred');
       setLoading(false);

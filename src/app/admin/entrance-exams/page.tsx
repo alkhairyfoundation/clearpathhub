@@ -66,6 +66,11 @@ const [formData, setFormData] = useState({
    const [editingQuestion, setEditingQuestion] = useState<any>(null);
    const [questionBankError, setQuestionBankError] = useState('');
    const [questionBankSuccess, setQuestionBankSuccess] = useState('');
+   const [showBankSelectModal, setShowBankSelectModal] = useState(false);
+   const [bankSelectSearch, setBankSelectSearch] = useState('');
+   const [bankSelectQuestions, setBankSelectQuestions] = useState<any[]>([]);
+   const [bankSelectFiltered, setBankSelectFiltered] = useState<any[]>([]);
+   const [selectedBankIds, setSelectedBankIds] = useState<Set<string>>(new Set());
    
    // Analytics State
    const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -360,7 +365,85 @@ async function handleCreateExam() {
     }
   }
 
-  async function handleAddQuestion() {
+   async function handleRemoveQuestion(questionId: string) {
+     if (!confirm('Remove this question from the exam?')) return;
+     try {
+       await supabase.from('entrance_questions').delete().eq('id', questionId);
+       setQuestions(prev => prev.filter(q => q.id !== questionId));
+     } catch (err) {
+       console.error('Failed to remove question:', err);
+     }
+   }
+
+   async function handleAddQuestionsFromBank(examId: string, selectedIds: string[]) {
+     if (selectedIds.length === 0) return;
+     setSaving(true);
+     try {
+       const { data: selectedQbank } = await supabase
+         .from('question_bank')
+         .select('*')
+         .in('id', selectedIds);
+       
+       if (selectedQbank && selectedQbank.length > 0) {
+         const toInsert = selectedQbank.map(q => ({
+           exam_id: examId,
+           question: q.question,
+           question_image: q.question_image || null,
+           options: q.options || [''],
+           correct_answer: q.correct_answer ?? 0,
+           points: q.points ?? 1,
+           question_type: q.question_type || 'multiple_choice',
+           subject: q.subject || null,
+         }));
+         
+         await supabase.from('entrance_questions').insert(toInsert);
+         
+         const { data: updated } = await supabase.from('entrance_questions').select('*').eq('exam_id', examId);
+         if (updated) setQuestions(updated);
+         
+         setSuccess(`Added ${toInsert.length} question(s) from question bank`);
+       }
+     } catch (err: any) {
+       setError(err.message || 'Failed to add questions');
+     } finally {
+       setSaving(false);
+     }
+   }
+
+   async function openBankSelectModal(exam: any) {
+     setSelectedExam(exam);
+     setSelectedBankIds(new Set());
+     setBankSelectSearch('');
+     // Filter by the exam's level for faster loading and relevant questions
+     let query = supabase.from('question_bank').select('*').eq('level', exam.level);
+     // If exam has subjects, also filter by those
+     const examSubjects = exam.subjects;
+     if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
+       query = query.in('subject', examSubjects);
+     }
+     const { data } = await query.order('created_at', { ascending: false });
+     setBankSelectQuestions(data || []);
+     setBankSelectFiltered(data || []);
+     setShowBankSelectModal(true);
+   }
+
+   function filterBankSelect(search: string) {
+     setBankSelectSearch(search);
+     const lower = search.toLowerCase();
+     setBankSelectFiltered(
+       bankSelectQuestions.filter(q => q.question.toLowerCase().includes(lower))
+     );
+   }
+
+   function toggleBankSelect(id: string) {
+     setSelectedBankIds(prev => {
+       const next = new Set(prev);
+       if (next.has(id)) next.delete(id); else next.add(id);
+       return next;
+     });
+   }
+
+   async function handleAddQuestion() {
     if (!selectedExam) return;
     setSaving(true);
     const payload: any = {
@@ -433,7 +516,39 @@ async function handleCreateExam() {
     fetchData();
   }
 
-  async function handleAdmissionDecision() {
+   async function handleDeleteApplication(appId: string) {
+     if (!confirm('Are you sure you want to permanently delete this application? This cannot be undone.')) return;
+     setDeleting(appId);
+     try {
+       await supabase.from('entrance_applications').delete().eq('id', appId);
+       setSuccess('Application deleted successfully');
+       fetchData();
+     } catch (err: any) {
+       setError(err.message || 'Failed to delete application');
+     } finally {
+       setDeleting(null);
+     }
+   }
+
+   async function handleBanApplication(appId: string, email: string) {
+     if (!confirm(`Ban this applicant (${email})? They will not be able to apply again.`)) return;
+     setDeleting(appId);
+     try {
+       await supabase.from('entrance_applications').update({
+         status: 'banned',
+         reviewed_by: profile?.id,
+         reviewed_at: new Date().toISOString(),
+       }).eq('id', appId);
+       setSuccess('Applicant banned successfully');
+       fetchData();
+     } catch (err: any) {
+       setError(err.message || 'Failed to ban applicant');
+     } finally {
+       setDeleting(null);
+     }
+   }
+
+   async function handleAdmissionDecision() {
     if (!selectedApplication) return;
     setSaving(true);
     
@@ -724,6 +839,7 @@ This report is system-generated and official.
     failed: applications.filter(a => a.status === 'failed').length,
     admitted: applications.filter(a => a.status === 'admitted').length,
     rejected: applications.filter(a => a.status === 'rejected').length,
+    banned: applications.filter(a => a.status === 'banned').length,
   };
 
   function getStatusBadge(status: string) {
@@ -734,6 +850,7 @@ This report is system-generated and official.
       case 'failed': return 'bg-red-100 text-red-700';
       case 'admitted': return 'bg-primary-100 text-primary-700';
       case 'rejected': return 'bg-slate-100 text-slate-700';
+      case 'banned': return 'bg-red-100 text-red-700';
       default: return 'bg-slate-100 text-slate-700';
     }
   }
@@ -798,6 +915,13 @@ This report is system-generated and official.
             </div>
             <p className="text-2xl font-bold text-slate-600">{stats.rejected}</p>
           </div>
+          <div className="card">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-slate-500 uppercase">Banned</span>
+              <XCircle size={16} className="text-red-600" />
+            </div>
+            <p className="text-2xl font-bold text-red-600">{stats.banned}</p>
+          </div>
         </div>
 
         <div className="card p-4">
@@ -856,12 +980,34 @@ This report is system-generated and official.
                             )}
                           </div>
                         </div>
-                        <button 
-                          onClick={() => openApplicationModal(app)}
-                          className="btn-outline text-sm py-2"
-                        >
-                          Review
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => openApplicationModal(app)}
+                            className="btn-outline text-sm py-2"
+                          >
+                            Review
+                          </button>
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={() => handleDeleteApplication(app.id)}
+                              disabled={deleting === app.id}
+                              className="p-2 hover:bg-red-50 rounded-lg text-red-500 disabled:opacity-50"
+                              title="Delete Application"
+                            >
+                              {deleting === app.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                            </button>
+                            {app.status !== 'banned' && (
+                              <button 
+                                onClick={() => handleBanApplication(app.id, app.email)}
+                                disabled={deleting === app.id}
+                                className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 disabled:opacity-50"
+                                title="Ban Applicant"
+                              >
+                                <XCircle size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1336,11 +1482,28 @@ This report is system-generated and official.
 
                 {questions.length > 0 && (
                   <div className="mt-4">
-                    <h4 className="font-semibold text-slate-700 mb-2">{questions.length} Questions Added</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-slate-700">{questions.length} Questions Added</h4>
+                      <button
+                        onClick={() => openBankSelectModal(selectedExam)}
+                        className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                      >
+                        + From Question Bank
+                      </button>
+                    </div>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                        {questions.map((q: any, i: number) => (
-                        <div key={q.id} className="p-3 bg-slate-50 rounded-lg text-sm">
-                          <span className="font-medium">{i + 1}.</span> {q.question} <span className="text-xs text-slate-400">({q.question_type})</span>
+                        <div key={q.id} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg text-sm group">
+                          <span className="font-medium flex-shrink-0">{i + 1}.</span>
+                          <span className="flex-1 truncate">{q.question}</span>
+                          <span className="text-xs text-slate-400 flex-shrink-0">({q.question_type})</span>
+                          <button
+                            onClick={() => handleRemoveQuestion(q.id)}
+                            className="p-1 hover:bg-red-100 rounded text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                            title="Remove question"
+                          >
+                            <Trash2 size={12} />
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -1381,6 +1544,81 @@ This report is system-generated and official.
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Question Bank Selection Modal */}
+        {showBankSelectModal && selectedExam && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-bold text-slate-900">Select Questions from Bank — {selectedExam.title}</h3>
+                <button onClick={() => setShowBankSelectModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+                  <X size={20} className="text-slate-500" />
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="text"
+                    placeholder="Search questions..."
+                    value={bankSelectSearch}
+                    onChange={e => filterBankSelect(e.target.value)}
+                    className="input pl-10"
+                  />
+                </div>
+
+                {bankSelectFiltered.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500">
+                    No questions found in the question bank. Add questions to the bank first.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {bankSelectFiltered.map(q => (
+                      <label
+                        key={q.id}
+                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          selectedBankIds.has(q.id) ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedBankIds.has(q.id)}
+                          onChange={() => toggleBankSelect(q.id)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900">{q.question}</p>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100">{q.subject}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100">{q.level}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100">{q.difficulty_level}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-slate-100">{q.question_type}</span>
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between items-center p-5 border-t border-slate-200 sticky bottom-0 bg-white">
+                <p className="text-sm text-slate-500">{selectedBankIds.size} selected</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowBankSelectModal(false)} className="btn-ghost">Cancel</button>
+                  <button
+                    onClick={async () => {
+                      await handleAddQuestionsFromBank(selectedExam.id, Array.from(selectedBankIds));
+                      setShowBankSelectModal(false);
+                    }}
+                    disabled={selectedBankIds.size === 0 || saving}
+                    className="btn-primary disabled:opacity-50"
+                  >
+                    {saving ? 'Adding...' : `Add ${selectedBankIds.size} Question(s)`}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
