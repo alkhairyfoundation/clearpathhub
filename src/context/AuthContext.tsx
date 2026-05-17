@@ -25,6 +25,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // On mount, recover Supabase session from localStorage so client queries
+  // (profiles, etc.) have proper auth and pass RLS.
+  useEffect(() => {
+    supabase.auth.getSession().catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (status === 'loading') {
       setLoading(true);
@@ -41,23 +47,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [status, session]);
 
-  async function fetchProfile(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      if (data) {
-        setProfileState(data);
-      } else {
-        setProfileState(null);
+  async function fetchProfile(userId: string, retries = 3) {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        // On first load, Supabase session may not be recovered from localStorage
+        // yet. Call getSession() to trigger recovery before querying profiles.
+        await supabase.auth.getSession();
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (data) {
+          setProfileState(data);
+          return;
+        }
+        // If error or no data, retry after a delay (session might still be
+        // recovering via autoRefreshToken)
+        if (error) console.warn(`Profile fetch attempt ${attempt + 1} failed:`, error.message);
+      } catch (error) {
+        console.warn(`Profile fetch attempt ${attempt + 1} error:`, error);
       }
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      setProfileState(null);
+      if (attempt < retries - 1) {
+        await new Promise(r => setTimeout(r, 500));
+      }
     }
+    // All retries exhausted — profile will remain null. Auth is still valid
+    // via NextAuth; individual pages can choose to show fallback UI.
+    console.warn('Profile fetch failed after all retries');
+    setProfileState(null);
   }
 
   const signIn = useCallback(async (email: string, password: string) => {

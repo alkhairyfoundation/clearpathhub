@@ -40,7 +40,7 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
     router.push('/login');
   };
 
-  if (loading || !profile) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold"></div>
@@ -48,10 +48,22 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
     );
   }
 
+  // If NextAuth confirms the user but profile is null (e.g., Supabase RLS
+  // recovery hasn't completed yet), use a fallback profile so the UI renders.
+  const displayProfile = profile || (user ? {
+    id: user.id || '',
+    email: user.email || '',
+    first_name: user.name?.split(' ')[0] || 'User',
+    last_name: user.name?.split(' ')[1] || '',
+    role: (user as any).role || 'student',
+    created_at: '',
+    updated_at: '',
+  } as any : null);
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Mobile Navigation */}
-      <MobileNav role={profile.role} />
+      <MobileNav role={displayProfile?.role} />
 
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:w-64 lg:block">
@@ -69,18 +81,18 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
 
           {/* Navigation */}
           <div className="flex-1 overflow-y-auto p-4 space-y-1">
-            <Sidebar role={profile.role} />
+            <Sidebar role={displayProfile?.role} />
           </div>
 
           {/* User Section at Bottom */}
           <div className="p-4 border-t border-slate-200">
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
               <div className="w-10 h-10 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                {profile.first_name?.[0]}{profile.last_name?.[0]}
+                {displayProfile?.first_name?.[0]}{displayProfile?.last_name?.[0]}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-900 text-sm truncate">{profile.first_name} {profile.last_name}</p>
-                <p className="text-xs text-slate-500 capitalize">{profile.role}</p>
+                <p className="font-semibold text-slate-900 text-sm truncate">{displayProfile?.first_name} {displayProfile?.last_name}</p>
+                <p className="text-xs text-slate-500 capitalize">{displayProfile?.role}</p>
               </div>
             </div>
             <button
@@ -132,7 +144,7 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
                   className="flex items-center gap-2 p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                    {profile.first_name?.[0]}{profile.last_name?.[0]}
+                    {displayProfile?.first_name?.[0]}{displayProfile?.last_name?.[0]}
                   </div>
                   <ChevronDown size={16} className="text-slate-400" />
                 </button>
@@ -140,14 +152,14 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 animate-scale-in z-50">
                     <button
-                      onClick={() => router.push(`/${profile.role}/profile`)}
+                      onClick={() => router.push(`/${displayProfile?.role || 'student'}/profile`)}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                     >
                       <User size={16} />
                       <span>Profile</span>
                     </button>
                     <button
-                      onClick={() => router.push(`/${profile.role}/settings`)}
+                      onClick={() => router.push(`/${displayProfile?.role || 'student'}/settings`)}
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                     >
                       <Settings size={16} />
