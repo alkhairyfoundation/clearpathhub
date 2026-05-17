@@ -39,11 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     } else if (status === 'authenticated') {
       if (session?.user && (session.user as any).id) {
-        fetchProfile((session.user as any).id);
+        // Keep loading true until profile fetch completes so child pages
+        // never see a null profile before the fetch finishes.
+        fetchProfile((session.user as any).id).finally(() => {
+          setLoading(false);
+        });
       } else {
         setProfileState(null);
+        setLoading(false);
       }
-      setLoading(false);
     }
   }, [status, session]);
 
