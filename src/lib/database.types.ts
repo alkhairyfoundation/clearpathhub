@@ -1176,6 +1176,7 @@ export interface Database {
           reviewed_by: string | null;
           reviewed_at: string | null;
           security_events: Json | null;
+          answers: Json | null;
           completed_at: string | null;
           created_at: string;
         };
@@ -1200,6 +1201,7 @@ export interface Database {
           reviewed_by?: string | null;
           reviewed_at?: string | null;
           security_events?: Json | null;
+          answers?: Json | null;
           completed_at?: string | null;
           created_at?: string;
         };
@@ -1224,6 +1226,7 @@ export interface Database {
           reviewed_by?: string | null;
           reviewed_at?: string | null;
           security_events?: Json | null;
+          answers?: Json | null;
           completed_at?: string | null;
           created_at?: string;
         };

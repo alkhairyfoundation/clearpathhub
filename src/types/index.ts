@@ -431,10 +431,13 @@ export interface EntranceApplication {
   date_of_birth?: string;
   gender?: string;
   applied_class: string;
+  admitted_class?: string;
   previous_school?: string;
   exam_score?: number;
   status: 'pending' | 'assigned' | 'passed' | 'failed' | 'admitted' | 'rejected' | 'banned';
   mastery_level?: string;
+  subject_scores?: any;
+  topic_mastery?: any;
   completed_at?: string;
   security_events?: any;
   answers?: any;

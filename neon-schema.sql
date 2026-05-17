@@ -460,6 +460,7 @@ CREATE TABLE IF NOT EXISTS entrance_applications (
    reviewed_by UUID REFERENCES profiles(id),
    reviewed_at TIMESTAMP,
    security_events JSONB,
+   answers JSONB,
    completed_at TIMESTAMP,
    created_at TIMESTAMP DEFAULT NOW()
 );

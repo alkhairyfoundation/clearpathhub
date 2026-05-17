@@ -201,30 +201,31 @@ async function handleSubmit() {
      const studentEmail = profile?.email || application?.email || '';
      const status = finalScore >= (exam.passing_score || 50) ? 'passed' : 'failed';
 
-     try {
-       await supabase
-         .from('entrance_applications')
-         .update({
-           exam_score: finalScore,
-           status,
-           mastery_level: masteryLevel,
-           completed_at: new Date().toISOString(),
-           answers: Object.entries(answers).map(([qIdx, ans]: [string, any]) => ({
-             question_index: parseInt(qIdx),
-             question: questions[parseInt(qIdx)]?.question,
-             question_type: questions[parseInt(qIdx)]?.question_type,
-             options: questions[parseInt(qIdx)]?.options,
-             correct_answer: questions[parseInt(qIdx)]?.correct_answer,
-             given_answer: ans,
-             is_correct: gradeQuestion(questions[parseInt(qIdx)], ans),
-             points: questions[parseInt(qIdx)]?.points || 1,
-           })),
-           security_events: securityEvents
-         })
-         .eq('id', applicationId);
-     } catch (err) {
-       console.error('Failed to save exam results:', err);
-     }
+      try {
+        const { error: updateError } = await supabase
+          .from('entrance_applications')
+          .update({
+            exam_score: finalScore,
+            status,
+            mastery_level: masteryLevel,
+            completed_at: new Date().toISOString(),
+            answers: Object.entries(answers).map(([qIdx, ans]: [string, any]) => ({
+              question_index: parseInt(qIdx),
+              question: questions[parseInt(qIdx)]?.question,
+              question_type: questions[parseInt(qIdx)]?.question_type,
+              options: questions[parseInt(qIdx)]?.options,
+              correct_answer: questions[parseInt(qIdx)]?.correct_answer,
+              given_answer: ans,
+              is_correct: gradeQuestion(questions[parseInt(qIdx)], ans),
+              points: questions[parseInt(qIdx)]?.points || 1,
+            })),
+            security_events: securityEvents
+          })
+          .eq('id', applicationId);
+        if (updateError) throw updateError;
+      } catch (err: any) {
+        console.error('Failed to save exam results:', err.message);
+      }
 
      try {
        await supabase.from('student_analytics').insert({
