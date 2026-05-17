@@ -205,6 +205,23 @@ async function handleCreateExam() {
       }
     }
     
+    function getQuestionBankLevels(examLevel: string): string[] {
+      switch (examLevel) {
+        case 'PRIMARY':
+          return ['PRIMARY'];
+        case 'JSS':
+          return ['JSS1', 'JSS2', 'JSS3'];
+        case 'SS1':
+          return ['SS1'];
+        case 'SS2':
+          return ['SS2'];
+        case 'SS3':
+          return ['SS3'];
+        default:
+          return ['PRIMARY'];
+      }
+    }
+
     async function autoPopulateExamQuestions(examId: string, level: string, subjects: string[], totalQuestions?: number) {
       try {
         if (!subjects || subjects.length === 0) {
@@ -214,87 +231,88 @@ async function handleCreateExam() {
 
         const questionCount = totalQuestions || formData.total_questions || 40;
         const questionsPerSubject = Math.max(1, Math.floor(questionCount / subjects.length));
-       
-       let allSelectedQuestions: any[] = [];
-       
-       for (const subject of subjects) {
-         // Select questions from question bank with a distribution favoring harder questions
-         // 40% VERY_HARD, 30% HARD, 20% MEDIUM, 10% EASY
-         const veryHardCount = Math.max(1, Math.round(questionsPerSubject * 0.4));
-         const hardCount = Math.max(1, Math.round(questionsPerSubject * 0.3));
-         const mediumCount = Math.max(1, Math.round(questionsPerSubject * 0.2));
-         const easyCount = Math.max(0, questionsPerSubject - veryHardCount - hardCount - mediumCount);
-         
-         // Fetch questions for each difficulty level
-         const { data: veryHardData } = await supabase
-           .from('question_bank')
-           .select('*')
-           .eq('subject', subject)
-           .eq('level', level)
-           .eq('difficulty_level', 'VERY_HARD')
-           .eq('is_active', true)
-           .limit(veryHardCount * 2); // Get extra for random selection
-           
-         const { data: hardData } = await supabase
-           .from('question_bank')
-           .select('*')
-           .eq('subject', subject)
-           .eq('level', level)
-           .eq('difficulty_level', 'HARD')
-           .eq('is_active', true)
-           .limit(hardCount * 2);
-           
-         const { data: mediumData } = await supabase
-           .from('question_bank')
-           .select('*')
-           .eq('subject', subject)
-           .eq('level', level)
-           .eq('difficulty_level', 'MEDIUM')
-           .eq('is_active', true)
-           .limit(mediumCount * 2);
-           
-         const { data: easyData } = await supabase
-           .from('question_bank')
-           .select('*')
-           .eq('subject', subject)
-           .eq('level', level)
-           .eq('difficulty_level', 'EASY')
-           .eq('is_active', true)
-           .limit(easyCount * 2);
-         
-         // Select random questions from each difficulty category
-         if (veryHardData && veryHardData.length > 0) {
-           const shuffledVeryHard = veryHardData.sort(() => Math.random() - 0.5);
-           const selectedVeryHard = shuffledVeryHard.slice(0, veryHardCount);
-           allSelectedQuestions = [...allSelectedQuestions, ...selectedVeryHard];
-         }
-         
-         if (hardData && hardData.length > 0) {
-           const shuffledHard = hardData.sort(() => Math.random() - 0.5);
-           const selectedHard = shuffledHard.slice(0, hardCount);
-           allSelectedQuestions = [...allSelectedQuestions, ...selectedHard];
-         }
-         
-         if (mediumData && mediumData.length > 0) {
-           const shuffledMedium = mediumData.sort(() => Math.random() - 0.5);
-           const selectedMedium = shuffledMedium.slice(0, mediumCount);
-           allSelectedQuestions = [...allSelectedQuestions, ...selectedMedium];
-         }
-         
-         if (easyData && easyData.length > 0) {
-           const shuffledEasy = easyData.sort(() => Math.random() - 0.5);
-           const selectedEasy = shuffledEasy.slice(0, easyCount);
-           allSelectedQuestions = [...allSelectedQuestions, ...selectedEasy];
-         }
-       }
-       
+        
+        let allSelectedQuestions: any[] = [];
+        const qbLevels = getQuestionBankLevels(level);
+        
+        for (const subject of subjects) {
+          // Select questions from question bank with a distribution favoring harder questions
+          // 40% VERY_HARD, 30% HARD, 20% MEDIUM, 10% EASY
+          const veryHardCount = Math.max(1, Math.round(questionsPerSubject * 0.4));
+          const hardCount = Math.max(1, Math.round(questionsPerSubject * 0.3));
+          const mediumCount = Math.max(1, Math.round(questionsPerSubject * 0.2));
+          const easyCount = Math.max(0, questionsPerSubject - veryHardCount - hardCount - mediumCount);
+          
+          // Fetch questions for each difficulty level
+          const { data: veryHardData } = await supabase
+            .from('question_bank')
+            .select('*')
+            .eq('subject', subject)
+            .in('level', qbLevels)
+            .eq('difficulty_level', 'VERY_HARD')
+            .eq('is_active', true)
+            .limit(veryHardCount * 2); // Get extra for random selection
+            
+          const { data: hardData } = await supabase
+            .from('question_bank')
+            .select('*')
+            .eq('subject', subject)
+            .in('level', qbLevels)
+            .eq('difficulty_level', 'HARD')
+            .eq('is_active', true)
+            .limit(hardCount * 2);
+            
+          const { data: mediumData } = await supabase
+            .from('question_bank')
+            .select('*')
+            .eq('subject', subject)
+            .in('level', qbLevels)
+            .eq('difficulty_level', 'MEDIUM')
+            .eq('is_active', true)
+            .limit(mediumCount * 2);
+            
+          const { data: easyData } = await supabase
+            .from('question_bank')
+            .select('*')
+            .eq('subject', subject)
+            .in('level', qbLevels)
+            .eq('difficulty_level', 'EASY')
+            .eq('is_active', true)
+            .limit(easyCount * 2);
+          
+          // Select random questions from each difficulty category
+          if (veryHardData && veryHardData.length > 0) {
+            const shuffledVeryHard = veryHardData.sort(() => Math.random() - 0.5);
+            const selectedVeryHard = shuffledVeryHard.slice(0, veryHardCount);
+            allSelectedQuestions = [...allSelectedQuestions, ...selectedVeryHard];
+          }
+          
+          if (hardData && hardData.length > 0) {
+            const shuffledHard = hardData.sort(() => Math.random() - 0.5);
+            const selectedHard = shuffledHard.slice(0, hardCount);
+            allSelectedQuestions = [...allSelectedQuestions, ...selectedHard];
+          }
+          
+          if (mediumData && mediumData.length > 0) {
+            const shuffledMedium = mediumData.sort(() => Math.random() - 0.5);
+            const selectedMedium = shuffledMedium.slice(0, mediumCount);
+            allSelectedQuestions = [...allSelectedQuestions, ...selectedMedium];
+          }
+          
+          if (easyData && easyData.length > 0) {
+            const shuffledEasy = easyData.sort(() => Math.random() - 0.5);
+            const selectedEasy = shuffledEasy.slice(0, easyCount);
+            allSelectedQuestions = [...allSelectedQuestions, ...selectedEasy];
+          }
+        }
+        
         // If we don't have enough questions, fill with any available questions for the level
         if (allSelectedQuestions.length < questionCount) {
           const selectedIds = new Set(allSelectedQuestions.map(q => q.id));
           const { data: additionalQuestions } = await supabase
             .from('question_bank')
             .select('*')
-            .eq('level', level)
+            .in('level', qbLevels)
             .eq('is_active', true);
             
           if (additionalQuestions) {
@@ -306,27 +324,28 @@ async function handleCreateExam() {
         }
         
         // Shuffle all selected questions to distribute difficulty levels throughout the exam
-       if (allSelectedQuestions.length > 0) {
-         allSelectedQuestions = allSelectedQuestions.sort(() => Math.random() - 0.5);
-       }
-       
-         // Insert selected questions into entrance_questions
-         if (allSelectedQuestions.length > 0) {
-           const questionsToInsert = allSelectedQuestions.map(q => ({
-             exam_id: examId,
-             question: q.question,
-             options: q.options || [''],
-             correct_answer: q.correct_answer ?? 0,
-             points: q.points ?? 1,
-             question_type: q.question_type || 'multiple_choice',
-           }));
-           
-           const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
-           if (error) throw new Error(`Failed to insert questions: ${error.message}`);
-         } else {
-           setWarning('No questions found in question bank for the selected level and subjects.');
-         }
-         } catch (error) {
+        if (allSelectedQuestions.length > 0) {
+          allSelectedQuestions = allSelectedQuestions.sort(() => Math.random() - 0.5);
+        }
+        
+        // Insert selected questions into entrance_questions
+        if (allSelectedQuestions.length > 0) {
+          const questionsToInsert = allSelectedQuestions.map(q => ({
+            exam_id: examId,
+            question: q.question,
+            options: q.options || [''],
+            correct_answer: q.correct_answer ?? 0,
+            points: q.points ?? 1,
+            question_type: q.question_type || 'multiple_choice',
+            subject: q.subject || null,
+          }));
+          
+          const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
+          if (error) throw new Error(`Failed to insert questions: ${error.message}`);
+        } else {
+          setWarning('No questions found in question bank for the selected level and subjects.');
+        }
+      } catch (error) {
         console.error('Error auto-populating exam questions:', error);
         // Don't fail the exam creation if question population fails
         setWarning('Exam created but question auto-population had issues. You can add questions manually.');
@@ -410,22 +429,23 @@ async function handleCreateExam() {
      }
    }
 
-   async function openBankSelectModal(exam: any) {
-     setSelectedExam(exam);
-     setSelectedBankIds(new Set());
-     setBankSelectSearch('');
-     // Filter by the exam's level for faster loading and relevant questions
-     let query = supabase.from('question_bank').select('*').eq('level', exam.level);
-     // If exam has subjects, also filter by those
-     const examSubjects = exam.subjects;
-     if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
-       query = query.in('subject', examSubjects);
-     }
-     const { data } = await query.order('created_at', { ascending: false });
-     setBankSelectQuestions(data || []);
-     setBankSelectFiltered(data || []);
-     setShowBankSelectModal(true);
-   }
+    async function openBankSelectModal(exam: any) {
+      setSelectedExam(exam);
+      setSelectedBankIds(new Set());
+      setBankSelectSearch('');
+      // Filter by the exam's level for faster loading and relevant questions
+      const qbLevels = getQuestionBankLevels(exam.level);
+      let query = supabase.from('question_bank').select('*').in('level', qbLevels);
+      // If exam has subjects, also filter by those
+      const examSubjects = exam.subjects;
+      if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
+        query = query.in('subject', examSubjects);
+      }
+      const { data } = await query.order('created_at', { ascending: false });
+      setBankSelectQuestions(data || []);
+      setBankSelectFiltered(data || []);
+      setShowBankSelectModal(true);
+    }
 
    function filterBankSelect(search: string) {
      setBankSelectSearch(search);
@@ -838,6 +858,7 @@ This report is system-generated and official.
     passed: applications.filter(a => a.status === 'passed').length,
     failed: applications.filter(a => a.status === 'failed').length,
     admitted: applications.filter(a => a.status === 'admitted').length,
+    deferred: applications.filter(a => a.status === 'deferred').length,
     rejected: applications.filter(a => a.status === 'rejected').length,
     banned: applications.filter(a => a.status === 'banned').length,
   };
@@ -849,6 +870,7 @@ This report is system-generated and official.
       case 'passed': return 'bg-green-100 text-green-700';
       case 'failed': return 'bg-red-100 text-red-700';
       case 'admitted': return 'bg-primary-100 text-primary-700';
+      case 'deferred': return 'bg-orange-100 text-orange-700';
       case 'rejected': return 'bg-slate-100 text-slate-700';
       case 'banned': return 'bg-red-100 text-red-700';
       default: return 'bg-slate-100 text-slate-700';
@@ -1480,17 +1502,17 @@ This report is system-generated and official.
                   </div>
                 )}
 
-                {questions.length > 0 && (
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-slate-700">{questions.length} Questions Added</h4>
-                      <button
-                        onClick={() => openBankSelectModal(selectedExam)}
-                        className="text-xs text-primary-600 hover:text-primary-700 font-medium"
-                      >
-                        + From Question Bank
-                      </button>
-                    </div>
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-slate-700">{questions.length} Questions Added</h4>
+                    <button
+                      onClick={() => openBankSelectModal(selectedExam)}
+                      className="text-xs text-primary-600 hover:text-primary-700 font-medium px-2 py-1 bg-primary-50 rounded hover:bg-primary-100 transition-colors"
+                    >
+                      + From Question Bank
+                    </button>
+                  </div>
+                  {questions.length > 0 ? (
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                        {questions.map((q: any, i: number) => (
                         <div key={q.id} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg text-sm group">
@@ -1507,8 +1529,12 @@ This report is system-generated and official.
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-sm text-slate-400 italic py-2">
+                      No questions added yet. Use the form above to add a question, or select from the question bank.
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-3 p-5 border-t border-slate-200 sticky bottom-0 bg-white">
                 <button onClick={() => setShowQuestionModal(false)} className="btn-ghost">Close</button>
@@ -1627,8 +1653,8 @@ This report is system-generated and official.
          {/* Application Review Modal */}
          {showApplicationModal && selectedApplication && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in">
-               <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+               <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
                  <h3 className="text-lg font-bold text-slate-900">Review Application</h3>
                  <button onClick={() => setShowApplicationModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
                    <X size={20} className="text-slate-500" />
@@ -1667,6 +1693,50 @@ This report is system-generated and official.
                    </div>
                  )}
 
+                 {/* Detailed Exam Breakdown */}
+                 {selectedApplication.answers && Array.isArray(selectedApplication.answers) && (
+                   <div className="bg-slate-50 rounded-lg p-4">
+                     <h4 className="font-semibold text-slate-800 mb-2 text-sm">Detailed Exam Analysis</h4>
+                     <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                       {selectedApplication.answers.map((ans: any, idx: number) => {
+                         const isCorrect = ans.is_correct;
+                         return (
+                           <div key={idx} className="p-3 bg-white rounded-lg border border-slate-100 text-xs space-y-1">
+                             <div className="flex items-start gap-2 justify-between">
+                               <span className="font-medium text-slate-700">Q{ans.question_index + 1}: {ans.question}</span>
+                               <span className={`px-2 py-0.5 rounded text-[10px] font-semibold flex-shrink-0 ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                 {isCorrect ? 'Correct' : 'Incorrect'}
+                                </span>
+                             </div>
+                             <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-500 mt-1 pt-1 border-t border-slate-50">
+                               <div><span className="font-medium text-slate-600">Given Answer:</span> {Array.isArray(ans.given_answer) ? ans.given_answer.map((val: any) => ans.options?.[val] || val).join(', ') : (ans.options?.[ans.given_answer] || ans.given_answer || 'None')}</div>
+                               <div><span className="font-medium text-slate-600">Correct Answer:</span> {Array.isArray(ans.correct_answer) ? ans.correct_answer.map((val: any) => ans.options?.[val] || val).join(', ') : (ans.options?.[ans.correct_answer] || ans.correct_answer)}</div>
+                             </div>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Security/Cheating Events */}
+                 {selectedApplication.security_events && Array.isArray(selectedApplication.security_events) && selectedApplication.security_events.length > 0 && (
+                   <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                     <div className="flex items-center gap-2 text-red-700 mb-2">
+                       <AlertCircle size={16} />
+                       <h4 className="font-semibold text-sm">Security Logs Summary</h4>
+                     </div>
+                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                       {selectedApplication.security_events.map((evt: any, idx: number) => (
+                         <div key={idx} className="flex justify-between items-center text-xs text-red-600 bg-white p-2 rounded border border-red-100">
+                           <span className="capitalize">{evt.type?.replace('_', ' ')}</span>
+                           <span className="font-semibold">Count: {evt.count}</span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+
                  {/* Admission Decision */}
                  <div>
                    <label className="label">Admission Decision</label>
@@ -1680,6 +1750,7 @@ This report is system-generated and official.
                        <>
                          <option value="passed">Passed - Awaiting Admission</option>
                          <option value="failed">Failed - Reject</option>
+                         <option value="deferred">Deferred - Keep on Hold</option>
                        </>
                      )}
                      {selectedApplication.exam_score === null && (

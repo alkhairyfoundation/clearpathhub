@@ -234,27 +234,10 @@ async function handleSubmit() {
          score: finalScore,
          mastery_level: masteryLevel,
          topic_performance: {},
-         time_taken: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft) / 60),
-         security_events_count: securityEvents.length
+         time_taken_seconds: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft))
        });
      } catch (analyticsError) {
        console.error('Failed to insert analytics record:', analyticsError);
-     }
-
-     if (securityEvents.length > 0) {
-       try {
-         const logs = securityEvents.map(e => ({
-           attempt_id: applicationId,
-           student_id: profile?.id,
-           event_type: e.type,
-           event_data: { key: e.key, count: e.count },
-           severity: e.type === 'tab_switch' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
-           created_at: e.time,
-         }));
-         await supabase.from('exam_activity_logs').insert(logs);
-       } catch (logError) {
-         console.error('Failed to insert activity logs:', logError);
-       }
      }
 
      setScore(finalScore);

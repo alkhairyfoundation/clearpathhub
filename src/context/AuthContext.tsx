@@ -22,7 +22,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
-  const [profile, setProfileState] = useState<Profile | null>(null);
+  const [profile, setProfileState] = useState<Profile | null>(() => {
+    if (typeof window !== 'undefined') {
+      const savedRole = window.localStorage.getItem('user-role');
+      if (savedRole) {
+        return { role: savedRole } as Profile;
+      }
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   // On mount, recover Supabase session from localStorage so client queries
@@ -36,6 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
     } else if (status === 'unauthenticated') {
       setProfileState(null);
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('user-role');
+      }
       setLoading(false);
     } else if (status === 'authenticated') {
       if (session?.user && (session.user as any).id) {
@@ -46,6 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } else {
         setProfileState(null);
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem('user-role');
+        }
         setLoading(false);
       }
     }
@@ -65,6 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (data) {
           setProfileState(data);
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('user-role', data.role);
+          }
           return;
         }
         // If error or no data, retry after a delay (session might still be
@@ -80,6 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // All retries exhausted — profile will remain null. Auth is still valid
     // via NextAuth; individual pages can choose to show fallback UI.
     console.warn('Profile fetch failed after all retries');
+    // If it failed but we have a cached role, keep it to prevent abrupt logouts
+    if (typeof window !== 'undefined' && window.localStorage.getItem('user-role')) {
+      return;
+    }
     setProfileState(null);
   }
 
@@ -111,6 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('user-role');
+    }
     await nextAuthSignOut({ redirect: false });
   }, []);
 

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabase-server';
+import { query as neonQuery } from '@/lib/neon';
+import bcrypt from 'bcryptjs';
 
 async function verifyAdmin() {
   try {
@@ -67,7 +69,18 @@ export async function POST(request: Request) {
       .update({ first_name, last_name, role, phone: phone || null })
       .eq('id', userId);
 
-    // If role is student, create student record
+    // Hash password for Neon Postgres
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Insert user into Neon Postgres profiles table
+    await neonQuery(
+      `INSERT INTO profiles (id, email, first_name, last_name, role, phone, password_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [userId, email, first_name, last_name, role, phone || null, passwordHash]
+    );
+
+    // If role is student, create student record in both databases
     if (role === 'student') {
       const admissionPrefix = 'STD';
       const { count } = await adminClient
@@ -85,7 +98,18 @@ export async function POST(request: Request) {
         });
 
       if (studentError) {
-        console.error('Error creating student record:', studentError);
+        console.error('Error creating student record in Supabase:', studentError);
+      }
+
+      // Create student record in Neon Postgres
+      try {
+        await neonQuery(
+          `INSERT INTO students (profile_id, admission_number, class_id)
+           VALUES ($1, $2, $3)`,
+          [userId, admissionNumber, class_id || null]
+        );
+      } catch (neonStudentError) {
+        console.error('Error creating student record in Neon:', neonStudentError);
       }
     }
 

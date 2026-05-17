@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient, createSupabaseAdminClient } from '@/lib/supabase-server';
+import { query as neonQuery } from '@/lib/neon';
+import bcrypt from 'bcryptjs';
 
 async function verifyAdmin() {
   try {
@@ -31,6 +33,13 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     const { error: authError } = await adminClient.auth.admin.deleteUser(params.id);
     if (authError) {
       return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
+    }
+
+    // Delete user profile from Neon Postgres
+    try {
+      await neonQuery('DELETE FROM profiles WHERE id = $1', [params.id]);
+    } catch (neonDeleteError) {
+      console.error('Error deleting profile from Neon:', neonDeleteError);
     }
 
     return NextResponse.json({ success: true, message: 'User deleted successfully' });
@@ -67,6 +76,20 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       if (updateError) {
         return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
       }
+
+      // Update user profile in Neon Postgres
+      try {
+        const setClause = Object.keys(updates)
+          .map((key, index) => `${key} = $${index + 2}`)
+          .join(', ');
+        const values = Object.values(updates);
+        await neonQuery(
+          `UPDATE profiles SET ${setClause} WHERE id = $1`,
+          [params.id, ...values]
+        );
+      } catch (neonUpdateError) {
+        console.error('Error updating profile in Neon:', neonUpdateError);
+      }
     }
 
     if (password) {
@@ -77,6 +100,18 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       const { error: authError } = await adminClient.auth.admin.updateUserById(params.id, { password });
       if (authError) {
         return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
+      }
+
+      // Update password hash in Neon Postgres
+      try {
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, salt);
+        await neonQuery(
+          'UPDATE profiles SET password_hash = $1 WHERE id = $2',
+          [passwordHash, params.id]
+        );
+      } catch (neonPasswordError) {
+        console.error('Error updating password hash in Neon:', neonPasswordError);
       }
     }
 
