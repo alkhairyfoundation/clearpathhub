@@ -31,8 +31,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else if (status === 'unauthenticated') {
       setProfileState(null);
       setLoading(false);
-    } else if (status === 'authenticated' && session?.user) {
-      fetchProfile((session.user as any).id);
+    } else if (status === 'authenticated') {
+      if (session?.user && (session.user as any).id) {
+        fetchProfile((session.user as any).id);
+      } else {
+        setProfileState(null);
+      }
+      setLoading(false);
     }
   }, [status, session]);
 
