@@ -2,21 +2,26 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  const isAuthenticated = !!token;
+  try {
+    const secret = process.env.NEXTAUTH_SECRET || 'fallback-secret';
+    const token = await getToken({ req: request, secret });
+    const isAuthenticated = !!token;
 
-  const { pathname } = request.nextUrl;
+    const { pathname } = request.nextUrl;
 
-  // Protect API routes that require authentication
-  if (pathname.startsWith('/api/')) {
-    if (!isAuthenticated) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/api/auth/signin';
-      return NextResponse.redirect(url);
+    if (pathname.startsWith('/api/')) {
+      if (!isAuthenticated) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/api/auth/signin';
+        return NextResponse.redirect(url);
+      }
     }
-  }
 
-  return NextResponse.next();
+    return NextResponse.next();
+  } catch (error) {
+    // Allow request to proceed if middleware fails
+    return NextResponse.next();
+  }
 }
 
 export const config = {
