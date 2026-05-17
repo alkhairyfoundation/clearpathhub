@@ -23,15 +23,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const [profile, setProfileState] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(status === "loading");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Set loading based on session status
+    if (status === 'loading') {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [status]);
 
   useEffect(() => {
     if (session?.user && (session.user as any).id) {
       fetchProfile((session.user as any).id);
     } else {
       setProfileState(null);
+      setLoading(false);
     }
   }, [session]);
+
+  useEffect(() => {
+    // If session is loaded (not loading) but no user, ensure loading is false
+    if (status === 'authenticated' && !session?.user) {
+      setLoading(false);
+    }
+  }, [status, session]);
 
   async function fetchProfile(userId: string) {
     try {
