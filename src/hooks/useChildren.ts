@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
 export interface ChildWithProfile {
@@ -16,27 +15,26 @@ export interface ChildWithProfile {
 }
 
 export function useChildren() {
-  const { profile } = useAuth();
+  const { session } = useAuth();
   const [children, setChildren] = useState<ChildWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!profile || profile.role !== 'parent') return;
+    if (!session?.user) return;
     fetchChildren();
-  }, [profile]);
+  }, [session]);
 
   async function fetchChildren() {
     setLoading(true);
     setError('');
     try {
-      const { data, error: err } = await supabase
-        .from('students')
-        .select('*, profile:profiles!profile_id(first_name, last_name, email, phone), class:classes!class_id(name)')
-        .eq('parent_id', profile?.id)
-        .order('admission_number');
-      if (err) throw new Error(err.message);
-      setChildren(data || []);
+      // We'll need to create an API route to fetch children data
+      const response = await fetch('/api/parent/children');
+      if (!response.ok) throw new Error('Failed to fetch children');
+      
+      const data = await response.json();
+      setChildren(data);
     } catch (err: any) {
       setError(err.message);
     }

@@ -205,8 +205,19 @@ function AdminUsersPageContent() {
     if (!window.confirm('Remove this student from the parent?')) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from('students').update({ parent_id: null }).eq('id', studentId);
-      if (error) throw new Error(error.message);
+      // Clear students table (legacy)
+      const { error: studentError } = await supabase.from('students').update({ parent_id: null }).eq('id', studentId);
+      if (studentError) throw new Error(studentError.message);
+
+      // Clear parent_students junction
+      const { error: junctionError } = await supabase
+        .from('parent_students')
+        .delete()
+        .eq('parent_id', linkingParent.id)
+        .eq('student_id', studentId);
+
+      if (junctionError) throw new Error(junctionError.message);
+
       setSuccess('Student unlinked successfully');
       fetchAvailableStudents();
     } catch (err: any) {
@@ -240,12 +251,27 @@ function AdminUsersPageContent() {
         }
       }
 
-      const { error } = await supabase
+      // Update students table (legacy)
+      const { error: studentError } = await supabase
         .from('students')
         .update({ parent_id: linkingParent.id })
         .in('id', selectedStudentIds);
 
-      if (error) throw new Error(error.message);
+      if (studentError) throw new Error(studentError.message);
+
+      // Insert into parent_students junction table
+      const junctionData = selectedStudentIds.map(sid => ({
+        parent_id: linkingParent.id,
+        student_id: sid,
+        relationship: 'other' // Default
+      }));
+
+      const { error: junctionError } = await supabase
+        .from('parent_students')
+        .upsert(junctionData, { onConflict: 'parent_id, student_id' });
+
+      if (junctionError) throw new Error(junctionError.message);
+
       setSuccess(`${selectedStudentIds.length} student(s) linked to ${linkingParent.first_name}`);
       setShowLinkModal(false);
       setLinkingParent(null);

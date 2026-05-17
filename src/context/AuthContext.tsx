@@ -1,18 +1,18 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
-import { supabase, clearSupabaseCache } from '@/lib/supabase';
-import type { User, Session } from '@supabase/supabase-js';
+import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "next-auth/react";
+import { createContext, useEffect, useState, ReactNode, useCallback, useContext } from 'react';
+import { supabase } from "@/lib/supabase";
 import type { Profile, UserRole } from '@/types';
 
 interface AuthContextType {
-  user: User | null;
+  session: any; // NextAuth session type
+  user: any;
   profile: Profile | null;
   setProfile: (profile: Profile | null) => void;
   loading: boolean;
   isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null; user?: User; profile?: Profile }>;
-  signUp: (email: string, password: string, role: UserRole, firstName: string, lastName: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; profile: Profile | null }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
   clearSession: () => void;
@@ -20,195 +20,91 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function fallbackProfile(user: User): Profile {
-  const m = user.user_metadata || {};
-  return {
-    id: user.id,
-    email: user.email || '',
-    first_name: m.first_name || '',
-    last_name: m.last_name || '',
-    role: (m.role || 'student') as UserRole,
-    created_at: user.created_at,
-    updated_at: user.created_at,
-  };
-}
-
-async function fetchProfile(userId: string): Promise<Profile | null> {
-  try {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-    return data || null;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const initialized = useRef(false);
-
-  const clearSession = useCallback(() => {
-    setUser(null);
-    setProfile(null);
-    setLoading(false);
-  }, []);
-
-  const refreshSession = useCallback(async (): Promise<boolean> => {
-    try {
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError || !refreshData.session) {
-        // Only clear on specific refresh errors that indicate invalid session
-        if (refreshError instanceof Error && (refreshError.message?.includes('invalid') || refreshError.message?.includes('expired'))) {
-          clearSession();
-        }
-        return false;
-      }
-      setUser(refreshData.user);
-      const p = await fetchProfile(refreshData.user!.id);
-      setProfile(p || fallbackProfile(refreshData.user!));
-      return true;
-    } catch (err) {
-      // Only clear on specific errors that indicate invalid session
-      if (err instanceof Error && (err.message?.includes('invalid') || err.message?.includes('expired'))) {
-        clearSession();
-      }
-      return false;
-    }
-  }, [clearSession]);
+  const { data: session, status } = useSession();
+  const [profile, setProfileState] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(status === "loading");
 
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    if (session?.user && (session.user as any).id) {
+      fetchProfile((session.user as any).id);
+    } else {
+      setProfileState(null);
+    }
+  }, [session]);
 
-    let mounted = true;
-
-    (async () => {
-      try {
-        // Check if there's a stored session
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (!mounted) return;
-
-        if (error) {
-          // Only clear cache on specific errors that indicate invalid session
-          // Don't clear on temporary network errors during refresh
-          if (error && (error.message?.includes('invalid') || error.message?.includes('expired'))) {
-            clearSession();
-          }
-        }
-
-        if (session?.user) {
-          // Try to refresh if close to expiry
-          const expiresAt = session.expires_at;
-          const needsRefresh = expiresAt && (Date.now() > (expiresAt * 1000) - 120000);
-
-          if (needsRefresh) {
-            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-            if (!mounted) return;
-            if (refreshError || !refreshData.session) {
-              // Only clear on specific refresh errors
-              if (refreshError && (refreshError.message?.includes('invalid') || refreshError.message?.includes('expired'))) {
-                clearSession();
-              }
-              if (mounted) setLoading(false);
-              return;
-            }
-            setUser(refreshData.user);
-            const p = await fetchProfile(refreshData.user!.id);
-            if (mounted) setProfile(p || fallbackProfile(refreshData.user!));
-          } else {
-            setUser(session.user);
-            const p = await fetchProfile(session.user.id);
-            if (mounted) setProfile(p || fallbackProfile(session.user));
-          }
-        }
-      } catch (err) {
-        // Only clear on specific errors that indicate invalid session
-        if (err instanceof Error && (err.message?.includes('invalid') || err.message?.includes('expired'))) {
-          clearSession();
-        }
-        // For other errors, don't clear session - they might be temporary
+  async function fetchProfile(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (data) {
+        setProfileState(data);
+      } else {
+        setProfileState(null);
       }
-      if (mounted) setLoading(false);
-    })();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      if (event === 'INITIAL_SESSION') return;
-
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (session?.user) {
-          setUser(session.user);
-          const p = await fetchProfile(session.user.id);
-          if (mounted) setProfile(p || fallbackProfile(session.user));
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-      } else if (event === 'USER_UPDATED') {
-        if (session?.user) setUser(session.user);
-      }
-    });
-
-    return () => { mounted = false; subscription.unsubscribe(); };
-  }, [clearSession]);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      setProfileState(null);
+    }
+  }
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      setLoading(true);
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        setLoading(false);
-        return { error };
+      const result = await nextAuthSignIn("credentials", {
+        redirect: false,
+        email,
+        password
+      });
+      if (result && result.error) {
+        return { error: new Error(result.error), profile: null };
       }
-
-      if (data.user) {
-        setUser(data.user);
-        const p = await fetchProfile(data.user.id);
-        const profileData = p || fallbackProfile(data.user);
-        setProfile(profileData);
-        setLoading(false);
-        return { error: null, user: data.user, profile: profileData };
-      }
-
-      setLoading(false);
-      return { error: null };
-    } catch (err: unknown) {
-      setLoading(false);
-      const message = err instanceof Error ? err.message : 'Network error during login.';
-      return { error: new Error(message) };
+      return { error: null, profile: null };
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error("An error occurred"), profile: null };
     }
-  }, []);
-
-  const signUp = useCallback(async (email: string, password: string, role: UserRole, firstName: string, lastName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { first_name: firstName, last_name: lastName, role } },
-    });
-    if (error) return { error };
-    return { error: null };
   }, []);
 
   const signOut = useCallback(async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // ignore
-    }
-    clearSupabaseCache();
-    setUser(null);
-    setProfile(null);
+    await nextAuthSignOut({ redirect: false });
   }, []);
 
-  const isAuthenticated = !!user && !!profile;
+  const refreshSession = useCallback(async () => {
+    try {
+      const { data: { session: newSession } } = await supabase.auth.getSession();
+      if (newSession?.user) {
+        await fetchProfile(newSession.user.id);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error refreshing session:", error);
+      return false;
+    }
+  }, []);
+
+  const clearSession = useCallback(() => {
+    setProfileState(null);
+  }, []);
+
+  const isAuthenticated = !!session && !!profile;
+  const user = session?.user || null;
 
   return (
     <AuthContext.Provider value={{ 
-      user, profile, setProfile, loading, isAuthenticated,
-      signIn, signUp, signOut, refreshSession, clearSession,
+      session,
+      user,
+      profile,
+      setProfile: setProfileState,
+      loading,
+      isAuthenticated,
+      signIn,
+      signOut,
+      refreshSession,
+      clearSession,
     }}>
       {children}
     </AuthContext.Provider>

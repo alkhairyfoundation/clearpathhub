@@ -1,11 +1,20 @@
-import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { NextResponse, NextRequest } from 'next/server';
+import { query } from '@/lib/neon';
+import { getToken } from 'next-auth/jwt';
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
-  const supabase = await createSupabaseServerClient()
+export async function GET(request: NextRequest) {
   try {
+    // Authenticate user
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     // Get query parameters
     const { searchParams } = new URL(request.url)
     const recipientId = searchParams.get('recipientId')
@@ -14,37 +23,54 @@ export async function GET(request: Request) {
     const unreadOnly = searchParams.get('unread') === 'true'
 
     // Build query
-    let query = supabase
-      .from('messages')
-      .select(`
-        *,
-        sender:profiles(id, first_name, last_name, avatar_url),
-        recipient:profiles(id, first_name, last_name, avatar_url)
-      `)
-      .order('created_at', { ascending: false })
+    let queryStr = `
+      SELECT 
+        m.*,
+        sender.id as sender_id,
+        sender.first_name as sender_first_name,
+        sender.last_name as sender_last_name,
+        sender.avatar_url as sender_avatar_url,
+        recipient.id as recipient_id,
+        recipient.first_name as recipient_first_name,
+        recipient.last_name as recipient_last_name,
+        recipient.avatar_url as recipient_avatar_url
+      FROM messages m
+      JOIN profiles sender ON m.sender_id = sender.id
+      JOIN profiles recipient ON m.recipient_id = recipient.id
+    `;
+    
+    const params: any[] = [];
+    const conditions: string[] = [];
 
     // Apply filters
     if (recipientId) {
-      query = query.eq('recipient_id', recipientId)
+      conditions.push('m.recipient_id = $' + (params.length + 1));
+      params.push(recipientId);
     }
 
     if (senderId) {
-      query = query.eq('sender_id', senderId)
+      conditions.push('m.sender_id = $' + (params.length + 1));
+      params.push(senderId);
     }
 
     if (unreadOnly) {
-      query = query.eq('is_read', false)
+      conditions.push('m.is_read = false');
     }
+
+    if (conditions.length > 0) {
+      queryStr += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    queryStr += ' ORDER BY m.created_at DESC';
 
     // Apply limit
-    query = query.limit(limit)
+    if (limit > 0) {
+      queryStr += ' LIMIT $' + (params.length + 1);
+      params.push(limit);
+    }
 
     // Execute query
-    const { data, error } = await query
-
-    if (error) {
-      throw error
-    }
+    const data = await query(queryStr, params);
 
     return NextResponse.json({ success: true, data })
   } catch (error: any) {
@@ -56,38 +82,75 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
-  const supabase = await createSupabaseServerClient()
+export async function POST(request: NextRequest) {
   try {
-    const { recipient_id, subject, content } = await request.json()
-    
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+    // Authenticate user
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
         { status: 401 }
-      )
+      );
+    }
+
+    const { recipient_id, subject, content } = await request.json()
+    
+    // Validate input
+    if (!recipient_id || !subject || !content) {
+      return NextResponse.json(
+        { success: false, error: 'Recipient ID, subject, and content are required' },
+        { status: 400 }
+      );
+    }
+
+    // Verify recipient exists
+    const recipientCheck = await query(
+      'SELECT id FROM profiles WHERE id = $1',
+      [recipient_id]
+    );
+
+    if (recipientCheck.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Recipient not found' },
+        { status: 404 }
+      );
     }
 
     // Insert message
-    const { data, error } = await supabase
-      .from('messages')
-      .insert({
-        sender_id: user.id,
+    const result = await query(
+      `INSERT INTO messages (sender_id, recipient_id, subject, content)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [
+        token.id,
         recipient_id,
         subject,
         content
-      })
-      .select()
-      .single()
+      ]
+    );
 
-    if (error) {
-      throw error
-    }
+    // Get sender and recipient details for response
+    const messageWithDetails = await query(
+      `
+      SELECT 
+        m.*,
+        sender.id as sender_id,
+        sender.first_name as sender_first_name,
+        sender.last_name as sender_last_name,
+        sender.avatar_url as sender_avatar_url,
+        recipient.id as recipient_id,
+        recipient.first_name as recipient_first_name,
+        recipient.last_name as recipient_last_name,
+        recipient.avatar_url as recipient_avatar_url
+      FROM messages m
+      JOIN profiles sender ON m.sender_id = sender.id
+      JOIN profiles recipient ON m.recipient_id = recipient.id
+      WHERE m.id = $1
+      `,
+      [result[0].id]
+    );
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: messageWithDetails[0] })
   } catch (error: any) {
     console.error('Error sending message:', error)
     return NextResponse.json(

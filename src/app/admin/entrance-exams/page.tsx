@@ -82,10 +82,13 @@ const [formData, setFormData] = useState({
      PROFICIENT: 0,
      MASTERED: 0
    });
-   const [showAnalyticsFilterModal, setShowAnalyticsFilterModal] = useState(false);
-const [error, setError] = useState('');
-   const [success, setSuccess] = useState('');
-   const [warning, setWarning] = useState('');
+const [showAnalyticsFilterModal, setShowAnalyticsFilterModal] = useState(false);
+    const [selectedAnalytics, setSelectedAnalytics] = useState<any>(null);
+    const [showAnalyticsDetailModal, setShowAnalyticsDetailModal] = useState(false);
+    const [downloadingReport, setDownloadingReport] = useState<string | null>(null);
+ const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [warning, setWarning] = useState('');
 
    const QUESTION_TYPES = [
      { value: 'multiple_choice', label: 'Multiple Choice' },
@@ -613,15 +616,102 @@ async function handleCreateExam() {
         + 'with mastery levels, topic breakdowns, and recommendations.');
    }
    
-   function viewAnalyticsDetails(record: any) {
-     // In a real implementation, this would show a detailed modal
-     alert(`Viewing detailed analytics for ${record.student_name}`);
-   }
-   
-   function downloadAnalyticsReport(id: string) {
-     // In a real implementation, this would generate and download a PDF
-     alert(`Downloading PDF report for analytics record ${id}`);
-   }
+function viewAnalyticsDetails(record: any) {
+      setSelectedAnalytics(record);
+      setShowAnalyticsDetailModal(true);
+    }
+    
+    async function downloadAnalyticsReport(id: string) {
+      const record = analyticsData.find(r => r.id === id);
+      if (!record) return;
+      
+      setDownloadingReport(id);
+      
+      try {
+        // Fetch related application data
+        const { data: application } = await supabase
+          .from('entrance_applications')
+          .select('*')
+          .eq('id', record.application_id)
+          .single();
+        
+        // Generate comprehensive PDF report
+        const reportContent = `
+CLEARPATH EDU HUB - ENTRANCE EXAM ANALYSIS REPORT
+=================================================
+Generated: ${new Date().toLocaleString()}
+
+STUDENT INFORMATION
+-------------------
+Name: ${record.student_name || 'N/A'}
+Email: ${record.student_email || 'N/A'}
+Applied Class: ${application?.applied_class || 'N/A'}
+Admitted Class: ${application?.admitted_class || 'Pending'}
+
+EXAM RESULTS
+------------
+Exam Title: ${application?.exam?.title || 'N/A'}
+Total Score: ${record.score}%
+Mastery Level: ${record.mastery_level}
+Passing Score: ${application?.exam?.passing_score || 50}%
+Status: ${application?.status?.toUpperCase() || 'N/A'}
+
+TIME ANALYTICS
+--------------
+Duration: ${record.time_taken || 'N/A'} minutes
+Security Events: ${record.security_events_count || 0}
+
+PERFORMANCE BREAKDOWN
+---------------------
+${Object.entries(record.topic_performance || {}).map(([topic, data]: [string, any]) => 
+  `- ${topic}: ${data.score}% (${data.correct}/${data.total} correct)`
+).join('\n') || 'No topic data available'}
+
+RECOMMENDATIONS
+---------------
+${getRecommendations(record)}
+
+---
+ClearPath Edu Hub Management System
+This report is system-generated and official.
+        `.trim();
+        
+        // Create and download file
+        const blob = new Blob([reportContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Entrance_Exam_Report_${record.student_name?.replace(/\s+/g, '_') || 'Student'}_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        setSuccess('Report downloaded successfully');
+      } catch (err) {
+        console.error('Error generating report:', err);
+        setError('Failed to generate report');
+      } finally {
+        setDownloadingReport(null);
+      }
+    }
+    
+    function getRecommendations(record: any): string {
+      const score = record.score;
+      const mastery = record.mastery_level;
+      
+      if (mastery === 'MASTERED') {
+        return 'Student demonstrates exceptional understanding. Recommend advanced placement or enrichment programs.';
+      } else if (mastery === 'PROFICIENT') {
+        return 'Student shows strong comprehension. Continue with current curriculum and provide extension activities.';
+      } else if (mastery === 'EXCELLENT') {
+        return 'Student performs well. Focus on strengthening weaker areas through targeted practice.';
+      } else if (mastery === 'GOOD') {
+        return 'Student has basic understanding. Recommend remedial support and additional practice sessions.';
+      } else {
+        return 'Student requires significant support. Consider intensive tutoring and foundational skill development.';
+      }
+    }
 
   const filteredApps = applications.filter(a =>
     `${a.first_name} ${a.last_name} ${a.email}`.toLowerCase().includes(searchQuery.toLowerCase())
@@ -1652,30 +1742,119 @@ async function handleCreateExam() {
            </div>
          )}
          
-         {/* Analytics Filter Modal */}
-         {showAnalyticsFilterModal && (
-           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in">
-               <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-                 <h3 className="text-lg font-bold text-slate-900">Analytics Filters</h3>
-                 <button onClick={() => setShowAnalyticsFilterModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                   <X size={20} className="text-slate-500" />
-                 </button>
-               </div>
-               <div className="p-5">
-                 <p className="text-sm text-slate-500 mb-4">Analytics filter functionality would be implemented here</p>
-                 <div className="flex justify-end pt-4">
-                   <button onClick={() => setShowAnalyticsFilterModal(false)} className="btn-ghost">Cancel</button>
-                   <button onClick={() => {
-                     setShowAnalyticsFilterModal(false);
-                     // In a real implementation, apply filters and fetch data
-                   }} className="btn-primary">Apply Filters</button>
-                 </div>
-               </div>
-             </div>
-           </div>
-         )}
-       </div>
-     </DashboardLayout>
-   );
- }
+{/* Analytics Filter Modal */}
+          {showAnalyticsFilterModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in">
+                <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-slate-900">Analytics Filters</h3>
+                  <button onClick={() => setShowAnalyticsFilterModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+                    <X size={20} className="text-slate-500" />
+                  </button>
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-slate-500 mb-4">Analytics filter functionality would be implemented here</p>
+                  <div className="flex justify-end pt-4">
+                    <button onClick={() => setShowAnalyticsFilterModal(false)} className="btn-ghost">Cancel</button>
+                    <button onClick={() => {
+                      setShowAnalyticsFilterModal(false);
+                    }} className="btn-primary">Apply Filters</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Analytics Detail Modal */}
+          {showAnalyticsDetailModal && selectedAnalytics && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+                <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
+                  <h3 className="text-lg font-bold text-slate-900">Student Performance Details</h3>
+                  <button onClick={() => setShowAnalyticsDetailModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+                    <X size={20} className="text-slate-500" />
+                  </button>
+                </div>
+                <div className="p-5 space-y-6">
+                  {/* Student Info */}
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <h4 className="text-sm font-semibold text-slate-500 uppercase mb-3">Student Information</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-slate-400">Name</p>
+                        <p className="font-medium text-slate-900">{selectedAnalytics.student_name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">Email</p>
+                        <p className="font-medium text-slate-900">{selectedAnalytics.student_email || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Exam Score */}
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <h4 className="text-sm font-semibold text-slate-500 uppercase mb-3">Exam Performance</h4>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-4xl font-bold text-primary-600">{selectedAnalytics.score}%</p>
+                        <p className="text-sm text-slate-500">Total Score</p>
+                      </div>
+                      <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                        selectedAnalytics.mastery_level === 'MASTERED' ? 'bg-purple-100 text-purple-700' :
+                        selectedAnalytics.mastery_level === 'PROFICIENT' ? 'bg-blue-100 text-blue-700' :
+                        selectedAnalytics.mastery_level === 'EXCELLENT' ? 'bg-green-100 text-green-700' :
+                        selectedAnalytics.mastery_level === 'GOOD' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {selectedAnalytics.mastery_level}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div className="bg-white rounded-lg p-3">
+                        <p className="text-lg font-bold text-slate-900">{selectedAnalytics.time_taken || 0}</p>
+                        <p className="text-xs text-slate-500">Minutes</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3">
+                        <p className="text-lg font-bold text-slate-900">{selectedAnalytics.subject || 'N/A'}</p>
+                        <p className="text-xs text-slate-500">Subject</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-3">
+                        <p className="text-lg font-bold text-slate-900">{selectedAnalytics.security_events_count || 0}</p>
+                        <p className="text-xs text-slate-500">Security Events</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recommendations */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <h4 className="text-sm font-semibold text-blue-700 uppercase mb-2">Recommendations</h4>
+                    <p className="text-sm text-blue-600">{getRecommendations(selectedAnalytics)}</p>
+                  </div>
+                </div>
+                <div className="p-5 border-t border-slate-200 flex justify-between">
+                  <button onClick={() => setShowAnalyticsDetailModal(false)} className="btn-ghost">
+                    Close
+                  </button>
+                  <button 
+                    onClick={() => {
+                      downloadAnalyticsReport(selectedAnalytics.id);
+                      setShowAnalyticsDetailModal(false);
+                    }} 
+                    disabled={downloadingReport === selectedAnalytics.id}
+                    className="btn-primary flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {downloadingReport === selectedAnalytics.id ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Download size={16} />
+                    )}
+                    Download Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }

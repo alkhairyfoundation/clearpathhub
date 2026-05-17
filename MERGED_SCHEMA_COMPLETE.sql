@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   phone TEXT,
   role TEXT NOT NULL CHECK (role IN ('admin', 'teacher', 'student', 'parent', 'accountant')),
   avatar_url TEXT,
+  last_read_announcements TIMESTAMP DEFAULT NOW(),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -99,13 +100,23 @@ CREATE TABLE IF NOT EXISTS classes (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- PARENT-STUDENT JUNCTION TABLE (New)
+CREATE TABLE IF NOT EXISTS parent_students (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  relationship TEXT CHECK (relationship IN ('father', 'mother', 'guardian', 'other')),
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(parent_id, student_id)
+);
+
 -- STUDENTS (separate table for additional student-specific data)
 CREATE TABLE IF NOT EXISTS students (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  profile_id UUID UNIQUE NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   admission_number TEXT UNIQUE NOT NULL,
   class_id UUID REFERENCES classes(id),
-  parent_id UUID REFERENCES profiles(id),
+  parent_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   date_of_birth DATE,
   gender TEXT CHECK (gender IN ('male', 'female', 'other')),
   address TEXT,
@@ -331,6 +342,10 @@ CREATE TABLE IF NOT EXISTS behavioral_reports (
   homework_completion INTEGER NOT NULL CHECK (homework_completion BETWEEN 1 AND 5),
   behavior TEXT,
   teacher_notes TEXT,
+  title TEXT,
+  type TEXT DEFAULT 'general',
+  severity TEXT CHECK (severity IN ('low', 'medium', 'high', 'critical')) DEFAULT 'medium',
+  entered_by UUID REFERENCES profiles(id),
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -797,8 +812,16 @@ DO $$ BEGIN
 EXCEPTION WHEN others THEN NULL;
 END $$;
 
--- students table additional columns
-ALTER TABLE students ADD COLUMN IF NOT EXISTS parent_id UUID;
+ALTER TABLE students DROP CONSTRAINT IF EXISTS students_parent_id_fkey;
+ALTER TABLE students ADD FOREIGN KEY (parent_id) REFERENCES profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_read_announcements TIMESTAMP DEFAULT NOW();
+
+-- behavioral_reports: missing columns
+ALTER TABLE behavioral_reports ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE behavioral_reports ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'general';
+ALTER TABLE behavioral_reports ADD COLUMN IF NOT EXISTS severity TEXT CHECK (severity IN ('low', 'medium', 'high', 'critical')) DEFAULT 'medium';
+ALTER TABLE behavioral_reports ADD COLUMN IF NOT EXISTS entered_by UUID REFERENCES profiles(id);
 ALTER TABLE students ADD COLUMN IF NOT EXISTS date_of_birth DATE;
 ALTER TABLE students ADD COLUMN IF NOT EXISTS gender TEXT;
 ALTER TABLE students ADD COLUMN IF NOT EXISTS address TEXT;

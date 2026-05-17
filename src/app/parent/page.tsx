@@ -69,7 +69,9 @@ useEffect(() => {
 
       if (announcementsRes.data) {
         setAnnouncements(announcementsRes.data);
-        setStats(prev => ({ ...prev, unreadAnnouncements: announcementsRes.data.length }));
+        const lastRead = profile?.last_read_announcements ? new Date(profile.last_read_announcements).getTime() : 0;
+        const unreadCount = announcementsRes.data.filter(a => new Date(a.created_at).getTime() > lastRead).length;
+        setStats(prev => ({ ...prev, unreadAnnouncements: unreadCount }));
       }
     } catch (err: any) {
       setError(err.message);

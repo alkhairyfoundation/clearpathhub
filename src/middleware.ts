@@ -1,52 +1,31 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  const isAuthenticated = !!token;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            supabaseResponse.cookies.set(name, value, options);
-          });
-        },
-      },
-    }
-  );
+  const { pathname } = request.nextUrl;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    const url = request.nextUrl.clone();
-    const pathname = url.pathname;
-    
-    // Only protect API routes that require admin privileges
-    // Let client-side handle page protection after login
-    if (pathname.startsWith('/api/admin/')) {
-      url.pathname = '/login';
+  // Protect API routes that require authentication
+  if (pathname.startsWith('/api/')) {
+    if (!isAuthenticated) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/api/auth/signin';
       return NextResponse.redirect(url);
     }
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     '/api/admin/:path*',
+    '/api/teacher/:path*',
+    '/api/students/:path*',
+    '/api/messages/:path*',
+    '/api/analytics/:path*',
+    '/api/mastery/:path*',
   ],
 };

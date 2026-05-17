@@ -3,6 +3,8 @@ import Script from "next/script";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
+export const dynamic = 'force-dynamic';
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

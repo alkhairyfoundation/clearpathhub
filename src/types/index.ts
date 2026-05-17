@@ -10,6 +10,7 @@ export interface Profile {
   avatar_url?: string;
   created_at: string;
   updated_at: string;
+  last_read_announcements?: string;
 }
 
 export interface SchoolSettings {

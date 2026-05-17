@@ -214,21 +214,24 @@ async function handleSubmit() {
 
      if (error) throw new Error(error.message);
      
-     // Insert analytics record
-     try {
-       await supabase.from('student_analytics').insert({
-         application_id: applicationId,
-         subject: 'COMBINED', // In a real system, we'd track per subject
-         score: finalScore,
-         mastery_level: masteryLevel,
-         topic_performance: {}, // Would be populated with per-topic data in a real system
-         time_taken: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft) / 60), // Minutes taken
-         security_events_count: securityEvents.length
-       });
-     } catch (analyticsError) {
-       console.error('Failed to insert analytics record:', analyticsError);
-       // Don't fail the submission if analytics fails
-     }
+// Get student email from profile
+      const studentEmail = profile?.email || application?.email || '';
+      
+      // Insert analytics record
+      try {
+        await supabase.from('student_analytics').insert({
+          application_id: applicationId,
+          student_email: studentEmail,
+          subject: 'COMBINED',
+          score: finalScore,
+          mastery_level: masteryLevel,
+          topic_performance: {},
+          time_taken: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft) / 60),
+          security_events_count: securityEvents.length
+        });
+      } catch (analyticsError) {
+        console.error('Failed to insert analytics record:', analyticsError);
+      }
 
      if (securityEvents.length > 0) {
        const logs = securityEvents.map(e => ({

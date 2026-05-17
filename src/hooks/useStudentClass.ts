@@ -1,28 +1,28 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
 export function useStudentClass() {
-  const { profile } = useAuth();
+  const { session } = useAuth();
   const [classId, setClassId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!profile || profile.role !== 'student') return;
+    if (!session?.user) return;
     fetchClass();
-  }, [profile]);
+  }, [session]);
 
   async function fetchClass() {
     setLoading(true);
     try {
-      const { data } = await supabase
-        .from('students')
-        .select('class_id')
-        .eq('profile_id', profile?.id)
-        .maybeSingle();
-      setClassId(data?.class_id || null);
+      // We'll need to create a function to fetch student class from Neon
+      // For now, we'll call an API route
+      const response = await fetch('/api/student/class');
+      if (!response.ok) throw new Error('Failed to fetch class');
+      
+      const data = await response.json();
+      setClassId(data.classId);
     } catch {
       setClassId(null);
     }

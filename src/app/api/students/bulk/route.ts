@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
-import { createSupabaseServerClient, createSupabaseAdminClient } from '@/lib/supabase-server';
+import { NextResponse, NextRequest } from 'next/server';
+import { query } from '@/lib/neon';
+import bcrypt from 'bcryptjs';
+import { getToken } from 'next-auth/jwt';
 
 interface StudentInput {
   first_name: string;
@@ -26,48 +28,73 @@ interface BulkResult {
   error?: string;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    // Authenticate user
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, id')
-      .eq('id', user.id)
-      .single();
+    // Get user's profile to check role
+    const profileResult = await query(
+      'SELECT role, id FROM profiles WHERE id = $1',
+      [token.id]
+    );
 
-    const role = profile?.role;
+    if (profileResult.length === 0) {
+      return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
+    }
+
+    const role = profileResult[0].role;
     if (role !== 'admin' && role !== 'teacher') {
-      return NextResponse.json({ success: false, error: 'Admin or teacher access required' }, { status: 403 });
+      return NextResponse.json(
+        { success: false, error: 'Admin or teacher access required' },
+        { status: 403 }
+      );
     }
 
     const { students }: { students: StudentInput[] } = await request.json();
     if (!students || !Array.isArray(students) || students.length === 0) {
-      return NextResponse.json({ success: false, error: 'No students provided' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'No students provided' },
+        { status: 400 }
+      );
     }
 
     if (students.length > 200) {
-      return NextResponse.json({ success: false, error: 'Maximum 200 students per batch' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Maximum 200 students per batch' },
+        { status: 400 }
+      );
     }
 
-    // Build class_name → class_id lookup
-    let classQuery = supabase.from('classes').select('id, name');
+    // Build class_name → class_id lookup (teachers can only use their assigned classes)
+    let classQuery = 'SELECT id, name FROM classes';
+    const classParams: any[] = [];
+    
     if (role === 'teacher') {
-      const { data: subjectData } = await supabase
-        .from('subjects')
-        .select('class_id')
-        .eq('teacher_id', user.id);
-      const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
-      classQuery = classQuery.in('id', teacherClassIds);
+      // Get classes taught by this teacher
+      const subjectResult = await query(
+        'SELECT DISTINCT class_id FROM subjects WHERE teacher_id = $1',
+        [token.id]
+      );
+      
+      if (subjectResult.length > 0) {
+        const teacherClassIds = subjectResult.map((row: any) => row.class_id);
+        classQuery += ' WHERE id = ANY($1)';
+        classParams.push(teacherClassIds);
+      } else {
+        // Teacher has no subjects, so no classes
+        classQuery += ' WHERE 1 = 0'; // No results
+      }
     }
-    const { data: classes } = await classQuery;
-    const classMap = new Map((classes || []).map(c => [c.name.toLowerCase().trim(), c.id]));
 
-    const adminClient = createSupabaseAdminClient();
+    const classes = await query(classQuery, classParams);
+    const classMap = new Map(
+      classes.map((c: any) => [c.name.toLowerCase().trim(), c.id])
+    );
+
     const results: BulkResult[] = [];
 
     for (let i = 0; i < students.length; i++) {
@@ -76,11 +103,22 @@ export async function POST(request: Request) {
       const result: BulkResult = { row, success: false, email: s.email };
 
       try {
+        // Validate required fields
         if (!s.first_name || !s.last_name || !s.email || !s.password) {
           throw new Error('Missing required fields: first_name, last_name, email, password');
         }
         if (s.password.length < 6) {
           throw new Error('Password must be at least 6 characters');
+        }
+
+        // Check if user already exists
+        const existingUsers = await query(
+          'SELECT id FROM profiles WHERE email = $1',
+          [s.email]
+        );
+
+        if (existingUsers.length > 0) {
+          throw new Error('User with this email already exists');
         }
 
         // Resolve class_id from class_name
@@ -90,57 +128,61 @@ export async function POST(request: Request) {
           if (!lookup) {
             throw new Error(`Class "${s.class_name}" not found`);
           }
-          classId = lookup;
+          classId = String(lookup);
         }
 
-        // Create auth user
-        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-          email: s.email,
-          password: s.password,
-          email_confirm: true,
-          user_metadata: { first_name: s.first_name, last_name: s.last_name, role: 'student' },
-        });
-        if (authError || !authData.user) {
-          throw new Error(authError?.message || 'Failed to create auth user');
-        }
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(s.password, salt);
 
-        // Create profile
-        const { error: profileError } = await adminClient.from('profiles').insert({
-          id: authData.user.id,
-          email: s.email,
-          first_name: s.first_name,
-          last_name: s.last_name,
-          role: 'student',
-          phone: s.phone || null,
-        });
-        if (profileError) {
-          await adminClient.auth.admin.deleteUser(authData.user.id).catch(() => {});
-          throw new Error(profileError.message);
-        }
+        // Generate user ID
+        const userIdResult = await query('SELECT gen_random_uuid() as id');
+        const userId = userIdResult[0].id;
+
+        // Insert into profiles
+        await query(
+          `INSERT INTO profiles (id, email, first_name, last_name, role, phone, password_hash)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            userId,
+            s.email,
+            s.first_name,
+            s.last_name,
+            'student',
+            s.phone || null,
+            passwordHash
+          ]
+        );
 
         // Generate admission number
-        const { count } = await adminClient.from('students').select('*', { count: 'exact', head: true });
-        const admissionNumber = `STD${String((count || 0) + 1).padStart(4, '0')}`;
+        const countResult: any = await query('SELECT COUNT(*) as count FROM students');
+        const studentCount = countResult.length > 0 ? parseInt(countResult[0].count || '0') : 0;
+        const admissionNumber = `STD${String(studentCount + 1).padStart(4, '0')}`;
 
-        // Create student record
-        const { error: studentError } = await adminClient.from('students').insert({
-          profile_id: authData.user.id,
-          admission_number: admissionNumber,
-          class_id: classId,
-          parent_id: null,
-          gender: s.gender || null,
-          date_of_birth: s.date_of_birth || null,
-          address: s.address || null,
-          guardian_name: s.guardian_name || null,
-          guardian_phone: s.guardian_phone || null,
-          guardian_email: s.guardian_email || null,
-          blood_group: s.blood_group || null,
-          emergency_contact: s.emergency_contact || null,
-        });
-        if (studentError) {
-          await adminClient.auth.admin.deleteUser(authData.user.id).catch(() => {});
-          throw new Error(studentError.message);
-        }
+        // Insert into students
+        await query(
+          `INSERT INTO students (
+            profile_id, admission_number, class_id, parent_id, gender, 
+            date_of_birth, address, guardian_name, guardian_phone, 
+            guardian_email, blood_group, emergency_contact
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+          )`,
+          [
+            userId,
+            admissionNumber,
+            classId || null,
+            null, // parent_id
+            s.gender || null,
+            s.date_of_birth || null,
+            s.address || null,
+            s.guardian_name || null,
+            s.guardian_phone || null,
+            s.guardian_email || null,
+            s.blood_group || null,
+            s.emergency_contact || null
+          ]
+        );
 
         result.success = true;
         result.admission_number = admissionNumber;
@@ -158,6 +200,10 @@ export async function POST(request: Request) {
       totalFailed: results.filter(r => !r.success).length,
     });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Error in bulk student creation:', error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
   }
 }
