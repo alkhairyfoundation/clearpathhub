@@ -105,9 +105,11 @@ export default function AdminSubjectsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this subject? This may affect related lessons and results.')) return;
+    if (!confirm('Delete this subject? This will unlink related sessions and lessons.')) return;
     setDeleting(id);
     try {
+      await supabase.from('sessions').update({ subject_id: null }).eq('subject_id', id);
+      await supabase.from('lessons').update({ subject_id: null }).eq('subject_id', id);
       const { error } = await supabase.from('subjects').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Subject deleted successfully');

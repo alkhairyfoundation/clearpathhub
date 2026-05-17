@@ -104,16 +104,17 @@ export default function AdminTestsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this test and all associated attempts?')) return;
+    if (!confirm('Delete this test and all associated questions and attempts?')) return;
     setDeleting(id);
     try {
+      await supabase.from('test_questions').delete().eq('test_id', id);
       await supabase.from('test_attempts').delete().eq('test_id', id);
       const { error } = await supabase.from('tests').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Test deleted');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to delete test');
     } finally {
       setDeleting(null);
     }

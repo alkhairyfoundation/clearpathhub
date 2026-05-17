@@ -520,10 +520,22 @@ async function handleCreateExam() {
   }
 
   async function handleDeleteExam(id: string) {
-    if (!confirm('Delete this exam?')) return;
+    if (!confirm('Delete this exam and all associated questions, codes, and applications?')) return;
     setDeleting(id);
-    await supabase.from('entrance_exams').delete().eq('id', id);
-    setDeleting(null); fetchData();
+    try {
+      await supabase.from('entrance_questions').delete().eq('exam_id', id);
+      await supabase.from('entrance_codes').delete().eq('exam_id', id);
+      await supabase.from('entrance_applications').delete().eq('exam_id', id);
+      const { error } = await supabase.from('entrance_exams').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      setSuccess('Exam and all associated data deleted');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete exam');
+    } finally {
+      setDeleting(null);
+      fetchData();
+    }
   }
 
   async function handleAssignExam(applicationId: string, examId: string) {

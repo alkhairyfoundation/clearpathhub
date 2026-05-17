@@ -128,12 +128,34 @@ export default function AdminAcademicSessionsPage() {
 
   async function handleDelete(id: string, table: 'academic_sessions' | 'terms') {
     const label = table === 'academic_sessions' ? 'session' : 'term';
-    if (!confirm(`Delete this ${label}? This action cannot be undone.`)) return;
+    const labelCap = label.charAt(0).toUpperCase() + label.slice(1);
+    if (table === 'academic_sessions') {
+      const termCount = terms.filter(t => t.session_id === id).length;
+      if (termCount > 0 && !confirm(`This session has ${termCount} term(s). Delete session AND all its terms?`)) return;
+    }
+    if (!confirm(`Delete this ${label}? This cannot be undone.`)) return;
     setDeleting(id);
     try {
+      if (table === 'academic_sessions') {
+        // Clear school_settings reference if this session is set as current
+        await supabase.from('school_settings').update({ current_session_id: null }).eq('current_session_id', id);
+        // Delete all terms belonging to this session
+        const { data: termIds } = await supabase.from('terms').select('id').eq('session_id', id);
+        if (termIds && termIds.length > 0) {
+          const tIds = termIds.map(t => t.id);
+          // Clear school_settings current_term_id if it points to any of these terms
+          await supabase.from('school_settings').update({ current_term_id: null }).in('current_term_id', tIds);
+          // Delete the terms
+          await supabase.from('terms').delete().in('id', tIds);
+        }
+      } else {
+        // Clear school_settings reference if this term is set as current
+        await supabase.from('school_settings').update({ current_term_id: null }).eq('current_term_id', id);
+      }
+      // Now delete the record itself
       const { error } = await supabase.from(table).delete().eq('id', id);
       if (error) throw new Error(error.message);
-      setSuccess(`${label.charAt(0).toUpperCase() + label.slice(1)} deleted`);
+      setSuccess(`${labelCap} and all associated records deleted`);
       setTimeout(() => setSuccess(''), 3000);
       fetchData();
     } catch (err: any) {

@@ -22,6 +22,7 @@ export default function AdminQuestionBankPage() {
   const [search, setSearch] = useState('');
   const [filterSubject, setFilterSubject] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterLevel, setFilterLevel] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -59,10 +60,30 @@ export default function AdminQuestionBankPage() {
     } catch (err: any) { setError(err.message); }
   }
 
+  async function approveAllPending() {
+    if (!confirm(`Are you sure you want to approve and publish all ${counts.draft} pending questions?`)) return;
+    setSaving(true);
+    try {
+      const draftIds = questions.filter(q => q.status === 'draft').map(q => q.id);
+      if (draftIds.length === 0) return;
+      const { error } = await supabase.from('question_bank').update({ status: 'published' }).in('id', draftIds);
+      if (error) throw new Error(error.message);
+      setSuccess(`Successfully approved and published all ${draftIds.length} pending questions!`);
+      fetchData();
+    } catch (err: any) { setError(err.message); } finally { setSaving(false); }
+  }
+
+  const activeSubjects = subjects.filter(sub => 
+    questions.some(q => q.subject_id === sub.id)
+  );
+
+  const activeLevels = Array.from(new Set(questions.map(q => q.level).filter(Boolean))).sort();
+
   const filteredQuestions = questions.filter(q => {
     if (search && !q.question.toLowerCase().includes(search.toLowerCase()) && !q.topic.toLowerCase().includes(search.toLowerCase())) return false;
     if (filterSubject && q.subject_id !== filterSubject) return false;
     if (filterStatus && q.status !== filterStatus) return false;
+    if (filterLevel && q.level !== filterLevel) return false;
     return true;
   });
 
@@ -79,7 +100,21 @@ export default function AdminQuestionBankPage() {
               <p className="text-slate-500 mt-1">Review, approve, and manage all questions</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm flex-wrap">
+            {counts.draft > 0 && (
+              <button
+                onClick={approveAllPending}
+                disabled={saving}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1.5 shadow-sm active:scale-95"
+              >
+                {saving ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <CheckCircle size={14} />
+                )}
+                Approve & Publish All Pending ({counts.draft})
+              </button>
+            )}
             <span className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg font-medium">{counts.draft} pending review</span>
             <span className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-medium">{counts.total} total</span>
           </div>
@@ -89,7 +124,7 @@ export default function AdminQuestionBankPage() {
         {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
 
         <div className="card">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..."
@@ -98,7 +133,12 @@ export default function AdminQuestionBankPage() {
             <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)}
               className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
               <option value="">All Subjects</option>
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {activeSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <select value={filterLevel} onChange={e => setFilterLevel(e.target.value)}
+              className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+              <option value="">All Levels</option>
+              {activeLevels.map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
             </select>
             <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
               className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">

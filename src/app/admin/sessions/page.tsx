@@ -82,8 +82,19 @@ export default function AdminSessionsPage() {
   }
 
   async function handleDeleteSession(id: string) {
-    if (!confirm('Delete this video lesson?')) return;
-    await supabase.from('sessions').delete().eq('id', id);
+    if (!confirm('Delete this video lesson and all associated quizzes?')) return;
+    try {
+      const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', id);
+      if (quizzes && quizzes.length > 0) {
+        const qIds = quizzes.map(q => q.id);
+        await supabase.from('quiz_questions').delete().in('quiz_id', qIds);
+        await supabase.from('quizzes').delete().in('id', qIds);
+      }
+      const { error } = await supabase.from('sessions').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+    } catch (err: any) {
+      console.error('Failed to delete session:', err);
+    }
     fetchData();
   }
 

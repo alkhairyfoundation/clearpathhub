@@ -67,9 +67,11 @@ export default function AdminDepartmentsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this department? This may affect associated classes and subjects.')) return;
+    if (!confirm('Delete this department? This will unlink associated classes and subjects.')) return;
     setDeleting(id);
     try {
+      await supabase.from('classes').update({ department_id: null }).eq('department_id', id);
+      await supabase.from('subjects').update({ department_id: null }).eq('department_id', id);
       const { error } = await supabase.from('departments').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Department deleted successfully');

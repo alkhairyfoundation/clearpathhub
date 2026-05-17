@@ -71,9 +71,11 @@ export default function AdminClassesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this class? This may affect associated students and subjects.')) return;
+    if (!confirm('Delete this class? This will unlink associated students and subjects.')) return;
     setDeleting(id);
     try {
+      await supabase.from('students').update({ class_id: null }).eq('class_id', id);
+      await supabase.from('subjects').update({ class_id: null }).eq('class_id', id);
       const { error } = await supabase.from('classes').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Class deleted successfully');
