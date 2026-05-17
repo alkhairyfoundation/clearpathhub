@@ -64,11 +64,10 @@ export default function AdminQuestionBankPage() {
     if (!confirm(`Are you sure you want to approve and publish all ${counts.draft} pending questions?`)) return;
     setSaving(true);
     try {
-      const draftIds = questions.filter(q => q.status === 'draft').map(q => q.id);
-      if (draftIds.length === 0) return;
-      const { error } = await supabase.from('question_bank').update({ status: 'published' }).in('id', draftIds);
+      const { data, error } = await supabase.from('question_bank').update({ status: 'published' }).eq('status', 'draft').select();
       if (error) throw new Error(error.message);
-      setSuccess(`Successfully approved and published all ${draftIds.length} pending questions!`);
+      const count = data?.length ?? 0;
+      setSuccess(`Successfully approved and published ${count} pending questions!`);
       fetchData();
     } catch (err: any) { setError(err.message); } finally { setSaving(false); }
   }
