@@ -27,8 +27,20 @@ export default function TeacherAttendancePage() {
   useEffect(() => { if (selectedClass) loadClassData(); }, [date, selectedClass]);
 
   async function fetchClasses() {
-    const { data } = await supabase.from('classes').select('id, name').order('level');
-    if (data) setClasses(data);
+    // Get teacher's class IDs from their subject assignments
+    const { data: subjectData } = await supabase
+      .from('subjects')
+      .select('class_id')
+      .eq('teacher_id', profile?.id);
+
+    const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+
+    if (teacherClassIds.length > 0) {
+      const { data } = await supabase.from('classes').select('id, name').in('id', teacherClassIds).order('level');
+      if (data) setClasses(data);
+    } else {
+      setClasses([]);
+    }
   }
 
   async function loadClassData() {

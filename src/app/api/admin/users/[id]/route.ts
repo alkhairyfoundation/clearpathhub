@@ -32,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const supabase = await createSupabaseAdminClient();
 
     const body = await request.json();
-    const { first_name, last_name, role, phone, password } = body;
+    const { first_name, last_name, role, phone, password, class_ids, subject_name } = body;
 
     const updates: Record<string, any> = {};
     if (first_name !== undefined) updates.first_name = first_name;
@@ -85,6 +85,42 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         );
       } catch (neonPasswordError) {
         console.error('Error updating password hash in Neon:', neonPasswordError);
+      }
+    }
+
+    // Update teacher subject assignments
+    if (class_ids !== undefined) {
+      try {
+        const subjectName = subject_name || 'General';
+        // Get existing subject IDs for this teacher
+        const { data: existingSubjects } = await supabase
+          .from('subjects')
+          .select('id, class_id')
+          .eq('teacher_id', params.id);
+
+        const existingClassIds = existingSubjects?.map(s => s.class_id).filter(Boolean) || [];
+
+        // Add new class assignments
+        const newClassIds = class_ids.filter((cid: string) => !existingClassIds.includes(cid));
+        if (newClassIds.length > 0) {
+          const newEntries = newClassIds.map((classId: string) => ({
+            name: subjectName,
+            code: `TCH-${params.id.slice(0, 4)}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+            teacher_id: params.id,
+            class_id: classId,
+          }));
+          await supabase.from('subjects').insert(newEntries);
+        }
+
+        // Remove unassigned class entries
+        const removeIds = existingSubjects
+          ?.filter(s => s.class_id && !class_ids.includes(s.class_id))
+          .map(s => s.id) || [];
+        if (removeIds.length > 0) {
+          await supabase.from('subjects').delete().in('id', removeIds);
+        }
+      } catch (subjectErr) {
+        console.error('Error updating teacher subjects:', subjectErr);
       }
     }
 

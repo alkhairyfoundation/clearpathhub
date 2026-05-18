@@ -30,10 +30,23 @@ export default function TeacherResultsPage() {
   async function fetchData() {
     setLoading(true);
     try {
+      // Get teacher's subjects and their class IDs
+      const { data: teacherSubjects } = await supabase
+        .from('subjects')
+        .select('id, class_id')
+        .eq('teacher_id', profile?.id);
+
+      const teacherSubjectIds = teacherSubjects?.map(s => s.id) || [];
+      const teacherClassIds = Array.from(new Set(teacherSubjects?.map(s => s.class_id).filter(Boolean) || []));
+
       const [resRes, subsRes, stuRes] = await Promise.all([
-        supabase.from('results').select('*, student:profiles!student_id(*), subject:subjects!subject_id(*)').order('created_at', { ascending: false }).limit(50),
-        supabase.from('subjects').select('*').order('name'),
-        supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
+        teacherSubjectIds.length > 0
+          ? supabase.from('results').select('*, student:profiles!student_id(*), subject:subjects!subject_id(*)').in('subject_id', teacherSubjectIds).order('created_at', { ascending: false }).limit(50)
+          : { data: [], error: null },
+        supabase.from('subjects').select('*').eq('teacher_id', profile?.id).order('name'),
+        teacherClassIds.length > 0
+          ? supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name)').in('class_id', teacherClassIds).then(r => ({ data: r.data?.map(s => s.profile).filter(Boolean) || [], error: r.error }))
+          : { data: [], error: null },
       ]);
       if (resRes.error) throw new Error(resRes.error.message);
       if (resRes.data) setResults(resRes.data);

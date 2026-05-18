@@ -58,6 +58,8 @@ function AdminUsersPageContent() {
   const [showBulkModal, setShowBulkModal] = useState(false);
 
   const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [teacherClassIds, setTeacherClassIds] = useState<string[]>([]);
+  const [teacherSubjectName, setTeacherSubjectName] = useState('');
   const [formData, setFormData] = useState<UserFormData>({
     email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '', class_id: '',
   });
@@ -79,7 +81,15 @@ function AdminUsersPageContent() {
       if (role === 'student') {
         const { data } = await supabase.from('students').select('*, class:class_id(name, level)').eq('profile_id', uid).maybeSingle();
         if (data) setUserExtraInfo(data);
-      } else if (role === 'teacher' || role === 'accountant') {
+      } else       if (role === 'teacher') {
+        const [staffRes, subjectsRes] = await Promise.all([
+          supabase.from('staff').select('*, department:departments(name)').eq('profile_id', uid).maybeSingle(),
+          supabase.from('subjects').select('id, name, code, class:classes!class_id(name)').eq('teacher_id', uid),
+        ]);
+        if (staffRes.data || subjectsRes.data) {
+          setUserExtraInfo({ ...staffRes.data, subjects: subjectsRes.data || [] });
+        }
+      } else if (role === 'accountant') {
         const { data } = await supabase.from('staff').select('*, department:departments(name)').eq('profile_id', uid).maybeSingle();
         if (data) setUserExtraInfo(data);
       } else if (role === 'parent') {
@@ -120,7 +130,9 @@ function AdminUsersPageContent() {
       email: '', password: '', first_name: '', last_name: '',
       role: selectedRole, phone: '', class_id: '',
     });
-    if (selectedRole === 'student') {
+    setTeacherClassIds([]);
+    setTeacherSubjectName('');
+    if (selectedRole === 'student' || selectedRole === 'teacher') {
       const { data } = await supabase.from('classes').select('id, name, level').order('name');
       setClasses(data || []);
     } else {
@@ -138,10 +150,18 @@ function AdminUsersPageContent() {
       email: user.email, password: '', first_name: user.first_name,
       last_name: user.last_name, role: user.role, phone: user.phone || '', class_id: '',
     });
-    if (user.role === 'student') {
+    setTeacherSubjectName('');
+    if (user.role === 'student' || user.role === 'teacher') {
       supabase.from('classes').select('id, name, level').order('name').then(({ data }) => setClasses(data || []));
     } else {
       setClasses([]);
+    }
+    if (user.role === 'teacher') {
+      supabase.from('subjects').select('class_id').eq('teacher_id', user.id).then(({ data }) => {
+        setTeacherClassIds(data?.map(s => s.class_id).filter(Boolean) as string[] || []);
+      });
+    } else {
+      setTeacherClassIds([]);
     }
     setShowModal(true);
   }
@@ -161,6 +181,10 @@ function AdminUsersPageContent() {
           phone: formData.phone || null,
         };
         if (formData.password) body.password = formData.password;
+        if (formData.role === 'teacher') {
+          body.class_ids = teacherClassIds;
+          body.subject_name = teacherSubjectName || undefined;
+        }
 
         const res = await fetch(`/api/admin/users/${editingUser.id}`, {
           method: 'PATCH',
@@ -180,7 +204,11 @@ function AdminUsersPageContent() {
         const res = await fetch('/api/admin/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            class_ids: formData.role === 'teacher' ? teacherClassIds : undefined,
+            subject_name: formData.role === 'teacher' ? (teacherSubjectName || undefined) : undefined,
+          }),
         });
 
         const result = await res.json();
@@ -557,6 +585,32 @@ function AdminUsersPageContent() {
                 <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" placeholder="+234..." />
               </div>
 
+              {formData.role === 'teacher' && (
+                <>
+                  <div>
+                    <label className="label">Subject Name (optional)</label>
+                    <input type="text" value={teacherSubjectName} onChange={(e) => setTeacherSubjectName(e.target.value)} className="input" placeholder="e.g., Mathematics (applies to all selected classes)" />
+                  </div>
+                  <div>
+                    <label className="label">Assigned Classes</label>
+                    <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
+                      {classes.map(c => (
+                        <label key={c.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                          <input type="checkbox" checked={teacherClassIds.includes(c.id)} onChange={(e) => {
+                            if (e.target.checked) {
+                              setTeacherClassIds([...teacherClassIds, c.id]);
+                            } else {
+                              setTeacherClassIds(teacherClassIds.filter(id => id !== c.id));
+                            }
+                          }} className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+                          <span className="text-sm text-slate-700">{c.name} (Level {c.level})</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
               {formData.role === 'student' && (
                 <div>
                   <label className="label">Class</label>
@@ -634,6 +688,16 @@ function AdminUsersPageContent() {
                   <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
                     <span className="text-sm text-slate-500">Department</span>
                     <span className="text-sm font-medium text-slate-900">{userExtraInfo.department?.name || 'N/A'}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'teacher' && userExtraInfo?.subjects && userExtraInfo.subjects.length > 0 && (
+                  <div className="py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500 block mb-1">Assigned Subjects ({userExtraInfo.subjects.length})</span>
+                    {userExtraInfo.subjects.map((s: any, i: number) => (
+                      <span key={i} className="text-sm font-medium text-slate-900 block">
+                        {s.name} ({s.code}) — {s.class?.name || 'No class'}
+                      </span>
+                    ))}
                   </div>
                 )}
                 {viewingUser.role === 'parent' && userExtraInfo?.children && (

@@ -31,10 +31,20 @@ export default function TeacherClassesPage() {
   async function fetchData() {
     setLoading(true);
     try {
+      // Get teacher's class IDs from their subject assignments
+      const { data: subjectData } = await supabase
+        .from('subjects')
+        .select('class_id')
+        .eq('teacher_id', profile?.id);
+
+      const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+
       const [classesRes, studentsRes, subjectsRes] = await Promise.all([
-        supabase.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').order('level'),
+        teacherClassIds.length > 0
+          ? supabase.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').in('id', teacherClassIds).order('level')
+          : { data: [], error: null },
         supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').order('admission_number'),
-        supabase.from('subjects').select('*').order('name'),
+        supabase.from('subjects').select('*').eq('teacher_id', profile?.id).order('name'),
       ]);
       if (classesRes.error) throw new Error(classesRes.error.message);
       if (studentsRes.error) throw new Error(studentsRes.error.message);

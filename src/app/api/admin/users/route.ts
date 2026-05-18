@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, first_name, last_name, role, phone, class_id } = await request.json();
+    const { email, password, first_name, last_name, role, phone, class_id, class_ids, subject_name } = await request.json();
     
     // Validate required fields
     if (!email || !password || !first_name || !last_name || !role) {
@@ -55,6 +55,23 @@ export async function POST(request: Request) {
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [userId, email, first_name, last_name, role, phone || null, passwordHash]
     );
+
+    // If role is teacher, create subject entries for assigned classes
+    if (role === 'teacher' && class_ids && class_ids.length > 0) {
+      const subjectName = subject_name || 'General';
+      try {
+        const subjectEntries = class_ids.map((classId: string) => ({
+          name: subjectName,
+          code: `TCH-${userId.slice(0, 4)}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          teacher_id: userId,
+          class_id: classId,
+        }));
+        const { error: subjectError } = await adminClient.from('subjects').insert(subjectEntries);
+        if (subjectError) console.error('Error creating teacher subjects:', subjectError);
+      } catch (subjectErr) {
+        console.error('Error creating teacher subjects:', subjectErr);
+      }
+    }
 
     // If role is student, create student record in both databases
     if (role === 'student') {

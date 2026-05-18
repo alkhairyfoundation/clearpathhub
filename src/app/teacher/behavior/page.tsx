@@ -28,9 +28,19 @@ export default function TeacherBehaviorPage() {
   async function fetchData() {
     setLoading(true);
     try {
+      // Get teacher's class IDs
+      const { data: subjectData } = await supabase
+        .from('subjects')
+        .select('class_id')
+        .eq('teacher_id', profile?.id);
+
+      const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+
       const [reportsRes, studentsRes] = await Promise.all([
         supabase.from('behavioral_reports').select('*, student:profiles!student_id(*)').order('week_start', { ascending: false }).limit(50),
-        supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
+        teacherClassIds.length > 0
+          ? supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name)').in('class_id', teacherClassIds).then(r => ({ data: r.data?.map(s => s.profile).filter(Boolean) || [], error: r.error }))
+          : supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
       ]);
       if (reportsRes.error) throw new Error(reportsRes.error.message);
       if (reportsRes.data) setReports(reportsRes.data);
