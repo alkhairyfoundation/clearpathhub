@@ -583,7 +583,8 @@ async function handleCreateExam() {
    async function handleAdmissionDecision() {
     if (!selectedApplication) return;
     setSaving(true);
-    
+    setError('');
+
     const updateData: any = {
       status: admissionData.status,
       reviewed_by: profile?.id,
@@ -592,6 +593,31 @@ async function handleCreateExam() {
 
     if (admissionData.status === 'admitted' && admissionData.admitted_class) {
       updateData.admitted_class = admissionData.admitted_class;
+
+      try {
+        const password = Math.random().toString(36).slice(2, 10) + 'A1!';
+        const res = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: selectedApplication.email,
+            password,
+            first_name: selectedApplication.first_name,
+            last_name: selectedApplication.last_name,
+            role: 'student',
+            phone: selectedApplication.phone || '',
+            class_id: '',
+          }),
+        });
+
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Failed to create user');
+
+        setSuccess(`Student admitted! Login: ${selectedApplication.email} / Password: ${password}`);
+        setTimeout(() => setSuccess(''), 10000);
+      } catch (err: any) {
+        setError('Application status saved but user creation failed: ' + err.message);
+      }
     }
 
     await supabase.from('entrance_applications').update(updateData).eq('id', selectedApplication.id);

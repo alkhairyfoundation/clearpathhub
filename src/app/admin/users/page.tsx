@@ -53,6 +53,7 @@ function AdminUsersPageContent() {
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [newCredentials, setNewCredentials] = useState({ email: '', password: '' });
   const [viewingUser, setViewingUser] = useState<Profile | null>(null);
+  const [userExtraInfo, setUserExtraInfo] = useState<Record<string, any>>({});
   const [resetPasswordMode, setResetPasswordMode] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
 
@@ -69,6 +70,25 @@ function AdminUsersPageContent() {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchUsers();
   }, [profile, selectedRole]);
+
+  useEffect(() => {
+    if (!viewingUser) { setUserExtraInfo({}); return; }
+    const uid = viewingUser.id;
+    const role = viewingUser.role;
+    async function fetchExtraInfo() {
+      if (role === 'student') {
+        const { data } = await supabase.from('students').select('*, class:class_id(name, level)').eq('profile_id', uid).maybeSingle();
+        if (data) setUserExtraInfo(data);
+      } else if (role === 'teacher' || role === 'accountant') {
+        const { data } = await supabase.from('staff').select('*, department:departments(name)').eq('profile_id', uid).maybeSingle();
+        if (data) setUserExtraInfo(data);
+      } else if (role === 'parent') {
+        const { data } = await supabase.from('parent_students').select('*, student:students!student_id(profile:profiles!profile_id(first_name, last_name), admission_number, class_id)').eq('parent_id', uid);
+        if (data) setUserExtraInfo({ children: data });
+      }
+    }
+    fetchExtraInfo();
+  }, [viewingUser]);
 
   async function fetchUsers() {
     setLoading(true);
@@ -592,6 +612,40 @@ function AdminUsersPageContent() {
                   <span className="text-sm text-slate-500">Phone</span>
                   <span className="text-sm font-medium text-slate-900">{viewingUser.phone || '—'}</span>
                 </div>
+                {viewingUser.role === 'student' && userExtraInfo?.class && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Class</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.class?.name || 'N/A'}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.admission_number && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Admission No.</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.admission_number}</span>
+                  </div>
+                )}
+                {(viewingUser.role === 'teacher' || viewingUser.role === 'accountant') && userExtraInfo?.staff_id && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Staff ID</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.staff_id}</span>
+                  </div>
+                )}
+                {(viewingUser.role === 'teacher' || viewingUser.role === 'accountant') && userExtraInfo?.department && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Department</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.department?.name || 'N/A'}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'parent' && userExtraInfo?.children && (
+                  <div className="py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500 block mb-1">Linked Children ({userExtraInfo.children.length})</span>
+                    {userExtraInfo.children.map((c: any, i: number) => (
+                      <span key={i} className="text-sm font-medium text-slate-900 block">
+                        {c.student?.profile?.first_name} {c.student?.profile?.last_name} ({c.student?.admission_number})
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
                   <span className="text-sm text-slate-500">User ID</span>
                   <span className="text-sm font-mono text-slate-600">{viewingUser.id}</span>
