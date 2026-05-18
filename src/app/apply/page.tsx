@@ -230,53 +230,27 @@ function ApplyPageContent() {
     }));
 
     try {
-      const { error: updateError } = await supabase
-        .from('entrance_applications')
-        .update({
-          exam_score: percentage,
+      const res = await fetch('/api/entrance/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId,
+          score: percentage,
           status: passed ? 'passed' : 'failed',
-          mastery_level: masteryLevel,
-          answers: answersData,
-          security_events: securityEvents,
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', applicationId);
-
-      if (updateError) throw new Error(updateError.message);
-
-      // Update code usage count atomically
-      if (codeData?.id) {
-        const { error: codeError } = await supabase
-          .rpc('increment_code_usage', { p_code_id: codeData.id });
-
-        if (codeError) {
-          const { data: currentCode } = await supabase
-            .from('entrance_codes')
-            .select('used_count')
-            .eq('id', codeData.id)
-            .single();
-
-          await supabase
-            .from('entrance_codes')
-            .update({ used_count: (currentCode?.used_count || 0) + 1 })
-            .eq('id', codeData.id);
-        }
-      }
-
-      // Save to student analytics
-      await supabase.from('student_analytics').insert({
-        application_id: applicationId,
-        student_email: formData.email,
-        subject: 'COMBINED',
-        score: percentage,
-        mastery_level: masteryLevel,
-        topic_performance: {},
-        time_taken_seconds: timeTaken * 60,
+          masteryLevel,
+          answersData,
+          securityEvents,
+          timeTaken,
+          codeId: codeData?.id,
+          studentEmail: formData.email,
+        }),
       });
 
-    } catch (err) {
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || 'Failed to save results');
+    } catch (err: any) {
       console.error('Failed to save results:', err);
-      setError('Failed to save your exam results. Please contact the school.');
+      setError(err.message || 'Failed to save your exam results. Please contact the school.');
       setSubmitting(false);
       return;
     }

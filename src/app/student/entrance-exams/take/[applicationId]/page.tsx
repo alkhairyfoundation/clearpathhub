@@ -53,6 +53,7 @@ export default function StudentTakeEntranceExamPage() {
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [tabSwitches, setTabSwitches] = useState(0);
   const [securityEvents, setSecurityEvents] = useState<any[]>([]);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
@@ -202,14 +203,15 @@ async function handleSubmit() {
      const status = finalScore >= (exam.passing_score || 50) ? 'passed' : 'failed';
 
       try {
-        const { error: updateError } = await supabase
-          .from('entrance_applications')
-          .update({
-            exam_score: finalScore,
+        const res = await fetch('/api/entrance/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            applicationId,
+            score: finalScore,
             status,
-            mastery_level: masteryLevel,
-            completed_at: new Date().toISOString(),
-            answers: Object.entries(answers).map(([qIdx, ans]: [string, any]) => ({
+            masteryLevel,
+            answersData: Object.entries(answers).map(([qIdx, ans]: [string, any]) => ({
               question_index: parseInt(qIdx),
               question: questions[parseInt(qIdx)]?.question,
               question_type: questions[parseInt(qIdx)]?.question_type,
@@ -219,50 +221,24 @@ async function handleSubmit() {
               is_correct: gradeQuestion(questions[parseInt(qIdx)], ans),
               points: questions[parseInt(qIdx)]?.points || 1,
             })),
-            security_events: securityEvents
-          })
-          .eq('id', applicationId);
-        if (updateError) throw updateError;
+            securityEvents,
+            timeTaken: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft) / 60),
+            codeId: application?.code_id,
+            studentEmail,
+          }),
+        });
 
-        // Update code usage count if application has a code_id
-        if (application?.code_id) {
-          const { error: codeError } = await supabase
-            .rpc('increment_code_usage', { p_code_id: application.code_id });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Failed to save results');
 
-          if (codeError) {
-            const { data: currentCode } = await supabase
-              .from('entrance_codes')
-              .select('used_count')
-              .eq('id', application.code_id)
-              .single();
-
-            await supabase
-              .from('entrance_codes')
-              .update({ used_count: (currentCode?.used_count || 0) + 1 })
-              .eq('id', application.code_id);
-          }
-        }
+        setScore(finalScore);
+        setSubmitted(true);
       } catch (err: any) {
         console.error('Failed to save exam results:', err.message);
+        setSubmitError(err.message || 'Failed to save your exam results. Please contact the school.');
+        setSubmitted(true);
       }
-
-     try {
-       await supabase.from('student_analytics').insert({
-         application_id: applicationId,
-         student_email: studentEmail,
-         subject: 'COMBINED',
-         score: finalScore,
-         mastery_level: masteryLevel,
-         topic_performance: {},
-         time_taken_seconds: Math.round(((exam.duration_minutes || 60) * 60 - timeLeft))
-       });
-     } catch (analyticsError) {
-       console.error('Failed to insert analytics record:', analyticsError);
-     }
-
-     setScore(finalScore);
-     setSubmitted(true);
-     setSubmitting(false);
+      setSubmitting(false);
    }
 
   if (loading) return (
@@ -274,6 +250,19 @@ async function handleSubmit() {
   if (submitted) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="max-w-2xl mx-auto card text-center">
+        {submitError ? (
+          <>
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-100">
+              <AlertTriangle size={40} className="text-red-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">Submission Error</h1>
+            <p className="text-red-600 mb-6">{submitError}</p>
+            <button onClick={() => { setSubmitted(false); setSubmitError(''); setSubmitting(false); }} className="btn-primary">
+              Try Again
+            </button>
+          </>
+        ) : (
+          <>
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${score !== null && score >= (exam?.passing_score || 50) ? 'bg-green-100' : 'bg-red-100'}`}>
           {score !== null && score >= (exam?.passing_score || 50) ? <Check size={40} className="text-green-600" /> : <AlertTriangle size={40} className="text-red-600" />}
         </div>
@@ -301,6 +290,8 @@ async function handleSubmit() {
         <button onClick={() => router.push('/student/entrance-exams')} className="btn-primary">
           Back to Entrance Exams
         </button>
+          </>
+        )}
       </div>
     </div>
   );
