@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, uploadFile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, BookOpen, Users, Award, Clock, ArrowLeft } from 'lucide-react';
+import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, BookOpen, Users, Award, Clock, ArrowLeft, Upload } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import imageCompression from 'browser-image-compression';
 import type { Subject, Class, Staff, TeacherEvaluation, TeacherTask } from '@/types';
 
 export default function TeacherProfilePage() {
@@ -27,6 +28,24 @@ export default function TeacherProfilePage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [pendingTasks, setPendingTasks] = useState<TeacherTask[]>([]);
   const [stats, setStats] = useState({ totalStudents: 0, totalSessions: 0, pendingEvaluations: 0, completedTasks: 0 });
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const compressed = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 512, useWebWorker: true });
+      const { url, error } = await uploadFile('avatars', compressed, profile?.id || 'unknown');
+      if (error) throw error;
+      if (url) setFormData(prev => ({ ...prev, avatar_url: url }));
+    } catch (err: any) {
+      setError(err.message || 'Avatar upload failed');
+    }
+    setUploadingAvatar(false);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  }
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -186,7 +205,17 @@ export default function TeacherProfilePage() {
               </div>
               <div><label className="label">Email</label><input type="email" value={formData.email} disabled className="input bg-slate-50 text-slate-500 cursor-not-allowed" /><p className="text-xs text-slate-400 mt-1">Email cannot be changed</p></div>
               <div><label className="label">Phone</label><input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" placeholder="+234..." /></div>
-              <div><label className="label">Avatar URL (optional)</label><input type="url" value={formData.avatar_url} onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })} className="input" placeholder="https://..." /></div>
+              <div>
+                <label className="label">Avatar Photo</label>
+                <div className="flex items-center gap-3">
+                  <input type="text" value={formData.avatar_url} onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })} className="input flex-1" placeholder="https://... or upload" />
+                  <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} hidden />
+                  <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} className="btn-outline flex items-center gap-2 whitespace-nowrap">
+                    {uploadingAvatar ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                    {uploadingAvatar ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+              </div>
               <button onClick={handleSaveProfile} disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">{saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}{saving ? 'Saving...' : 'Save Changes'}</button>
             </div>
           </div>

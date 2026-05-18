@@ -87,8 +87,12 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
           {/* User Section at Bottom */}
           <div className="p-4 border-t border-slate-200">
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-              <div className="w-10 h-10 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                {displayProfile?.first_name?.[0]}{displayProfile?.last_name?.[0]}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 overflow-hidden ${!displayProfile?.avatar_url ? 'bg-gradient-to-br from-cp-gold to-cp-gold-light' : ''}`}>
+                {displayProfile?.avatar_url ? (
+                  <img src={displayProfile.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  `${displayProfile?.first_name?.[0] || ''}${displayProfile?.last_name?.[0] || ''}`
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-slate-900 text-sm truncate">{displayProfile?.first_name} {displayProfile?.last_name}</p>
@@ -143,8 +147,12 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                    {displayProfile?.first_name?.[0]}{displayProfile?.last_name?.[0]}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs overflow-hidden ${!displayProfile?.avatar_url ? 'bg-gradient-to-br from-cp-gold to-cp-gold-light' : ''}`}>
+                    {displayProfile?.avatar_url ? (
+                      <img src={displayProfile.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      `${displayProfile?.first_name?.[0] || ''}${displayProfile?.last_name?.[0] || ''}`
+                    )}
                   </div>
                   <ChevronDown size={16} className="text-slate-400" />
                 </button>

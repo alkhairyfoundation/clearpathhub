@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, uploadFile } from '@/lib/supabase';
+import imageCompression from 'browser-image-compression';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -28,6 +29,7 @@ type UserFormData = {
   role: UserRole;
   phone: string;
   class_id: string;
+  avatar_url: string;
 };
 
 type ClassOption = { id: string; name: string; level: number };
@@ -61,8 +63,26 @@ function AdminUsersPageContent() {
   const [teacherClassIds, setTeacherClassIds] = useState<string[]>([]);
   const [teacherSubjectName, setTeacherSubjectName] = useState('');
   const [formData, setFormData] = useState<UserFormData>({
-    email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '', class_id: '',
+    email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '', class_id: '', avatar_url: '',
   });
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const compressed = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 512, useWebWorker: true });
+      const { url, error } = await uploadFile('avatars', compressed, 'admin-upload');
+      if (error) throw error;
+      if (url) setFormData(prev => ({ ...prev, avatar_url: url }));
+    } catch (err: any) {
+      setError(err.message || 'Avatar upload failed');
+    }
+    setUploadingAvatar(false);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  }
 
   // Student-specific fields for linking
   const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
@@ -128,7 +148,7 @@ function AdminUsersPageContent() {
     const selectedRole = role || 'teacher';
     setFormData({
       email: '', password: '', first_name: '', last_name: '',
-      role: selectedRole, phone: '', class_id: '',
+      role: selectedRole, phone: '', class_id: '', avatar_url: '',
     });
     setTeacherClassIds([]);
     setTeacherSubjectName('');
@@ -148,7 +168,7 @@ function AdminUsersPageContent() {
     setResetPasswordMode(false);
     setFormData({
       email: user.email, password: '', first_name: user.first_name,
-      last_name: user.last_name, role: user.role, phone: user.phone || '', class_id: '',
+      last_name: user.last_name, role: user.role, phone: user.phone || '', class_id: '', avatar_url: user.avatar_url || '',
     });
     setTeacherSubjectName('');
     if (user.role === 'student' || user.role === 'teacher') {
@@ -179,6 +199,7 @@ function AdminUsersPageContent() {
           last_name: formData.last_name,
           role: formData.role,
           phone: formData.phone || null,
+          avatar_url: formData.avatar_url || null,
         };
         if (formData.password) body.password = formData.password;
         if (formData.role === 'teacher') {
@@ -585,6 +606,18 @@ function AdminUsersPageContent() {
                 <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" placeholder="+234..." />
               </div>
 
+              <div>
+                <label className="label">Avatar Photo</label>
+                <div className="flex items-center gap-3">
+                  <input type="text" value={formData.avatar_url} onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })} className="input flex-1" placeholder="https://... or upload" />
+                  <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} hidden />
+                  <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} className="btn-outline flex items-center gap-2 whitespace-nowrap">
+                    {uploadingAvatar ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                    {uploadingAvatar ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+              </div>
+
               {formData.role === 'teacher' && (
                 <>
                   <div>
@@ -646,8 +679,12 @@ function AdminUsersPageContent() {
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                  {viewingUser.first_name[0]?.toUpperCase()}{viewingUser.last_name[0]?.toUpperCase()}
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl overflow-hidden ${!viewingUser.avatar_url ? 'bg-gradient-to-br from-primary-500 to-primary-600' : ''}`}>
+                  {viewingUser.avatar_url ? (
+                    <img src={viewingUser.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    `${viewingUser.first_name[0]?.toUpperCase()}${viewingUser.last_name[0]?.toUpperCase()}`
+                  )}
                 </div>
                 <div>
                   <h4 className="text-xl font-bold text-slate-900">{viewingUser.first_name} {viewingUser.last_name}</h4>

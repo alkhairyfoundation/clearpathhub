@@ -10,6 +10,7 @@ import {
   Loader2, Search, QrCode, Eye, Hash, Download, Award, AlertCircle, 
   GraduationCap, ChevronDown, CheckCircle, XCircle, Filter
 } from 'lucide-react';
+import jsPDF from 'jspdf';
 
 export default function AdminEntranceExamsPage() {
   const { profile } = useAuth();
@@ -797,69 +798,202 @@ function viewAnalyticsDetails(record: any) {
     async function downloadAnalyticsReport(id: string) {
       const record = analyticsData.find(r => r.id === id);
       if (!record) return;
-      
+
       setDownloadingReport(id);
-      
+
       try {
-        // Fetch related application data
         const { data: application } = await supabase
           .from('entrance_applications')
           .select('*')
           .eq('id', record.application_id)
           .single();
-        
-        // Generate comprehensive PDF report
-        const reportContent = `
-CLEARPATH EDU HUB - ENTRANCE EXAM ANALYSIS REPORT
-=================================================
-Generated: ${new Date().toLocaleString()}
 
-STUDENT INFORMATION
--------------------
-Name: ${record.student_name || 'N/A'}
-Email: ${record.student_email || 'N/A'}
-Applied Class: ${application?.applied_class || 'N/A'}
-Admitted Class: ${application?.admitted_class || 'Pending'}
+        const { data: schoolSettings } = await supabase
+          .from('school_settings')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
 
-EXAM RESULTS
-------------
-Exam Title: ${application?.exam?.title || 'N/A'}
-Total Score: ${record.score}%
-Mastery Level: ${record.mastery_level}
-Passing Score: ${application?.exam?.passing_score || 50}%
-Status: ${application?.status?.toUpperCase() || 'N/A'}
+        const schoolName = schoolSettings?.school_name || 'ClearPath Edu Hub';
+        const primaryColor: [number, number, number] = [30, 58, 95];
+        const goldColor: [number, number, number] = [179, 146, 47];
 
-TIME ANALYTICS
---------------
-Duration: ${record.time_taken || 'N/A'} minutes
-Security Events: ${record.security_events_count || 0}
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pw = doc.internal.pageSize.getWidth();
 
-PERFORMANCE BREAKDOWN
----------------------
-${Object.entries(record.topic_performance || {}).map(([topic, data]: [string, any]) => 
-  `- ${topic}: ${data.score}% (${data.correct}/${data.total} correct)`
-).join('\n') || 'No topic data available'}
+        // Header banner
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, pw, 40, 'F');
+        doc.setFillColor(...goldColor);
+        doc.rect(0, 38, pw, 2, 'F');
 
-RECOMMENDATIONS
----------------
-${getRecommendations(record)}
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text(schoolName, pw / 2, 16, { align: 'center' });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text('ENTRANCE EXAM ANALYSIS REPORT', pw / 2, 24, { align: 'center' });
+        doc.setFontSize(7);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, pw / 2, 31, { align: 'center' });
 
----
-ClearPath Edu Hub Management System
-This report is system-generated and official.
-        `.trim();
-        
-        // Create and download file
-        const blob = new Blob([reportContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Entrance_Exam_Report_${record.student_name?.replace(/\s+/g, '_') || 'Student'}_${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
+        // Section: Student Information
+        let y = 52;
+        doc.setFillColor(...primaryColor);
+        doc.rect(14, y - 4, pw - 28, 7, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('STUDENT INFORMATION', 18, y + 0.5);
+
+        y += 11;
+        doc.setTextColor(60, 60, 60);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        const studentInfo = [
+          ['Name', record.student_name || 'N/A'],
+          ['Email', record.student_email || 'N/A'],
+          ['Applied Class', application?.applied_class || 'N/A'],
+          ['Admitted Class', application?.admitted_class || 'Pending'],
+        ];
+        studentInfo.forEach(([label, value], i) => {
+          const rowY = y + i * 5.5;
+          doc.setFont('helvetica', 'bold');
+          doc.text(label + ':', 18, rowY);
+          doc.setFont('helvetica', 'normal');
+          doc.text(value, 55, rowY);
+        });
+
+        // Section: Exam Results
+        y += studentInfo.length * 5.5 + 7;
+        doc.setFillColor(...primaryColor);
+        doc.rect(14, y - 4, pw - 28, 7, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('EXAM RESULTS', 18, y + 0.5);
+
+        y += 11;
+        const score = record.score || 0;
+        const passed = score >= (application?.exam?.passing_score || 50);
+
+        // Score circle
+        const scoreX = pw - 40;
+        doc.setDrawColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
+        doc.setFillColor(passed ? 240 : 254, passed ? 253 : 242, passed ? 244 : 242);
+        doc.circle(scoreX, y + 12, 12, 'FD');
+        doc.setTextColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${score}%`, scoreX, y + 15, { align: 'center' });
+
+        const resultsInfo = [
+          ['Exam Title', application?.exam?.title || 'N/A'],
+          ['Mastery Level', record.mastery_level || 'N/A'],
+          ['Passing Score', `${application?.exam?.passing_score || 50}%`],
+          ['Status', passed ? 'PASSED' : 'FAILED'],
+          ['Duration', `${record.time_taken || 'N/A'} minutes`],
+          ['Security Events', `${record.security_events_count || 0}`],
+        ];
+        resultsInfo.forEach(([label, value], i) => {
+          const rowY = y + i * 5.5;
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(60, 60, 60);
+          doc.setFontSize(8);
+          doc.text(label + ':', 18, rowY);
+          doc.setFont('helvetica', 'normal');
+          if (label === 'Status') {
+            doc.setTextColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 38 : 38);
+            doc.text(value, 55, rowY);
+          } else {
+            doc.text(value, 55, rowY);
+          }
+        });
+
+        // Section: Performance Breakdown
+        const topicPerf = record.topic_performance || {};
+        const topicEntries = Object.entries(topicPerf);
+        if (topicEntries.length > 0) {
+          y += resultsInfo.length * 5.5 + 7;
+          doc.setFillColor(...primaryColor);
+          doc.rect(14, y - 4, pw - 28, 7, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.text('PERFORMANCE BREAKDOWN', 18, y + 0.5);
+
+          y += 10;
+          // Table header
+          doc.setFillColor(245, 247, 250);
+          doc.rect(14, y - 3, pw - 28, 6, 'F');
+          doc.setTextColor(100, 100, 100);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.text('Subject / Topic', 18, y + 0.5);
+          doc.text('Score', pw / 2 - 5, y + 0.5, { align: 'center' });
+          doc.text('Correct', pw / 2 + 20, y + 0.5, { align: 'center' });
+          doc.text('Total', pw / 2 + 45, y + 0.5, { align: 'center' });
+
+          y += 7;
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60, 60, 60);
+          topicEntries.forEach(([topic, data]: [string, any], i) => {
+            const rowY = y + i * 5.5;
+            if (rowY > 270) return;
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.text(topic, 18, rowY);
+            doc.text(`${data.score}%`, pw / 2 - 5, rowY, { align: 'center' });
+            doc.text(`${data.correct || 0}`, pw / 2 + 20, rowY, { align: 'center' });
+            doc.text(`${data.total || 0}`, pw / 2 + 45, rowY, { align: 'center' });
+            if (i % 2 === 0) {
+              doc.setFillColor(250, 251, 252);
+              doc.rect(14, rowY - 2.5, pw - 28, 5.5, 'F');
+            }
+          });
+          y += topicEntries.length * 5.5 + 3;
+
+          // Score bar
+          if (y < 250) {
+            y += 3;
+            doc.setFillColor(240, 242, 245);
+            doc.roundedRect(18, y, pw - 36, 5, 2.5, 2.5, 'F');
+            doc.setFillColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
+            doc.roundedRect(18, y, Math.max((pw - 36) * score / 100, 4), 5, 2.5, 2.5, 'F');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(6);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Overall Score: ${score}% — ${getRecommendations(record)}`, pw / 2, y + 9, { align: 'center' });
+          }
+        }
+
+        // Recommendations
+        y = Math.max(y + 12, 240);
+        if (y < 270) {
+          doc.setFillColor(253, 237, 236);
+          doc.roundedRect(14, y, pw - 28, 20, 2, 2, 'F');
+          doc.setTextColor(180, 80, 60);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.text('Recommendations', 18, y + 5);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7);
+          doc.setFillColor(253, 237, 236);
+          const recText = getRecommendations(record);
+          const split = doc.splitTextToSize(recText, pw - 40);
+          doc.text(split, 18, y + 11);
+        }
+
+        // Footer
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 285, pw, 12, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'normal');
+        doc.text(schoolName + ' — Official Document', pw / 2, 291, { align: 'center' });
+        doc.text('This report is system-generated and does not require a signature.', pw / 2, 295, { align: 'center' });
+
+        doc.save(`Entrance_Exam_Report_${record.student_name?.replace(/\s+/g, '_') || 'Student'}_${new Date().toISOString().split('T')[0]}.pdf`);
         setSuccess('Report downloaded successfully');
       } catch (err) {
         console.error('Error generating report:', err);

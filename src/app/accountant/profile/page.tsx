@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, uploadFile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Save, Eye, EyeOff, User, Phone, Check, AlertCircle, Loader2, Shield, Calendar, DollarSign, TrendingUp, TrendingDown, Receipt, FileText } from 'lucide-react';
+import { Save, Eye, EyeOff, User, Phone, Check, AlertCircle, Loader2, Shield, Calendar, DollarSign, TrendingUp, TrendingDown, Receipt, FileText, Upload } from 'lucide-react';
+import imageCompression from 'browser-image-compression';
 import type { Staff, Transaction, Invoice } from '@/types';
 
 export default function AccountantProfilePage() {
@@ -22,6 +23,24 @@ export default function AccountantProfilePage() {
   const [pwData, setPwData] = useState({ current: '', new: '', confirm: '' });
   const [pwLoading, setPwLoading] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const compressed = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 512, useWebWorker: true });
+      const { url, error } = await uploadFile('avatars', compressed, profile?.id || 'unknown');
+      if (error) throw error;
+      if (url) setFormData(prev => ({ ...prev, avatar_url: url }));
+    } catch (err: any) {
+      setMsg({ type: 'error', text: err.message || 'Avatar upload failed' });
+    }
+    setUploadingAvatar(false);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  }
 
   useEffect(() => {
     if (!profile || profile.role !== 'accountant') { router.push('/login'); return; }
@@ -87,6 +106,17 @@ export default function AccountantProfilePage() {
                 <div><label className="label">Last Name</label><input value={formData.last_name} onChange={e => setFormData({...formData, last_name: e.target.value})} className="input" /></div>
                 <div><label className="label">Email</label><input value={formData.email} disabled className="input bg-slate-50 text-slate-500 cursor-not-allowed" type="email" /><p className="text-xs text-slate-400 mt-1">Email cannot be changed</p></div>
                 <div><label className="label">Phone</label><input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="input" /></div>
+                <div>
+                  <label className="label">Avatar Photo</label>
+                  <div className="flex items-center gap-3">
+                    <input type="text" value={formData.avatar_url} onChange={e => setFormData({...formData, avatar_url: e.target.value})} className="input flex-1" placeholder="https://... or upload" />
+                    <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} hidden />
+                    <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} className="btn-outline flex items-center gap-2 whitespace-nowrap">
+                      {uploadingAvatar ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {uploadingAvatar ? 'Uploading...' : 'Upload'}
+                    </button>
+                  </div>
+                </div>
               </div>
               {msg && <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${msg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{msg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{msg.text}</div>}
               <button onClick={handleSave} disabled={saving} className="btn-primary mt-4">{saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{saving ? 'Saving...' : 'Save Changes'}</button>
@@ -104,6 +134,27 @@ export default function AccountantProfilePage() {
           </div>
 
           <div className="space-y-6">
+            <div className="card text-center">
+              <div className="w-24 h-24 bg-gradient-to-br from-cyan-600 to-cyan-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                {formData.avatar_url ? (
+                  <img src={formData.avatar_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  <span className="text-3xl font-bold text-white">{profile.first_name[0]?.toUpperCase()}{profile.last_name[0]?.toUpperCase()}</span>
+                )}
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">{profile.first_name} {profile.last_name}</h2>
+              <p className="text-sm text-cyan-600 font-medium mt-1">Accountant</p>
+              {staffInfo && <p className="text-xs text-slate-400 mt-1">Staff ID: {staffInfo.staff_id}</p>}
+              <p className="text-sm text-slate-400 mt-1">{profile.email}</p>
+              {profile.phone && (
+                <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
+                  <Phone size={14} /><span>{profile.phone}</span>
+                </div>
+              )}
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+                <Calendar size={14} />Joined {new Date(profile.created_at).toLocaleDateString()}
+              </div>
+            </div>
             <div className="card">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Financial Overview</h2>
               <div className="space-y-3">

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Search, X, CheckCircle, XCircle, Clock, UserCheck, Users, Loader2, ArrowLeft } from 'lucide-react';
+import { Plus, Search, X, CheckCircle, XCircle, Clock, UserCheck, Users, Loader2, ArrowLeft, Download } from 'lucide-react';
 
 export default function TeacherAttendancePage() {
   const { profile } = useAuth();
@@ -88,6 +88,23 @@ export default function TeacherAttendancePage() {
     setSaving(false);
   }
 
+  function exportCSV() {
+    if (students.length === 0) return;
+    const headers = 'Student Name,Admission Number,Class,Date,Status';
+    const rows = students.map(s => {
+      const status = attendanceRecords[s.profile_id] || 'unmarked';
+      const className = classes.find(c => c.id === selectedClass)?.name || 'N/A';
+      return `"${s.profile?.first_name} ${s.profile?.last_name}","${s.admission_number}","${className}","${date}","${status}"`;
+    }).join('\n');
+    const blob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance_${date}_${classes.find(c => c.id === selectedClass)?.name || 'class'}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const presentCount = Object.values(attendanceRecords).filter(s => s === 'present').length;
   const absentCount = Object.values(attendanceRecords).filter(s => s === 'absent').length;
   const lateCount = Object.values(attendanceRecords).filter(s => s === 'late').length;
@@ -136,10 +153,15 @@ export default function TeacherAttendancePage() {
               {classes.find(c => c.id === selectedClass)?.name} - {new Date(date).toLocaleDateString()}
             </h2>
             {students.length > 0 && (
-              <button onClick={markAllPresent} disabled={saving} className="btn-outline text-sm flex items-center gap-2">
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                Mark All Present
-              </button>
+              <div className="flex gap-2">
+                <button onClick={markAllPresent} disabled={saving} className="btn-outline text-sm flex items-center gap-2">
+                  {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                  Mark All Present
+                </button>
+                <button onClick={exportCSV} className="btn-outline text-sm flex items-center gap-2">
+                  <Download size={16} /> Export CSV
+                </button>
+              </div>
             )}
           </div>
 

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Award, Save, ArrowLeft, BarChart3, Users, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Plus, Award, Save, ArrowLeft, BarChart3, Users, TrendingUp, AlertTriangle, Download } from 'lucide-react';
 import type { Result, Subject, Profile } from '@/types';
 import SendResultButton from '@/components/SendResultButton';
 
@@ -81,6 +81,19 @@ export default function TeacherResultsPage() {
     return 'F';
   }
 
+  function exportCSV() {
+    if (results.length === 0) { setError('No results to export'); return; }
+    const headers = 'Student,Subject,Exam Type,Score,Grade,Date';
+    const rows = results.map(r =>
+      `"${r.student?.first_name || ''} ${r.student?.last_name || ''}","${r.subject?.name || ''}","${r.exam_type}","${r.score}","${r.grade || ''}","${new Date(r.created_at).toLocaleDateString()}"`
+    ).join('\n');
+    const blob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'results_export.csv'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const scores = results.map(r => r.score);
   const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
   const passRate = scores.length > 0 ? Math.round((scores.filter(s => s >= 50).length / scores.length) * 100) : 0;
@@ -127,6 +140,7 @@ export default function TeacherResultsPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => setShowSummary(!showSummary)} className="btn-outline flex items-center gap-2"><BarChart3 size={18} />{showSummary ? 'Hide Summary' : 'Summary'}</button>
+            <button onClick={exportCSV} className="btn-outline flex items-center gap-2"><Download size={18} />Export CSV</button>
             <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Enter Result</button>
           </div>
         </div>

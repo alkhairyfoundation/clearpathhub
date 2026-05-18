@@ -99,7 +99,19 @@ export default function StaffScanQRPage() {
       date: new Date().toISOString().split('T')[0],
       status: 'present'
     };
-    await supabase.from('staff_attendance').insert(record);
+    const todayDate = new Date().toISOString().split('T')[0];
+    const { data: existing } = await supabase
+      .from('staff_attendance')
+      .select('id')
+      .eq('staff_id', profile?.id)
+      .eq('date', todayDate)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from('staff_attendance').update({ status: 'present', scanned_at: new Date().toISOString(), qr_data: data, scan_type: qrType }).eq('id', existing.id);
+    } else {
+      await supabase.from('staff_attendance').insert(record);
+    }
     setLastScan(record);
     setScanHistory(prev => [record, ...prev.slice(0, 19)]);
   }

@@ -67,6 +67,22 @@ export default function AdminAttendancePage() {
     }
   }
 
+  function exportCSV() {
+    if (attendance.length === 0) { setError('No attendance data to export'); return; }
+    const headers = 'Student Name,Admission Number,Class,Date,Status,Marked By';
+    const rows = attendance.map(a => {
+      const name = a.student ? `${a.student.first_name} ${a.student.last_name}` : 'N/A';
+      return `"${name}","${a.student_id?.slice(0, 8) || 'N/A'}","${a.class?.name || 'N/A'}","${a.date}","${a.status}","${a.marked_by?.slice(0, 8) || 'N/A'}"`;
+    }).join('\n');
+    const blob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `attendance_${date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const presentPct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
   const statusColors: Record<string, string> = {
     present: 'bg-green-600 text-white', absent: 'bg-red-600 text-white', late: 'bg-amber-500 text-white', excused: 'bg-purple-600 text-white'
@@ -83,7 +99,7 @@ export default function AdminAttendancePage() {
           <h1 className="text-2xl font-bold text-slate-900">Attendance</h1>
           <p className="text-slate-500 mt-1">Track and manage student attendance</p>
         </div>
-        <button className="btn-outline flex items-center gap-2" onClick={() => setError('Export feature coming soon')}><Download size={18} /> Export</button>
+        <button className="btn-outline flex items-center gap-2" onClick={exportCSV}><Download size={18} /> Export CSV</button>
         </div>
 
         {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}

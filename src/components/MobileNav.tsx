@@ -149,8 +149,12 @@ export default function MobileNav({ role }: MobileNavProps) {
             {/* User Info */}
             <div className="p-4 border-b border-slate-100 bg-slate-50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {profile?.first_name?.[0]}{profile?.last_name?.[0]}
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden ${!profile?.avatar_url ? 'bg-gradient-to-br from-cp-gold to-cp-gold-light' : ''}`}>
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    `${profile?.first_name?.[0] || ''}${profile?.last_name?.[0] || ''}`
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 truncate">{profile?.first_name} {profile?.last_name}</p>

@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, uploadFile } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Clock, MapPin, ArrowLeft } from 'lucide-react';
+import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Clock, MapPin, ArrowLeft, Upload } from 'lucide-react';
 import type { SchoolSettings } from '@/types';
+import imageCompression from 'browser-image-compression';
 
 export default function AdminProfilePage() {
   const { profile } = useAuth();
@@ -24,6 +25,24 @@ export default function AdminProfilePage() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [schoolSettings, setSchoolSettings] = useState<Partial<SchoolSettings> | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    try {
+      const compressed = await imageCompression(file, { maxSizeMB: 0.5, maxWidthOrHeight: 512, useWebWorker: true });
+      const { url, error } = await uploadFile('avatars', compressed, profile?.id || 'unknown');
+      if (error) throw error;
+      if (url) setFormData(prev => ({ ...prev, avatar_url: url }));
+    } catch (err: any) {
+      setError(err.message || 'Avatar upload failed');
+    }
+    setUploadingAvatar(false);
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  }
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -184,8 +203,15 @@ export default function AdminProfilePage() {
                 <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" placeholder="+234..." />
               </div>
               <div>
-                <label className="label">Avatar URL (optional)</label>
-                <input type="url" value={formData.avatar_url} onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })} className="input" placeholder="https://..." />
+                <label className="label">Avatar Photo</label>
+                <div className="flex items-center gap-3">
+                  <input type="text" value={formData.avatar_url} onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })} className="input flex-1" placeholder="https://... or upload" />
+                  <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} hidden />
+                  <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} className="btn-outline flex items-center gap-2 whitespace-nowrap">
+                    {uploadingAvatar ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                    {uploadingAvatar ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
               </div>
               <button onClick={handleSaveProfile} disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">
                 {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
