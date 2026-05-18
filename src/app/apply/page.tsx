@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Clock, Check, X, FileText, Upload, AlertCircle, ArrowLeft, GraduationCap } from 'lucide-react';
+import { Clock, Check, X, FileText, Upload, AlertCircle, ArrowLeft, GraduationCap, ShieldAlert } from 'lucide-react';
 
 function ApplyPageContent() {
   const router = useRouter();
@@ -28,6 +28,9 @@ function ApplyPageContent() {
   const [error, setError] = useState('');
   const [examScore, setExamScore] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [tabSwitches, setTabSwitches] = useState(0);
+  const [securityEvents, setSecurityEvents] = useState<any[]>([]);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (code) {
@@ -36,20 +39,75 @@ function ApplyPageContent() {
     }
   }, [code]);
 
-  // Timer effect
+  // Timer effect with auto-submit
   useEffect(() => {
-    if (step !== 'exam' || !exam || !startTime) return;
+    if (step !== 'exam' || !exam || !startTime || submittingRef.current) return;
     const interval = setInterval(() => {
       const elapsed = Math.round((Date.now() - startTime) / 60000);
       const remaining = Math.max(0, exam.duration_minutes - elapsed);
       setTimeRemaining(remaining);
-      if (remaining <= 0) {
+      if (remaining <= 0 && !submittingRef.current) {
         clearInterval(interval);
+        submittingRef.current = true;
         submitExam();
       }
     }, 1000);
     return () => clearInterval(interval);
   }, [step, exam, startTime]);
+
+  // Tab switch detection (security)
+  useEffect(() => {
+    if (step !== 'exam' || !exam?.prevent_tab_switch) return;
+    function handleVisibility() {
+      if (document.hidden) {
+        setTabSwitches(prev => {
+          const next = prev + 1;
+          setSecurityEvents(events => [...events, { type: 'tab_switch', time: new Date().toISOString(), count: next }]);
+          if (next >= (exam?.max_tab_switches || 3) && !submittingRef.current) {
+            submittingRef.current = true;
+            submitExam();
+          }
+          return next;
+        });
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [step, exam]);
+
+  // Fullscreen enforcement (security)
+  useEffect(() => {
+    if (step !== 'exam' || !exam?.require_fullscreen) return;
+    function handleFullscreenChange() {
+      if (!document.fullscreenElement) {
+        setSecurityEvents(events => [...events, { type: 'fullscreen_exit', time: new Date().toISOString() }]);
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [step, exam]);
+
+  // Keyboard shortcut prevention (security)
+  useEffect(() => {
+    if (step !== 'exam') return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'u', 's', 'p'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        setSecurityEvents(events => [...events, { type: 'keyboard_shortcut', key: e.key, time: new Date().toISOString() }]);
+      }
+    }
+    function handleContextMenu(e: MouseEvent) { e.preventDefault(); }
+    function handleCopy(e: ClipboardEvent) { e.preventDefault(); }
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('copy', handleCopy);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('copy', handleCopy);
+    };
+  }, [step]);
 
   async function verifyCode(codeToVerify: string) {
     setLoading(true);
@@ -126,6 +184,9 @@ function ApplyPageContent() {
         setStartTime(Date.now());
         setTimeRemaining(exam.duration_minutes);
         setStep('exam');
+        if (exam.require_fullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Failed to start exam. Please try again.');
@@ -138,37 +199,86 @@ function ApplyPageContent() {
     setSubmitting(true);
 
     const timeTaken = Math.round((Date.now() - startTime) / 60000);
-    let score = 0;
+    let correctCount = 0;
     let totalPoints = 0;
 
     questions.forEach((q, i) => {
       totalPoints += (q.points || 1);
-      if (answers[i] === q.correct_answer) score += (q.points || 1);
+      if (answers[i] === q.correct_answer) correctCount += (q.points || 1);
     });
 
-    const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
+    const percentage = totalPoints > 0 ? Math.round((correctCount / totalPoints) * 100) : 0;
     const passed = percentage >= exam.passing_score;
     setExamScore(percentage);
 
+    let masteryLevel: string;
+    if (percentage >= 90) masteryLevel = 'MASTERED';
+    else if (percentage >= 80) masteryLevel = 'PROFICIENT';
+    else if (percentage >= 70) masteryLevel = 'EXCELLENT';
+    else if (percentage >= 60) masteryLevel = 'GOOD';
+    else masteryLevel = 'POOR';
+
+    const answersData = Object.entries(answers).map(([qIdx, ans]: [string, any]) => ({
+      question_index: parseInt(qIdx),
+      question: questions[parseInt(qIdx)]?.question,
+      question_type: questions[parseInt(qIdx)]?.question_type,
+      options: questions[parseInt(qIdx)]?.options,
+      correct_answer: questions[parseInt(qIdx)]?.correct_answer,
+      given_answer: ans,
+      is_correct: ans === questions[parseInt(qIdx)]?.correct_answer,
+      points: questions[parseInt(qIdx)]?.points || 1,
+    }));
+
     try {
-      await supabase
+      const { error: updateError } = await supabase
         .from('entrance_applications')
         .update({
           exam_score: percentage,
           status: passed ? 'passed' : 'failed',
+          mastery_level: masteryLevel,
+          answers: answersData,
+          security_events: securityEvents,
           completed_at: new Date().toISOString()
         })
         .eq('id', applicationId);
 
-      // Update code usage count
+      if (updateError) throw new Error(updateError.message);
+
+      // Update code usage count atomically
       if (codeData?.id) {
-        await supabase
-          .from('entrance_codes')
-          .update({ used_count: (codeData.used_count || 0) + 1 })
-          .eq('id', codeData.id);
+        const { error: codeError } = await supabase
+          .rpc('increment_code_usage', { p_code_id: codeData.id });
+
+        if (codeError) {
+          const { data: currentCode } = await supabase
+            .from('entrance_codes')
+            .select('used_count')
+            .eq('id', codeData.id)
+            .single();
+
+          await supabase
+            .from('entrance_codes')
+            .update({ used_count: (currentCode?.used_count || 0) + 1 })
+            .eq('id', codeData.id);
+        }
       }
+
+      // Save to student analytics
+      await supabase.from('student_analytics').insert({
+        application_id: applicationId,
+        student_email: formData.email,
+        subject: 'COMBINED',
+        score: percentage,
+        mastery_level: masteryLevel,
+        topic_performance: {},
+        time_taken_seconds: timeTaken * 60,
+      });
+
     } catch (err) {
       console.error('Failed to save results:', err);
+      setError('Failed to save your exam results. Please contact the school.');
+      setSubmitting(false);
+      return;
     }
 
     setStep('result');

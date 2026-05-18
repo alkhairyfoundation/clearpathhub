@@ -125,6 +125,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('Supabase client auth failed:', supabaseError.message);
       }
 
+      // Fetch and return profile for immediate role-based redirect
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (profile) {
+          return { error: null, profile };
+        }
+      }
+
       return { error: null, profile: null };
     } catch (err) {
       return { error: err instanceof Error ? err : new Error("An error occurred"), profile: null };

@@ -223,6 +223,25 @@ async function handleSubmit() {
           })
           .eq('id', applicationId);
         if (updateError) throw updateError;
+
+        // Update code usage count if application has a code_id
+        if (application?.code_id) {
+          const { error: codeError } = await supabase
+            .rpc('increment_code_usage', { p_code_id: application.code_id });
+
+          if (codeError) {
+            const { data: currentCode } = await supabase
+              .from('entrance_codes')
+              .select('used_count')
+              .eq('id', application.code_id)
+              .single();
+
+            await supabase
+              .from('entrance_codes')
+              .update({ used_count: (currentCode?.used_count || 0) + 1 })
+              .eq('id', application.code_id);
+          }
+        }
       } catch (err: any) {
         console.error('Failed to save exam results:', err.message);
       }

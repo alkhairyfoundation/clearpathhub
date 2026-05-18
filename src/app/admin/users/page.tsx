@@ -118,7 +118,11 @@ function AdminUsersPageContent() {
       email: user.email, password: '', first_name: user.first_name,
       last_name: user.last_name, role: user.role, phone: user.phone || '', class_id: '',
     });
-    setClasses([]);
+    if (user.role === 'student') {
+      supabase.from('classes').select('id, name, level').order('name').then(({ data }) => setClasses(data || []));
+    } else {
+      setClasses([]);
+    }
     setShowModal(true);
   }
 

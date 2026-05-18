@@ -117,18 +117,30 @@ export default function TeacherTestsPage() {
   }
 
   async function togglePublish(test: any) {
-    await supabase.from('tests').update({ is_published: !test.is_published }).eq('id', test.id);
+    try {
+      const { error } = await supabase.from('tests').update({ is_published: !test.is_published }).eq('id', test.id);
+      if (error) throw new Error(error.message);
+      setSuccess(test.is_published ? 'Test unpublished' : 'Test published');
+    } catch (err: any) {
+      setError(err.message || 'Failed to toggle publish');
+    }
     fetchData();
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this test and all questions?')) return;
     setDeleting(id);
-    await supabase.from('test_attempts').delete().eq('test_id', id);
-    await supabase.from('tests').delete().eq('id', id);
+    try {
+      const { error: attemptsError } = await supabase.from('test_attempts').delete().eq('test_id', id);
+      if (attemptsError) throw new Error(attemptsError.message);
+      const { error: testError } = await supabase.from('tests').delete().eq('id', id);
+      if (testError) throw new Error(testError.message);
+      setSuccess('Test deleted');
+      fetchData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete test');
+    }
     setDeleting(null);
-    setSuccess('Test deleted');
-    fetchData();
   }
 
   async function openQuestions(test: any) {
@@ -161,8 +173,13 @@ export default function TeacherTestsPage() {
   }
 
   async function handleDeleteQuestion(qId: string) {
-    await supabase.from('test_questions').delete().eq('id', qId);
-    setQuestions(questions.filter(q => q.id !== qId));
+    try {
+      const { error } = await supabase.from('test_questions').delete().eq('id', qId);
+      if (error) throw new Error(error.message);
+      setQuestions(questions.filter(q => q.id !== qId));
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete question');
+    }
   }
 
   const filtered = tests.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()));

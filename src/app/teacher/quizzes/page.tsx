@@ -90,7 +90,8 @@ export default function TeacherQuizzesPage() {
           question_type: q.question_type || 'multiple_choice',
           order_index: i,
         }));
-        await supabase.from('quiz_questions').insert(quizQuestions);
+        const { error: qError } = await supabase.from('quiz_questions').insert(quizQuestions);
+        if (qError) throw new Error(qError.message);
       }
       setShowModal(false);
       setFormData({ title: '', description: '', session_id: '', passing_score: 50, time_limit: 30 });
@@ -102,7 +103,14 @@ export default function TeacherQuizzesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Delete this quiz?')) { await supabase.from('quizzes').delete().eq('id', id); fetchData(); }
+    if (!confirm('Delete this quiz?')) return;
+    try {
+      const { error } = await supabase.from('quizzes').delete().eq('id', id);
+      if (error) throw new Error(error.message);
+      fetchData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete quiz');
+    }
   }
 
   function addQuestion() {

@@ -118,19 +118,24 @@ export default function StudentTakeQuizPage() {
     const passed = finalScore >= (quiz.passing_score || 50);
     const startedAt = new Date(Date.now() - ((quiz.time_limit || 30) * 60 - timeLeft) * 1000);
 
-    await supabase.from('quiz_attempts').insert({
-      quiz_id: quizId,
-      student_id: profile.id,
-      answers,
-      score: finalScore,
-      passed,
-      time_taken: (quiz.time_limit || 30) * 60 - timeLeft,
-      started_at: startedAt.toISOString(),
-      completed_at: new Date().toISOString(),
-    });
-
-    setScore(finalScore);
-    setSubmitted(true);
+    try {
+      const { error: attemptError } = await supabase.from('quiz_attempts').insert({
+        quiz_id: quizId,
+        student_id: profile.id,
+        answers,
+        score: finalScore,
+        passed,
+        time_taken: (quiz.time_limit || 30) * 60 - timeLeft,
+        started_at: startedAt.toISOString(),
+        completed_at: new Date().toISOString(),
+      });
+      if (attemptError) throw new Error(attemptError.message);
+      setScore(finalScore);
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error('Failed to save quiz attempt:', err.message);
+      alert('Failed to save your quiz. Please try again.');
+    }
     setSubmitting(false);
   }
 

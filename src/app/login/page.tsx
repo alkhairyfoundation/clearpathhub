@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { Mail, Lock, Eye, EyeOff, GraduationCap, ArrowLeft, BookOpen, Shield, GraduationCap as StudentCap, Check, AlertCircle } from 'lucide-react';
 
 function BismillahPopup({ onClose }: { onClose: () => void }) {
@@ -71,7 +70,7 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
-      const { error: signInError } = await signIn(email.trim(), password);
+      const { error: signInError, profile: profileData } = await signIn(email.trim(), password);
 
       if (signInError) {
         setError(signInError.message);
@@ -79,34 +78,22 @@ function LoginPageContent() {
         return;
       }
 
-      // Get supabase session (now available after signIn)
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profileData) {
-          const role = profileData.role;
-          const roleRoutes: Record<string, string> = {
-            admin: '/admin',
-            teacher: '/teacher',
-            student: '/student',
-            parent: '/parent',
-            accountant: '/accountant',
-          };
-          const targetRoute = roleRoutes[role];
-          if (targetRoute) {
-            router.replace(targetRoute);
-            return;
-          }
+      if (profileData?.role) {
+        const roleRoutes: Record<string, string> = {
+          admin: '/admin',
+          teacher: '/teacher',
+          student: '/student',
+          parent: '/parent',
+          accountant: '/accountant',
+        };
+        const targetRoute = roleRoutes[profileData.role];
+        if (targetRoute) {
+          router.replace(targetRoute);
+          return;
         }
       }
 
-      // Fallback: redirect to home (DashboardLayout will handle role-based redirect)
+      // Fallback: redirect to home
       router.replace(redirect || '/');
     } catch (err: any) {
       setError(err?.message || 'An unexpected error occurred');

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, DollarSign, TrendingUp, TrendingDown, Receipt, FileText } from 'lucide-react';
+import { Save, Eye, EyeOff, User, Phone, Check, AlertCircle, Loader2, Shield, Calendar, DollarSign, TrendingUp, TrendingDown, Receipt, FileText } from 'lucide-react';
 import type { Staff, Transaction, Invoice } from '@/types';
 
 export default function AccountantProfilePage() {
@@ -52,7 +52,7 @@ export default function AccountantProfilePage() {
   async function handleSave() {
     if (!profile) return;
     setSaving(true); setMsg(null);
-    const { error } = await supabase.from('profiles').update(formData).eq('id', profile.id);
+    const { error } = await supabase.from('profiles').update({ first_name: formData.first_name, last_name: formData.last_name, phone: formData.phone || null, avatar_url: formData.avatar_url || null }).eq('id', profile.id);
     if (error) { setMsg({ type: 'error', text: error.message }); } 
     else { setMsg({ type: 'success', text: 'Profile updated!' }); setProfile({ ...profile, ...formData }); }
     setSaving(false);
@@ -85,7 +85,7 @@ export default function AccountantProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><label className="label">First Name</label><input value={formData.first_name} onChange={e => setFormData({...formData, first_name: e.target.value})} className="input" /></div>
                 <div><label className="label">Last Name</label><input value={formData.last_name} onChange={e => setFormData({...formData, last_name: e.target.value})} className="input" /></div>
-                <div><label className="label">Email</label><input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="input" type="email" /></div>
+                <div><label className="label">Email</label><input value={formData.email} disabled className="input bg-slate-50 text-slate-500 cursor-not-allowed" type="email" /><p className="text-xs text-slate-400 mt-1">Email cannot be changed</p></div>
                 <div><label className="label">Phone</label><input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="input" /></div>
               </div>
               {msg && <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${msg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{msg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{msg.text}</div>}

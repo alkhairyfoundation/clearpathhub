@@ -23,6 +23,7 @@ export default function StudentPracticePage() {
   const [streak, setStreak] = useState<any>(null);
   const [badges, setBadges] = useState<any[]>([]);
   const [startTime, setStartTime] = useState<number>(0);
+  const sessionStartTimeRef = useRef<number>(0);
   const [sessionStats, setSessionStats] = useState({ correct: 0, total: 0, time: 0 });
   const timerRef = useRef<any>(null);
 
@@ -96,8 +97,8 @@ export default function StudentPracticePage() {
         seenIds.add(q.id);
         return true;
       }).length ? selectedQuestions.filter((q, i, arr) => arr.findIndex(x => x.id === q.id) === i) : [
-        { id: 'demo', question: 'Sample: What is the capital of France?', options: ['London', 'Paris', 'Berlin', 'Madrid'], correct_answer: 1, question_type: 'multiple_choice', difficulty: 'easy', topic: 'Demo', subtopic: '', explanation: 'Paris is the capital of France.' },
-        { id: 'demo2', question: 'Sample: 5 + 3 = ?', options: ['6', '7', '8', '9'], correct_answer: 2, question_type: 'multiple_choice', difficulty: 'easy', topic: 'Demo', subtopic: '', explanation: '5 + 3 = 8' },
+        { id: 'demo', question: 'Sample: What is the capital of France?', options: ['London', 'Paris', 'Berlin', 'Madrid'], correct_answer: 1, question_type: 'multiple_choice', difficulty_level: 'easy', topic: 'Demo', subtopic: '', explanation: 'Paris is the capital of France.' },
+        { id: 'demo2', question: 'Sample: 5 + 3 = ?', options: ['6', '7', '8', '9'], correct_answer: 2, question_type: 'multiple_choice', difficulty_level: 'easy', topic: 'Demo', subtopic: '', explanation: '5 + 3 = 8' },
       ];
       setQuestions(finalQuestions.slice(0, QUESTIONS_PER_SESSION));
 
@@ -109,6 +110,7 @@ export default function StudentPracticePage() {
       }).select().single();
       if (sErr) throw sErr;
       setSession(newSession);
+      sessionStartTimeRef.current = Date.now();
       setStartTime(Date.now());
 
       // Ensure daily goal exists
@@ -143,21 +145,28 @@ export default function StudentPracticePage() {
     const q = questions[currentIdx];
     const isCorrect = selectedAnswer === q.correct_answer;
 
+    const questionTime = Math.floor((Date.now() - startTime) / 1000);
+
     // Record attempt
     if (session) {
-      await supabase.from('practice_attempts').insert({
-        session_id: session.id, student_id: profile?.id,
-        question_text: q.question, question_type: q.question_type || 'multiple_choice',
-        options: q.options, correct_answer: q.correct_answer,
-        selected_answer: selectedAnswer, is_correct: isCorrect,
-        time_taken: Math.floor((Date.now() - startTime) / 1000),
-        difficulty: q.difficulty_level || 'medium', topic: q.topic || '', subtopic: q.subtopic || '',
-        explanation: q.explanation || null,
-        question_source: 'bank', source_id: q.id,
-      });
+      try {
+        const { error: attemptError } = await supabase.from('practice_attempts').insert({
+          session_id: session.id, student_id: profile?.id,
+          question_text: q.question, question_type: q.question_type || 'multiple_choice',
+          options: q.options, correct_answer: q.correct_answer,
+          selected_answer: selectedAnswer, is_correct: isCorrect,
+          time_taken: questionTime,
+          difficulty: q.difficulty_level || 'medium', topic: q.topic || '', subtopic: q.subtopic || '',
+          explanation: q.explanation || null,
+          question_source: 'bank', source_id: q.id,
+        });
+        if (attemptError) console.error('Failed to save practice attempt:', attemptError.message);
+      } catch (err) {
+        console.error('Failed to save practice attempt:', err);
+      }
     }
 
-    setSessionStats(prev => ({ correct: prev.correct + (isCorrect ? 1 : 0), total: prev.total + 1, time: prev.time }));
+    setSessionStats(prev => ({ correct: prev.correct + (isCorrect ? 1 : 0), total: prev.total + 1, time: prev.time + questionTime }));
 
     if (currentIdx + 1 >= questions.length) {
       await finishSession(isCorrect);
@@ -173,13 +182,18 @@ export default function StudentPracticePage() {
     const finalCorrect = sessionStats.correct + (lastCorrect ? 1 : 0);
     const finalTotal = sessionStats.total + 1;
     const score = Math.round((finalCorrect / finalTotal) * 100);
-    const duration = Math.floor((Date.now() - startTime) / 1000);
+    const duration = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
 
     if (session) {
-      await supabase.from('practice_sessions').update({
-        status: 'completed', completed_at: new Date().toISOString(),
-        answered_questions: finalTotal, correct_answers: finalCorrect, score, duration_seconds: duration,
-      }).eq('id', session.id);
+      try {
+        const { error: sessionError } = await supabase.from('practice_sessions').update({
+          status: 'completed', completed_at: new Date().toISOString(),
+          answered_questions: finalTotal, correct_answers: finalCorrect, score, duration_seconds: duration,
+        }).eq('id', session.id);
+        if (sessionError) console.error('Failed to update session:', sessionError.message);
+      } catch (err) {
+        console.error('Failed to update session:', err);
+      }
     }
 
     // Update daily goal
@@ -187,10 +201,14 @@ export default function StudentPracticePage() {
     const { data: goal } = await supabase.from('daily_goals').select('*')
       .eq('student_id', profile?.id).eq('date', today).maybeSingle();
     if (goal) {
-      await supabase.from('daily_goals').update({
-        completed_questions: finalTotal, achieved_score: score,
-        status: score >= 70 ? 'completed' : 'missed',
-      }).eq('id', goal.id);
+      try {
+        await supabase.from('daily_goals').update({
+          completed_questions: finalTotal, achieved_score: score,
+          status: score >= 70 ? 'completed' : 'missed',
+        }).eq('id', goal.id);
+      } catch (err) {
+        console.error('Failed to update daily goal:', err);
+      }
     }
 
     // Update streak
@@ -405,8 +423,8 @@ export default function StudentPracticePage() {
         {/* Question Card */}
         <div className="card">
           <div className="flex items-center gap-2 mb-4">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${currentQ.difficulty === 'easy' ? 'bg-green-100 text-green-700' : currentQ.difficulty === 'hard' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
-              {currentQ.difficulty}
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${(currentQ.difficulty_level || 'medium') === 'easy' ? 'bg-green-100 text-green-700' : (currentQ.difficulty_level || 'medium') === 'hard' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+              {currentQ.difficulty_level || 'medium'}
             </span>
             {currentQ.topic && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">{currentQ.topic}</span>}
           </div>

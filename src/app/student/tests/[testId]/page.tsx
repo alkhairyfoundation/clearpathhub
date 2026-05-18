@@ -57,10 +57,16 @@ export default function StudentTakeTestPage() {
     fetchTest();
   }, [profile, testId]);
 
+  const submittingRef = useRef(false);
+
   useEffect(() => {
-    if (!started || timeLeft <= 0 || submitted) return;
+    if (!started || timeLeft <= 0 || submitted || submittingRef.current) return;
     const timer = setInterval(() => setTimeLeft(prev => {
-      if (prev <= 1) { handleSubmit(); return 0; }
+      if (prev <= 1 && !submittingRef.current) {
+        submittingRef.current = true;
+        handleSubmit();
+        return 0;
+      }
       return prev - 1;
     }), 1000);
     return () => clearInterval(timer);
@@ -197,33 +203,40 @@ export default function StudentTakeTestPage() {
 
     const startedAt = new Date(Date.now() - ((test.duration_minutes || 30) * 60 - timeLeft) * 1000);
 
-    const { data: attempt } = await supabase.from('test_attempts').insert({
-      test_id: testId,
-      student_id: profile.id,
-      answers,
-      score: finalScore,
-      passed: finalScore >= (test.passing_score || 50),
-      tab_switches: tabSwitches,
-      fullscreen_exits: fullscreenExits,
-      time_taken: (test.duration_minutes || 30) * 60 - timeLeft,
-      started_at: startedAt.toISOString(),
-      completed_at: new Date().toISOString(),
-    }).select().single();
-
-    if (attempt && securityEvents.length > 0) {
-      const logs = securityEvents.map(e => ({
-        attempt_id: attempt.id,
+    try {
+      const { data: attempt, error: attemptError } = await supabase.from('test_attempts').insert({
+        test_id: testId,
         student_id: profile.id,
-        event_type: e.type,
-        event_data: { key: e.key, count: e.count },
-        severity: e.type === 'tab_switch' || e.type === 'fullscreen_exit' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
-        created_at: e.time,
-      }));
-      await supabase.from('exam_activity_logs').insert(logs);
-    }
+        answers,
+        score: finalScore,
+        passed: finalScore >= (test.passing_score || 50),
+        tab_switches: tabSwitches,
+        fullscreen_exits: fullscreenExits,
+        time_taken: (test.duration_minutes || 30) * 60 - timeLeft,
+        started_at: startedAt.toISOString(),
+        completed_at: new Date().toISOString(),
+      }).select().single();
 
-    setScore(finalScore);
-    setSubmitted(true);
+      if (attemptError) throw new Error(attemptError.message);
+
+      if (attempt && securityEvents.length > 0) {
+        const logs = securityEvents.map(e => ({
+          attempt_id: attempt.id,
+          student_id: profile.id,
+          event_type: e.type,
+          event_data: { key: e.key, count: e.count },
+          severity: e.type === 'tab_switch' || e.type === 'fullscreen_exit' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
+          created_at: e.time,
+        }));
+        await supabase.from('exam_activity_logs').insert(logs);
+      }
+
+      setScore(finalScore);
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error('Failed to save test attempt:', err.message);
+      alert('Failed to save your test. Please try again.');
+    }
     setSubmitting(false);
   }
 

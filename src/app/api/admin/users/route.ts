@@ -1,34 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient, createSupabaseServerClient } from '@/lib/supabase-server';
+import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { query as neonQuery } from '@/lib/neon';
 import bcrypt from 'bcryptjs';
 
-async function verifyAdmin() {
-  try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return null;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
-    if (profile?.role === 'admin') return true;
-    return false;
-  } catch {
-    return false;
-  }
-}
-
 export async function POST(request: Request) {
   try {
-    const isAdmin = await verifyAdmin();
-    if (!isAdmin) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { email, password, first_name, last_name, role, phone, class_id } = await request.json();
     
     // Validate required fields
@@ -132,17 +108,12 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const isAdmin = await verifyAdmin();
-    if (!isAdmin) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role');
     const search = searchParams.get('search');
 
-    const supabase = await createSupabaseServerClient();
-    let query = supabase.from('profiles').select('*');
+    const adminClient = createSupabaseAdminClient();
+    let query = adminClient.from('profiles').select('*');
 
     if (role && role !== 'all') {
       query = query.eq('role', role);

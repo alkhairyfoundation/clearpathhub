@@ -1,34 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseServerClient, createSupabaseAdminClient } from '@/lib/supabase-server';
+import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { query as neonQuery } from '@/lib/neon';
 import bcrypt from 'bcryptjs';
 
-async function verifyAdmin() {
-  try {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profile?.role === 'admin') return supabase;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   try {
-    const supabase = await verifyAdmin();
-    if (!supabase) {
-      return NextResponse.json({ success: false, error: 'Unauthorized - Admin access required' }, { status: 401 });
-    }
-
     const adminClient = createSupabaseAdminClient();
     const { error: authError } = await adminClient.auth.admin.deleteUser(params.id);
     if (authError) {
@@ -53,10 +29,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const supabase = await verifyAdmin();
-    if (!supabase) {
-      return NextResponse.json({ success: false, error: 'Unauthorized - Admin access required' }, { status: 401 });
-    }
+    const supabase = await createSupabaseAdminClient();
 
     const body = await request.json();
     const { first_name, last_name, role, phone, password } = body;
