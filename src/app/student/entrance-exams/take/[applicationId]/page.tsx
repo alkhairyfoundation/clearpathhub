@@ -52,6 +52,8 @@ export default function StudentTakeEntranceExamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [tabSwitches, setTabSwitches] = useState(0);
+  const [fullscreenBlocked, setFullscreenBlocked] = useState(false);
+  const [fullscreenExits, setFullscreenExits] = useState(0);
   const [securityEvents, setSecurityEvents] = useState<any[]>([]);
   const [submitError, setSubmitError] = useState('');
 
@@ -88,16 +90,39 @@ export default function StudentTakeEntranceExamPage() {
   }, [started, submitted, exam]);
 
   useEffect(() => {
-    if (!started || submitted) return;
+    if (!started || submitted || !exam?.require_fullscreen) return;
     function handleFullscreenChange() {
-      if (!document.fullscreenElement && exam?.require_fullscreen) {
+      if (!document.fullscreenElement) {
         setSecurityEvents(events => [...events, { type: 'fullscreen_exit', time: new Date().toISOString() }]);
-        document.documentElement.requestFullscreen().catch(() => {});
+        setFullscreenBlocked(true);
+      } else {
+        setFullscreenBlocked(false);
       }
     }
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    const interval = setInterval(() => {
+      if (started && !submitted && exam?.require_fullscreen && !document.fullscreenElement) {
+        setFullscreenBlocked(true);
+      }
+    }, 2000);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      clearInterval(interval);
+    };
   }, [started, submitted, exam]);
+
+  // Block F11 key
+  useEffect(() => {
+    if (!started || submitted) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        setSecurityEvents(events => [...events, { type: 'keyboard_shortcut', key: e.key, time: new Date().toISOString() }]);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [started, submitted]);
 
   useEffect(() => {
     if (!started || submitted) return;
@@ -421,6 +446,39 @@ async function handleSubmit() {
           ))}
         </div>
       </div>
+
+      {/* Fullscreen Blocking Overlay */}
+      {fullscreenBlocked && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={40} className="text-red-600" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Fullscreen Required</h2>
+            <p className="text-slate-600 mb-6">
+              You exited fullscreen mode during the exam. You must re-enter fullscreen to continue.
+            </p>
+            <button
+              onClick={() => {
+                document.documentElement.requestFullscreen().then(() => {
+                  setFullscreenBlocked(false);
+                }).catch(() => {
+                  setFullscreenBlocked(true);
+                });
+              }}
+              className="btn-primary w-full py-3 text-lg"
+            >
+              Re-enter Fullscreen
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="btn-ghost w-full mt-2 text-sm text-slate-500"
+            >
+              Submit Exam Now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

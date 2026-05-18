@@ -29,6 +29,7 @@ function ApplyPageContent() {
   const [examScore, setExamScore] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [tabSwitches, setTabSwitches] = useState(0);
+  const [fullscreenBlocked, setFullscreenBlocked] = useState(false);
   const [securityEvents, setSecurityEvents] = useState<any[]>([]);
   const submittingRef = useRef(false);
 
@@ -81,12 +82,36 @@ function ApplyPageContent() {
     function handleFullscreenChange() {
       if (!document.fullscreenElement) {
         setSecurityEvents(events => [...events, { type: 'fullscreen_exit', time: new Date().toISOString() }]);
-        document.documentElement.requestFullscreen().catch(() => {});
+        setFullscreenBlocked(true);
+      } else {
+        setFullscreenBlocked(false);
       }
     }
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    // Also check periodically for stealth fullscreen exits
+    const interval = setInterval(() => {
+      if (step === 'exam' && exam?.require_fullscreen && !document.fullscreenElement) {
+        setFullscreenBlocked(true);
+      }
+    }, 2000);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      clearInterval(interval);
+    };
   }, [step, exam]);
+
+  // Block F11 key
+  useEffect(() => {
+    if (step !== 'exam') return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        setSecurityEvents(events => [...events, { type: 'keyboard_shortcut', key: e.key, time: new Date().toISOString() }]);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [step]);
 
   // Keyboard shortcut prevention (security)
   useEffect(() => {
@@ -496,6 +521,45 @@ function ApplyPageContent() {
           </div>
         )}
       </div>
+
+      {/* Fullscreen Blocking Overlay */}
+      {fullscreenBlocked && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShieldAlert size={40} className="text-red-600" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Fullscreen Required</h2>
+            <p className="text-slate-600 mb-6">
+              You exited fullscreen mode during the exam. You must re-enter fullscreen to continue.
+              Multiple fullscreen exits may result in automatic submission.
+            </p>
+            <button
+              onClick={() => {
+                document.documentElement.requestFullscreen().then(() => {
+                  setFullscreenBlocked(false);
+                }).catch(() => {
+                  setFullscreenBlocked(true);
+                });
+              }}
+              className="btn-primary w-full py-3 text-lg"
+            >
+              Re-enter Fullscreen
+            </button>
+            <button
+              onClick={() => {
+                if (!submittingRef.current) {
+                  submittingRef.current = true;
+                  submitExam();
+                }
+              }}
+              className="btn-ghost w-full mt-2 text-sm text-slate-500"
+            >
+              Submit Exam Now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
