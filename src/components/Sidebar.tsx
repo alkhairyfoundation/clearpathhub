@@ -38,6 +38,7 @@ const navItems = {
     { href: '/admin/school-qr', label: 'School QR Code', icon: QrCode },
     { href: '/admin/staff-qr', label: 'Staff Attendance QR', icon: ScanLine },
     { href: '/admin/import-export', label: 'Import/Export', icon: Upload },
+    { href: '/admin/profile', label: 'Profile', icon: Settings },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
   ],
   teacher: [
@@ -87,6 +88,7 @@ const navItems = {
     { href: '/accountant/payments', label: 'Payments', icon: DollarSign },
     { href: '/accountant/expenses', label: 'Expenses', icon: Activity },
     { href: '/accountant/reports', label: 'Reports', icon: BarChart3 },
+    { href: '/accountant/profile', label: 'Profile', icon: Settings },
     { href: '/accountant/settings', label: 'Settings', icon: Settings },
   ],
 };

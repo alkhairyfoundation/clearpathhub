@@ -185,9 +185,17 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
         <div className="lg:hidden h-16" />
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto min-h-[calc(100vh-8rem)]">
           {children}
         </main>
+
+        {/* Footer */}
+        <footer className="border-t border-slate-200 bg-white px-6 py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-500">
+            <p>&copy; {new Date().getFullYear()} ClearPath Edu Hub. All rights reserved.</p>
+            <p>Developed by: Odebunmi Tawwab A.</p>
+          </div>
+        </footer>
       </div>
 
       {/* Click outside to close user menu */}

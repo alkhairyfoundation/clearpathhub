@@ -439,6 +439,7 @@ export default function Home() {
 
           <div className="border-t border-slate-800 mt-12 pt-8 text-center text-sm">
             <p>&copy; {new Date().getFullYear()} ClearPath Edu Hub. All rights reserved. Built with purpose. Every student masters every lesson.</p>
+            <p className="mt-2 text-slate-500">Developed by: Odebunmi Tawwab A.</p>
           </div>
         </div>
       </footer>
