@@ -100,65 +100,61 @@ export default function AdminSessionsPage() {
     fetchData();
   }
 
+  async function getCheckpointQuizId(sessionId: string): Promise<string | null> {
+    const { data: existing } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+    if (existing) return existing.id;
+    const { data: created } = await supabase.from('quizzes').insert({
+      session_id: sessionId,
+      title: 'Checkpoint Quiz',
+      passing_score: 80,
+    }).select('id').maybeSingle();
+    return created?.id || null;
+  }
+
+  async function loadCheckpoints(quizId: string) {
+    const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('timestamp_seconds', { ascending: true });
+    setCheckpoints(data || []);
+  }
+
   async function openCheckpoints(session: any) {
     setSelectedSession(session);
-    const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', session.id);
-    let cp: any[] = [];
-    if (quizzes && quizzes.length > 0) {
-      const { data: questions } = await supabase.from('quiz_questions').select('*').in('quiz_id', quizzes.map(q => q.id)).order('timestamp_seconds');
-      if (questions) cp = questions;
-    }
-    setCheckpoints(cp);
+    const qId = await getCheckpointQuizId(session.id);
+    if (qId) await loadCheckpoints(qId);
+    else setCheckpoints([]);
     setShowCheckpointModal(true);
   }
 
   async function addCheckpoint() {
-    if (!selectedSession || !checkpointForm.question.trim()) return;
+    if (!selectedSession || !checkpointForm.question.trim()) { setError('Question is required'); setSaving(false); return; }
+    const validOptions = checkpointForm.options.filter(o => o.trim());
+    if (validOptions.length < 2) { setError('At least 2 options are required'); setSaving(false); return; }
     setSaving(true);
-    
-    // First ensure a quiz exists for this session
-    let quizId = selectedSession.quiz?.[0]?.id;
-    if (!quizId) {
-      const { data: quiz } = await supabase.from('quizzes').insert({
-        session_id: selectedSession.id,
-        title: `${selectedSession.title} - Checkpoint Quiz`,
-        passing_score: 80,
-      }).select().single();
-      if (quiz) quizId = quiz.id;
-    }
+    setError('');
 
-    if (quizId) {
-      await supabase.from('quiz_questions').insert({
-        quiz_id: quizId,
-        question: checkpointForm.question,
-        options: checkpointForm.options.filter(o => o.trim()),
-        correct_answer: checkpointForm.correct_answer,
-        points: checkpointForm.points,
-        timestamp_seconds: checkpointForm.timestamp_seconds,
-        is_checkpoint: true,
-      });
-      
-      const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', selectedSession.id);
-      let cp: any[] = [];
-      if (quizzes && quizzes.length > 0) {
-        const { data: questions } = await supabase.from('quiz_questions').select('*').in('quiz_id', quizzes.map(q => q.id)).order('timestamp_seconds');
-        if (questions) cp = questions;
-      }
-      setCheckpoints(cp);
-      setCheckpointForm({ timestamp_seconds: 0, question: '', options: ['', '', '', ''], correct_answer: 0, points: 1 });
-    }
+    const quizId = await getCheckpointQuizId(selectedSession.id);
+    if (!quizId) { setError('Failed to create checkpoint quiz'); setSaving(false); return; }
+
+    const { error: insertError } = await supabase.from('quiz_questions').insert({
+      quiz_id: quizId,
+      question: checkpointForm.question.trim(),
+      options: validOptions,
+      correct_answer: Math.min(checkpointForm.correct_answer, validOptions.length - 1),
+      points: checkpointForm.points || 1,
+      question_type: 'multiple_choice',
+      timestamp_seconds: checkpointForm.timestamp_seconds || 0,
+      is_checkpoint: true,
+    });
+    if (insertError) { setError(insertError.message); setSaving(false); return; }
+
+    await loadCheckpoints(quizId);
+    setCheckpointForm({ timestamp_seconds: 0, question: '', options: ['', '', '', ''], correct_answer: 0, points: 1 });
     setSaving(false);
   }
 
   async function deleteCheckpoint(id: string) {
     await supabase.from('quiz_questions').delete().eq('id', id);
-    const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', selectedSession.id);
-    let cp: any[] = [];
-    if (quizzes && quizzes.length > 0) {
-      const { data: questions } = await supabase.from('quiz_questions').select('*').in('quiz_id', quizzes.map(q => q.id)).order('timestamp_seconds');
-      if (questions) cp = questions;
-    }
-    setCheckpoints(cp);
+    const qId = await getCheckpointQuizId(selectedSession.id);
+    if (qId) await loadCheckpoints(qId);
   }
 
   function extractYouTubeId(url: string) {
