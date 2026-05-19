@@ -60,6 +60,9 @@ function AdminUsersPageContent() {
   const [showBulkModal, setShowBulkModal] = useState(false);
 
   const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [allClasses, setAllClasses] = useState<ClassOption[]>([]);
+  const [selectedClass, setSelectedClass] = useState('');
+  const [studentClassMap, setStudentClassMap] = useState<Record<string, string>>({});
   const [teacherClassIds, setTeacherClassIds] = useState<string[]>([]);
   const [teacherSubjectName, setTeacherSubjectName] = useState('');
   const [formData, setFormData] = useState<UserFormData>({
@@ -133,6 +136,22 @@ function AdminUsersPageContent() {
     if (!fetchError && data) {
       setUsers(data);
     }
+
+    // Fetch class info for student filtering/display
+    if (selectedRole === 'all' || selectedRole === 'student') {
+      const { data: classList } = await supabase.from('classes').select('id, name, level').order('name');
+      if (classList) setAllClasses(classList);
+      const { data: studentRecords } = await supabase.from('students').select('profile_id, class_id');
+      if (studentRecords) {
+        const map: Record<string, string> = {};
+        studentRecords.forEach(s => { if (s.class_id) map[s.profile_id] = s.class_id; });
+        setStudentClassMap(map);
+      }
+    } else {
+      setAllClasses([]);
+      setStudentClassMap({});
+    }
+
     setLoading(false);
   }
 
@@ -360,9 +379,14 @@ function AdminUsersPageContent() {
     }
   }
 
-  const filteredUsers = users.filter(user =>
-    `${user.first_name} ${user.last_name} ${user.email} ${user.phone || ''}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = `${user.first_name} ${user.last_name} ${user.email} ${user.phone || ''}`.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (selectedClass && (user.role === 'student' || selectedRole === 'all')) {
+      return studentClassMap[user.id] === selectedClass;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -415,8 +439,24 @@ function AdminUsersPageContent() {
               </button>
             ))}
           </div>
+          {(selectedRole === 'all' || selectedRole === 'student') && allClasses.length > 0 && (
+            <div className="w-full lg:w-64">
+              <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="input text-sm">
+                <option value="">All Classes</option>
+                {allClasses.map(c => (
+                  <option key={c.id} value={c.id}>{c.name} (Level {c.level})</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
+      {selectedClass && (
+        <div className="flex items-center gap-2 text-sm text-primary-700 bg-primary-50 px-3 py-2 rounded-lg">
+          <span>Filtered by class</span>
+          <button onClick={() => setSelectedClass('')} className="ml-1 hover:underline">Clear</button>
+        </div>
+      )}
 
       {/* Success/Error Messages */}
       {success && (
@@ -450,6 +490,7 @@ function AdminUsersPageContent() {
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Class</th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Phone</th>
                   <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Created</th>
                   <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
@@ -477,6 +518,13 @@ function AdminUsersPageContent() {
                         {roleConfig[user.role]?.icon}
                         {roleConfig[user.role]?.label}
                       </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-slate-600 hidden md:table-cell">
+                      {user.role === 'student' ? (() => {
+                        const cId = studentClassMap[user.id];
+                        const c = allClasses.find(cl => cl.id === cId);
+                        return c ? c.name : '—';
+                      })() : '—'}
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-600 hidden md:table-cell">{user.phone || '—'}</td>
                     <td className="py-3 px-4 text-sm text-slate-500 hidden lg:table-cell">

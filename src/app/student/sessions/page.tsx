@@ -64,7 +64,7 @@ export default function StudentSessionsPage() {
 
       let query = supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes(quiz_questions!quiz_id(*))').eq('is_published', true);
       if (studentClassId) {
-        query = query.or(`class_id.eq.${studentClassId},class_id.is.null`);
+        query = query.eq('class_id', studentClassId);
       }
       const [sessionsRes, notesRes] = await Promise.all([
         query.order('created_at', { ascending: false }),

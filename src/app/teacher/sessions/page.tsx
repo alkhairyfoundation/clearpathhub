@@ -181,6 +181,7 @@ export default function TeacherSessionsPage() {
             subject_id: formData.subject_id || null,
             teacher_id: profile?.id,
             session_id: sessionId,
+            class_id: formData.class_id || null,
             title: `${formData.title} - Notes`,
             content: lessonNotes,
             is_published: true,

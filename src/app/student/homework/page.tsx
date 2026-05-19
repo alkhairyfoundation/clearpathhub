@@ -28,7 +28,7 @@ export default function StudentHomeworkPage() {
     const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
     let hwQuery = supabase.from('homework').select('*, subject:subjects(*), class:classes(*)');
     if (student?.class_id) {
-      hwQuery = hwQuery.or(`class_id.eq.${student.class_id},class_id.is.null`);
+      hwQuery = hwQuery.eq('class_id', student.class_id);
     }
     const [hwRes, subRes] = await Promise.all([
       hwQuery.order('due_date', { ascending: true }),

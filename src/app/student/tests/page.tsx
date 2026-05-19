@@ -36,9 +36,7 @@ export default function StudentTestsPage() {
     if (testsRes.data) {
       let filteredTests = testsRes.data;
       if (student?.class_id) {
-        filteredTests = testsRes.data.filter(t => 
-          !t.class_id || t.class_id === student.class_id
-        );
+        filteredTests = testsRes.data.filter(t => t.class_id === student.class_id);
       }
       setTests(filteredTests);
     }

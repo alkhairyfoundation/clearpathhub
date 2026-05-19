@@ -16,13 +16,14 @@ export default function AdminLessonsPage() {
   const [lessons, setLessons] = useState<(Lesson & { subject?: Subject, teacher?: { first_name: string, last_name: string } })[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [formData, setFormData] = useState({ title: '', content: '', subject_id: '', teacher_id: '', attachments: '' });
+  const [formData, setFormData] = useState({ title: '', content: '', subject_id: '', teacher_id: '', class_id: '', attachments: '' });
   const [quizForm, setQuizForm] = useState({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1 });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -35,14 +36,16 @@ export default function AdminLessonsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [lessonsRes, subjectsRes, teachersRes] = await Promise.all([
-      supabase.from('lessons').select('*, subject:subjects!subject_id(*), teacher:profiles!teacher_id(first_name, last_name)').order('created_at', { ascending: false }),
+    const [lessonsRes, subjectsRes, teachersRes, classesRes] = await Promise.all([
+      supabase.from('lessons').select('*, subject:subjects!subject_id(*), teacher:profiles!teacher_id(first_name, last_name), class:classes!class_id(name)').order('created_at', { ascending: false }),
       supabase.from('subjects').select('*').order('name'),
       supabase.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
+      supabase.from('classes').select('id, name, level').order('name'),
     ]);
     if (lessonsRes.data) setLessons(lessonsRes.data);
     if (subjectsRes.data) setSubjects(subjectsRes.data);
     if (teachersRes.data) setTeachers(teachersRes.data);
+    if (classesRes.data) setClasses(classesRes.data);
     setLoading(false);
   }
 
@@ -54,6 +57,7 @@ export default function AdminLessonsPage() {
         title: formData.title, content: formData.content,
         subject_id: formData.subject_id || null,
         teacher_id: formData.teacher_id || null,
+        class_id: formData.class_id || null,
         attachments: formData.attachments ? formData.attachments.split(',').map(a => a.trim()) : [],
         is_published: true,
       };
@@ -61,7 +65,7 @@ export default function AdminLessonsPage() {
       if (error) throw new Error(error.message);
       setSuccess('Lesson created');
       setShowModal(false);
-      setFormData({ title: '', content: '', subject_id: '', teacher_id: '', attachments: '' });
+      setFormData({ title: '', content: '', subject_id: '', teacher_id: '', class_id: '', attachments: '' });
       fetchData();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) { setError(err.message); }
@@ -170,7 +174,7 @@ export default function AdminLessonsPage() {
                 </div>
               </div>
               <h3 className="font-semibold text-slate-800 mb-1">{lesson.title}</h3>
-              <p className="text-sm text-slate-500 mb-3">{lesson.subject?.name}</p>
+              <p className="text-sm text-slate-500 mb-3">{lesson.subject?.name}{lesson.class?.name ? ` — ${lesson.class.name}` : ''}</p>
               <p className="text-sm text-slate-600 line-clamp-3 mb-4">{lesson.content}</p>
               {lesson.attachments && lesson.attachments.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-slate-500"><Paperclip size={14} /><span>{lesson.attachments.length} attachment(s)</span></div>
@@ -191,6 +195,7 @@ export default function AdminLessonsPage() {
                 <div><label className="label">Title *</label><input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Lesson title" /></div>
                 <div><label className="label">Subject</label><select value={formData.subject_id} onChange={e => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select Subject</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
                 <div><label className="label">Teacher</label><select value={formData.teacher_id} onChange={e => setFormData({ ...formData, teacher_id: e.target.value })} className="input"><option value="">Select Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
+                <div><label className="label">Class *</label><select value={formData.class_id} onChange={e => setFormData({ ...formData, class_id: e.target.value })} className="input"><option value="">Select Class</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                 <div><label className="label">Content (Markdown supported)</label><textarea value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} className="input" rows={8} placeholder="Lesson content..." /></div>
                 
                 <div className="space-y-3">
