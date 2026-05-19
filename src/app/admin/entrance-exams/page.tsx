@@ -596,6 +596,7 @@ async function handleCreateExam() {
       updateData.admitted_class = admissionData.admitted_class;
 
       try {
+        const selectedClass = classes.find(c => c.name === admissionData.admitted_class);
         const password = Math.random().toString(36).slice(2, 10) + 'A1!';
         const res = await fetch('/api/admin/users', {
           method: 'POST',
@@ -607,15 +608,15 @@ async function handleCreateExam() {
             last_name: selectedApplication.last_name,
             role: 'student',
             phone: selectedApplication.phone || '',
-            class_id: '',
+            class_id: selectedClass?.id || '',
           }),
         });
 
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Failed to create user');
 
-        setSuccess(`Student admitted! Login: ${selectedApplication.email} / Password: ${password}`);
-        setTimeout(() => setSuccess(''), 10000);
+        setSuccess(`Student admitted! Login: ${selectedApplication.email} | Password: ${password} ` +
+          `| Class: ${admissionData.admitted_class}`);
       } catch (err: any) {
         setError('Application status saved but user creation failed: ' + err.message);
       }
@@ -1941,19 +1942,10 @@ function viewAnalyticsDetails(record: any) {
                        onChange={e => setAdmissionData({...admissionData, admitted_class: e.target.value})}
                        className="input"
                      >
-                       <option value="">Select Class</option>
-                       <option value="PRIMARY 1">Primary 1</option>
-                       <option value="PRIMARY 2">Primary 2</option>
-                       <option value="PRIMARY 3">Primary 3</option>
-                       <option value="PRIMARY 4">Primary 4</option>
-                       <option value="PRIMARY 5">Primary 5</option>
-                       <option value="PRIMARY 6">Primary 6</option>
-                       <option value="JSS 1">JSS 1</option>
-                       <option value="JSS 2">JSS 2</option>
-                       <option value="JSS 3">JSS 3</option>
-                       <option value="SS 1">SS 1</option>
-                       <option value="SS 2">SS 2</option>
-                       <option value="SS 3">SS 3</option>
+                        <option value="">Select Class</option>
+                        {classes.map(cls => (
+                          <option key={cls.id} value={cls.name}>{cls.name}</option>
+                        ))}
                      </select>
                      <p className="text-xs text-slate-500 mt-1">You can admit the student to a different class than what they applied for.</p>
                    </div>

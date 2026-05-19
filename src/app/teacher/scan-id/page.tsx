@@ -24,8 +24,20 @@ export default function TeacherScanIDPage() {
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
+    fetchTodayHistory();
     return () => stopCamera();
   }, [profile]);
+
+  async function fetchTodayHistory() {
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('attendance')
+      .select('*, student:profiles!student_id(first_name, last_name)')
+      .eq('date', today)
+      .eq('scan_method', 'qr_scan')
+      .order('marked_at', { ascending: false });
+    if (data) setScanHistory(data);
+  }
 
   async function handleManualEntry(e: React.FormEvent) {
     e.preventDefault();
@@ -55,10 +67,11 @@ export default function TeacherScanIDPage() {
       .maybeSingle();
     
     if (student) {
+      const today = new Date().toISOString().split('T')[0];
       await supabase.from('attendance').upsert({
         student_id: student.profile_id,
         class_id: student.class_id,
-        date: new Date().toISOString().split('T')[0],
+        date: today,
         status: 'present',
         marked_by: profile?.id,
         marked_at: new Date().toISOString(),
@@ -66,7 +79,7 @@ export default function TeacherScanIDPage() {
       }, { onConflict: 'student_id,class_id,date' });
       
       setLastScanned(student);
-      setScanHistory(prev => [student, ...prev.slice(0, 19)]);
+      await fetchTodayHistory();
       stopCamera();
     } else {
       alert('Student not found with admission number: ' + admissionNumber);
@@ -177,12 +190,12 @@ export default function TeacherScanIDPage() {
 
           {scanHistory.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-medium text-slate-800 mb-3">Recent Scans ({scanHistory.length})</h3>
+              <h3 className="font-medium text-slate-800 mb-3">Today&apos;s Scans ({scanHistory.length})</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {scanHistory.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
-                    <div className="flex items-center gap-2"><UserCheck size={16} className="text-green-500" /><span>{s.profile?.first_name} {s.profile?.last_name}</span></div>
-                    <span className="text-slate-500">{s.admission_number}</span>
+                {scanHistory.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                    <div className="flex items-center gap-2"><UserCheck size={16} className="text-green-500" /><span>{s.student?.first_name} {s.student?.last_name}</span></div>
+                    <span className="text-slate-500">{s.marked_at ? new Date(s.marked_at).toLocaleTimeString() : ''}</span>
                   </div>
                 ))}
               </div>

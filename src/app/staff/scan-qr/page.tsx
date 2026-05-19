@@ -24,8 +24,23 @@ export default function StaffScanQRPage() {
   useEffect(() => {
     if (loading) return;
     if (!profile || !['teacher', 'accountant', 'admin'].includes(profile.role || '')) { router.push('/login'); return; }
+    if (profile) fetchTodayHistory();
     return () => stopCamera();
   }, [profile, loading]);
+
+  async function fetchTodayHistory() {
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('staff_attendance')
+      .select('*')
+      .eq('staff_id', profile?.id)
+      .eq('date', today)
+      .order('scanned_at', { ascending: false });
+    if (data) {
+      setScanHistory(data);
+      if (data.length > 0) setLastScan(data[0]);
+    }
+  }
 
   async function startCamera() {
     setCameraError('');
@@ -112,8 +127,7 @@ export default function StaffScanQRPage() {
     } else {
       await supabase.from('staff_attendance').insert(record);
     }
-    setLastScan(record);
-    setScanHistory(prev => [record, ...prev.slice(0, 19)]);
+    await fetchTodayHistory();
   }
 
   return (
@@ -143,11 +157,11 @@ export default function StaffScanQRPage() {
             <div className="text-center py-8 text-slate-500"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>No attendance marked yet</p></div>
           )}
           {scanHistory.length > 0 && (
-            <div className="mt-4"><h3 className="font-medium text-slate-800 mb-2">Recent Scans</h3>
+            <div className="mt-4"><h3 className="font-medium text-slate-800 mb-2">Today&apos;s Scans ({scanHistory.length})</h3>
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {scanHistory.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-sm">
-                    <div className="flex items-center gap-2"><Check size={14} className="text-green-500" /><span>{s.staff_name}</span></div>
+                {scanHistory.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-sm">
+                    <div className="flex items-center gap-2"><Check size={14} className="text-green-500" /><span>{s.staff_name} — {s.date}</span></div>
                     <span className="text-slate-500">{new Date(s.scanned_at).toLocaleTimeString()}</span>
                   </div>
                 ))}
