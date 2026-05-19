@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Clock, Check, X, FileText, Upload, AlertCircle, ArrowLeft, GraduationCap, ShieldAlert } from 'lucide-react';
+import Calculator from '@/components/Calculator';
 
 function ApplyPageContent() {
   const router = useRouter();
@@ -285,17 +286,18 @@ function ApplyPageContent() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50 to-slate-100">
       {/* Header */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200/60 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl flex items-center justify-center shadow-lg shadow-primary-600/25">
               <GraduationCap className="text-white" size={22} />
             </div>
             <div>
-              <h1 className="font-bold text-slate-900 text-lg leading-tight">ClearPath</h1>
-              <p className="text-[10px] font-semibold text-primary-600 uppercase tracking-wider -mt-0.5">Edu Hub</p>
+              <p className="font-bold text-slate-900">ClearPath</p>
+              <p className="text-xs text-slate-500">Edu Hub</p>
             </div>
           </Link>
           <Link href="/" className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
@@ -561,6 +563,8 @@ function ApplyPageContent() {
         </div>
       )}
     </div>
+    <Calculator />
+    </>
   );
 }
 

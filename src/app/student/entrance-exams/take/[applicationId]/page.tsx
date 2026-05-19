@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react';
   import { supabase } from '@/lib/supabase';
   import { useRouter, useParams } from 'next/navigation';
   import { Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Loader2, ArrowLeft, FileText } from 'lucide-react';
+import Calculator from '@/components/Calculator';
 
 function gradeQuestion(question: any, answer: any): boolean {
    if (answer === undefined || answer === null) return false;
@@ -358,6 +359,7 @@ async function handleSubmit() {
   if (!question) return <div className="card text-center"><p>No questions in this exam</p></div>;
 
   return (
+    <>
     <div className="space-y-4 max-w-3xl mx-auto p-4">
       <div className="flex items-center justify-between">
         <button onClick={() => { if (confirm('Leave exam? Your progress will be lost.')) router.push('/student/entrance-exams'); }} className="flex items-center gap-2 text-slate-600 hover:text-slate-800">
@@ -480,5 +482,7 @@ async function handleSubmit() {
         </div>
       )}
     </div>
+    <Calculator />
+    </>
   );
 }

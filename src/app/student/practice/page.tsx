@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Brain, CheckCircle, XCircle, Clock, Loader2, ArrowLeft, Zap, Award, BarChart3, Star, RotateCcw } from 'lucide-react';
+import Calculator from '@/components/Calculator';
 
 export default function StudentPracticePage() {
   const { profile } = useAuth();
@@ -403,6 +404,7 @@ export default function StudentPracticePage() {
   );
 
   return (
+    <>
     <DashboardLayout title="Daily Practice" subtitle={`Question ${currentIdx + 1} of ${questions.length}`}>
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Progress Bar */}
@@ -501,5 +503,7 @@ export default function StudentPracticePage() {
         )}
       </div>
     </DashboardLayout>
+    <Calculator />
+    </>
   );
 }

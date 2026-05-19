@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
 import { Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Loader2, Award } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import Calculator from '@/components/Calculator';
 
 function gradeQuestion(question: any, answer: any): boolean {
   if (answer === undefined || answer === null) return false;
@@ -204,6 +205,7 @@ export default function StudentTakeQuizPage() {
   if (!question) return <div className="card text-center"><p>No questions in this quiz</p></div>;
 
   return (
+    <>
     <DashboardLayout title={quiz.title}>
       <div className="space-y-4 max-w-3xl mx-auto">
         <div className="flex items-center justify-between">
@@ -306,5 +308,7 @@ export default function StudentTakeQuizPage() {
         </div>
       </div>
     </DashboardLayout>
+    <Calculator />
+    </>
   );
 }

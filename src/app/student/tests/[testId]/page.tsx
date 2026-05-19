@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Eye, EyeOff, Loader2, ImageIcon } from 'lucide-react';
+import Calculator from '@/components/Calculator';
 
 function gradeQuestion(question: any, answer: any): boolean {
   if (answer === undefined || answer === null) return false;
@@ -286,6 +287,7 @@ export default function StudentTakeTestPage() {
   if (!question) return <div className="card text-center"><p>No questions in this test</p></div>;
 
   return (
+    <>
     <div className="space-y-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between">
         <button onClick={() => { if (confirm('Leave test? Progress will be lost.')) router.push('/student'); }} className="flex items-center gap-2 text-slate-600 hover:text-slate-800"><ArrowLeft size={18} />Exit</button>
@@ -385,5 +387,7 @@ export default function StudentTakeTestPage() {
         </div>
       </div>
     </div>
+    <Calculator />
+    </>
   );
 }
