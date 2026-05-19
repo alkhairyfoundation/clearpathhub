@@ -84,7 +84,7 @@ export default function AdminLessonsPage() {
     if (lesson.session_id) return lesson.session_id;
     const { data: newSession } = await supabase.from('sessions').insert({
       title: lesson.title, description: `${lesson.title} - Lesson Notes`,
-      video_type: 'youtube', video_url: '', duration: 0, is_published: true,
+      video_type: 'youtube', video_url: '', duration: 0, is_published: false,
     }).select('id').single();
     if (!newSession) return null;
     await supabase.from('lessons').update({ session_id: newSession.id }).eq('id', lesson.id);
@@ -94,7 +94,7 @@ export default function AdminLessonsPage() {
 
   async function openQuizManager(lesson: any) {
     setSelectedLesson(lesson);
-    const sessionId = lesson.session_id || lesson.id;
+    const sessionId = lesson.session_id;
     const { data: bySession } = await supabase.from('quizzes').select('id').eq('session_id', sessionId);
     let questions: any[] = [];
     if (bySession?.length) {

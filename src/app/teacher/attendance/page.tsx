@@ -77,7 +77,7 @@ export default function TeacherAttendancePage() {
       marked_by: profile?.id,
       marked_at: new Date().toISOString(),
       scan_method: 'manual'
-    }, { onConflict: 'student_id,class_id,date' });
+    }, { onConflict: 'student_id,date' });
   }
 
   async function markAllPresent() {

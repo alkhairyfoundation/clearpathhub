@@ -32,8 +32,7 @@ export default function StudentSessionsPage() {
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<string, boolean>>({});
   const [checkpointRawAnswers, setCheckpointRawAnswers] = useState<Record<string, number>>({});
   const [checkpointScore, setCheckpointScore] = useState<{ correct: number; total: number } | null>(null);
-  const [lessonNotes, setLessonNotes] = useState<any[]>([]);
-  const [showNotes, setShowNotes] = useState(false);
+
   const [youtubePlayer, setYoutubePlayer] = useState<any>(null);
   const [videoEnded, setVideoEnded] = useState(false);
   const [showPostQuiz, setShowPostQuiz] = useState(false);
@@ -66,13 +65,9 @@ export default function StudentSessionsPage() {
       if (studentClassId) {
         query = query.eq('class_id', studentClassId);
       }
-      const [sessionsRes, notesRes] = await Promise.all([
-        query.order('created_at', { ascending: false }),
-        supabase.from('lessons').select('*').eq('is_published', true).order('created_at', { ascending: false }),
-      ]);
-      if (sessionsRes.error) throw new Error(sessionsRes.error.message);
-      if (sessionsRes.data) setSessions(sessionsRes.data);
-      if (notesRes.data) setLessonNotes(notesRes.data);
+      const { data: sessionsData, error: sessionsError } = await query.order('created_at', { ascending: false });
+      if (sessionsError) throw new Error(sessionsError.message);
+      if (sessionsData) setSessions(sessionsData);
     } catch (err: any) {
       setError(err.message);
     }
@@ -342,7 +337,7 @@ export default function StudentSessionsPage() {
               </div>
             )}
             
-            <button onClick={() => setShowNotes(!showNotes)} className="absolute top-4 right-4 z-10 p-2 bg-white/90 rounded-lg hover:bg-white"><BookOpen size={20} /></button>
+            <button onClick={() => router.push('/student/lessons')} className="absolute top-4 right-4 z-10 p-2 bg-white/90 rounded-lg hover:bg-white" title="View Lesson Notes"><BookOpen size={20} /></button>
             <button onClick={handleCloseVideo} className="absolute top-4 left-4 z-10 p-2 bg-white/90 rounded-lg hover:bg-white"><XCircle size={20} /></button>
 
             {videoEnded && (
@@ -386,23 +381,7 @@ export default function StudentSessionsPage() {
             );
           })()}
 
-          {showNotes && (
-            <div className="w-96 bg-white overflow-y-auto p-6">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><BookOpen size={20} className="text-green-600" />Lesson Notes</h2>
-              {lessonNotes.filter(n => n.subject_id === selectedSession.subject_id).length === 0 ? (
-                <p className="text-slate-500 text-sm">No notes available for this lesson</p>
-              ) : (
-                <div className="space-y-4">
-                  {lessonNotes.filter(n => n.subject_id === selectedSession.subject_id).map((note: any) => (
-                    <div key={note.id} className="p-4 bg-gray-50 rounded-lg">
-                      <h3 className="font-semibold text-slate-800 mb-2">{note.title}</h3>
-                      <div className="prose prose-sm max-w-none text-slate-600 whitespace-pre-wrap">{note.content}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+
         </div>
         )}
       </div>
