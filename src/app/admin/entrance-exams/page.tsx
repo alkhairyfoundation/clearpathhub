@@ -500,7 +500,7 @@ async function handleCreateExam() {
         .from('entrance_codes')
         .select('id')
         .eq('code', code)
-        .single();
+        .maybeSingle();
       
       if (!existing) break;
       attempts++;

@@ -51,7 +51,7 @@ export default function AccountantProfilePage() {
 
   async function fetchStaffInfo() {
     if (!profile) return;
-    const { data } = await supabase.from('staff').select('*, department:departments(name)').eq('profile_id', profile.id).single();
+    const { data } = await supabase.from('staff').select('*, department:departments(name)').eq('profile_id', profile.id).maybeSingle();
     if (data) setStaffInfo(data);
   }
 

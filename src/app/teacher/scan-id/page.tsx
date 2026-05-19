@@ -52,7 +52,7 @@ export default function TeacherScanIDPage() {
       .from('students')
       .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
       .eq('admission_number', admissionNumber)
-      .single();
+      .maybeSingle();
     
     if (student) {
       await supabase.from('attendance').upsert({

@@ -35,9 +35,14 @@ export default function AdminAttendancePage() {
     setLoading(true);
     let query = supabase.from('attendance').select('*, student:profiles!student_id(first_name, last_name, email), class:classes!class_id(name)').eq('date', date);
     if (selectedClass !== 'all') query = query.eq('class_id', selectedClass);
-    const { data, error } = await query.order('student.first_name', { ascending: true });
+    const { data, error } = await query;
     if (error) setError(error.message);
     if (data) {
+      data.sort((a, b) => {
+        const na = `${a.student?.first_name || ''} ${a.student?.last_name || ''}`;
+        const nb = `${b.student?.first_name || ''} ${b.student?.last_name || ''}`;
+        return na.localeCompare(nb);
+      });
       setAttendance(data);
       setStats({
         present: data.filter(a => a.status === 'present').length,

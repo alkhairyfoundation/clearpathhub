@@ -303,7 +303,7 @@ export default function StudentPracticePage() {
 
     if (!existingTypes.includes('first_goal')) toAward.push('first_goal');
 
-    const { data: s } = await supabase.from('learning_streaks').select('current_streak').eq('student_id', profile?.id).single();
+    const { data: s } = await supabase.from('learning_streaks').select('current_streak').eq('student_id', profile?.id).maybeSingle();
     const streakCount = s?.current_streak || 0;
     if (streakCount >= 3 && !existingTypes.includes('streak_3')) toAward.push('streak_3');
     if (streakCount >= 7 && !existingTypes.includes('streak_7')) toAward.push('streak_7');

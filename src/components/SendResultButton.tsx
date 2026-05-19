@@ -97,7 +97,7 @@ export default function SendResultButton({ studentId, studentName, results, clas
         .from('students')
         .select('parent_id, class:classes!class_id(name)')
         .eq('profile_id', studentId)
-        .single();
+        .maybeSingle();
 
       if (!student?.parent_id) {
         setError('No parent linked to this student.');
@@ -109,7 +109,7 @@ export default function SendResultButton({ studentId, studentName, results, clas
         .from('profiles')
         .select('phone, email')
         .eq('id', student.parent_id)
-        .single();
+        .maybeSingle();
 
       if (!parent) {
         setError('Parent profile not found.');

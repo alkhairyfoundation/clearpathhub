@@ -143,7 +143,7 @@ function ApplyPageContent() {
         .select('*, exam:entrance_exams(*)')
         .eq('code', codeToVerify.toUpperCase().trim())
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (codeResult && codeResult.exam) {
         if (codeResult.used_count >= codeResult.max_uses) {

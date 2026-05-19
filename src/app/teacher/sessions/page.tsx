@@ -128,8 +128,7 @@ export default function TeacherSessionsPage() {
           .from('quizzes')
           .select('id')
           .eq('session_id', sessionId)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         let quizId = existingQuiz?.id;
         
@@ -161,8 +160,7 @@ export default function TeacherSessionsPage() {
           .from('lessons')
           .select('id')
           .eq('session_id', sessionId)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         if (existingLesson) {
           await supabase.from('lessons').update({
