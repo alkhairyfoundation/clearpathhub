@@ -10,6 +10,10 @@ import type { Session, Subject } from '@/types';
 import FileUpload from '@/components/FileUpload';
 import { STORAGE_BUCKETS } from '@/lib/supabase';
 
+declare global {
+  interface Window { YT: any; onYouTubeIframeAPIReady: () => void; }
+}
+
 interface VideoCheckpoint {
   id?: string;
   timestamp_seconds: number;
@@ -48,6 +52,7 @@ export default function TeacherSessionsPage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
@@ -59,8 +64,10 @@ export default function TeacherSessionsPage() {
     video_url: '',
     video_type: 'youtube' as 'youtube' | 'upload',
     subject_id: '',
-    duration: 30,
+    class_id: '',
+    duration: 0,
   });
+  const [detectingDuration, setDetectingDuration] = useState(false);
   const [checkpoints, setCheckpoints] = useState<VideoCheckpoint[]>([]);
   const [lessonNotes, setLessonNotes] = useState('');
   const [error, setError] = useState('');
@@ -77,13 +84,15 @@ export default function TeacherSessionsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const [sessionsRes, subjectsRes] = await Promise.all([
-        supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes(*)').order('created_at', { ascending: false }),
+      const [sessionsRes, subjectsRes, classesRes] = await Promise.all([
+        supabase.from('sessions').select('*, subject:subjects!subject_id(*), class:classes!class_id(name), quiz:quizzes(*)').order('created_at', { ascending: false }),
         supabase.from('subjects').select('*').order('name'),
+        supabase.from('classes').select('id, name').order('level'),
       ]);
       if (sessionsRes.error) throw new Error(sessionsRes.error.message);
       if (sessionsRes.data) setSessions(sessionsRes.data);
       if (subjectsRes.data) setSubjects(subjectsRes.data);
+      if (classesRes.data) setClasses(classesRes.data);
     } catch (err: any) {
       setError(err.message);
     }
@@ -99,8 +108,9 @@ export default function TeacherSessionsPage() {
         video_url: formData.video_url,
         video_type: formData.video_type,
         subject_id: formData.subject_id || null,
+        class_id: formData.class_id || null,
         teacher_id: profile?.id,
-        duration: parseInt(formData.duration.toString()),
+        duration: Math.round(formData.duration),
         is_published: true,
       };
 
@@ -181,7 +191,7 @@ export default function TeacherSessionsPage() {
     setSuccess(editingSession ? 'Session updated' : 'Session created');
     setShowModal(false);
     setShowLessonModal(false);
-    setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', duration: 30 });
+    setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', class_id: '', duration: 0 });
     setEditingSession(null);
     setCheckpoints([]);
     setLessonNotes('');
@@ -199,9 +209,9 @@ export default function TeacherSessionsPage() {
   }
 
   function addCheckpoint() {
-    const duration = parseInt(formData.duration.toString()) || 60;
+    const totalSecs = formData.duration * 60 || 300;
     const count = checkpoints.length;
-    const newTimestamp = count > 0 ? Math.round(count * (duration / (count + 1))) : 0;
+    const newTimestamp = count > 0 ? Math.round(count * (totalSecs / (count + 1))) : 0;
     setCheckpoints([...checkpoints, {
       timestamp_seconds: newTimestamp,
       question: '',
@@ -247,6 +257,54 @@ export default function TeacherSessionsPage() {
     return match ? match[1] : null;
   }
 
+  async function detectVideoDuration() {
+    if (!formData.video_url) return;
+    setDetectingDuration(true);
+    try {
+      if (formData.video_type === 'youtube') {
+        const videoId = extractYouTubeId(formData.video_url);
+        if (!videoId) { setDetectingDuration(false); return; }
+        const duration = await new Promise<number>((resolve) => {
+          if (typeof YT === 'undefined' || !YT.Player) {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const prevReady = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = () => {
+              window.onYouTubeIframeAPIReady = prevReady || (() => {});
+              const el = document.createElement('div');
+              el.id = 'yt-detect';
+              el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+              document.body.appendChild(el);
+              new YT.Player('yt-detect', { videoId, height: '1', width: '1', playerVars: { autoplay: 0, controls: 0 }, events: { onReady: (e) => { const d = e.target.getDuration(); e.target.destroy(); document.body.removeChild(el); resolve(Math.round(d / 60)); }, onError: () => { document.body.removeChild(el); resolve(0); } } });
+            };
+            document.head.appendChild(tag);
+          } else {
+            const el = document.createElement('div');
+            el.id = 'yt-detect';
+            el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+            document.body.appendChild(el);
+            new YT.Player('yt-detect', { videoId, height: '1', width: '1', playerVars: { autoplay: 0, controls: 0 }, events: { onReady: (e) => { const d = e.target.getDuration(); e.target.destroy(); document.body.removeChild(el); resolve(Math.round(d / 60)); }, onError: () => { document.body.removeChild(el); resolve(0); } } });
+          }
+        });
+        if (duration > 0) setFormData(prev => ({ ...prev, duration }));
+      } else {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        const dur = await new Promise<number>((resolve) => {
+          video.onloadedmetadata = () => { const d = video.duration; URL.revokeObjectURL(video.src); resolve(Math.round(d / 60)); };
+          video.onerror = () => resolve(0);
+          video.src = formData.video_url;
+        });
+        if (dur > 0) setFormData(prev => ({ ...prev, duration: dur }));
+      }
+    } catch { /* ignore */ }
+    setDetectingDuration(false);
+  }
+
+  useEffect(() => {
+    if (formData.video_url && formData.duration === 0) detectVideoDuration();
+  }, [formData.video_url]);
+
   return (
     <DashboardLayout title="Video Lessons" subtitle="Create video lessons with checkpoints and notes">
       <div className="space-y-6">
@@ -258,7 +316,7 @@ export default function TeacherSessionsPage() {
           <button
             onClick={() => { 
               setEditingSession(null); 
-              setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', duration: 30 });
+              setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', class_id: '', duration: 0 });
               setCheckpoints([]);
               setLessonNotes('');
               setShowModal(true); 
@@ -310,7 +368,7 @@ export default function TeacherSessionsPage() {
                 )}
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-800 mb-1">{session.title}</h3>
-                  <p className="text-sm text-slate-500">{session.subject?.name} • {session.duration} min</p>
+                  <p className="text-sm text-slate-500">{session.subject?.name}{session.class?.name ? ` • ${session.class.name}` : ''} • {session.duration || '?'} min</p>
                   <div className="flex items-center gap-2 mt-2">
                     {hasCheckpoint && (
                       <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
@@ -319,7 +377,7 @@ export default function TeacherSessionsPage() {
                     )}
                   </div>
                   <div className="flex gap-1 mt-3">
-                    <button onClick={() => { setEditingSession(session); setFormData({ title: session.title, description: session.description || '', video_url: session.video_url || '', video_type: session.video_type === 'youtube' ? 'youtube' : 'upload', subject_id: session.subject_id || '', duration: session.duration || 30 }); setShowModal(true); }} className="p-2 hover:bg-gray-100 rounded-lg">
+                    <button onClick={() => { setEditingSession(session); setFormData({ title: session.title, description: session.description || '', video_url: session.video_url || '', video_type: session.video_type === 'youtube' ? 'youtube' : 'upload', subject_id: session.subject_id || '', class_id: session.class_id || '', duration: session.duration || 0 }); setShowModal(true); }} className="p-2 hover:bg-gray-100 rounded-lg">
                       <Edit size={16} className="text-slate-600" />
                     </button>
                     <button onClick={() => handleDelete(session.id)} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -354,6 +412,13 @@ export default function TeacherSessionsPage() {
                 <select value={formData.subject_id} onChange={(e) => setFormData({ ...formData, subject_id: e.target.value })} className="input">
                   <option value="">Select Subject</option>
                   {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label">Class</label>
+                <select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input">
+                  <option value="">Select Class</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="space-y-4">
@@ -391,8 +456,18 @@ export default function TeacherSessionsPage() {
                 )}
               </div>
               <div>
-                <label className="label">Duration (minutes)</label>
-                <input type="number" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })} className="input" min={1} />
+                <label className="label">Duration</label>
+                {detectingDuration ? (
+                  <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 size={14} className="animate-spin" /> Detecting video duration...</div>
+                ) : formData.duration > 0 ? (
+                  <div className="flex items-center gap-2 text-sm"><span className="font-medium">{formData.duration} minutes</span>
+                    {formData.video_url && <button type="button" onClick={detectVideoDuration} className="text-primary-600 text-xs hover:underline">Re-detect</button>}
+                  </div>
+                ) : formData.video_url ? (
+                  <button type="button" onClick={detectVideoDuration} className="btn-outline text-sm">Detect Video Duration</button>
+                ) : (
+                  <p className="text-sm text-slate-400">Enter or upload a video to auto-detect duration</p>
+                )}
               </div>
 
               {/* CHECKPOINTS SECTION */}
@@ -439,10 +514,10 @@ export default function TeacherSessionsPage() {
                               onChange={(e) => updateCheckpoint(i, 'timestamp_seconds', parseInt(e.target.value))}
                               className="input"
                               min={0}
-                              max={parseInt(formData.duration.toString()) * 60}
+                              max={formData.duration * 60 || 99999}
                             />
                             <p className="text-xs text-slate-500 mt-1">
-                              Video is {formData.duration} min = {parseInt(formData.duration.toString()) * 60} seconds
+                              Video is {formData.duration || '?'} min = {(formData.duration || 0) * 60 || '?'} seconds
                             </p>
                           </div>
                         </div>

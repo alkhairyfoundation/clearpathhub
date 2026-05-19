@@ -59,8 +59,13 @@ export default function StudentSessionsPage() {
   async function fetchData() {
     setLoading(true);
     try {
+      const { data: studentData } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+      const studentClassId = studentData?.class_id;
+
+      let query = supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes!quiz_id(quiz_questions!quiz_id(*))').eq('is_published', true);
+      if (studentClassId) query = query.eq('class_id', studentClassId);
       const [sessionsRes, notesRes] = await Promise.all([
-        supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes!quiz_id(quiz_questions!quiz_id(*))').eq('is_published', true).order('created_at', { ascending: false }),
+        query.order('created_at', { ascending: false }),
         supabase.from('lessons').select('*').eq('is_published', true).order('created_at', { ascending: false }),
       ]);
       if (sessionsRes.error) throw new Error(sessionsRes.error.message);
@@ -274,7 +279,7 @@ export default function StudentSessionsPage() {
                 )}
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-800 mb-1">{session.title}</h3>
-                  <p className="text-sm text-slate-500">{session.subject?.name} &bull; {session.duration} min</p>
+                  <p className="text-sm text-slate-500">{session.subject?.name} &bull; {session.duration || '?'} min</p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {checkpoints.length > 0 && (
                       <span className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs"><Lock size={12} />{checkpoints.length} checkpoint{checkpoints.length > 1 ? 's' : ''}</span>

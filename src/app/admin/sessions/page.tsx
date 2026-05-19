@@ -10,6 +10,10 @@ import type { Subject } from '@/types';
 import FileUpload from '@/components/FileUpload';
 import { STORAGE_BUCKETS } from '@/lib/supabase';
 
+declare global {
+  interface Window { YT: any; onYouTubeIframeAPIReady: () => void; }
+}
+
 export default function AdminSessionsPage() {
   const { profile } = useAuth();
   const router = useRouter();
@@ -27,8 +31,9 @@ export default function AdminSessionsPage() {
   const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
     title: '', description: '', video_url: '', video_type: 'youtube' as 'youtube' | 'upload',
-    subject_id: '', teacher_id: '', duration: 0, is_published: true,
+    subject_id: '', teacher_id: '', class_id: '', duration: 0, is_published: true,
   });
+  const [detectingDuration, setDetectingDuration] = useState(false);
   const [checkpoints, setCheckpoints] = useState<any[]>([]);
   const [checkpointForm, setCheckpointForm] = useState({
     timestamp_seconds: 0, question: '', options: ['', '', '', ''], correct_answer: 0, points: 1,
@@ -42,7 +47,7 @@ export default function AdminSessionsPage() {
   async function fetchData() {
     setLoading(true);
     const [sessionsRes, subjectsRes, teachersRes, classesRes] = await Promise.all([
-      supabase.from('sessions').select('*, subject:subjects!subject_id(name), teacher:profiles!teacher_id(first_name, last_name), quiz:quizzes(id, title)').order('created_at', { ascending: false }),
+      supabase.from('sessions').select('*, subject:subjects!subject_id(name), class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name), quiz:quizzes(id, title)').order('created_at', { ascending: false }),
       supabase.from('subjects').select('id, name').order('name'),
       supabase.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
       supabase.from('classes').select('id, name').order('level'),
@@ -66,13 +71,14 @@ export default function AdminSessionsPage() {
         video_type: formData.video_type,
         subject_id: formData.subject_id || null,
         teacher_id: formData.teacher_id || null,
-        duration: formData.duration || null,
+        class_id: formData.class_id || null,
+        duration: Math.round(formData.duration),
         is_published: formData.is_published,
       });
       if (error) throw new Error(error.message);
       setSuccess('Video lesson created!');
       setShowModal(false);
-      setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', teacher_id: '', duration: 0, is_published: true });
+      setFormData({ title: '', description: '', video_url: '', video_type: 'youtube', subject_id: '', teacher_id: '', class_id: '', duration: 0, is_published: true });
       fetchData();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {
@@ -100,8 +106,13 @@ export default function AdminSessionsPage() {
 
   async function openCheckpoints(session: any) {
     setSelectedSession(session);
-    const { data } = await supabase.from('quiz_questions').select('*').eq('session_id', session.id).order('timestamp_seconds');
-    setCheckpoints(data || []);
+    const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', session.id);
+    let cp: any[] = [];
+    if (quizzes && quizzes.length > 0) {
+      const { data: questions } = await supabase.from('quiz_questions').select('*').in('quiz_id', quizzes.map(q => q.id)).order('timestamp_seconds');
+      if (questions) cp = questions;
+    }
+    setCheckpoints(cp);
     setShowCheckpointModal(true);
   }
 
@@ -123,7 +134,6 @@ export default function AdminSessionsPage() {
     if (quizId) {
       await supabase.from('quiz_questions').insert({
         quiz_id: quizId,
-        session_id: selectedSession.id,
         question: checkpointForm.question,
         options: checkpointForm.options.filter(o => o.trim()),
         correct_answer: checkpointForm.correct_answer,
@@ -132,8 +142,13 @@ export default function AdminSessionsPage() {
         is_checkpoint: true,
       });
       
-      const { data } = await supabase.from('quiz_questions').select('*').eq('session_id', selectedSession.id).order('timestamp_seconds');
-      setCheckpoints(data || []);
+      const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', selectedSession.id);
+      let cp: any[] = [];
+      if (quizzes && quizzes.length > 0) {
+        const { data: questions } = await supabase.from('quiz_questions').select('*').in('quiz_id', quizzes.map(q => q.id)).order('timestamp_seconds');
+        if (questions) cp = questions;
+      }
+      setCheckpoints(cp);
       setCheckpointForm({ timestamp_seconds: 0, question: '', options: ['', '', '', ''], correct_answer: 0, points: 1 });
     }
     setSaving(false);
@@ -141,9 +156,67 @@ export default function AdminSessionsPage() {
 
   async function deleteCheckpoint(id: string) {
     await supabase.from('quiz_questions').delete().eq('id', id);
-    const { data } = await supabase.from('quiz_questions').select('*').eq('session_id', selectedSession.id).order('timestamp_seconds');
-    setCheckpoints(data || []);
+    const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', selectedSession.id);
+    let cp: any[] = [];
+    if (quizzes && quizzes.length > 0) {
+      const { data: questions } = await supabase.from('quiz_questions').select('*').in('quiz_id', quizzes.map(q => q.id)).order('timestamp_seconds');
+      if (questions) cp = questions;
+    }
+    setCheckpoints(cp);
   }
+
+  function extractYouTubeId(url: string) {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+    return match ? match[1] : null;
+  }
+
+  async function detectVideoDuration() {
+    if (!formData.video_url) return;
+    setDetectingDuration(true);
+    try {
+      if (formData.video_type === 'youtube') {
+        const videoId = extractYouTubeId(formData.video_url);
+        if (!videoId) { setDetectingDuration(false); return; }
+        const duration = await new Promise<number>((resolve) => {
+          if (typeof YT === 'undefined' || !YT.Player) {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const prevReady = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = () => {
+              window.onYouTubeIframeAPIReady = prevReady || (() => {});
+              const el = document.createElement('div');
+              el.id = 'yt-detect';
+              el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+              document.body.appendChild(el);
+              new YT.Player('yt-detect', { videoId, height: '1', width: '1', playerVars: { autoplay: 0, controls: 0 }, events: { onReady: (e) => { const d = e.target.getDuration(); e.target.destroy(); document.body.removeChild(el); resolve(Math.round(d / 60)); }, onError: () => { document.body.removeChild(el); resolve(0); } } });
+            };
+            document.head.appendChild(tag);
+          } else {
+            const el = document.createElement('div');
+            el.id = 'yt-detect';
+            el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
+            document.body.appendChild(el);
+            new YT.Player('yt-detect', { videoId, height: '1', width: '1', playerVars: { autoplay: 0, controls: 0 }, events: { onReady: (e) => { const d = e.target.getDuration(); e.target.destroy(); document.body.removeChild(el); resolve(Math.round(d / 60)); }, onError: () => { document.body.removeChild(el); resolve(0); } } });
+          }
+        });
+        if (duration > 0) setFormData(prev => ({ ...prev, duration }));
+      } else {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        const dur = await new Promise<number>((resolve) => {
+          video.onloadedmetadata = () => { const d = video.duration; URL.revokeObjectURL(video.src); resolve(Math.round(d / 60)); };
+          video.onerror = () => resolve(0);
+          video.src = formData.video_url;
+        });
+        if (dur > 0) setFormData(prev => ({ ...prev, duration: dur }));
+      }
+    } catch { /* ignore */ }
+    setDetectingDuration(false);
+  }
+
+  useEffect(() => {
+    if (formData.video_url && formData.duration === 0) detectVideoDuration();
+  }, [formData.video_url]);
 
   const filtered = sessions.filter(s =>
     `${s.title} ${s.subject?.name || ''} ${s.teacher?.first_name || ''} ${s.teacher?.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase())
@@ -209,7 +282,7 @@ export default function AdminSessionsPage() {
                   </div>
                 </div>
                 <h3 className="font-bold text-slate-900 mb-1">{session.title}</h3>
-                <p className="text-sm text-slate-500 mb-2">{session.subject?.name || 'No Subject'}</p>
+                <p className="text-sm text-slate-500 mb-2">{session.subject?.name || 'No Subject'}{session.class?.name ? ` — ${session.class.name}` : ''}</p>
                 {session.description && <p className="text-sm text-slate-600 line-clamp-2 mb-3">{session.description}</p>}
                 <div className="flex items-center gap-3 text-xs text-slate-400">
                   {session.teacher && <span>By: {session.teacher.first_name} {session.teacher.last_name}</span>}
@@ -269,11 +342,22 @@ export default function AdminSessionsPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div><label className="label">Duration (minutes)</label><input type="number" value={formData.duration} onChange={e => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })} className="input" /></div>
-                  <div></div>
+                <div>
+                  <label className="label">Duration</label>
+                  {detectingDuration ? (
+                    <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 size={14} className="animate-spin" /> Detecting video duration...</div>
+                  ) : formData.duration > 0 ? (
+                    <div className="flex items-center gap-2 text-sm"><span className="font-medium">{formData.duration} minutes</span>
+                      {formData.video_url && <button type="button" onClick={detectVideoDuration} className="text-primary-600 text-xs hover:underline">Re-detect</button>}
+                    </div>
+                  ) : formData.video_url ? (
+                    <button type="button" onClick={detectVideoDuration} className="btn-outline text-sm">Detect Video Duration</button>
+                  ) : (
+                    <p className="text-sm text-slate-400">Enter or upload a video to auto-detect duration</p>
+                  )}
                 </div>
                 <div><label className="label">Subject</label><select value={formData.subject_id} onChange={e => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select Subject</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+                <div><label className="label">Class</label><select value={formData.class_id} onChange={e => setFormData({ ...formData, class_id: e.target.value })} className="input"><option value="">Select Class</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                 <div><label className="label">Teacher</label><select value={formData.teacher_id} onChange={e => setFormData({ ...formData, teacher_id: e.target.value })} className="input"><option value="">Select Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
                 <div><label className="label">Description</label><textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="input" rows={3} placeholder="Lesson description..." /></div>
                 <label className="flex items-center gap-2">
