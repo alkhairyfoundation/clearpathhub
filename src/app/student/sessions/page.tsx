@@ -158,7 +158,6 @@ export default function StudentSessionsPage() {
     setCheckpointRawAnswers({});
     setCheckpointScore(null);
     setVideoEnded(false);
-    setShowNotes(false);
     setShowPostQuiz(false);
     setQuizSubmitted(false);
     checkpointSavedRef.current = false;
