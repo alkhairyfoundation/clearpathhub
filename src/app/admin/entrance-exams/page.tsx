@@ -805,9 +805,9 @@ function viewAnalyticsDetails(record: any) {
       try {
         const { data: application } = await supabase
           .from('entrance_applications')
-          .select('*')
+          .select('*, exam:entrance_exams!exam_id(*)')
           .eq('id', record.application_id)
-          .single();
+          .maybeSingle();
 
         const { data: schoolSettings } = await supabase
           .from('school_settings')
@@ -821,6 +821,17 @@ function viewAnalyticsDetails(record: any) {
 
         const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         const pw = doc.internal.pageSize.getWidth();
+
+        const exam = application?.exam;
+        const score = record.score || 0;
+        const passingScore = exam?.passing_score || 50;
+        const passed = score >= passingScore;
+        const timeTakenMins = record.time_taken_seconds
+          ? Math.round(record.time_taken_seconds / 60)
+          : record.time_taken || 'N/A';
+        const completedDate = application?.completed_at
+          ? new Date(application.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : 'N/A';
 
         // Header banner
         doc.setFillColor(...primaryColor);
@@ -852,10 +863,12 @@ function viewAnalyticsDetails(record: any) {
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         const studentInfo = [
-          ['Name', record.student_name || 'N/A'],
-          ['Email', record.student_email || 'N/A'],
+          ['Full Name', record.student_name || application?.first_name + ' ' + application?.last_name || 'N/A'],
+          ['Email', record.student_email || application?.email || 'N/A'],
+          ['Phone', application?.phone || 'N/A'],
           ['Applied Class', application?.applied_class || 'N/A'],
           ['Admitted Class', application?.admitted_class || 'Pending'],
+          ['Exam Completed', completedDate],
         ];
         studentInfo.forEach(([label, value], i) => {
           const rowY = y + i * 5.5;
@@ -875,8 +888,6 @@ function viewAnalyticsDetails(record: any) {
         doc.text('EXAM RESULTS', 18, y + 0.5);
 
         y += 11;
-        const score = record.score || 0;
-        const passed = score >= (application?.exam?.passing_score || 50);
 
         // Score circle
         const scoreX = pw - 40;
@@ -889,12 +900,16 @@ function viewAnalyticsDetails(record: any) {
         doc.text(`${score}%`, scoreX, y + 15, { align: 'center' });
 
         const resultsInfo = [
-          ['Exam Title', application?.exam?.title || 'N/A'],
+          ['Exam Title', exam?.title || 'N/A'],
+          ['Academic Year', exam?.academic_year || 'N/A'],
+          ['Exam Date', exam?.exam_date ? new Date(exam.exam_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'],
+          ['Subject', record.subject || exam?.level || 'N/A'],
+          ['Total Questions', `${exam?.total_questions || 'N/A'}`],
+          ['Passing Score', `${passingScore}%`],
+          ['Score Obtained', `${score}%`],
           ['Mastery Level', record.mastery_level || 'N/A'],
-          ['Passing Score', `${application?.exam?.passing_score || 50}%`],
+          ['Time Taken', typeof timeTakenMins === 'number' ? `${timeTakenMins} minutes` : `${timeTakenMins}`],
           ['Status', passed ? 'PASSED' : 'FAILED'],
-          ['Duration', `${record.time_taken || 'N/A'} minutes`],
-          ['Security Events', `${record.security_events_count || 0}`],
         ];
         resultsInfo.forEach(([label, value], i) => {
           const rowY = y + i * 5.5;
@@ -911,10 +926,19 @@ function viewAnalyticsDetails(record: any) {
           }
         });
 
+        // Section: Subject Scores
+        const subjectScores = application?.subject_scores;
+        const subjectEntries = subjectScores && typeof subjectScores === 'object'
+          ? Object.entries(subjectScores)
+          : [];
+
         // Section: Performance Breakdown
         const topicPerf = record.topic_performance || {};
         const topicEntries = Object.entries(topicPerf);
-        if (topicEntries.length > 0) {
+
+        const hasBreakdown = subjectEntries.length > 0 || topicEntries.length > 0;
+
+        if (hasBreakdown) {
           y += resultsInfo.length * 5.5 + 7;
           doc.setFillColor(...primaryColor);
           doc.rect(14, y - 4, pw - 28, 7, 'F');
@@ -938,13 +962,29 @@ function viewAnalyticsDetails(record: any) {
           y += 7;
           doc.setFont('helvetica', 'normal');
           doc.setTextColor(60, 60, 60);
-          topicEntries.forEach(([topic, data]: [string, any], i) => {
+
+          let breakRows: [string, any][] = [];
+
+          if (subjectEntries.length > 0) {
+            subjectEntries.forEach(([subj, data]: [string, any]) => {
+              breakRows.push([subj, typeof data === 'object' ? data : { score: data, correct: 0, total: 0 }]);
+            });
+          }
+          if (topicEntries.length > 0) {
+            topicEntries.forEach(([topic, data]: [string, any]) => {
+              if (!subjectEntries.some(([s]) => s === topic)) {
+                breakRows.push([topic, data]);
+              }
+            });
+          }
+
+          breakRows.forEach(([name, data], i) => {
             const rowY = y + i * 5.5;
             if (rowY > 270) return;
             doc.setFontSize(7);
             doc.setFont('helvetica', 'normal');
-            doc.text(topic, 18, rowY);
-            doc.text(`${data.score}%`, pw / 2 - 5, rowY, { align: 'center' });
+            doc.text(name, 18, rowY);
+            doc.text(`${data.score || data}%`, pw / 2 - 5, rowY, { align: 'center' });
             doc.text(`${data.correct || 0}`, pw / 2 + 20, rowY, { align: 'center' });
             doc.text(`${data.total || 0}`, pw / 2 + 45, rowY, { align: 'center' });
             if (i % 2 === 0) {
@@ -952,7 +992,7 @@ function viewAnalyticsDetails(record: any) {
               doc.rect(14, rowY - 2.5, pw - 28, 5.5, 'F');
             }
           });
-          y += topicEntries.length * 5.5 + 3;
+          y += breakRows.length * 5.5 + 3;
 
           // Score bar
           if (y < 250) {
