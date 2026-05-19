@@ -103,12 +103,17 @@ export default function AdminSessionsPage() {
   async function getCheckpointQuizId(sessionId: string): Promise<string | null> {
     const { data: existing } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
     if (existing) return existing.id;
-    const { data: created } = await supabase.from('quizzes').insert({
+    const { data: created, error: insErr } = await supabase.from('quizzes').insert({
       session_id: sessionId,
       title: 'Checkpoint Quiz',
       passing_score: 80,
     }).select('id').maybeSingle();
-    return created?.id || null;
+    if (created) return created.id;
+    if (insErr) {
+      const { data: retry } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+      return retry?.id || null;
+    }
+    return null;
   }
 
   async function loadCheckpoints(quizId: string) {

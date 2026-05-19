@@ -139,8 +139,12 @@ export default function TeacherSessionsPage() {
         let quizId = existingQuiz?.id;
         
         if (!quizId) {
-          const { data: quiz } = await supabase.from('quizzes').insert(quizData).select().single();
+          const { data: quiz, error: insErr } = await supabase.from('quizzes').insert(quizData).select().maybeSingle();
           if (quiz) quizId = quiz.id;
+          else if (insErr) {
+            const { data: retry } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+            if (retry) quizId = retry.id;
+          }
         }
         
         if (quizId) {

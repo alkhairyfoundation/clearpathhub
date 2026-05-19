@@ -76,14 +76,25 @@ export default function AdminLessonsPage() {
     setTimeout(() => setSuccess(''), 3000);
   }
 
+  async function ensureSessionForLesson(lesson: any): Promise<string | null> {
+    if (lesson.session_id) return lesson.session_id;
+    const { data: newSession } = await supabase.from('sessions').insert({
+      title: lesson.title, description: `${lesson.title} - Lesson Notes`,
+      video_type: 'youtube', video_url: '', duration: 0, is_published: true,
+    }).select('id').single();
+    if (!newSession) return null;
+    await supabase.from('lessons').update({ session_id: newSession.id }).eq('id', lesson.id);
+    lesson.session_id = newSession.id;
+    return newSession.id;
+  }
+
   async function openQuizManager(lesson: any) {
     setSelectedLesson(lesson);
-    const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', lesson.id).order('created_at');
-    // Also try by lesson reference
-    const { data: byLesson } = await supabase.from('quizzes').select('id').eq('session_id', lesson.id);
-    let questions: any[] = data || [];
-    if (byLesson?.length) {
-      const { data: qq } = await supabase.from('quiz_questions').select('*').in('quiz_id', byLesson.map(q => q.id)).order('created_at');
+    const sessionId = lesson.session_id || lesson.id;
+    const { data: bySession } = await supabase.from('quizzes').select('id').eq('session_id', sessionId);
+    let questions: any[] = [];
+    if (bySession?.length) {
+      const { data: qq } = await supabase.from('quiz_questions').select('*').in('quiz_id', bySession.map(q => q.id)).order('created_at');
       questions = qq || [];
     }
     setQuizQuestions(questions);
@@ -93,13 +104,19 @@ export default function AdminLessonsPage() {
   async function addQuizQuestion() {
     if (!selectedLesson || !quizForm.question.trim()) return;
     setSaving(true);
-    // Create a quiz if doesn't exist
+    const sessionId = await ensureSessionForLesson(selectedLesson);
+    if (!sessionId) { setError('Could not create session for lesson'); setSaving(false); return; }
+    setError('');
     let quizId = null;
-    const { data: existing } = await supabase.from('quizzes').select('id').eq('session_id', selectedLesson.id).limit(1);
-    if (existing?.length) { quizId = existing[0].id; }
+    const { data: existing } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+    if (existing) { quizId = existing.id; }
     else {
-      const { data: newQuiz } = await supabase.from('quizzes').insert({ session_id: selectedLesson.id, title: `${selectedLesson.title} Quiz`, passing_score: 60 }).select().single();
-      if (newQuiz) quizId = newQuiz.id;
+      const { data: nq, error: insErr } = await supabase.from('quizzes').insert({ session_id: sessionId, title: `${selectedLesson.title} Quiz`, passing_score: 60 }).select('id').maybeSingle();
+      if (nq) quizId = nq.id;
+      else if (insErr) {
+        const { data: retry } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+        if (retry) quizId = retry.id;
+      }
     }
     if (quizId) {
       await supabase.from('quiz_questions').insert({
