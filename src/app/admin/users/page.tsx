@@ -206,6 +206,9 @@ function AdminUsersPageContent() {
           body.class_ids = teacherClassIds;
           body.subject_name = teacherSubjectName || undefined;
         }
+        if (formData.role === 'student') {
+          body.class_id = formData.class_id || null;
+        }
 
         const res = await fetch(`/api/admin/users/${editingUser.id}`, {
           method: 'PATCH',

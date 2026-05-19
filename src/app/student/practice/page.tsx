@@ -43,8 +43,6 @@ export default function StudentPracticePage() {
       const { data: student } = await supabase.from('students').select('*, class:classes!class_id(name)').eq('profile_id', profile?.id).maybeSingle();
       const { data: term } = await supabase.from('terms').select('*').eq('is_current', true).maybeSingle();
 
-      if (!student?.class_id) throw new Error('No class assigned');
-
       // Adaptive question selection based on mastery scores and spaced repetition
       let selectedQuestions: any[] = [];
       const [masteryRes, reviewRes] = await Promise.all([
@@ -59,9 +57,9 @@ export default function StudentPracticePage() {
       const dueTopicSet = new Set(dueReviews.map(r => r.topic));
       const masteredTopics = masteryData.filter(m => m.mastery_score >= 80).map(m => m.topic);
 
-      // Get current SOW topic
+      // Get current SOW topic (skip if no class assigned)
       let sowTopic: string | null = null;
-      if (term && student.class_id) {
+      if (term && student?.class_id) {
         const { data: sow } = await supabase.from('scheme_of_work')
           .select('topic').eq('term_id', term.id).eq('class_id', student.class_id)
           .eq('week_number', term.current_week).maybeSingle();

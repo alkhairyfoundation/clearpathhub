@@ -62,8 +62,10 @@ export default function StudentSessionsPage() {
       const { data: studentData } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
       const studentClassId = studentData?.class_id;
 
-      let query = supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes!quiz_id(quiz_questions!quiz_id(*))').eq('is_published', true);
-      if (studentClassId) query = query.eq('class_id', studentClassId);
+      let query = supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes(quiz_questions!quiz_id(*))').eq('is_published', true);
+      if (studentClassId) {
+        query = query.or(`class_id.eq.${studentClassId},class_id.is.null`);
+      }
       const [sessionsRes, notesRes] = await Promise.all([
         query.order('created_at', { ascending: false }),
         supabase.from('lessons').select('*').eq('is_published', true).order('created_at', { ascending: false }),
@@ -257,8 +259,16 @@ export default function StudentSessionsPage() {
       <div className="space-y-6">
         <div><h1 className="text-2xl font-bold text-slate-800">Video Lessons</h1><p className="text-slate-500">Watch lessons and complete checkpoint quizzes to unlock content</p></div>
         
-        {loading ? (
+          {loading ? (
         <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
+      ) : sessions.length === 0 ? (
+        <div className="card text-center py-16">
+          <PlayCircle className="mx-auto text-slate-300 mb-4" size={48} />
+          <p className="font-medium text-slate-500">No video lessons available</p>
+          <p className="text-sm text-slate-400 mt-1">Lessons will appear here once assigned to your class</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sessions.map((session) => {

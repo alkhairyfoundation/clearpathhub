@@ -32,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const supabase = await createSupabaseAdminClient();
 
     const body = await request.json();
-    const { first_name, last_name, role, phone, password, class_ids, subject_name } = body;
+    const { first_name, last_name, role, phone, password, class_ids, subject_name, class_id } = body;
 
     const updates: Record<string, any> = {};
     if (first_name !== undefined) updates.first_name = first_name;
@@ -121,6 +121,18 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         }
       } catch (subjectErr) {
         console.error('Error updating teacher subjects:', subjectErr);
+      }
+    }
+
+    // Update student class_id
+    if (class_id !== undefined) {
+      const { data: studentRecord } = await supabase
+        .from('students')
+        .select('id')
+        .eq('profile_id', params.id)
+        .maybeSingle();
+      if (studentRecord) {
+        await supabase.from('students').update({ class_id: class_id || null }).eq('id', studentRecord.id);
       }
     }
 
