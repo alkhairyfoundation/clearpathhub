@@ -185,7 +185,7 @@ export default function AdminSessionsPage() {
               el.id = 'yt-detect';
               el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
               document.body.appendChild(el);
-              new W.YT.Player('yt-detect', { videoId, height: '1', width: '1', playerVars: { autoplay: 0, controls: 0 }, events: { onReady: (e) => { const d = e.target.getDuration(); e.target.destroy(); document.body.removeChild(el); resolve(Math.round(d / 60)); }, onError: () => { document.body.removeChild(el); resolve(0); } } });
+              new W.YT.Player('yt-detect', { videoId, height: '1', width: '1', playerVars: { autoplay: 0, controls: 0 }, events: { onReady: (e: any) => { const d = e.target.getDuration(); e.target.destroy(); document.body.removeChild(el); resolve(Math.round(d / 60)); }, onError: () => { document.body.removeChild(el); resolve(0); } } });
             };
             document.head.appendChild(tag);
           } else {
@@ -193,7 +193,7 @@ export default function AdminSessionsPage() {
             el.id = 'yt-detect';
             el.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none';
             document.body.appendChild(el);
-            new W.YT.Player('yt-detect', { videoId, height: '1', width: '1', playerVars: { autoplay: 0, controls: 0 }, events: { onReady: (e) => { const d = e.target.getDuration(); e.target.destroy(); document.body.removeChild(el); resolve(Math.round(d / 60)); }, onError: () => { document.body.removeChild(el); resolve(0); } } });
+            new W.YT.Player('yt-detect', { videoId, height: '1', width: '1', playerVars: { autoplay: 0, controls: 0 }, events: { onReady: (e: any) => { const d = e.target.getDuration(); e.target.destroy(); document.body.removeChild(el); resolve(Math.round(d / 60)); }, onError: () => { document.body.removeChild(el); resolve(0); } } });
           }
         });
         if (duration > 0) setFormData(prev => ({ ...prev, duration }));
