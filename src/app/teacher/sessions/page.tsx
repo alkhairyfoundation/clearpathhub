@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, CheckCircle, AlertCircle, HelpCircle, Pause, BookOpen } from 'lucide-react';
+import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, CheckCircle, AlertCircle, HelpCircle, Pause, BookOpen, Loader2 } from 'lucide-react';
 import type { Session, Subject } from '@/types';
 import FileUpload from '@/components/FileUpload';
 import { STORAGE_BUCKETS } from '@/lib/supabase';
