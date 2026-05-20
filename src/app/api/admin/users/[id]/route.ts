@@ -6,6 +6,35 @@ import bcrypt from 'bcryptjs';
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   try {
     const adminClient = createSupabaseAdminClient();
+
+    // Get user role first so we know what related data to clean up
+    const { data: profile } = await adminClient
+      .from('profiles')
+      .select('role')
+      .eq('id', params.id)
+      .maybeSingle();
+
+    // Clean up role-specific dependencies before deleting
+    if (profile?.role === 'teacher') {
+      await adminClient.from('subjects').delete().eq('teacher_id', params.id);
+      await adminClient.from('homework').delete().eq('teacher_id', params.id);
+      await adminClient.from('sessions').delete().eq('teacher_id', params.id);
+      await adminClient.from('lessons').delete().eq('teacher_id', params.id);
+    } else if (profile?.role === 'student') {
+      await adminClient.from('students').delete().eq('profile_id', params.id);
+      await adminClient.from('homework_submissions').delete().eq('student_id', params.id);
+    } else if (profile?.role === 'parent') {
+      await adminClient.from('parent_students').delete().eq('parent_id', params.id);
+      // Also clear legacy student parent links
+      await adminClient.from('students').update({ parent_id: null }).eq('parent_id', params.id);
+    } else if (profile?.role === 'accountant') {
+      await adminClient.from('staff').delete().eq('profile_id', params.id);
+    }
+
+    // Delete profile from Supabase profiles
+    await adminClient.from('profiles').delete().eq('id', params.id);
+
+    // Delete auth user
     const { error: authError } = await adminClient.auth.admin.deleteUser(params.id);
     if (authError) {
       return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
@@ -14,8 +43,8 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     // Delete user profile from Neon Postgres
     try {
       await neonQuery('DELETE FROM profiles WHERE id = $1', [params.id]);
-    } catch (neonDeleteError) {
-      console.error('Error deleting profile from Neon:', neonDeleteError);
+    } catch {
+      // Neon cleanup is best-effort
     }
 
     return NextResponse.json({ success: true, message: 'User deleted successfully' });

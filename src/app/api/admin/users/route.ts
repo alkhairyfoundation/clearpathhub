@@ -57,19 +57,18 @@ export async function POST(request: Request) {
     );
 
     // If role is teacher, create subject entries for assigned classes
+    let subjectWarning = '';
     if (role === 'teacher' && class_ids && class_ids.length > 0) {
       const subjectName = subject_name || 'General';
-      try {
-        const subjectEntries = class_ids.map((classId: string) => ({
-          name: subjectName,
-          code: `TCH-${userId.slice(0, 4)}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-          teacher_id: userId,
-          class_id: classId,
-        }));
-        const { error: subjectError } = await adminClient.from('subjects').insert(subjectEntries);
-        if (subjectError) console.error('Error creating teacher subjects:', subjectError);
-      } catch (subjectErr) {
-        console.error('Error creating teacher subjects:', subjectErr);
+      const subjectEntries = class_ids.map((classId: string) => ({
+        name: subjectName,
+        code: `TCH-${userId.slice(0, 4)}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        teacher_id: userId,
+        class_id: classId,
+      }));
+      const { error: subjectError } = await adminClient.from('subjects').insert(subjectEntries);
+      if (subjectError) {
+        subjectWarning = `User created but subject assignments failed: ${subjectError.message}`;
       }
     }
 
@@ -109,7 +108,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: 'User created successfully',
+        message: subjectWarning ? `User created with warnings: ${subjectWarning}` : 'User created successfully',
+        warning: subjectWarning || undefined,
         user: { id: userId, email, first_name, last_name, role, phone }
       },
       { status: 201 }

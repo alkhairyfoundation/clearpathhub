@@ -256,7 +256,8 @@ function AdminUsersPageContent() {
 
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Failed to create user');
-        setSuccess('User created successfully');
+        setSuccess(result.message || 'User created successfully');
+        if (result.warning) setError(result.warning);
         setNewCredentials({ email: formData.email, password: formData.password });
         setShowCredentialsModal(true);
       }
