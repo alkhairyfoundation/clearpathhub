@@ -62,7 +62,7 @@ export default function AdminAttendancePage() {
       const { error } = await supabase.from('attendance').upsert({
         student_id: studentId, class_id: selectedClass !== 'all' ? selectedClass : null, date, status,
         marked_by: profile?.id, marked_at: new Date().toISOString(), scan_method: 'manual',
-      });
+      }, { onConflict: 'student_id,date' });
       if (error) throw new Error(error.message);
       fetchAttendance();
     } catch (err: any) {

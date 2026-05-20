@@ -68,11 +68,14 @@ export default function TeacherScanIDPage() {
     
     if (student) {
       const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const cutoffHour = 8, cutoffMin = 30;
+      const isLate = now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() > cutoffMin);
       await supabase.from('attendance').upsert({
         student_id: student.profile_id,
         class_id: student.class_id,
         date: today,
-        status: 'present',
+        status: isLate ? 'late' : 'present',
         marked_by: profile?.id,
         marked_at: new Date().toISOString(),
         scan_method: 'qr_scan'

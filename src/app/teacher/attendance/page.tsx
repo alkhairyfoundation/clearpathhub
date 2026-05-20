@@ -69,15 +69,20 @@ export default function TeacherAttendancePage() {
 
   async function markAttendance(studentId: string, status: string) {
     setAttendanceRecords(prev => ({ ...prev, [studentId]: status }));
-    await supabase.from('attendance').upsert({
-      student_id: studentId,
-      class_id: selectedClass,
-      date,
-      status,
-      marked_by: profile?.id,
-      marked_at: new Date().toISOString(),
-      scan_method: 'manual'
-    }, { onConflict: 'student_id,date' });
+    try {
+      const { error } = await supabase.from('attendance').upsert({
+        student_id: studentId,
+        class_id: selectedClass,
+        date,
+        status,
+        marked_by: profile?.id,
+        marked_at: new Date().toISOString(),
+        scan_method: 'manual'
+      }, { onConflict: 'student_id,date' });
+      if (error) setError(error.message);
+    } catch (err: any) {
+      setError(err.message);
+    }
   }
 
   async function markAllPresent() {
@@ -145,6 +150,8 @@ export default function TeacherAttendancePage() {
           <div className="flex items-center gap-2"><CheckCircle size={20} className="text-green-600" /><span className="text-2xl font-bold text-green-600">{presentCount}</span></div>
         </div>
       </div>
+
+      {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
 
       {selectedClass && (
         <div className="bg-white rounded-xl shadow-md p-6">
