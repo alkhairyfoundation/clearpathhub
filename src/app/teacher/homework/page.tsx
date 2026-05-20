@@ -70,28 +70,39 @@ export default function TeacherHomeworkPage() {
   async function handleSave() {
     setUploading(true);
     setError('');
-    const data = {
-      ...formData,
-      subject_id: formData.subject_id || null,
-      class_id: formData.class_id || null,
-      teacher_id: profile?.id,
-      due_date: formData.due_date || null,
-      attachments: attachmentUrls.length > 0 ? attachmentUrls : null,
-      homework_type: formData.homework_type,
-    };
+    setSuccess('');
+    try {
+      const data = {
+        ...formData,
+        subject_id: formData.subject_id || null,
+        class_id: formData.class_id || null,
+        teacher_id: profile?.id,
+        due_date: formData.due_date || null,
+        attachments: attachmentUrls.length > 0 ? attachmentUrls : null,
+        homework_type: formData.homework_type,
+        is_active: true,
+      };
 
-    if (editingHomework) {
-      await supabase.from('homework').update(data).eq('id', editingHomework.id);
-    } else {
-      await supabase.from('homework').insert(data);
+      let result;
+      if (editingHomework) {
+        result = await supabase.from('homework').update(data).eq('id', editingHomework.id);
+      } else {
+        result = await supabase.from('homework').insert(data);
+      }
+      if (result.error) throw new Error(result.error.message);
+
+      setSuccess(editingHomework ? 'Homework updated successfully' : 'Homework created successfully');
+      setShowModal(false);
+      setFormData({ title: '', description: '', subject_id: '', class_id: '', due_date: '', total_marks: 100, homework_type: 'assignment' });
+      setAttachmentFiles([]);
+      setAttachmentUrls([]);
+      setEditingHomework(null);
+      fetchData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to save homework');
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
-    setShowModal(false);
-    setFormData({ title: '', description: '', subject_id: '', class_id: '', due_date: '', total_marks: 100, homework_type: 'assignment' });
-    setAttachmentFiles([]);
-    setAttachmentUrls([]);
-    setEditingHomework(null);
-    fetchData();
   }
 
   async function handleDelete(id: string) {
@@ -122,6 +133,9 @@ export default function TeacherHomeworkPage() {
           </div>
           <button onClick={() => { setEditingHomework(null); setFormData({ title: '', description: '', subject_id: '', class_id: '', due_date: '', total_marks: 100, homework_type: 'assignment' }); setAttachmentFiles([]); setAttachmentUrls([]); setShowModal(true); }} className="btn-primary flex items-center gap-2"><Plus size={20} />Add Homework</button>
         </div>
+
+        {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-green-700 text-sm">{success}</div>}
 
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           {loading ? <div className="p-12 text-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div></div> : homework.length === 0 ? <div className="p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No homework found</p><button onClick={() => setShowModal(true)} className="btn-primary mt-4">Add First Homework</button></div> : (

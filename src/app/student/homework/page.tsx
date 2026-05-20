@@ -13,6 +13,7 @@ export default function StudentHomeworkPage() {
   const [homework, setHomework] = useState<any[]>([]);
   const [mySubmissions, setMySubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [submissionUrls, setSubmissionUrls] = useState<Record<string, string>>({});
   const [submissionFiles, setSubmissionFiles] = useState<Record<string, File[]>>({});
   const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
@@ -25,17 +26,24 @@ export default function StudentHomeworkPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
-    let hwQuery = supabase.from('homework').select('*, subject:subjects(*), class:classes(*)');
-    if (student?.class_id) {
-      hwQuery = hwQuery.eq('class_id', student.class_id);
+    setError('');
+    try {
+      const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+      let hwQuery = supabase.from('homework').select('*, subject:subjects(*), class:classes(*)').eq('is_active', true);
+      if (student?.class_id) {
+        hwQuery = hwQuery.eq('class_id', student.class_id);
+      }
+      const [hwRes, subRes] = await Promise.all([
+        hwQuery.order('due_date', { ascending: true }),
+        supabase.from('homework_submissions').select('*, homework:homework(*)').eq('student_id', profile?.id).order('submitted_at', { ascending: false }),
+      ]);
+      if (hwRes.error) throw new Error(hwRes.error.message);
+      if (subRes.error) throw new Error(subRes.error.message);
+      if (hwRes.data) setHomework(hwRes.data);
+      if (subRes.data) setMySubmissions(subRes.data);
+    } catch (err: any) {
+      setError(err.message);
     }
-    const [hwRes, subRes] = await Promise.all([
-      hwQuery.order('due_date', { ascending: true }),
-      supabase.from('homework_submissions').select('*, homework:homework(*)').eq('student_id', profile?.id).order('submitted_at', { ascending: false }),
-    ]);
-    if (hwRes.data) setHomework(hwRes.data);
-    if (subRes.data) setMySubmissions(subRes.data);
     setLoading(false);
   }
 
@@ -51,22 +59,30 @@ export default function StudentHomeworkPage() {
     if (!url && files.length === 0) return;
 
     setSubmitting(prev => ({ ...prev, [homeworkId]: true }));
-    const uploadedUrls: string[] = [];
-    for (const file of files) {
-      const { url: fileUrl } = await uploadFile('homework', file, `submissions-${homeworkId}`);
-      if (fileUrl) uploadedUrls.push(fileUrl);
-    }
+    setError('');
+    try {
+      const uploadedUrls: string[] = [];
+      for (const file of files) {
+        const { url: fileUrl } = await uploadFile('homework', file, `submissions-${homeworkId}`);
+        if (fileUrl) uploadedUrls.push(fileUrl);
+      }
 
-    await supabase.from('homework_submissions').insert({
-      homework_id: homeworkId,
-      student_id: profile?.id,
-      submission_url: url || uploadedUrls.join(','),
-      submitted_at: new Date().toISOString()
-    });
-    setSubmissionUrls(prev => ({ ...prev, [homeworkId]: '' }));
-    setSubmissionFiles(prev => ({ ...prev, [homeworkId]: [] }));
-    setSubmitting(prev => ({ ...prev, [homeworkId]: false }));
-    fetchData();
+      const { error: submitError } = await supabase.from('homework_submissions').insert({
+        homework_id: homeworkId,
+        student_id: profile?.id,
+        submission_url: url || uploadedUrls.join(','),
+        submitted_at: new Date().toISOString()
+      });
+      if (submitError) throw new Error(submitError.message);
+
+      setSubmissionUrls(prev => ({ ...prev, [homeworkId]: '' }));
+      setSubmissionFiles(prev => ({ ...prev, [homeworkId]: [] }));
+      fetchData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit homework');
+    } finally {
+      setSubmitting(prev => ({ ...prev, [homeworkId]: false }));
+    }
   }
 
   function isSubmitted(homeworkId: string) {
@@ -97,6 +113,8 @@ export default function StudentHomeworkPage() {
           </div>
         </div>
         
+        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+
         {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : (
         <div className="space-y-4">
           {homework.length === 0 ? <div className="bg-white rounded-xl p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No homework assigned</p></div> :
