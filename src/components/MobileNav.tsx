@@ -37,7 +37,6 @@ const navItems = {
     { href: '/admin/scan-id', label: 'Scan Student ID', icon: ScanLine },
     { href: '/admin/staff-id-cards', label: 'Staff ID Cards', icon: QrCode },
     { href: '/admin/school-qr', label: 'School QR Code', icon: QrCode },
-    { href: '/admin/staff-qr', label: 'Staff Attendance QR', icon: ScanLine },
     { href: '/admin/import-export', label: 'Import/Export', icon: Upload },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
   ],
