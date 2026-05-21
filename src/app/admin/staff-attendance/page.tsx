@@ -34,7 +34,7 @@ export default function AdminStaffAttendancePage() {
       .select('*')
       .eq('staff_id', profile?.id)
       .eq('date', today)
-      .order('marked_at', { ascending: false });
+      .order('scanned_at', { ascending: false });
     if (data) {
       setScanHistory(data);
       if (data.length > 0) setLastScan(data[0]);
@@ -98,14 +98,19 @@ export default function AdminStaffAttendancePage() {
 
     const today = new Date().toISOString().split('T')[0];
     const status = isLate() ? 'late' : 'present';
+    const staffName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
 
     let qrCode = data;
+    let scanType = 'raw';
     try {
       const parsed = JSON.parse(data);
       if (parsed.type === 'STAFF_ATTENDANCE' || parsed.type === 'SCHOOL_ATTENDANCE') {
         qrCode = parsed.school || parsed.type;
+        scanType = 'staff_attendance';
       }
-    } catch {}
+    } catch {
+      scanType = 'manual';
+    }
 
     const { data: existing } = await supabase
       .from('staff_attendance')
@@ -116,11 +121,12 @@ export default function AdminStaffAttendancePage() {
 
     if (existing) {
       await supabase.from('staff_attendance').update({
-        status, marked_at: new Date().toISOString(), qr_code: qrCode, marked_by: profile?.id,
+        status, scanned_at: new Date().toISOString(), qr_data: data, scan_type: scanType,
       }).eq('id', existing.id);
     } else {
       await supabase.from('staff_attendance').insert({
-        staff_id: profile?.id, date: today, status, marked_at: new Date().toISOString(), qr_code: qrCode, marked_by: profile?.id,
+        staff_id: profile?.id, staff_name: staffName, qr_data: data, qr_code: qrCode,
+        scan_type: scanType, scanned_at: new Date().toISOString(), date: today, status,
       });
     }
     await fetchTodayHistory();
@@ -164,7 +170,7 @@ export default function AdminStaffAttendancePage() {
                 </div>
                 <div>
                   <p className="font-semibold text-slate-800 capitalize">Marked {lastScan.status}</p>
-                  <p className="text-sm text-slate-500">{lastScan.marked_at ? new Date(lastScan.marked_at).toLocaleTimeString() : ''}</p>
+                  <p className="text-sm text-slate-500">{lastScan.scanned_at ? new Date(lastScan.scanned_at).toLocaleTimeString() : ''}</p>
                 </div>
               </div>
             ) : (
@@ -180,7 +186,7 @@ export default function AdminStaffAttendancePage() {
                         <span className={`w-2 h-2 rounded-full ${s.status === 'late' ? 'bg-amber-500' : 'bg-green-500'}`} />
                         <span className="capitalize">{s.status}</span>
                       </div>
-                      <span className="text-slate-500">{s.marked_at ? new Date(s.marked_at).toLocaleTimeString() : ''}</span>
+                      <span className="text-slate-500">{s.scanned_at ? new Date(s.scanned_at).toLocaleTimeString() : ''}</span>
                     </div>
                   ))}
                 </div>

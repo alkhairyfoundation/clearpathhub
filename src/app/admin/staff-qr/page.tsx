@@ -58,18 +58,20 @@ export default function AdminStaffQRPage() {
   }
 
   async function fetchAttendance() {
-    const { data } = await supabase.from('staff_attendance').select('*').eq('date', date).order('marked_at', { ascending: false });
+    const { data } = await supabase.from('staff_attendance').select('*').eq('date', date).order('scanned_at', { ascending: false });
     if (data) setStaffAttendance(data);
   }
 
   async function markAttendance(staffId: string, status: 'present' | 'absent' | 'late') {
     setUpdating(staffId);
+    const staffProfile = allStaff.find(s => s.id === staffId);
+    const staffName = staffProfile ? `${staffProfile.first_name || ''} ${staffProfile.last_name || ''}`.trim() : '';
     const existing = staffAttendance.find(a => a.staff_id === staffId);
     if (existing) {
-      await supabase.from('staff_attendance').update({ status, marked_at: new Date().toISOString(), marked_by: profile?.id }).eq('id', existing.id);
+      await supabase.from('staff_attendance').update({ status, scanned_at: new Date().toISOString() }).eq('id', existing.id);
     } else {
       await supabase.from('staff_attendance').insert({
-        staff_id: staffId, date, status, marked_at: new Date().toISOString(), marked_by: profile?.id,
+        staff_id: staffId, staff_name: staffName, date, status, scanned_at: new Date().toISOString(), scan_type: 'manual',
       });
     }
     await fetchAttendance();
@@ -94,7 +96,7 @@ export default function AdminStaffQRPage() {
       ...s,
       record,
       status: record?.status || null,
-      marked_at: record?.marked_at || null,
+      scanned_at: record?.scanned_at || null,
     };
   });
 
@@ -201,7 +203,7 @@ export default function AdminStaffQRPage() {
                         <p className="font-semibold text-slate-900 text-sm truncate">{s.first_name} {s.last_name}</p>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-slate-400 capitalize">{s.role}</span>
-                          {s.record?.marked_at && <span className="text-xs text-slate-400">&bull; {new Date(s.marked_at).toLocaleTimeString()}</span>}
+                          {s.record?.scanned_at && <span className="text-xs text-slate-400">&bull; {new Date(s.scanned_at).toLocaleTimeString()}</span>}
                         </div>
                       </div>
                     </div>
