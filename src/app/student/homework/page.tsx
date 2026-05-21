@@ -15,12 +15,14 @@ export default function StudentHomeworkPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submissionUrls, setSubmissionUrls] = useState<Record<string, string>>({});
+  const [submissionText, setSubmissionText] = useState<Record<string, string>>({});
   const [submissionFiles, setSubmissionFiles] = useState<Record<string, File[]>>({});
   const [submitting, setSubmitting] = useState<Record<string, boolean>>({});
   const [expandedHw, setExpandedHw] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
+    if (!profile.id) return;
     fetchData();
   }, [profile]);
 
@@ -55,8 +57,9 @@ export default function StudentHomeworkPage() {
 
   async function handleSubmit(homeworkId: string) {
     const url = submissionUrls[homeworkId] || '';
+    const text = submissionText[homeworkId] || '';
     const files = submissionFiles[homeworkId] || [];
-    if (!url && files.length === 0) return;
+    if (!url && files.length === 0 && !text) return;
 
     setSubmitting(prev => ({ ...prev, [homeworkId]: true }));
     setError('');
@@ -67,15 +70,18 @@ export default function StudentHomeworkPage() {
         if (fileUrl) uploadedUrls.push(fileUrl);
       }
 
+      const submissionValue = text || url || uploadedUrls.join(',');
+
       const { error: submitError } = await supabase.from('homework_submissions').insert({
         homework_id: homeworkId,
         student_id: profile?.id,
-        submission_url: url || uploadedUrls.join(','),
+        submission_url: submissionValue,
         submitted_at: new Date().toISOString()
       });
       if (submitError) throw new Error(submitError.message);
 
       setSubmissionUrls(prev => ({ ...prev, [homeworkId]: '' }));
+      setSubmissionText(prev => ({ ...prev, [homeworkId]: '' }));
       setSubmissionFiles(prev => ({ ...prev, [homeworkId]: [] }));
       fetchData();
     } catch (err: any) {
@@ -98,6 +104,10 @@ export default function StudentHomeworkPage() {
     if (['jpg', 'jpeg', 'png', 'gif'].includes(ext || '')) return <Image size={14} className="text-purple-600" />;
     if (['mp4', 'mov', 'avi'].includes(ext || '')) return <FileVideo size={14} className="text-red-600" />;
     return <Paperclip size={14} className="text-blue-600" />;
+  }
+
+  function isUrl(str: string) {
+    return /^https?:\/\//i.test(str);
   }
 
   return (
@@ -164,14 +174,21 @@ export default function StudentHomeworkPage() {
                       {submitted.feedback && <p className="text-sm text-green-600 mt-1">Feedback: {submitted.feedback}</p>}
                       {submitted.submission_url && (
                         <div className="mt-2">
-                          <a href={submitted.submission_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-green-600 hover:underline">
-                            <ExternalLink size={12} /> View Submission
-                          </a>
+                          {isUrl(submitted.submission_url) ? (
+                            <a href={submitted.submission_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-green-600 hover:underline">
+                              <ExternalLink size={12} /> View Submission
+                            </a>
+                          ) : (
+                            <div className="text-sm text-green-700 bg-green-100 rounded p-2 whitespace-pre-wrap">
+                              {submitted.submission_url}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="space-y-3">
+                      <textarea placeholder="Type your answer here..." value={submissionText[hw.id] || ''} onChange={(e) => setSubmissionText({ ...submissionText, [hw.id]: e.target.value })} className="input w-full" rows={3} />
                       <div className="flex gap-3">
                         <input type="text" placeholder="Or paste a URL to your work" value={submissionUrls[hw.id] || ''} onChange={(e) => setSubmissionUrls({ ...submissionUrls, [hw.id]: e.target.value })} className="input flex-1" />
                       </div>

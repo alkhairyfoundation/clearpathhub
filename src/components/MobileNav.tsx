@@ -7,7 +7,7 @@ import {
   Menu, X, LayoutDashboard, Users, GraduationCap, UserCheck, BookOpen, 
   Calendar, BarChart3, Settings, QrCode, Megaphone, FileText, 
   Shield, DollarSign, ClipboardList, Award, Activity, ScanLine,
-  Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, ChevronDown, LogOut
+  Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, ChevronDown, LogOut, Brain
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
@@ -24,6 +24,8 @@ const navItems = {
     { href: '/admin/subjects', label: 'Subjects', icon: BookOpen },
     { href: '/admin/departments', label: 'Departments', icon: Building2 },
     { href: '/admin/attendance', label: 'Attendance', icon: UserCheck },
+    { href: '/admin/staff-attendance', label: 'Staff Attendance', icon: ScanLine },
+    { href: '/admin/student-practice', label: 'Student Practice', icon: Brain },
     { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },
     { href: '/admin/lessons', label: 'Lesson Notes', icon: FileText },
     { href: '/admin/sessions', label: 'Video Lessons', icon: BookOpen },
@@ -45,10 +47,12 @@ const navItems = {
     { href: '/teacher/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/teacher/lessons', label: 'Lessons', icon: FileText },
     { href: '/teacher/homework', label: 'Homework', icon: Clipboard },
+    { href: '/teacher/tasks', label: 'My Tasks', icon: ClipboardList },
     { href: '/teacher/tests', label: 'Tests', icon: TestTube2 },
     { href: '/teacher/quizzes', label: 'Quizzes', icon: Award },
     { href: '/teacher/results', label: 'Results', icon: BarChart3 },
     { href: '/teacher/attendance', label: 'Attendance', icon: UserCheck },
+    { href: '/teacher/staff-attendance', label: 'Staff Attendance', icon: ScanLine },
     { href: '/teacher/behavior', label: 'Behavior', icon: Activity },
     { href: '/teacher/scan-id', label: 'Scan ID', icon: ScanLine },
     { href: '/teacher/profile', label: 'Profile', icon: Settings },
@@ -80,6 +84,7 @@ const navItems = {
     { href: '/accountant/payments', label: 'Payments', icon: DollarSign },
     { href: '/accountant/expenses', label: 'Expenses', icon: Activity },
     { href: '/accountant/reports', label: 'Reports', icon: BarChart3 },
+    { href: '/accountant/staff-attendance', label: 'Staff Attendance', icon: ScanLine },
     { href: '/accountant/settings', label: 'Settings', icon: Settings },
   ],
 };
