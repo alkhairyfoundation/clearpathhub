@@ -4,45 +4,44 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar, Clock, AlertCircle } from 'lucide-react';
 import jsQR from 'jsqr';
 import DashboardLayout from '@/components/DashboardLayout';
 
 export default function TeacherStaffAttendancePage() {
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
   const router = useRouter();
   const [showCamera, setShowCamera] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [lastScan, setLastScan] = useState<any>(null);
-  const [scanHistory, setScanHistory] = useState<any[]>([]);
+  const [todayRecord, setTodayRecord] = useState<any>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (loading) return;
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
-    fetchTodayHistory();
+    if (profile) checkToday();
     return () => stopCamera();
-  }, [profile]);
+  }, [profile, loading]);
 
-  async function fetchTodayHistory() {
+  async function checkToday() {
     const today = new Date().toISOString().split('T')[0];
     const { data } = await supabase
       .from('staff_attendance')
       .select('*')
       .eq('staff_id', profile?.id)
       .eq('date', today)
-      .order('scanned_at', { ascending: false });
-    if (data) {
-      setScanHistory(data);
-      if (data.length > 0) setLastScan(data[0]);
-    }
+      .maybeSingle();
+    setTodayRecord(data);
   }
 
   async function startCamera() {
     setCameraError('');
+    setMessage(null);
     setShowCamera(true);
     setScanning(true);
     try {
@@ -79,7 +78,7 @@ export default function TeacherStaffAttendancePage() {
       const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
       if (imageData) {
         const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-        if (code?.data) {
+        if (code?.data && code.data.length > 10) {
           processScan(code.data);
         }
       }
@@ -95,41 +94,36 @@ export default function TeacherStaffAttendancePage() {
 
   async function processScan(data: string) {
     stopCamera();
+    setMessage(null);
 
     const today = new Date().toISOString().split('T')[0];
     const status = isLate() ? 'late' : 'present';
     const staffName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
+    const now = new Date().toISOString();
 
     let qrCode = data;
     let scanType = 'raw';
     try {
       const parsed = JSON.parse(data);
       if (parsed.type === 'STAFF_ATTENDANCE' || parsed.type === 'SCHOOL_ATTENDANCE') {
-        qrCode = parsed.school || parsed.type;
+        qrCode = parsed.school || data;
         scanType = 'staff_attendance';
       }
-    } catch {
-      scanType = 'manual';
-    }
+    } catch { scanType = 'manual'; }
 
-    const { data: existing } = await supabase
-      .from('staff_attendance')
-      .select('id')
-      .eq('staff_id', profile?.id)
-      .eq('date', today)
-      .maybeSingle();
+    try {
+      const { error } = await supabase.from('staff_attendance').upsert({
+        staff_id: profile?.id, staff_name: staffName, date: today, status,
+        qr_data: data, qr_code: qrCode, scan_type: scanType,
+        scanned_at: now, marked_at: now,
+      }, { onConflict: 'staff_id,date' });
 
-    if (existing) {
-      await supabase.from('staff_attendance').update({
-        status, scanned_at: new Date().toISOString(), qr_data: data, scan_type: scanType,
-      }).eq('id', existing.id);
-    } else {
-      await supabase.from('staff_attendance').insert({
-        staff_id: profile?.id, staff_name: staffName, qr_data: data, qr_code: qrCode,
-        scan_type: scanType, scanned_at: new Date().toISOString(), date: today, status,
-      });
+      if (error) { setMessage({ type: 'error', text: error.message }); return; }
+      setMessage({ type: 'success', text: `Marked as ${status} at ${new Date(now).toLocaleTimeString()}` });
+      setTodayRecord({ status, scanned_at: now });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to save attendance' });
     }
-    await fetchTodayHistory();
   }
 
   return (
@@ -141,7 +135,7 @@ export default function TeacherStaffAttendancePage() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Staff Attendance</h1>
-            <p className="text-slate-500">Scan the school QR code displayed at the entrance</p>
+            <p className="text-slate-500">Scan the school QR code to mark your attendance</p>
           </div>
         </div>
 
@@ -149,12 +143,24 @@ export default function TeacherStaffAttendancePage() {
           <Clock size={16} /> Attendance after 8:30 AM is automatically marked as <strong>Late</strong>
         </div>
 
+        {message && (
+          <div className={`rounded-lg p-3 text-sm flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+            {message.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />} {message.text}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card text-center">
             <QrCode size={48} className="mx-auto text-primary-600 mb-4" />
             <h2 className="text-lg font-semibold text-slate-800 mb-2">Scan QR Code</h2>
             <p className="text-sm text-slate-500 mb-6">Point your camera at the school QR code to mark your attendance</p>
-            {!showCamera ? (
+            {todayRecord ? (
+              <div className="p-4 bg-green-50 rounded-lg text-center">
+                <Check size={32} className="mx-auto text-green-600 mb-2" />
+                <p className="font-semibold text-green-700 capitalize">Already marked {todayRecord.status}</p>
+                <p className="text-sm text-green-600">Today at {new Date(todayRecord.scanned_at || todayRecord.marked_at).toLocaleTimeString()}</p>
+              </div>
+            ) : !showCamera ? (
               <button onClick={startCamera} className="btn-primary flex items-center gap-2 mx-auto"><Camera size={18} />Open Camera</button>
             ) : (
               <button onClick={stopCamera} className="btn-outline flex items-center gap-2 mx-auto"><X size={16} />Close Camera</button>
@@ -162,35 +168,21 @@ export default function TeacherStaffAttendancePage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><Calendar size={18} className="text-slate-400" />Today&apos;s Attendance</h2>
-            {lastScan ? (
-              <div className={`flex items-center gap-4 p-4 rounded-lg mb-4 ${lastScan.status === 'late' ? 'bg-amber-50' : 'bg-green-50'}`}>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${lastScan.status === 'late' ? 'bg-amber-100' : 'bg-green-100'}`}>
-                  <Check className={lastScan.status === 'late' ? 'text-amber-600' : 'text-green-600'} size={24} />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-800 capitalize">Marked {lastScan.status}</p>
-                  <p className="text-sm text-slate-500">{lastScan.scanned_at ? new Date(lastScan.scanned_at).toLocaleTimeString() : ''}</p>
+            <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><Calendar size={18} className="text-slate-400" />Today&apos;s Record</h2>
+            {todayRecord ? (
+              <div className={`p-4 rounded-lg ${todayRecord.status === 'late' ? 'bg-amber-50' : 'bg-green-50'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${todayRecord.status === 'late' ? 'bg-amber-100' : 'bg-green-100'}`}>
+                    <Check className={todayRecord.status === 'late' ? 'text-amber-600' : 'text-green-600'} size={24} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-800 capitalize">Marked {todayRecord.status}</p>
+                    <p className="text-sm text-slate-500">{todayRecord.scanned_at || todayRecord.marked_at ? new Date(todayRecord.scanned_at || todayRecord.marked_at).toLocaleTimeString() : ''}</p>
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-8 text-slate-500"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>Not yet marked</p></div>
-            )}
-            {scanHistory.length > 0 && (
-              <div className="mt-4">
-                <h3 className="font-medium text-slate-800 mb-2">History ({scanHistory.length})</h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {scanHistory.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${s.status === 'late' ? 'bg-amber-500' : 'bg-green-500'}`} />
-                        <span className="capitalize">{s.status}</span>
-                      </div>
-                      <span className="text-slate-500">{s.scanned_at ? new Date(s.scanned_at).toLocaleTimeString() : ''}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             )}
           </div>
         </div>
