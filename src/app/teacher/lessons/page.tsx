@@ -76,8 +76,11 @@ export default function TeacherLessonsPage() {
   async function ensureSessionForLesson(lesson: any): Promise<string | null> {
     if (lesson.session_id) return lesson.session_id;
     const { data: newSession } = await supabase.from('sessions').insert({
-      title: lesson.title, description: `${lesson.title} - Lesson Notes`,
-      video_type: 'youtube', video_url: '', duration: 0, is_published: false,
+      title: lesson.title,
+      subject_id: lesson.subject_id || null,
+      class_id: lesson.class_id || null,
+      teacher_id: lesson.teacher_id || profile?.id,
+      is_published: true,
     }).select('id').single();
     if (!newSession) return null;
     await supabase.from('lessons').update({ session_id: newSession.id }).eq('id', lesson.id);
