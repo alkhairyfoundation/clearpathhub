@@ -98,29 +98,25 @@ export default function AdminStaffAttendancePage() {
 
     const today = new Date().toISOString().split('T')[0];
     const status = isLate() ? 'late' : 'present';
-    const staffName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
     const now = new Date().toISOString();
 
     let qrCode = data;
-    let scanType = 'raw';
     try {
       const parsed = JSON.parse(data);
       if (parsed.type === 'STAFF_ATTENDANCE' || parsed.type === 'SCHOOL_ATTENDANCE') {
         qrCode = parsed.school || data;
-        scanType = 'staff_attendance';
       }
-    } catch { scanType = 'manual'; }
+    } catch {}
 
     try {
       const { error } = await supabase.from('staff_attendance').upsert({
-        staff_id: profile?.id, staff_name: staffName, date: today, status,
-        qr_data: data, qr_code: qrCode, scan_type: scanType,
-        scanned_at: now, marked_at: now,
+        staff_id: profile?.id, date: today, status,
+        qr_code: qrCode, marked_at: now,
       }, { onConflict: 'staff_id,date' });
 
       if (error) { setMessage({ type: 'error', text: error.message }); return; }
       setMessage({ type: 'success', text: `Marked as ${status} at ${new Date(now).toLocaleTimeString()}` });
-      setTodayRecord({ status, scanned_at: now });
+      setTodayRecord({ status, marked_at: now });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to save attendance' });
     }
@@ -158,7 +154,7 @@ export default function AdminStaffAttendancePage() {
               <div className="p-4 bg-green-50 rounded-lg text-center">
                 <Check size={32} className="mx-auto text-green-600 mb-2" />
                 <p className="font-semibold text-green-700 capitalize">Already marked {todayRecord.status}</p>
-                <p className="text-sm text-green-600">Today at {new Date(todayRecord.scanned_at || todayRecord.marked_at).toLocaleTimeString()}</p>
+                <p className="text-sm text-green-600">Today at {new Date(todayRecord.marked_at).toLocaleTimeString()}</p>
               </div>
             ) : !showCamera ? (
               <button onClick={startCamera} className="btn-primary flex items-center gap-2 mx-auto"><Camera size={18} />Open Camera</button>
@@ -177,7 +173,7 @@ export default function AdminStaffAttendancePage() {
                   </div>
                   <div>
                     <p className="font-semibold text-slate-800 capitalize">Marked {todayRecord.status}</p>
-                    <p className="text-sm text-slate-500">{todayRecord.scanned_at || todayRecord.marked_at ? new Date(todayRecord.scanned_at || todayRecord.marked_at).toLocaleTimeString() : ''}</p>
+                    <p className="text-sm text-slate-500">{todayRecord.marked_at ? new Date(todayRecord.marked_at).toLocaleTimeString() : ''}</p>
                   </div>
                 </div>
               </div>

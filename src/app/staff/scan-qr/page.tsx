@@ -35,7 +35,7 @@ export default function StaffScanQRPage() {
       .select('*')
       .eq('staff_id', profile?.id)
       .eq('date', today)
-      .order('scanned_at', { ascending: false });
+      .order('marked_at', { ascending: false });
     if (data) {
       setScanHistory(data);
       if (data.length > 0) setLastScan(data[0]);
@@ -92,28 +92,14 @@ export default function StaffScanQRPage() {
     stopCamera();
     
     let qrCode = data;
-    let qrType = 'raw';
     
     try {
       const parsed = JSON.parse(data);
       if (parsed.type === 'STAFF_ATTENDANCE' || parsed.type === 'SCHOOL_ATTENDANCE') {
         qrCode = parsed.school || parsed.type;
-        qrType = 'staff_attendance';
       }
-    } catch {
-      qrType = 'manual';
-    }
+    } catch {}
     
-    const record = {
-      staff_id: profile?.id,
-      staff_name: `${profile?.first_name} ${profile?.last_name}`,
-      qr_data: data,
-      qr_code: qrCode,
-      scan_type: qrType,
-      scanned_at: new Date().toISOString(),
-      date: new Date().toISOString().split('T')[0],
-      status: 'present'
-    };
     const todayDate = new Date().toISOString().split('T')[0];
     const { data: existing } = await supabase
       .from('staff_attendance')
@@ -123,9 +109,12 @@ export default function StaffScanQRPage() {
       .maybeSingle();
 
     if (existing) {
-      await supabase.from('staff_attendance').update({ status: 'present', scanned_at: new Date().toISOString(), qr_data: data, scan_type: qrType }).eq('id', existing.id);
+      await supabase.from('staff_attendance').update({ status: 'present', marked_at: new Date().toISOString() }).eq('id', existing.id);
     } else {
-      await supabase.from('staff_attendance').insert(record);
+      await supabase.from('staff_attendance').insert({
+        staff_id: profile?.id, qr_code: qrCode, marked_at: new Date().toISOString(),
+        date: todayDate, status: 'present',
+      });
     }
     await fetchTodayHistory();
   }
@@ -151,7 +140,7 @@ export default function StaffScanQRPage() {
           {lastScan ? (
             <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center"><Check className="text-green-600" size={24} /></div>
-              <div><p className="font-semibold text-slate-800">Checked In</p><p className="text-sm text-slate-500">{new Date(lastScan.scanned_at).toLocaleTimeString()}</p></div>
+              <div><p className="font-semibold text-slate-800">Checked In</p><p className="text-sm text-slate-500">{new Date(lastScan.marked_at).toLocaleTimeString()}</p></div>
             </div>
           ) : (
             <div className="text-center py-8 text-slate-500"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>No attendance marked yet</p></div>
@@ -161,8 +150,8 @@ export default function StaffScanQRPage() {
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {scanHistory.map((s) => (
                   <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-sm">
-                    <div className="flex items-center gap-2"><Check size={14} className="text-green-500" /><span>{s.staff_name} — {s.date}</span></div>
-                    <span className="text-slate-500">{new Date(s.scanned_at).toLocaleTimeString()}</span>
+                    <div className="flex items-center gap-2"><Check size={14} className="text-green-500" /><span>{s.date}</span></div>
+                    <span className="text-slate-500">{new Date(s.marked_at).toLocaleTimeString()}</span>
                   </div>
                 ))}
               </div>
