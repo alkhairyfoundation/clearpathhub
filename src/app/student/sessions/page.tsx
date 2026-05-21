@@ -205,6 +205,31 @@ export default function StudentSessionsPage() {
         if (youtubePlayer) youtubePlayer.playVideo();
         else { const video = document.querySelector('video'); video?.play(); }
       }, 1000);
+    } else {
+      const checkpoints = getCheckpoints(selectedSession);
+      const currentIdx = checkpoints.findIndex(c => c.id === currentCheckpoint.id);
+      const previousTimestamp = currentIdx > 0 ? checkpoints[currentIdx - 1].timestamp_seconds : 0;
+      setCheckpointAnswers(prev => {
+        const next = { ...prev };
+        delete next[currentCheckpoint.id!];
+        return next;
+      });
+      setCheckpointRawAnswers(prev => {
+        const next = { ...prev };
+        delete next[currentCheckpoint.id!];
+        return next;
+      });
+      setTimeout(() => {
+        setCheckpointActive(false);
+        setCurrentCheckpoint(null);
+        if (youtubePlayer) {
+          youtubePlayer.seekTo(previousTimestamp);
+          youtubePlayer.playVideo();
+        } else {
+          const video = document.querySelector('video');
+          if (video) { video.currentTime = previousTimestamp; video.play(); }
+        }
+      }, 1500);
     }
   }
 
@@ -327,7 +352,7 @@ export default function StudentSessionsPage() {
                     })}
                   </div>
                   {checkpointAnswers[currentCheckpoint.id] === false && (
-                    <div className="mt-4 p-3 bg-red-50 rounded-lg text-sm text-red-600 flex items-center gap-2"><AlertCircle size={16} />Incorrect. You must answer correctly to continue.</div>
+                    <div className="mt-4 p-3 bg-red-50 rounded-lg text-sm text-red-600 flex items-center gap-2"><AlertCircle size={16} />Incorrect. Rewinding to last checkpoint for review...</div>
                   )}
                   {checkpointAnswers[currentCheckpoint.id] === true && (
                     <div className="mt-4 p-3 bg-green-50 rounded-lg text-sm text-green-600 flex items-center gap-2"><CheckCircle size={16} />Correct! Continuing video...</div>

@@ -241,8 +241,8 @@ export default function StudentLessonsPage() {
           </div>
         )}
 
-        {/* Lesson Detail Modal */}
-        {selectedLesson && !showQuiz && (
+        {/* Lesson Detail Modal (with inline quiz) */}
+        {selectedLesson && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedLesson(null)}>
             <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="p-6 border-b sticky top-0 bg-white z-10 flex items-center justify-between">
@@ -262,27 +262,18 @@ export default function StudentLessonsPage() {
                   <h3 className="font-medium text-slate-800 mb-3">Attachments</h3>
                   <div className="space-y-2">
                     {selectedLesson.attachments.map((url: string, i: number) => (
-                      <a
-                        key={i}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        <Download size={16} />
-                        <span className="truncate">{url.split('/').pop()}</span>
-                      </a>
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"><Download size={16} /><span className="truncate">{url.split('/').pop()}</span></a>
                     ))}
                   </div>
                 </div>
               )}
-              {quizQuestions.length > 0 && (
+
+              {/* Inline Quiz */}
+              {quizQuestions.length > 0 && !showQuiz && !quizFinished && (
                 <div className="p-6 border-t">
                   <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <HelpCircle size={20} className="text-primary-600" />
-                      </div>
+                      <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"><HelpCircle size={20} className="text-primary-600" /></div>
                       <div className="flex-1">
                         <p className="font-semibold text-slate-800">Lesson Quiz Available</p>
                         <p className="text-sm text-slate-600">{quizQuestions.length} question{quizQuestions.length > 1 ? 's' : ''} to test your understanding</p>
@@ -292,78 +283,55 @@ export default function StudentLessonsPage() {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        )}
 
-        {/* Quiz Modal */}
-        {showQuiz && quizQuestions.length > 0 && !quizFinished && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 border-b sticky top-0 bg-white z-10 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-800">Lesson Quiz</h2>
-                  <p className="text-sm text-slate-500">Question {quizIdx + 1} of {quizQuestions.length}</p>
+              {showQuiz && !quizFinished && quizQuestions.length > 0 && (
+                <div className="p-6 border-t space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-800">Lesson Quiz</h3>
+                    <span className="text-sm text-slate-500">Question {quizIdx + 1} of {quizQuestions.length}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                    <div className="bg-primary-600 h-1.5 rounded-full transition-all" style={{ width: `${((quizIdx + 1) / quizQuestions.length) * 100}%` }} />
+                  </div>
+                  <h4 className="font-semibold text-slate-800 text-lg">{quizQuestions[quizIdx].question}</h4>
+                  <div className="space-y-2">
+                    {quizQuestions[quizIdx].options.map((opt: string, i: number) => {
+                      const isSelected = quizAnswer === i;
+                      const isCorrectAnswer = i === quizQuestions[quizIdx].correct_answer;
+                      let btnClass = 'w-full text-left p-3 rounded-lg border-2 transition-all text-sm ';
+                      if (!quizFeedback) {
+                        btnClass += isSelected ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700';
+                      } else {
+                        btnClass += isCorrectAnswer ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : isSelected ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 text-slate-400';
+                      }
+                      return (
+                        <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizFeedback} className={btnClass}>
+                          <span className="font-medium mr-2">{String.fromCharCode(65 + i)}.</span>{opt}
+                          {quizFeedback && isCorrectAnswer && <CheckCircle size={16} className="inline ml-2 text-emerald-600" />}
+                          {quizFeedback && isSelected && !isCorrectAnswer && <XCircle size={16} className="inline ml-2 text-red-600" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {quizFeedback && (
+                    <button onClick={handleQuizNext} className="btn-primary w-full">
+                      {quizIdx + 1 >= quizQuestions.length ? 'Finish' : 'Next Question'}
+                    </button>
+                  )}
                 </div>
-                <button onClick={() => { setShowQuiz(false); setSelectedLesson(null); }} className="p-2 hover:bg-slate-100 rounded-full">
-                  <XCircle size={20} className="text-slate-500" />
-                </button>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="w-full bg-slate-200 rounded-full h-1.5">
-                  <div className="bg-primary-600 h-1.5 rounded-full transition-all" style={{ width: `${((quizIdx + 1) / quizQuestions.length) * 100}%` }} />
-                </div>
-                <h3 className="font-semibold text-slate-800 text-lg">{quizQuestions[quizIdx].question}</h3>
-                <div className="space-y-2">
-                  {quizQuestions[quizIdx].options.map((opt: string, i: number) => {
-                    const isSelected = quizAnswer === i;
-                    const isCorrectAnswer = i === quizQuestions[quizIdx].correct_answer;
-                    let btnClass = 'w-full text-left p-3 rounded-lg border-2 transition-all text-sm ';
-                    if (!quizFeedback) {
-                      btnClass += isSelected ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700';
-                    } else {
-                      btnClass += isCorrectAnswer ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : isSelected ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 text-slate-400';
-                    }
-                    return (
-                      <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizFeedback} className={btnClass}>
-                        <span className="font-medium mr-2">{String.fromCharCode(65 + i)}.</span>
-                        {opt}
-                        {quizFeedback && isCorrectAnswer && <CheckCircle size={16} className="inline ml-2 text-emerald-600" />}
-                        {quizFeedback && isSelected && !isCorrectAnswer && <XCircle size={16} className="inline ml-2 text-red-600" />}
-                      </button>
-                    );
-                  })}
-                </div>
-                {quizFeedback && (
-                  <button onClick={handleQuizNext} className="btn-primary w-full">
-                    {quizIdx + 1 >= quizQuestions.length ? 'Finish' : 'Next Question'}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+              )}
 
-        {/* Quiz Finished */}
-        {showQuiz && quizFinished && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 text-center">
-              {quizResults ? (
-                <>
+              {quizFinished && quizResults && (
+                <div className="p-6 border-t text-center">
                   <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${quizResults.correct / quizResults.total >= 0.7 ? 'bg-emerald-100' : 'bg-amber-100'}`}>
                     {quizResults.correct / quizResults.total >= 0.7 ? <CheckCircle size={32} className="text-emerald-600" /> : <XCircle size={32} className="text-amber-600" />}
                   </div>
                   <h3 className="text-xl font-bold text-slate-800 mb-2">Quiz Complete</h3>
                   <p className="text-3xl font-bold text-primary-600 mb-2">{quizResults.correct}/{quizResults.total}</p>
                   <p className="text-slate-500 mb-6">{Math.round((quizResults.correct / quizResults.total) * 100)}% score</p>
-                </>
-              ) : (
-                <div className="flex items-center justify-center py-8"><Loader2 size={24} className="animate-spin text-primary-600" /></div>
+                  <button onClick={startQuiz} className="btn-primary">Retry Quiz</button>
+                </div>
               )}
-              <div className="flex gap-3">
-                <button onClick={() => { setShowQuiz(false); setSelectedLesson(null); }} className="btn-ghost flex-1">Close</button>
-                <button onClick={startQuiz} className="btn-primary flex-1">Retry</button>
-              </div>
             </div>
           </div>
         )}
