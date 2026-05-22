@@ -41,6 +41,14 @@ export default function ParentAnnouncementsPage() {
     if (!error && data) {
       setAnnouncements(prev => reset ? data : [...prev, ...data]);
       setHasMore(data.length === PAGE_SIZE);
+
+      // Update last read timestamp on first load
+      if (reset && data.length > 0) {
+        await supabase
+          .from('profiles')
+          .update({ last_read_announcements: new Date().toISOString() })
+          .eq('id', profile?.id);
+      }
     }
     if (reset) setLoading(false);
     else setLoadingMore(false);

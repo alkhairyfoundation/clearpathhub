@@ -43,6 +43,9 @@ export default function StudentSessionsPage() {
   const playerRef = useRef<any>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const checkpointSavedRef = useRef(false);
+  const checkpointAnswersRef = useRef<Record<string, boolean>>({});
+  const checkpointActiveRef = useRef(false);
+  const checkpointsRef = useRef<CheckpointQuestion[]>([]);
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
@@ -54,6 +57,9 @@ export default function StudentSessionsPage() {
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [profile]);
+
+  useEffect(() => { checkpointAnswersRef.current = checkpointAnswers; }, [checkpointAnswers]);
+  useEffect(() => { checkpointActiveRef.current = checkpointActive; }, [checkpointActive]);
 
   async function fetchData() {
     setLoading(true);
@@ -163,6 +169,7 @@ export default function StudentSessionsPage() {
     checkpointSavedRef.current = false;
 
     const checkpoints = getCheckpoints(session);
+    checkpointsRef.current = checkpoints;
     if (checkpoints.length > 0 && session.video_type === 'youtube') {
       const youtubeId = extractYouTubeId(session.video_url || '');
       if (youtubeId) setTimeout(() => initYouTubePlayer(youtubeId), 500);
@@ -170,9 +177,9 @@ export default function StudentSessionsPage() {
 
     if (checkpoints.length > 0 && intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      if (!playerRef.current || checkpointActive) return;
+      if (!playerRef.current || checkpointActiveRef.current) return;
       const currentTime = playerRef.current.getCurrentTime();
-      const cp = checkpoints.find(c => Math.abs(c.timestamp_seconds - currentTime) <= 3 && !checkpointAnswers[c.id]);
+      const cp = checkpointsRef.current.find(c => Math.abs(c.timestamp_seconds - currentTime) <= 3 && !checkpointAnswersRef.current[c.id]);
       if (cp) {
         playerRef.current.pauseVideo();
         setCurrentCheckpoint(cp);
