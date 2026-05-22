@@ -278,8 +278,19 @@ export default function AdminSchoolQRPage() {
               <img src={qrCodeUrl} alt="School QR" className="max-w-full max-h-full object-contain" style={{ width: 'min(85vw, 85vh)' }} />
             </div>
           </div>
-          <div className="shrink-0 text-center py-3 text-xs text-slate-400 border-t bg-white">
-            {schoolSettings?.school_name} &mdash; Scan for staff attendance
+          <div className="shrink-0 border-t bg-white px-4 py-3 flex items-center justify-between flex-wrap gap-2">
+            <span className="text-xs text-slate-400">{schoolSettings?.school_name} &mdash; Scan for staff attendance</span>
+            <div className="flex gap-2">
+              <button onClick={downloadPNG} className="btn-primary text-xs flex items-center gap-1.5 px-3 py-1.5">
+                <Download size={14} /> PNG
+              </button>
+              <button onClick={downloadPDF} className="btn-outline text-xs flex items-center gap-1.5 px-3 py-1.5">
+                <Download size={14} /> PDF
+              </button>
+              <button onClick={handlePrint} className="btn-outline text-xs flex items-center gap-1.5 px-3 py-1.5">
+                <Printer size={14} /> Print
+              </button>
+            </div>
           </div>
         </div>
       )}
