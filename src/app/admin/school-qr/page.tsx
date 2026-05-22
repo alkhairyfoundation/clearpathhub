@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, QrCode, Download, Printer, Eye, Loader2 } from 'lucide-react';
+import { ArrowLeft, QrCode, Download, Printer, Eye, Loader2, Maximize2, Minimize2, Smartphone } from 'lucide-react';
 import QRCode from 'qrcode';
 import DashboardLayout from '@/components/DashboardLayout';
 import jsPDF from 'jspdf';
@@ -15,8 +15,9 @@ export default function AdminSchoolQRPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [qrSize, setQrSize] = useState(500);
+  const [qrSize, setQrSize] = useState(800);
   const [showPreview, setShowPreview] = useState(false);
+  const [landscapeMode, setLandscapeMode] = useState(false);
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -187,7 +188,7 @@ export default function AdminSchoolQRPage() {
           {qrCodeUrl ? (
             <div className="text-center">
               <div className="bg-white rounded-xl p-8 mb-6 inline-block border-2 border-slate-200">
-                <img src={qrCodeUrl} alt="School QR Code" className="w-64 h-64" />
+                <img src={qrCodeUrl} alt="School QR Code" className="w-80 h-80 sm:w-96 sm:h-96" />
               </div>
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-slate-900">{schoolSettings?.school_name || 'Mastery Engine'}</h3>
@@ -223,11 +224,17 @@ export default function AdminSchoolQRPage() {
               <div>
                 <label className="label">QR Size</label>
                 <select value={qrSize} onChange={(e) => setQrSize(Number(e.target.value))} className="input">
-                  <option value={300}>Small (300x300)</option>
-                  <option value={500}>Medium (500x500)</option>
+                  <option value={500}>Standard (500x500)</option>
                   <option value={800}>Large (800x800)</option>
                   <option value={1000}>Extra Large (1000x1000)</option>
+                  <option value={1200}>XXL (1200x1200)</option>
+                  <option value={1500}>Max (1500x1500)</option>
                 </select>
+              </div>
+              <div>
+                <button onClick={() => setLandscapeMode(true)} className="btn-outline w-full flex items-center justify-center gap-2">
+                  <Maximize2 size={18} /> Landscape Scan Mode
+                </button>
               </div>
             </div>
           </div>
@@ -253,6 +260,29 @@ export default function AdminSchoolQRPage() {
           </div>
         </div>
       </div>
+
+      {/* Landscape Scan Mode — full screen, QR fills as much space as possible */}
+      {landscapeMode && qrCodeUrl && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col">
+          <div className="flex items-center justify-between px-6 py-4 border-b bg-white shrink-0">
+            <div className="flex items-center gap-3">
+              <Smartphone size={20} className="text-slate-500" />
+              <span className="text-sm font-semibold text-slate-700">Rotate your device to landscape for maximum scan distance</span>
+            </div>
+            <button onClick={() => setLandscapeMode(false)} className="btn-ghost flex items-center gap-2">
+              <Minimize2 size={18} /> Exit
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-4 bg-slate-50">
+            <div className="bg-white rounded-2xl shadow-lg p-4 max-w-full max-h-full flex items-center justify-center" style={{ aspectRatio: '1' }}>
+              <img src={qrCodeUrl} alt="School QR" className="max-w-full max-h-full object-contain" style={{ width: 'min(85vw, 85vh)' }} />
+            </div>
+          </div>
+          <div className="shrink-0 text-center py-3 text-xs text-slate-400 border-t bg-white">
+            {schoolSettings?.school_name} &mdash; Scan for staff attendance
+          </div>
+        </div>
+      )}
 
       {/* Preview Modal */}
       {showPreview && (
