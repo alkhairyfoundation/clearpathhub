@@ -72,6 +72,7 @@ const navItems = {
     { href: '/student/quizzes', label: 'Quizzes', icon: Award },
     { href: '/student/results', label: 'Results', icon: BarChart3 },
     { href: '/student/attendance', label: 'Attendance', icon: UserCheck },
+    { href: '/student/announcements', label: 'Announcements', icon: Megaphone },
     { href: '/student/entrance-exams', label: 'Entrance Exams', icon: FileCheck },
     { href: '/student/id-card', label: 'My ID Card', icon: QrCode },
     { href: '/student/profile', label: 'Profile', icon: Settings },
