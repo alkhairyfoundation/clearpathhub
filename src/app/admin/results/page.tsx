@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import {
   Plus, Award, Save, ArrowLeft, BarChart3, Users, TrendingUp,
   AlertTriangle, Download, CheckCircle, XCircle, Loader2, Edit3, Send, GraduationCap, Printer
 } from 'lucide-react';
-import type { Result, Subject, Profile } from '@/types';
+import type { Subject } from '@/types';
 import SendResultButton from '@/components/SendResultButton';
 
 type ExamType = 'ca1' | 'ca2' | 'ca3' | 'exam';
@@ -48,7 +48,7 @@ function safeScore(val: string | number): number {
   return Math.min(100, Math.max(0, n));
 }
 
-export default function TeacherResultsPage() {
+export default function AdminResultsPage() {
   const { profile } = useAuth();
   const router = useRouter();
 
@@ -72,7 +72,7 @@ export default function TeacherResultsPage() {
   const [formData, setFormData] = useState({ student_id: '', subject_id: '', exam_type: 'ca1' as ExamType, score: 0, grade: '', remarks: '' });
 
   useEffect(() => {
-    if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
+    if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchInitial();
   }, [profile]);
 
@@ -83,19 +83,10 @@ export default function TeacherResultsPage() {
   async function fetchInitial() {
     setLoading(true);
     try {
-      const { data: teacherSubjects } = await supabase
-        .from('subjects')
-        .select('id, class_id, name')
-        .eq('teacher_id', profile?.id);
-
-      const teacherClassIds = Array.from(new Set(teacherSubjects?.map(s => s.class_id).filter(Boolean) || [])) as string[];
-
       const [{ data: termData }, { data: classData }, { data: subjData }] = await Promise.all([
         supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
-        teacherClassIds.length > 0
-          ? supabase.from('classes').select('*').in('id', teacherClassIds).order('name')
-          : { data: [], error: null },
-        supabase.from('subjects').select('*').eq('teacher_id', profile?.id).order('name'),
+        supabase.from('classes').select('*').order('name'),
+        supabase.from('subjects').select('*').order('name'),
       ]);
 
       setTerms(termData || []);
@@ -277,10 +268,10 @@ export default function TeacherResultsPage() {
   function exportCSV() {
     if (allResults.length === 0) { setError('No results to export'); return; }
     const headers = 'Student,Admission,Subject,Exam Type,Score,Grade,Term,Date';
-    const rows = allResults.map((r: any) =>
+    const csvRows = allResults.map((r: any) =>
       `"${r.student?.first_name || ''} ${r.student?.last_name || ''}","${students.find(s => s.profile_id === r.student_id)?.admission_number || ''}","${r.subject?.name || ''}","${r.exam_type}","${r.score}","${r.grade || ''}","${r.term || ''}","${new Date(r.created_at).toLocaleDateString()}"`
     ).join('\n');
-    const blob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
+    const blob = new Blob([`${headers}\n${csvRows}`], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = 'results_export.csv'; a.click();
@@ -296,13 +287,13 @@ export default function TeacherResultsPage() {
   const currentSubject = subjects.find(s => s.id === selectedSubjectId);
 
   return (
-    <DashboardLayout title="Score Declaration" subtitle="Enter CA and Exam scores per student per term">
+    <DashboardLayout title="Score Declaration" subtitle="Admin - Enter CA and Exam scores per student per term">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-            <div><h1 className="text-2xl font-bold text-slate-800">Score Declaration</h1><p className="text-slate-500 text-sm">Enter CA and Exam scores per student per term</p></div>
+            <div><h1 className="text-2xl font-bold text-slate-800">Score Declaration</h1><p className="text-slate-500 text-sm">Admin - Enter CA and Exam scores per student per term</p></div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowSummary(!showSummary)} className="btn-outline flex items-center gap-2 text-sm"><BarChart3 size={16} />{showSummary ? 'Hide' : 'Summary'}</button>

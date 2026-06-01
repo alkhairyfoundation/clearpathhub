@@ -22,6 +22,7 @@ const navItems = {
     { href: '/admin/users', label: 'User Management', icon: Users },
     { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
     { href: '/admin/subjects', label: 'Subjects', icon: BookOpen },
+    { href: '/admin/results', label: 'Results & Analytics', icon: BarChart3 },
     { href: '/admin/departments', label: 'Departments', icon: Building2 },
     { href: '/admin/attendance', label: 'Attendance', icon: UserCheck },
     { href: '/admin/staff-attendance', label: 'Scan Staff Attendance', icon: ScanLine },

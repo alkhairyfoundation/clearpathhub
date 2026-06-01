@@ -70,14 +70,16 @@ function ReportCardContent() {
     if (!child || !selectedTerm) return;
     try {
       const pid = child.profile_id;
-      const start = selectedTerm.start_date;
-      const end = selectedTerm.end_date;
+      const termName = selectedTerm.name || '';
+      const startDate = (selectedTerm.start_date || '').split('T')[0];
+      const endDate = (selectedTerm.end_date || '').split('T')[0];
+      const endOfDay = endDate + 'T23:59:59';
 
       const [resR, attR, behR, hwR] = await Promise.all([
-        supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', pid).gte('created_at', start).lte('created_at', end + 'T23:59:59').order('created_at'),
-        supabase.from('attendance').select('*').eq('student_id', pid).gte('date', start).lte('date', end).order('date'),
-        supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', pid).gte('created_at', start).lte('created_at', end + 'T23:59:59'),
-        supabase.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', pid).gte('submitted_at', start).lte('submitted_at', end + 'T23:59:59'),
+        supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', pid).eq('term', termName).order('created_at'),
+        supabase.from('attendance').select('*').eq('student_id', pid).gte('date', startDate).lte('date', endDate).order('date'),
+        supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', pid).gte('created_at', startDate).lte('created_at', endOfDay),
+        supabase.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', pid).gte('submitted_at', startDate).lte('submitted_at', endOfDay),
       ]);
       setResults(resR.data || []);
       setAttendance(attR.data || []);

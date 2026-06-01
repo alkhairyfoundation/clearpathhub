@@ -256,6 +256,7 @@ export default function AdminDashboard() {
               { label: 'Sessions', href: '/admin/sessions', icon: <Video size={18} />, color: 'text-purple-600 bg-purple-50' },
               { label: 'Lessons', href: '/admin/lessons', icon: <BookOpen size={18} />, color: 'text-blue-600 bg-blue-50' },
               { label: 'Tests', href: '/admin/tests', icon: <FileText size={18} />, color: 'text-orange-600 bg-orange-50' },
+              { label: 'Results', href: '/admin/results', icon: <Award size={18} />, color: 'text-indigo-600 bg-indigo-50' },
               { label: 'ID Cards', href: '/admin/id-cards', icon: <QrCode size={18} />, color: 'text-amber-600 bg-amber-50' },
               { label: 'Analytics', href: '/admin/analytics', icon: <BarChart3 size={18} />, color: 'text-rose-600 bg-rose-50' },
               { label: 'Settings', href: '/admin/settings', icon: <Settings size={18} />, color: 'text-slate-600 bg-slate-50' },

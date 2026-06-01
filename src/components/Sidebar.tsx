@@ -23,6 +23,7 @@ const navItems = {
     { href: '/admin/question-bank', label: 'Question Bank', icon: HelpCircle },
     { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
     { href: '/admin/subjects', label: 'Subjects', icon: BookOpen },
+    { href: '/admin/results', label: 'Results & Analytics', icon: BarChart3 },
     { href: '/admin/departments', label: 'Departments', icon: Building2 },
     { href: '/admin/lessons', label: 'Lesson Notes', icon: FileText },
     { href: '/admin/sessions', label: 'Video Lessons', icon: BookOpen },
