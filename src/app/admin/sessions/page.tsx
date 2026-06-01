@@ -86,6 +86,9 @@ export default function AdminSessionsPage() {
   async function handleDeleteSession(id: string) {
     if (!confirm('Delete this video lesson and all associated quizzes?')) return;
     try {
+      // Delete lessons linked to this session
+      await supabase.from('lessons').delete().eq('session_id', id);
+      // Delete quizzes and their questions
       const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', id);
       if (quizzes && quizzes.length > 0) {
         const qIds = quizzes.map(q => q.id);

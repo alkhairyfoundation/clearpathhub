@@ -171,8 +171,9 @@ export interface VideoCheckpoint {
   question_image?: string;
   options: string[];
   option_images?: string[];
-  correct_answer: number;
+  correct_answer: any;
   points: number;
+  question_type?: string;
 }
 
 export interface Quiz {
@@ -192,9 +193,9 @@ export interface QuizQuestion {
   question_image?: string;
   option_images?: string[];
   options: string[];
-  correct_answer: number;
+  correct_answer: any;
   points: number;
-   question_type?: 'multiple_choice' | 'true_false' | 'fill_blank' | 'multiple_selection';
+  question_type?: 'multiple_choice' | 'true_false' | 'fill_blank' | 'short_answer' | 'multiple_selection';
   order_index?: number;
   timestamp_seconds?: number;
   is_checkpoint?: boolean;

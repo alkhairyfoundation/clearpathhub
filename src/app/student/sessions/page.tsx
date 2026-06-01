@@ -11,7 +11,7 @@ interface CheckpointQuestion {
   id: string;
   question: string;
   options: string[];
-  correct_answer: number;
+  correct_answer: any;
   timestamp_seconds: number;
   question_type?: string;
 }
@@ -30,7 +30,7 @@ export default function StudentSessionsPage() {
   const [checkpointActive, setCheckpointActive] = useState(false);
   const [currentCheckpoint, setCurrentCheckpoint] = useState<CheckpointQuestion | null>(null);
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<string, boolean>>({});
-  const [checkpointRawAnswers, setCheckpointRawAnswers] = useState<Record<string, number>>({});
+  const [checkpointRawAnswers, setCheckpointRawAnswers] = useState<Record<string, any>>({});
   const [checkpointScore, setCheckpointScore] = useState<{ correct: number; total: number } | null>(null);
 
   const [youtubePlayer, setYoutubePlayer] = useState<any>(null);
@@ -39,6 +39,8 @@ export default function StudentSessionsPage() {
   const [savingResults, setSavingResults] = useState(false);
   const [passedCheckpoints, setPassedCheckpoints] = useState(false);
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [multiSelected, setMultiSelected] = useState<number[]>([]);
+  const [textAnswer, setTextAnswer] = useState('');
   const [error, setError] = useState('');
   const playerRef = useRef<any>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -60,6 +62,7 @@ export default function StudentSessionsPage() {
 
   useEffect(() => { checkpointAnswersRef.current = checkpointAnswers; }, [checkpointAnswers]);
   useEffect(() => { checkpointActiveRef.current = checkpointActive; }, [checkpointActive]);
+  useEffect(() => { if (checkpointActive && currentCheckpoint) { setMultiSelected([]); setTextAnswer(''); } }, [checkpointActive, currentCheckpoint]);
 
   async function fetchData() {
     setLoading(true);
@@ -99,10 +102,29 @@ export default function StudentSessionsPage() {
 
   function getPostVideoQuiz(session: any): any | null {
     if (!session.quiz) return null;
-    const postQuiz = session.quiz.find((q: any) =>
-      !q.quiz_questions?.some((qq: any) => qq.timestamp_seconds !== undefined && qq.timestamp_seconds !== null)
-    );
+    const postQuiz = session.quiz.find((q: any) => {
+      const questions = q.quiz_questions || [];
+      return questions.length > 0 && !questions.some((qq: any) => qq.timestamp_seconds != null);
+    });
     return postQuiz || null;
+  }
+
+  function saveProgressToLocal() {
+    if (!selectedSession) return;
+    const key = `cp_${profile?.id}_${selectedSession.id}`;
+    localStorage.setItem(key, JSON.stringify({ answers: checkpointAnswersRef.current, rawAnswers: checkpointRawAnswers }));
+  }
+
+  function loadProgressFromLocal(sessionId: string): { answers: Record<string, boolean>; rawAnswers: Record<string, any> } | null {
+    const key = `cp_${profile?.id}_${sessionId}`;
+    const saved = localStorage.getItem(key);
+    if (!saved) return null;
+    try { return JSON.parse(saved); } catch { return null; }
+  }
+
+  function clearProgressFromLocal(sessionId: string) {
+    const key = `cp_${profile?.id}_${sessionId}`;
+    localStorage.removeItem(key);
   }
 
   async function saveCheckpointResults() {
@@ -113,7 +135,11 @@ export default function StudentSessionsPage() {
     const answered = Object.keys(checkpointRawAnswers).length;
     const correct = Object.values(checkpointAnswers).filter(Boolean).length;
     const passed = checkpoints.length > 0 && (correct / checkpoints.length) >= 0.8;
-    const quizId = selectedSession.quiz?.[0]?.id;
+    // Find the quiz that actually has the checkpoint questions
+    const checkpointQuiz = selectedSession.quiz?.find((q: any) =>
+      q.quiz_questions?.some((qq: any) => qq.timestamp_seconds != null)
+    );
+    const quizId = checkpointQuiz?.id;
     if (quizId) {
       await supabase.from('quiz_attempts').insert({
         quiz_id: quizId,
@@ -127,20 +153,22 @@ export default function StudentSessionsPage() {
     }
     setPassedCheckpoints(passed);
     setCheckpointScore({ correct, total: checkpoints.length });
+    clearProgressFromLocal(selectedSession.id);
   }
 
   function initYouTubePlayer(videoId: string) {
+    const origin = window.location.origin;
     (window as any).onYouTubeIframeAPIReady = () => {
       playerRef.current = new (window as any).YT.Player('youtube-player', {
         videoId,
-        playerVars: { modestbranding: 1, rel: 0 },
+        playerVars: { modestbranding: 1, rel: 0, origin },
         events: { onStateChange: onPlayerStateChange, onReady: onPlayerReady }
       });
     };
     if ((window as any).YT && (window as any).YT.Player) {
       playerRef.current = new (window as any).YT.Player('youtube-player', {
         videoId,
-        playerVars: { modestbranding: 1, rel: 0 },
+        playerVars: { modestbranding: 1, rel: 0, origin },
         events: { onStateChange: onPlayerStateChange, onReady: onPlayerReady }
       });
     }
@@ -160,13 +188,21 @@ export default function StudentSessionsPage() {
     setShowVideo(true);
     setCheckpointActive(false);
     setCurrentCheckpoint(null);
-    setCheckpointAnswers({});
-    setCheckpointRawAnswers({});
     setCheckpointScore(null);
     setVideoEnded(false);
     setShowPostQuiz(false);
     setQuizSubmitted(false);
     checkpointSavedRef.current = false;
+
+    // Restore checkpoint progress from localStorage
+    const saved = loadProgressFromLocal(session.id);
+    if (saved) {
+      setCheckpointAnswers(saved.answers);
+      setCheckpointRawAnswers(saved.rawAnswers);
+    } else {
+      setCheckpointAnswers({});
+      setCheckpointRawAnswers({});
+    }
 
     const checkpoints = getCheckpoints(session);
     checkpointsRef.current = checkpoints;
@@ -200,22 +236,49 @@ export default function StudentSessionsPage() {
     }
   }
 
-  function handleCheckpointAnswer(optionIndex: number) {
-    if (!currentCheckpoint) return;
-    const isCorrect = optionIndex === currentCheckpoint.correct_answer;
-    setCheckpointAnswers(prev => ({ ...prev, [currentCheckpoint.id]: isCorrect }));
-    setCheckpointRawAnswers(prev => ({ ...prev, [currentCheckpoint.id]: optionIndex }));
-    if (isCorrect) {
-      setTimeout(() => {
-        setCheckpointActive(false);
-        setCurrentCheckpoint(null);
-        if (youtubePlayer) youtubePlayer.playVideo();
-        else { const video = document.querySelector('video'); video?.play(); }
-      }, 1000);
+  function isAnswerCorrect(questionType: string | undefined, answer: any, correctAnswer: any): boolean {
+    switch (questionType) {
+      case 'multiple_selection':
+        return Array.isArray(answer) && Array.isArray(correctAnswer) &&
+          answer.length === correctAnswer.length &&
+          [...answer].sort().every((v: any, i: number) => v === [...correctAnswer].sort()[i]);
+      case 'fill_blank':
+      case 'short_answer':
+        return String(answer).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase();
+      default:
+        return answer === correctAnswer;
+    }
+  }
+
+  function resolveCheckpoint(wasCorrect: boolean) {
+    setCheckpointActive(false);
+    setCurrentCheckpoint(null);
+    if (wasCorrect) {
+      if (youtubePlayer) youtubePlayer.playVideo();
+      else { const video = document.querySelector('video'); video?.play(); }
     } else {
       const checkpoints = getCheckpoints(selectedSession);
-      const currentIdx = checkpoints.findIndex(c => c.id === currentCheckpoint.id);
+      const currentIdx = checkpoints.findIndex(c => c.id === currentCheckpoint?.id);
       const previousTimestamp = currentIdx > 0 ? checkpoints[currentIdx - 1].timestamp_seconds : 0;
+      if (youtubePlayer) {
+        youtubePlayer.seekTo(previousTimestamp);
+        youtubePlayer.playVideo();
+      } else {
+        const video = document.querySelector('video');
+        if (video) { video.currentTime = previousTimestamp; video.play(); }
+      }
+    }
+  }
+
+  function handleCheckpointAnswer(optionIndex: number) {
+    if (!currentCheckpoint) return;
+    const isCorrect = isAnswerCorrect(currentCheckpoint.question_type, optionIndex, currentCheckpoint.correct_answer);
+    setCheckpointAnswers(prev => ({ ...prev, [currentCheckpoint.id]: isCorrect }));
+    setCheckpointRawAnswers(prev => ({ ...prev, [currentCheckpoint.id]: optionIndex }));
+    saveProgressToLocal();
+    if (isCorrect) {
+      setTimeout(() => resolveCheckpoint(true), 1000);
+    } else {
       setCheckpointAnswers(prev => {
         const next = { ...prev };
         delete next[currentCheckpoint.id!];
@@ -226,17 +289,33 @@ export default function StudentSessionsPage() {
         delete next[currentCheckpoint.id!];
         return next;
       });
-      setTimeout(() => {
-        setCheckpointActive(false);
-        setCurrentCheckpoint(null);
-        if (youtubePlayer) {
-          youtubePlayer.seekTo(previousTimestamp);
-          youtubePlayer.playVideo();
-        } else {
-          const video = document.querySelector('video');
-          if (video) { video.currentTime = previousTimestamp; video.play(); }
-        }
-      }, 1500);
+      setTimeout(() => resolveCheckpoint(false), 1500);
+    }
+  }
+
+  function handleCheckpointTextAnswer(text: string) {
+    if (!currentCheckpoint) return;
+    const isCorrect = isAnswerCorrect(currentCheckpoint.question_type, text, currentCheckpoint.correct_answer);
+    setCheckpointAnswers(prev => ({ ...prev, [currentCheckpoint.id]: isCorrect }));
+    setCheckpointRawAnswers(prev => ({ ...prev, [currentCheckpoint.id]: text }));
+    saveProgressToLocal();
+    if (isCorrect) {
+      setTimeout(() => resolveCheckpoint(true), 1000);
+    } else {
+      setTimeout(() => resolveCheckpoint(false), 1500);
+    }
+  }
+
+  function handleCheckpointMultiAnswer(selected: number[]) {
+    if (!currentCheckpoint) return;
+    const isCorrect = isAnswerCorrect('multiple_selection', selected, currentCheckpoint.correct_answer);
+    setCheckpointAnswers(prev => ({ ...prev, [currentCheckpoint.id]: isCorrect }));
+    setCheckpointRawAnswers(prev => ({ ...prev, [currentCheckpoint.id]: selected }));
+    saveProgressToLocal();
+    if (isCorrect) {
+      setTimeout(() => resolveCheckpoint(true), 1000);
+    } else {
+      setTimeout(() => resolveCheckpoint(false), 1500);
     }
   }
 
@@ -277,8 +356,6 @@ export default function StudentSessionsPage() {
     const correct = Object.values(checkpointAnswers).filter(Boolean).length;
     return { correct, total: answered, allAnswered: answered >= checkpoints.length };
   }
-
-  const completedSessionIds = new Set<string>();
 
   return (
     <DashboardLayout title="Video Lessons" subtitle="Watch lessons and complete checkpoint quizzes to unlock content">
@@ -345,19 +422,74 @@ export default function StudentSessionsPage() {
                 <div className="bg-white rounded-xl max-w-xl w-full p-6">
                   <div className="flex items-center gap-2 mb-4"><Lock className="text-amber-500" size={24} /><span className="text-amber-600 font-medium">Checkpoint Required</span></div>
                   <h3 className="text-xl font-semibold text-slate-800 mb-4">{currentCheckpoint.question}</h3>
-                  <div className="space-y-3">
-                    {currentCheckpoint.options.map((opt, i) => {
-                      const answered = checkpointAnswers[currentCheckpoint.id] !== undefined;
-                      const isCorrect = i === currentCheckpoint.correct_answer;
+
+                  {(() => {
+                    const answered = checkpointAnswers[currentCheckpoint.id] !== undefined;
+                    const qtype = currentCheckpoint.question_type;
+
+                    // multiple_choice / true_false: buttons
+                    if (!qtype || qtype === 'multiple_choice' || qtype === 'true_false') {
                       return (
-                        <button key={i} onClick={() => !answered && handleCheckpointAnswer(i)} disabled={answered} className={`w-full p-4 rounded-lg text-left border transition-colors ${answered ? (isCorrect ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500') : 'hover:border-primary-500 hover:bg-primary-50'}`}>
-                          <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt}
-                          {answered && isCorrect && <CheckCircle size={16} className="float-right text-green-600" />}
-                          {answered && !isCorrect && checkpointAnswers[currentCheckpoint.id] === false && i === currentCheckpoint.correct_answer && <CheckCircle size={16} className="float-right text-green-600" />}
-                        </button>
+                        <div className="space-y-3">
+                          {currentCheckpoint.options.map((opt, i) => {
+                            const isCorrectIdx = i === currentCheckpoint.correct_answer;
+                            return (
+                              <button key={i} onClick={() => !answered && handleCheckpointAnswer(i)} disabled={answered} className={`w-full p-4 rounded-lg text-left border transition-colors ${answered ? (isCorrectIdx ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500') : 'hover:border-primary-500 hover:bg-primary-50'}`}>
+                                <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt}
+                                {answered && isCorrectIdx && <CheckCircle size={16} className="float-right text-green-600" />}
+                                {answered && !isCorrectIdx && checkpointAnswers[currentCheckpoint.id] === false && <XCircle size={16} className="float-right text-red-600" />}
+                              </button>
+                            );
+                          })}
+                        </div>
                       );
-                    })}
-                  </div>
+                    }
+
+                    // multiple_selection: checkboxes
+                    if (qtype === 'multiple_selection') {
+                      return (
+                        <div className="space-y-3">
+                          {currentCheckpoint.options.map((opt, i) => (
+                            <label key={i} className={`w-full p-4 rounded-lg text-left border flex items-center gap-3 cursor-pointer transition-colors ${answered ? 'opacity-60 cursor-default' : 'hover:border-primary-500 hover:bg-primary-50'} ${!answered && multiSelected.includes(i) ? 'border-primary-500 bg-primary-50' : 'border-slate-200 bg-white'}`}>
+                              <input type="checkbox" checked={multiSelected.includes(i)} disabled={answered} onChange={() => { if (answered) return; setMultiSelected(prev => prev.includes(i) ? prev.filter(v => v !== i) : [...prev, i]); }} className="w-5 h-5" />
+                              <span>{opt}</span>
+                            </label>
+                          ))}
+                          {!answered && (
+                            <button onClick={() => handleCheckpointMultiAnswer(multiSelected)} className="btn-primary w-full mt-2">Submit Answer</button>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // fill_blank: text input
+                    if (qtype === 'fill_blank') {
+                      return (
+                        <div>
+                          <input type="text" value={textAnswer} disabled={answered} onChange={e => setTextAnswer(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !answered && textAnswer.trim()) handleCheckpointTextAnswer(textAnswer); }} className="input w-full text-lg" placeholder="Type your answer..." autoFocus />
+                          {!answered && (
+                            <button onClick={() => { if (textAnswer.trim()) handleCheckpointTextAnswer(textAnswer); }} disabled={!textAnswer.trim()} className="btn-primary w-full mt-3 disabled:opacity-50">Submit Answer</button>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // short_answer: textarea
+                    if (qtype === 'short_answer') {
+                      return (
+                        <div>
+                          <textarea value={textAnswer} disabled={answered} onChange={e => setTextAnswer(e.target.value)} className="input w-full" rows={3} placeholder="Write your answer..." />
+                          {!answered && (
+                            <button onClick={() => { if (textAnswer.trim()) handleCheckpointTextAnswer(textAnswer); }} disabled={!textAnswer.trim()} className="btn-primary w-full mt-3 disabled:opacity-50">Submit Answer</button>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // fallback
+                    return <p className="text-slate-500">Unsupported question type.</p>;
+                  })()}
+
                   {checkpointAnswers[currentCheckpoint.id] === false && (
                     <div className="mt-4 p-3 bg-red-50 rounded-lg text-sm text-red-600 flex items-center gap-2"><AlertCircle size={16} />Incorrect. Rewinding to last checkpoint for review...</div>
                   )}

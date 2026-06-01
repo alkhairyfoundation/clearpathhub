@@ -68,6 +68,7 @@ export default function TeacherSessionsPage() {
   const [lessonNotes, setLessonNotes] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') {
@@ -81,7 +82,7 @@ export default function TeacherSessionsPage() {
     setLoading(true);
     try {
       const [sessionsRes, subjectsRes, classesRes] = await Promise.all([
-        supabase.from('sessions').select('*, subject:subjects!subject_id(*), class:classes!class_id(name), quiz:quizzes(*)').order('created_at', { ascending: false }),
+        supabase.from('sessions').select('*, subject:subjects!subject_id(*), class:classes!class_id(name), quiz:quizzes(*)').eq('teacher_id', profile?.id).order('created_at', { ascending: false }),
         supabase.from('subjects').select('*').order('name'),
         supabase.from('classes').select('id, name').order('level'),
       ]);
@@ -97,6 +98,10 @@ export default function TeacherSessionsPage() {
 
   async function handleSave() {
     setError(''); setSuccess('');
+    if (saving) return;
+    if (!formData.title.trim()) { setError('Title is required'); return; }
+    if (!formData.video_url.trim()) { setError('Video URL is required'); return; }
+    setSaving(true);
     try {
       const data = {
         title: formData.title,
@@ -200,6 +205,7 @@ export default function TeacherSessionsPage() {
     } catch (err: any) {
       setError(err.message);
     }
+    setSaving(false);
   }
 
   async function handleDelete(id: string) {
@@ -251,6 +257,51 @@ export default function TeacherSessionsPage() {
 
   function removeCheckpoint(index: number) {
     setCheckpoints(checkpoints.filter((_, i) => i !== index));
+  }
+
+  async function openEditModal(session: Session) {
+    setEditingSession(session);
+    setFormData({
+      title: session.title,
+      description: session.description || '',
+      video_url: session.video_url || '',
+      video_type: session.video_type === 'youtube' ? 'youtube' : 'upload',
+      subject_id: session.subject_id || '',
+      class_id: session.class_id || '',
+      duration: session.duration || 0,
+    });
+    // Load existing checkpoints
+    const { data: quiz } = await supabase
+      .from('quizzes')
+      .select('id')
+      .eq('session_id', session.id)
+      .maybeSingle();
+    if (quiz) {
+      const { data: questions } = await supabase
+        .from('quiz_questions')
+        .select('*')
+        .eq('quiz_id', quiz.id)
+        .order('timestamp_seconds', { ascending: true });
+      if (questions) {
+        setCheckpoints(questions.map(q => ({
+          id: q.id,
+          timestamp_seconds: q.timestamp_seconds || 0,
+          question: q.question,
+          options: q.options || [],
+          correct_answer: q.correct_answer,
+          points: q.points || 1,
+          question_type: q.question_type || 'multiple_choice',
+        })));
+      }
+    }
+    // Load existing lesson notes
+    const { data: lesson } = await supabase
+      .from('lessons')
+      .select('content')
+      .eq('session_id', session.id)
+      .maybeSingle();
+    setLessonNotes(lesson?.content || '');
+    setShowModal(true);
   }
 
   function extractYouTubeId(url: string) {
@@ -379,7 +430,7 @@ export default function TeacherSessionsPage() {
                     )}
                   </div>
                   <div className="flex gap-1 mt-3">
-                    <button onClick={() => { setEditingSession(session); setFormData({ title: session.title, description: session.description || '', video_url: session.video_url || '', video_type: session.video_type === 'youtube' ? 'youtube' : 'upload', subject_id: session.subject_id || '', class_id: session.class_id || '', duration: session.duration || 0 }); setShowModal(true); }} className="p-2 hover:bg-gray-100 rounded-lg">
+                    <button onClick={() => openEditModal(session)} className="p-2 hover:bg-gray-100 rounded-lg">
                       <Edit size={16} className="text-slate-600" />
                     </button>
                     <button onClick={() => handleDelete(session.id)} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -549,14 +600,29 @@ export default function TeacherSessionsPage() {
                         )}
 
                         {cp.question_type === 'fill_blank' && (
-                          <div className="p-3 bg-white rounded-lg border text-sm text-slate-600">
-                            Students will type the answer. The blank is represented by <code className="bg-slate-200 px-1 rounded">___</code> in the question text.
+                          <div>
+                            <label className="label text-xs">Correct Answer</label>
+                            <input
+                              type="text"
+                              value={typeof cp.correct_answer === 'string' ? cp.correct_answer : ''}
+                              onChange={(e) => updateCheckpoint(i, 'correct_answer', e.target.value)}
+                              className="input"
+                              placeholder="e.g., photosynthesis"
+                            />
+                            <p className="text-xs text-slate-500 mt-1">Use <code className="bg-slate-200 px-1 rounded">___</code> in the question text to mark the blank.</p>
                           </div>
                         )}
 
                         {cp.question_type === 'short_answer' && (
-                          <div className="p-3 bg-white rounded-lg border text-sm text-slate-600">
-                            Students will write a short answer. This requires manual review.
+                          <div>
+                            <label className="label text-xs">Expected Answer (case-insensitive)</label>
+                            <textarea
+                              value={typeof cp.correct_answer === 'string' ? cp.correct_answer : ''}
+                              onChange={(e) => updateCheckpoint(i, 'correct_answer', e.target.value)}
+                              className="input"
+                              rows={2}
+                              placeholder="Enter the expected answer or keywords"
+                            />
                           </div>
                         )}
 
@@ -643,9 +709,9 @@ export default function TeacherSessionsPage() {
               </div>
             </div>
             <div className="flex justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
-              <button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button>
-              <button onClick={handleSave} className="btn-primary">
-                {editingSession ? 'Update' : 'Create'} Lesson
+              <button onClick={() => { setShowModal(false); setSaving(false); }} className="btn-outline">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50 flex items-center gap-2">
+                {saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : (editingSession ? 'Update' : 'Create') + ' Lesson'}
               </button>
             </div>
           </div>
