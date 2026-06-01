@@ -59,12 +59,12 @@ function AdminUsersPageContent() {
   const [resetPasswordMode, setResetPasswordMode] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
 
-  const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [allClasses, setAllClasses] = useState<ClassOption[]>([]);
-  const [selectedClass, setSelectedClass] = useState('');
-  const [studentClassMap, setStudentClassMap] = useState<Record<string, string>>({});
-  const [teacherClassIds, setTeacherClassIds] = useState<string[]>([]);
-  const [teacherSubjectName, setTeacherSubjectName] = useState('');
+const [classes, setClasses] = useState<ClassOption[]>([]);
+const [allClasses, setAllClasses] = useState<ClassOption[]>([]);
+const [selectedClass, setSelectedClass] = useState('');
+const [studentClassMap, setStudentClassMap] = useState<Record<string, string>>({});
+const [teacherSubjectIds, setTeacherSubjectIds] = useState<string[]>([]);
+const [allSubjects, setAllSubjects] = useState<any[]>([]);
   const [formData, setFormData] = useState<UserFormData>({
     email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '', class_id: '', avatar_url: '',
   });
@@ -169,11 +169,14 @@ function AdminUsersPageContent() {
       email: '', password: '', first_name: '', last_name: '',
       role: selectedRole, phone: '', class_id: '', avatar_url: '',
     });
-    setTeacherClassIds([]);
-    setTeacherSubjectName('');
+    setTeacherSubjectIds([]);
     if (selectedRole === 'student' || selectedRole === 'teacher') {
       const { data } = await supabase.from('classes').select('id, name, level').order('name');
       setClasses(data || []);
+      if (selectedRole === 'teacher') {
+        const { data: subjects } = await supabase.from('subjects').select('id, name, code, class:classes!class_id(name)').order('name');
+        setAllSubjects(subjects || []);
+      }
     } else {
       setClasses([]);
     }
@@ -189,18 +192,21 @@ function AdminUsersPageContent() {
       email: user.email, password: '', first_name: user.first_name,
       last_name: user.last_name, role: user.role, phone: user.phone || '', class_id: '', avatar_url: user.avatar_url || '',
     });
-    setTeacherSubjectName('');
     if (user.role === 'student' || user.role === 'teacher') {
       supabase.from('classes').select('id, name, level').order('name').then(({ data }) => setClasses(data || []));
     } else {
       setClasses([]);
     }
     if (user.role === 'teacher') {
-      supabase.from('subjects').select('class_id').eq('teacher_id', user.id).then(({ data }) => {
-        setTeacherClassIds(data?.map(s => s.class_id).filter(Boolean) as string[] || []);
+      Promise.all([
+        supabase.from('subjects').select('id, name, code, class:classes!class_id(name)').order('name'),
+        supabase.from('subjects').select('id').eq('teacher_id', user.id),
+      ]).then(([allRes, assignedRes]) => {
+        setAllSubjects(allRes.data || []);
+        setTeacherSubjectIds(assignedRes.data?.map(s => s.id) || []);
       });
     } else {
-      setTeacherClassIds([]);
+      setTeacherSubjectIds([]);
     }
     setShowModal(true);
   }
@@ -222,8 +228,7 @@ function AdminUsersPageContent() {
         };
         if (formData.password) body.password = formData.password;
         if (formData.role === 'teacher') {
-          body.class_ids = teacherClassIds;
-          body.subject_name = teacherSubjectName || undefined;
+          body.subject_ids = teacherSubjectIds;
         }
         if (formData.role === 'student') {
           body.class_id = formData.class_id || null;
@@ -244,13 +249,12 @@ function AdminUsersPageContent() {
           throw new Error('Password must be at least 6 characters');
         }
 
-        const res = await fetch('/api/admin/users', {
+          const res = await fetch('/api/admin/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...formData,
-            class_ids: formData.role === 'teacher' ? teacherClassIds : undefined,
-            subject_name: formData.role === 'teacher' ? (teacherSubjectName || undefined) : undefined,
+            subject_ids: formData.role === 'teacher' ? teacherSubjectIds : undefined,
           }),
         });
 
@@ -671,29 +675,26 @@ function AdminUsersPageContent() {
               </div>
 
               {formData.role === 'teacher' && (
-                <>
-                  <div>
-                    <label className="label">Subject Name (optional)</label>
-                    <input type="text" value={teacherSubjectName} onChange={(e) => setTeacherSubjectName(e.target.value)} className="input" placeholder="e.g., Mathematics (applies to all selected classes)" />
+                <div>
+                  <label className="label">Assigned Subjects</label>
+                  <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
+                    {allSubjects.length === 0 && (
+                      <p className="text-sm text-slate-400 p-2">No subjects found. Create subjects first in the Subjects page.</p>
+                    )}
+                    {allSubjects.map(s => (
+                      <label key={s.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input type="checkbox" checked={teacherSubjectIds.includes(s.id)} onChange={(e) => {
+                          if (e.target.checked) {
+                            setTeacherSubjectIds([...teacherSubjectIds, s.id]);
+                          } else {
+                            setTeacherSubjectIds(teacherSubjectIds.filter(id => id !== s.id));
+                          }
+                        }} className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+                        <span className="text-sm text-slate-700">{s.name} (<span className="text-slate-500">{s.code}</span>{s.class ? ` — ${s.class.name}` : ''})</span>
+                      </label>
+                    ))}
                   </div>
-                  <div>
-                    <label className="label">Assigned Classes</label>
-                    <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
-                      {classes.map(c => (
-                        <label key={c.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
-                          <input type="checkbox" checked={teacherClassIds.includes(c.id)} onChange={(e) => {
-                            if (e.target.checked) {
-                              setTeacherClassIds([...teacherClassIds, c.id]);
-                            } else {
-                              setTeacherClassIds(teacherClassIds.filter(id => id !== c.id));
-                            }
-                          }} className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
-                          <span className="text-sm text-slate-700">{c.name} (Level {c.level})</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
 
               {formData.role === 'student' && (

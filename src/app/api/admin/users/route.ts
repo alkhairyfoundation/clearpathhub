@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, first_name, last_name, role, phone, class_id, class_ids, subject_name } = await request.json();
+    const { email, password, first_name, last_name, role, phone, class_id, subject_ids } = await request.json();
     
     // Validate required fields
     if (!email || !password || !first_name || !last_name || !role) {
@@ -56,17 +56,13 @@ export async function POST(request: Request) {
       [userId, email, first_name, last_name, role, phone || null, passwordHash]
     );
 
-    // If role is teacher, create subject entries for assigned classes
+    // If role is teacher, assign selected subjects
     let subjectWarning = '';
-    if (role === 'teacher' && class_ids && class_ids.length > 0) {
-      const subjectName = subject_name || 'General';
-      const subjectEntries = class_ids.map((classId: string) => ({
-        name: subjectName,
-        code: `TCH-${userId.slice(0, 4)}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-        teacher_id: userId,
-        class_id: classId,
-      }));
-      const { error: subjectError } = await adminClient.from('subjects').insert(subjectEntries);
+    if (role === 'teacher' && subject_ids && subject_ids.length > 0) {
+      const { error: subjectError } = await adminClient
+        .from('subjects')
+        .update({ teacher_id: userId })
+        .in('id', subject_ids);
       if (subjectError) {
         subjectWarning = `User created but subject assignments failed: ${subjectError.message}`;
       }
