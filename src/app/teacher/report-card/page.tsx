@@ -13,7 +13,12 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 type ExamType = 'ca1' | 'ca2' | 'ca3' | 'exam';
-const EXAM_LABELS: Record<string, string> = { ca1: 'CA 1', ca2: 'CA 2', ca3: 'CA 3', exam: 'Exam' };
+const SCORE_LABELS: Record<string, string> = { ca1: 'Mid-Term Test', ca2: '', ca3: '', exam: 'Exam' };
+const SCORE_WEIGHTS: Record<string, number> = { ca1: 0.4, exam: 0.6 };
+
+function weightedScore(ca1?: number | null, exam?: number | null): number {
+  return Math.round((ca1 ?? 0) * 0.4 + (exam ?? 0) * 0.6);
+}
 
 const COGNITIVE_FIELDS = [
   { key: 'cognitive_knowledge', label: 'Knowledge' },
@@ -145,12 +150,14 @@ function ReportCardContent() {
         supabase.from('attendance').select('*').eq('student_id', pid).gte('date', termStart).lte('date', termEnd),
       ]);
 
-      // Group results by subject
+      // Group results by subject (Mid-Term Test via ca1, Exam via exam)
       const subjectMap: Record<string, any> = {};
       (resultsRes.data || []).forEach((r: any) => {
         const sid = r.subject_id;
         if (!subjectMap[sid]) subjectMap[sid] = { subject_id: sid, subject_name: r.subject?.name || 'Unknown', ca1: null, ca2: null, ca3: null, exam: null };
-        subjectMap[sid][r.exam_type] = { score: r.score, grade: r.grade || calculateGrade(r.score), result_id: r.id };
+        if (r.exam_type === 'ca1' || r.exam_type === 'exam') {
+          subjectMap[sid][r.exam_type] = { score: r.score, grade: r.grade || calculateGrade(r.score), result_id: r.id };
+        }
       });
       setSubjectScores(Object.values(subjectMap));
 
@@ -229,11 +236,10 @@ function ReportCardContent() {
     return sub?.[examType] || null;
   }
 
-  // Build cumulative score table for 3rd term
+  // Build cumulative score table for 3rd term (weighted: midterm 40% + exam 60%)
   function getCumulativeSubjects() {
     const allSubjectIds = new Set<string>();
     const allSubjects: any[] = [];
-    const allData = [...subjectScores];
 
     // Merge term 1 and term 2 results
     [...term1Results, ...term2Results].forEach((r: any) => {
@@ -243,38 +249,34 @@ function ReportCardContent() {
           subject_id: r.subject_id,
           subject_name: r.subject?.name || 'Unknown',
           ca1: null, ca2: null, ca3: null, exam: null,
-          term1_ca: null, term1_exam: null, term2_ca: null, term2_exam: null,
         });
       }
     });
     subjectScores.forEach((s: any) => {
       if (!allSubjectIds.has(s.subject_id)) {
         allSubjectIds.add(s.subject_id);
-        allSubjects.push({ ...s, term1_ca: null, term1_exam: null, term2_ca: null, term2_exam: null });
+        allSubjects.push({ ...s });
       }
     });
 
     return allSubjects.map((sub: any) => {
-      // Term 1 scores
+      // Term 1 weighted total
       const t1Results = term1Results.filter((r: any) => r.subject_id === sub.subject_id);
-      const t1CA = t1Results.filter(r => r.exam_type !== 'exam').reduce((sum, r) => sum + r.score, 0);
-      const t1CAcount = t1Results.filter(r => r.exam_type !== 'exam').length;
+      const t1Midterm = t1Results.find(r => r.exam_type === 'ca1');
       const t1Exam = t1Results.find(r => r.exam_type === 'exam');
-      const t1Avg = t1CAcount + (t1Exam ? 1 : 0) > 0 ? Math.round((t1CA + (t1Exam?.score || 0)) / (t1CAcount + (t1Exam ? 1 : 0))) : null;
+      const t1Avg = weightedScore(t1Midterm?.score, t1Exam?.score);
 
-      // Term 2 scores
+      // Term 2 weighted total
       const t2Results = term2Results.filter((r: any) => r.subject_id === sub.subject_id);
-      const t2CA = t2Results.filter(r => r.exam_type !== 'exam').reduce((sum, r) => sum + r.score, 0);
-      const t2CAcount = t2Results.filter(r => r.exam_type !== 'exam').length;
+      const t2Midterm = t2Results.find(r => r.exam_type === 'ca1');
       const t2Exam = t2Results.find(r => r.exam_type === 'exam');
-      const t2Avg = t2CAcount + (t2Exam ? 1 : 0) > 0 ? Math.round((t2CA + (t2Exam?.score || 0)) / (t2CAcount + (t2Exam ? 1 : 0))) : null;
+      const t2Avg = weightedScore(t2Midterm?.score, t2Exam?.score);
 
-      // Term 3 scores (current)
+      // Term 3 weighted total (current)
       const current = subjectScores.find((s: any) => s.subject_id === sub.subject_id);
-      const t3Scores = [current?.ca1?.score, current?.ca2?.score, current?.ca3?.score, current?.exam?.score].filter((s: any) => s != null) as number[];
-      const t3Avg = t3Scores.length > 0 ? Math.round(t3Scores.reduce((a, b) => a + b, 0) / t3Scores.length) : null;
+      const t3Avg = weightedScore(current?.ca1?.score, current?.exam?.score);
 
-      // Cumulative
+      // Cumulative = average of all three term totals
       const allAvgs = [t1Avg, t2Avg, t3Avg].filter(a => a != null) as number[];
       const cumulativeAvg = allAvgs.length > 0 ? Math.round(allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length) : null;
 
@@ -292,11 +294,10 @@ function ReportCardContent() {
     });
   }
 
-  // Calculate totals
+  // Calculate totals using weighted formula
   function calcTotals() {
     const avgs = subjectScores.map(s => {
-      const scores = [s.ca1?.score, s.ca2?.score, s.ca3?.score, s.exam?.score].filter((x: any) => x != null) as number[];
-      return scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+      return weightedScore(s.ca1?.score, s.exam?.score);
     }).filter(a => a != null) as number[];
 
     const totalAvg = avgs.length > 0 ? Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length) : 0;
@@ -338,23 +339,22 @@ function ReportCardContent() {
       // Standard Single-Term Report
       (doc as any).autoTable({
         startY: 86,
-        head: [['Subject', 'CA 1', 'CA 2', 'CA 3', 'Exam', 'Total', 'Grade', 'Remark']],
+        head: [['Subject', 'Mid-Term Test\n(40%)', 'Exam\n(60%)', 'Total', 'Grade', 'Remark']],
         body: subjectScores.map(s => {
-          const scores = [s.ca1?.score, s.ca2?.score, s.ca3?.score, s.exam?.score].filter((x: any) => x != null) as number[];
-          const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+          const total = weightedScore(s.ca1?.score, s.exam?.score);
           return [
             s.subject_name,
-            s.ca1?.score ?? '-', s.ca2?.score ?? '-', s.ca3?.score ?? '-', s.exam?.score ?? '-',
-            scores.length > 0 ? `${avg}%` : '-',
-            calculateGrade(avg),
-            computeRemark(avg),
+            s.ca1?.score ?? '-', s.exam?.score ?? '-',
+            `${total}%`,
+            calculateGrade(total),
+            computeRemark(total),
           ];
         }),
         theme: 'striped',
         headStyles: { fillColor: [30, 58, 95] },
         foot: [[{
           content: `Overall Average: ${totals.totalAvg}% (${totals.totalGrade}) — ${totals.remark}`,
-          colSpan: 8,
+          colSpan: 6,
           styles: { fontStyle: 'bold', fillColor: [240, 240, 240] }
         }]],
         footStyles: { fillColor: [240, 240, 240] },
@@ -455,9 +455,8 @@ function ReportCardContent() {
       });
     } else {
       subjectScores.forEach((s: any) => {
-        const scores = [s.ca1?.score, s.ca2?.score, s.ca3?.score, s.exam?.score].filter((x: any) => x != null) as number[];
-        const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-        scoreRows += `<tr><td>${s.subject_name}</td><td>${s.ca1?.score ?? '-'}</td><td>${s.ca2?.score ?? '-'}</td><td>${s.ca3?.score ?? '-'}</td><td>${s.exam?.score ?? '-'}</td><td style="font-weight:bold">${scores.length > 0 ? avg + '%' : '-'}</td><td>${calculateGrade(avg)}</td><td>${computeRemark(avg)}</td></tr>`;
+        const total = weightedScore(s.ca1?.score, s.exam?.score);
+        scoreRows += `<tr><td>${s.subject_name}</td><td>${s.ca1?.score ?? '-'}</td><td>${s.exam?.score ?? '-'}</td><td style="font-weight:bold">${total}%</td><td>${calculateGrade(total)}</td><td>${computeRemark(total)}</td></tr>`;
       });
     }
 
@@ -499,7 +498,7 @@ function ReportCardContent() {
         <strong>Term:</strong> ${selectedTerm.name} (${selectedTerm.session?.name || ''}) &nbsp;|&nbsp;
         <strong>Attendance:</strong> ${attendanceData.present}/${attendanceData.total} days (${attendanceData.rate}%)
       </div>
-      <table><thead><tr>${isThirdTerm ? '<th>Subject</th><th>Term 1</th><th>Term 2</th><th>Term 3</th><th>Cumulative</th><th>Grade</th><th>Remark</th>' : '<th>Subject</th><th>CA 1</th><th>CA 2</th><th>CA 3</th><th>Exam</th><th>Total</th><th>Grade</th><th>Remark</th>'}</tr></thead><tbody>${scoreRows}</tbody></table>
+      <table><thead><tr>${isThirdTerm ? '<th>Subject</th><th>Term 1</th><th>Term 2</th><th>Term 3</th><th>Cumulative</th><th>Grade</th><th>Remark</th>' : '<th>Subject</th><th>Mid-Term Test<br><span style="font-weight:normal;font-size:10px">(40%)</span></th><th>Exam<br><span style="font-weight:normal;font-size:10px">(60%)</span></th><th>Total</th><th>Grade</th><th>Remark</th>'}</tr></thead><tbody>${scoreRows}</tbody></table>
       <div class="summary">
         <div class="summary-box"><div class="val">${totals.totalAvg}%</div><div class="lbl">Overall Average</div></div>
         <div class="summary-box"><div class="val">${totals.totalGrade}</div><div class="lbl">Grade</div></div>

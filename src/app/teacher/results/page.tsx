@@ -26,12 +26,16 @@ interface StudentScoreRow {
   dirty: boolean;
 }
 
-const EXAM_TYPES: { key: ExamType; label: string }[] = [
-  { key: 'ca1', label: 'CA 1' },
-  { key: 'ca2', label: 'CA 2' },
-  { key: 'ca3', label: 'CA 3' },
-  { key: 'exam', label: 'Exam' },
+const SCORE_TYPES: { key: ExamType; label: string; weight: number }[] = [
+  { key: 'ca1', label: 'Mid-Term Test', weight: 0.4 },
+  { key: 'exam', label: 'Exam', weight: 0.6 },
 ];
+
+function weightedTotal(row: StudentScoreRow): number {
+  const midterm = row.ca1?.score ?? 0;
+  const exam = row.exam?.score ?? 0;
+  return Math.round(midterm * 0.4 + exam * 0.6);
+}
 
 function calculateGrade(score: number): string {
   if (score >= 90) return 'A+';
@@ -154,7 +158,7 @@ export default function TeacherResultsPage() {
           student_id: s.profile_id,
           student_name: s.name,
           admission_number: s.admission_number,
-          ca1: getCell('ca1'), ca2: getCell('ca2'), ca3: getCell('ca3'), exam: getCell('exam'), dirty: false
+          ca1: getCell('ca1'), ca2: null, ca3: null, exam: getCell('exam'), dirty: false
         };
       });
       setRows(matrix);
@@ -177,12 +181,11 @@ export default function TeacherResultsPage() {
   }
 
   function cellTotal(row: StudentScoreRow): number {
-    const scores = [row.ca1, row.ca2, row.ca3, row.exam].filter(Boolean).map(c => c!.score);
-    return scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+    return weightedTotal(row);
   }
 
   function cellCount(row: StudentScoreRow): number {
-    return [row.ca1, row.ca2, row.ca3, row.exam].filter(Boolean).length;
+    return [row.ca1, row.exam].filter(Boolean).length;
   }
 
   async function saveRow(row: StudentScoreRow) {
@@ -190,7 +193,7 @@ export default function TeacherResultsPage() {
     const term = selectedTerm?.name || '';
     const academicYear = selectedTerm?.session?.name || '';
 
-    for (const et of ['ca1', 'ca2', 'ca3', 'exam'] as ExamType[]) {
+    for (const et of ['ca1', 'exam'] as ExamType[]) {
       const cell = row[et];
       if (!cell) continue;
       if (cell.result_id) {
@@ -410,10 +413,10 @@ export default function TeacherResultsPage() {
                   <thead>
                     <tr className="bg-slate-50 text-left">
                       <th className="py-3 px-4 font-semibold text-slate-600 sticky left-0 bg-slate-50 z-10 min-w-[180px]">Student</th>
-                      {EXAM_TYPES.map(et => (
-                        <th key={et.key} className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[80px]">{et.label}</th>
+                      {SCORE_TYPES.map(st => (
+                        <th key={st.key} className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[100px]">{st.label}<br /><span className="text-[10px] font-normal text-slate-400">({Math.round(st.weight * 100)}%)</span></th>
                       ))}
-                      <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[60px]">Avg</th>
+                      <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[60px]">Total</th>
                       <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[60px]">Grade</th>
                       <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[120px]">Actions</th>
                     </tr>
@@ -434,17 +437,17 @@ export default function TeacherResultsPage() {
                               {row.dirty && <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Unsaved changes" />}
                             </div>
                           </td>
-                          {EXAM_TYPES.map(et => {
-                             const cell = row[et.key];
+                          {SCORE_TYPES.map(st => {
+                             const cell = row[st.key];
                             return (
-                              <td key={et.key} className="py-2.5 px-3 text-center">
+                              <td key={st.key} className="py-2.5 px-3 text-center">
                                 <input
                                   type="number"
                                   min={0}
                                   max={100}
                                   value={cell?.score ?? ''}
-                                  onChange={e => updateCell(ri, et.key, e.target.value === '' ? 0 : Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-                                  className={`w-16 text-center text-sm font-bold py-1.5 rounded-lg border transition-colors ${
+                                  onChange={e => updateCell(ri, st.key, e.target.value === '' ? 0 : Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                                  className={`w-20 text-center text-sm font-bold py-1.5 rounded-lg border transition-colors ${
                                     cell ? 'bg-white border-slate-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500' : 'bg-slate-50 border-dashed border-slate-300 text-slate-400'
                                   }`}
                                   placeholder="-"
@@ -465,11 +468,11 @@ export default function TeacherResultsPage() {
                                 <SendResultButton
                                   studentId={row.student_id}
                                   studentName={row.student_name}
-                                  results={[row.ca1, row.ca2, row.ca3, row.exam]
+                                  results={[row.ca1, row.exam]
                                     .filter(Boolean)
                                     .map((c, i) => ({
                                       subject_name: currentSubject?.name || 'Subject',
-                                      exam_type: EXAM_TYPES[i].label,
+                                      exam_type: SCORE_TYPES[i].label,
                                       score: c!.score,
                                       grade: c!.grade,
                                     }))}
@@ -542,12 +545,10 @@ export default function TeacherResultsPage() {
                     {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
-                <div><label className="label">Exam Type</label>
+                <div><label className="label">Assessment Type</label>
                   <select value={formData.exam_type} onChange={e => setFormData({ ...formData, exam_type: e.target.value as ExamType })} className="input">
-                    <option value="ca1">CA 1</option>
-                    <option value="ca2">CA 2</option>
-                    <option value="ca3">CA 3</option>
-                    <option value="exam">Exam</option>
+                    <option value="ca1">Mid-Term Test (40%)</option>
+                    <option value="exam">Exam (60%)</option>
                   </select>
                 </div>
                 <div>
