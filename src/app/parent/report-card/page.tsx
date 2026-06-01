@@ -99,7 +99,7 @@ function ReportCardContent() {
     if (t) setSelectedTerm(t);
   }
 
-  // Group results: compute per-subject midterm (40%) + exam (60%) weighted total
+  // Group results: per-subject midterm (/40) + exam (/60) = total
   const subjectGrades = results.reduce((acc: any[], r) => {
     let sub = acc.find(s => s.subjectId === r.subject_id);
     if (!sub) {
@@ -110,10 +110,10 @@ function ReportCardContent() {
     if (r.exam_type === 'exam') sub.exam = r.score;
     return acc;
   }, []).map((s: any) => {
-    const avg = Math.round((s.midterm ?? 0) * 0.4 + (s.exam ?? 0) * 0.6);
-    const grade = avg >= 80 ? 'A' : avg >= 70 ? 'B' : avg >= 60 ? 'C' : avg >= 50 ? 'D' : 'F';
-    const gradeColor = avg >= 80 ? 'text-green-600' : avg >= 70 ? 'text-blue-600' : avg >= 60 ? 'text-yellow-600' : avg >= 50 ? 'text-orange-600' : 'text-red-600';
-    return { ...s, average: avg, grade, gradeColor, midterm: s.midterm, exam: s.exam };
+    const total = Math.min(100, (s.midterm ?? 0) + (s.exam ?? 0));
+    const grade = total >= 80 ? 'A' : total >= 70 ? 'B' : total >= 60 ? 'C' : total >= 50 ? 'D' : 'F';
+    const gradeColor = total >= 80 ? 'text-green-600' : total >= 70 ? 'text-blue-600' : total >= 60 ? 'text-yellow-600' : total >= 50 ? 'text-orange-600' : 'text-red-600';
+    return { ...s, average: total, grade, gradeColor, midterm: s.midterm, exam: s.exam };
   });
 
   const overallAvg = subjectGrades.length ? Math.round(subjectGrades.reduce((s: number, sg: any) => s + sg.average, 0) / subjectGrades.length) : 0;
@@ -154,8 +154,8 @@ function ReportCardContent() {
 
     (doc as any).autoTable({
       startY: 70,
-      head: [['Subject', 'Mid-Term Test\n(40%)', 'Exam\n(60%)', 'Total', 'Grade', 'Remark']],
-      body: subjectGrades.map((sg: any, i: number) => [sg.subjectName, sg.midterm != null ? `${sg.midterm}%` : '-', sg.exam != null ? `${sg.exam}%` : '-', `${sg.average}%`, sg.grade, subjectRemarks[i]]),
+      head: [['Subject', 'Mid-Term Test\n(/40)', 'Exam\n(/60)', 'Total', 'Grade', 'Remark']],
+      body: subjectGrades.map((sg: any, i: number) => [sg.subjectName, sg.midterm != null ? `${sg.midterm}` : '-', sg.exam != null ? `${sg.exam}` : '-', `${sg.average}%`, sg.grade, subjectRemarks[i]]),
       theme: 'striped',
       headStyles: { fillColor: [30, 58, 95] },
       foot: [[{ content: `Overall Average: ${overallAvg}%`, colSpan: 3, styles: { fontStyle: 'bold' } }, { content: `Attendance: ${attendanceRate}%`, colSpan: 3, styles: { fontStyle: 'bold' } }]],
@@ -192,7 +192,7 @@ function ReportCardContent() {
     if (!w) return;
     const name = `${child.profile?.first_name} ${child.profile?.last_name}`;
     const rows = subjectGrades.map((sg: any, i: number) =>
-      `<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0">${sg.subjectName}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${sg.midterm != null ? sg.midterm + '%' : '-'}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${sg.exam != null ? sg.exam + '%' : '-'}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:bold">${sg.average}%</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:bold">${sg.grade}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0">${subjectRemarks[i]}</td></tr>`
+      `<tr><td style="padding:8px;border-bottom:1px solid #e2e8f0">${sg.subjectName}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${sg.midterm != null ? sg.midterm : '-'}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${sg.exam != null ? sg.exam : '-'}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:bold">${sg.average}%</td><td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:bold">${sg.grade}</td><td style="padding:8px;border-bottom:1px solid #e2e8f0">${subjectRemarks[i]}</td></tr>`
     ).join('');
 
     w.document.write(`<!DOCTYPE html><html><head><title>Report Card - ${name}</title><style>
@@ -211,7 +211,7 @@ function ReportCardContent() {
     </style></head><body><div class="card">
       <div style="text-align:center;margin-bottom:20px"><h1>Mastery Engine</h1><p class="subtitle">Report Card — ${selectedTerm.name}</p></div>
       <div style="margin-bottom:20px"><p><strong>Student:</strong> ${name} &nbsp;|&nbsp; <strong>Class:</strong> ${child.class?.name || 'N/A'} &nbsp;|&nbsp; <strong>Admission:</strong> ${child.admission_number || 'N/A'}</p></div>
-      <table><thead><tr><th>Subject</th><th>Mid-Term Test<br><span style="font-weight:normal;font-size:10px">(40%)</span></th><th>Exam<br><span style="font-weight:normal;font-size:10px">(60%)</span></th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>${rows}</tbody></table>
+      <table><thead><tr><th>Subject</th><th>Mid-Term Test<br><span style="font-weight:normal;font-size:10px">(/40)</span></th><th>Exam<br><span style="font-weight:normal;font-size:10px">(/60)</span></th><th>Total</th><th>Grade</th><th>Remark</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="summary"><div class="summary-box"><div class="val">${overallAvg}%</div><div class="lbl">Overall Average</div></div><div class="summary-box"><div class="val">${attendanceRate}%</div><div class="lbl">Attendance</div></div><div class="summary-box"><div class="val">${homeworkCount}</div><div class="lbl">Homework Submitted</div></div></div>
       <p class="footer">Generated on ${new Date().toLocaleDateString()}</p>
     </div></body></html>`);

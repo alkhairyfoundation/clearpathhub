@@ -26,15 +26,15 @@ interface StudentScoreRow {
   dirty: boolean;
 }
 
-const SCORE_TYPES: { key: ExamType; label: string; weight: number }[] = [
-  { key: 'ca1', label: 'Mid-Term Test', weight: 0.4 },
-  { key: 'exam', label: 'Exam', weight: 0.6 },
+const SCORE_TYPES: { key: ExamType; label: string; maxScore: number }[] = [
+  { key: 'ca1', label: 'Mid-Term Test', maxScore: 40 },
+  { key: 'exam', label: 'Exam', maxScore: 60 },
 ];
 
-function weightedTotal(row: StudentScoreRow): number {
+function totalScore(row: StudentScoreRow): number {
   const midterm = row.ca1?.score ?? 0;
   const exam = row.exam?.score ?? 0;
-  return Math.round(midterm * 0.4 + exam * 0.6);
+  return Math.min(100, midterm + exam);
 }
 
 function calculateGrade(score: number): string {
@@ -49,7 +49,7 @@ function calculateGrade(score: number): string {
 function safeScore(val: string | number): number {
   const n = typeof val === 'string' ? parseInt(val) : val;
   if (isNaN(n)) return 0;
-  return Math.min(100, Math.max(0, n));
+  return Math.max(0, n);
 }
 
 export default function TeacherResultsPage() {
@@ -181,7 +181,7 @@ export default function TeacherResultsPage() {
   }
 
   function cellTotal(row: StudentScoreRow): number {
-    return weightedTotal(row);
+    return totalScore(row);
   }
 
   function cellCount(row: StudentScoreRow): number {
@@ -414,7 +414,7 @@ export default function TeacherResultsPage() {
                     <tr className="bg-slate-50 text-left">
                       <th className="py-3 px-4 font-semibold text-slate-600 sticky left-0 bg-slate-50 z-10 min-w-[180px]">Student</th>
                       {SCORE_TYPES.map(st => (
-                        <th key={st.key} className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[100px]">{st.label}<br /><span className="text-[10px] font-normal text-slate-400">({Math.round(st.weight * 100)}%)</span></th>
+                        <th key={st.key} className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[100px]">{st.label}<br /><span className="text-[10px] font-normal text-slate-400">(/{st.maxScore})</span></th>
                       ))}
                       <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[60px]">Total</th>
                       <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[60px]">Grade</th>
@@ -444,9 +444,9 @@ export default function TeacherResultsPage() {
                                 <input
                                   type="number"
                                   min={0}
-                                  max={100}
+                                  max={st.maxScore}
                                   value={cell?.score ?? ''}
-                                  onChange={e => updateCell(ri, st.key, e.target.value === '' ? 0 : Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                                  onChange={e => updateCell(ri, st.key, e.target.value === '' ? 0 : Math.min(st.maxScore, Math.max(0, parseInt(e.target.value) || 0)))}
                                   className={`w-20 text-center text-sm font-bold py-1.5 rounded-lg border transition-colors ${
                                     cell ? 'bg-white border-slate-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500' : 'bg-slate-50 border-dashed border-slate-300 text-slate-400'
                                   }`}
@@ -546,18 +546,23 @@ export default function TeacherResultsPage() {
                   </select>
                 </div>
                 <div><label className="label">Assessment Type</label>
-                  <select value={formData.exam_type} onChange={e => setFormData({ ...formData, exam_type: e.target.value as ExamType })} className="input">
-                    <option value="ca1">Mid-Term Test (40%)</option>
-                    <option value="exam">Exam (60%)</option>
+                  <select value={formData.exam_type} onChange={e => {
+                    const max = e.target.value === 'ca1' ? 40 : 60;
+                    setFormData({ ...formData, exam_type: e.target.value as ExamType, score: Math.min(formData.score, max) });
+                  }} className="input">
+                    <option value="ca1">Mid-Term Test (/40)</option>
+                    <option value="exam">Exam (/60)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="label">Score (0-100)</label>
-                  <input type="number" min={0} max={100} value={formData.score ?? ''}
+                  <label className="label">Score</label>
+                  <input type="number" min={0} max={formData.exam_type === 'ca1' ? 40 : 60}
+                    value={formData.score ?? ''}
                     onChange={e => {
                       const raw = e.target.value;
-                      const score = raw === '' ? 0 : safeScore(raw);
-                      setFormData({ ...formData, score: raw === '' ? 0 : Math.min(100, Math.max(0, parseInt(raw) || 0)), grade: calculateGrade(score) });
+                      const max = formData.exam_type === 'ca1' ? 40 : 60;
+                      const score = raw === '' ? 0 : Math.min(max, Math.max(0, parseInt(raw) || 0));
+                      setFormData({ ...formData, score, grade: calculateGrade(score) });
                     }}
                     className="input" />
                 </div>
