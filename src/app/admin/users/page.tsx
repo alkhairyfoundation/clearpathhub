@@ -826,8 +826,8 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {/* User Detail View Modal */}
       {viewingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setViewingUser(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
               <h3 className="text-lg font-bold text-slate-900">User Details</h3>
               <button onClick={() => setViewingUser(null)} className="p-1.5 hover:bg-slate-100 rounded-lg">
                 <X size={20} className="text-slate-500" />

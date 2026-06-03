@@ -1199,7 +1199,7 @@ function viewAnalyticsDetails(record: any) {
         {/* Code Modal */}
         {showCodeModal && selectedExam && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full"><div className="p-5 border-b flex justify-between"><h3>Codes — {selectedExam.title}</h3><button onClick={() => setShowCodeModal(false)}><X size={20} /></button></div><div className="p-5"><button onClick={handleGenerateCode} disabled={saving} className="btn-primary w-full mb-4">Generate Code</button>{codes.filter(c => c.exam_id === selectedExam.id).map(c => (<div key={c.id} className="flex justify-between p-2 bg-slate-50 mt-1"><code className="font-bold">{c.code}</code><span>{c.used_count}/{c.max_uses}</span></div>))}</div></div>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"><div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3>Codes — {selectedExam.title}</h3><button onClick={() => setShowCodeModal(false)}><X size={20} /></button></div><div className="p-5"><button onClick={handleGenerateCode} disabled={saving} className="btn-primary w-full mb-4">Generate Code</button>{codes.filter(c => c.exam_id === selectedExam.id).map(c => (<div key={c.id} className="flex justify-between p-2 bg-slate-50 mt-1"><code className="font-bold">{c.code}</code><span>{c.used_count}/{c.max_uses}</span></div>))}</div></div>
           </div>
         )}
 
@@ -1234,15 +1234,15 @@ function viewAnalyticsDetails(record: any) {
          {/* Question Bank Modal */}
          {showQuestionBankModal && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-               <div className="p-5 border-b flex justify-between"><h3>{editingQuestion ? 'Edit' : 'Add'} Question</h3><button onClick={() => setShowQuestionBankModal(false)}><X size={20} /></button></div>
+             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+               <div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3>{editingQuestion ? 'Edit' : 'Add'} Question</h3><button onClick={() => setShowQuestionBankModal(false)}><X size={20} /></button></div>
                <div className="p-5 space-y-4">
                  <textarea value={questionData.question} onChange={e => setQuestionData({...questionData, question: e.target.value})} className="input" placeholder="Question" />
                  <select value={questionData.subject} onChange={e => setQuestionData({...questionData, subject: e.target.value})} className="input"><option value="">Subject</option><option value="ENGLISH">English</option><option value="MATHEMATICS">Maths</option></select>
                  <select value={questionData.level} onChange={e => setQuestionData({...questionData, level: e.target.value})} className="input"><option value="">Level</option><option value="JSS1">JSS 1</option><option value="SS1">SS 1</option><option value="PRIMARY 1">Primary 1</option></select>
                  <select value={questionData.difficulty_level} onChange={e => setQuestionData({...questionData, difficulty_level: e.target.value})} className="input"><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option></select>
                </div>
-               <div className="p-5 border-t flex justify-end gap-2"><button onClick={() => setShowQuestionBankModal(false)}>Cancel</button><button onClick={() => addQuestionToBank(questionData)} className="btn-primary">Save</button></div>
+               <div className="p-5 border-t flex justify-end gap-2 bg-white sticky bottom-0"><button onClick={() => setShowQuestionBankModal(false)}>Cancel</button><button onClick={() => addQuestionToBank(questionData)} className="btn-primary">Save</button></div>
              </div>
            </div>
          )}

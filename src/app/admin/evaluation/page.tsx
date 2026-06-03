@@ -223,8 +223,8 @@ export default function AdminEvaluationPage() {
 
       {showTaskModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between"><h3 className="text-lg font-bold text-slate-900">Assign Task</h3><button onClick={() => setShowTaskModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="text-lg font-bold text-slate-900">Assign Task</h3><button onClick={() => setShowTaskModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
             <div className="p-5 space-y-4">
               <div><label className="label">Teacher</label><select value={formData.teacher_id} onChange={(e) => setFormData({ ...formData, teacher_id: e.target.value })} className="input"><option value="">Select Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
               <div><label className="label">Task Type</label><select value={formData.task_type} onChange={(e) => setFormData({ ...formData, task_type: e.target.value })} className="input"><option value="reading">Reading</option><option value="study">Study</option><option value="project">Project</option><option value="research">Research</option><option value="other">Other</option></select></div>
@@ -232,19 +232,19 @@ export default function AdminEvaluationPage() {
               <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={3} /></div>
               <div><label className="label">Due Date</label><input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} className="input" /></div>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-slate-200"><button onClick={() => setShowTaskModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateTask} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Assigning...' : 'Assign Task'}</button></div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 bg-white sticky bottom-0"><button onClick={() => setShowTaskModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateTask} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Assigning...' : 'Assign Task'}</button></div>
           </div>
         </div>
       )}
 
       {showEvalModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between"><h3 className="text-lg font-bold text-slate-900">New Evaluation</h3><button onClick={() => setShowEvalModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="text-lg font-bold text-slate-900">New Evaluation</h3><button onClick={() => setShowEvalModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
             <div className="p-5 space-y-4">
               <div><label className="label">Teacher</label><select value={selectedTeacher?.id || ''} onChange={(e) => setSelectedTeacher(teachers.find(t => t.id === e.target.value))} className="input"><option value="">Select Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-slate-200"><button onClick={() => setShowEvalModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateEvaluation} disabled={saving || !selectedTeacher} className="btn-primary disabled:opacity-50">{saving ? 'Creating...' : 'Create Evaluation'}</button></div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 bg-white sticky bottom-0"><button onClick={() => setShowEvalModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateEvaluation} disabled={saving || !selectedTeacher} className="btn-primary disabled:opacity-50">{saving ? 'Creating...' : 'Create Evaluation'}</button></div>
           </div>
         </div>
         )}

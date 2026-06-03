@@ -176,8 +176,8 @@ export default function TeacherClassesPage() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between"><h3 className="text-lg font-bold text-slate-900">{editingClass ? 'Edit' : 'New'} Class</h3><button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="text-lg font-bold text-slate-900">{editingClass ? 'Edit' : 'New'} Class</h3><button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button></div>
             <div className="p-5 space-y-4">
               <div><label className="label">Class Name</label><input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input" placeholder="e.g., JSS 1A" /></div>
               <div className="grid grid-cols-2 gap-4">
@@ -186,7 +186,7 @@ export default function TeacherClassesPage() {
               </div>
               <div><label className="label">Capacity</label><input type="number" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) })} className="input" /></div>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-slate-200"><button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button><button onClick={handleSave} disabled={saving} className="btn-primary">{saving ? 'Saving...' : editingClass ? 'Update' : 'Create'}</button></div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 bg-white sticky bottom-0"><button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button><button onClick={handleSave} disabled={saving} className="btn-primary">{saving ? 'Saving...' : editingClass ? 'Update' : 'Create'}</button></div>
           </div>
         </div>
         )}

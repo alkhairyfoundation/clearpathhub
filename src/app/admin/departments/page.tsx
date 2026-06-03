@@ -146,8 +146,8 @@ export default function AdminDepartmentsPage() {
 
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
                 <h3 className="text-lg font-bold text-slate-900">{editingDepartment ? 'Edit' : 'Add'} Department</h3>
                 <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X className="text-slate-500" size={20} /></button>
               </div>
@@ -156,7 +156,7 @@ export default function AdminDepartmentsPage() {
                 <div><label className="label">Department Name</label><input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="e.g., Science Department" /></div>
                 <div><label className="label">Department Code</label><input type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="input" placeholder="e.g., SCI" /></div>
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 bg-white sticky bottom-0">
                 <button onClick={() => { setShowModal(false); setError(''); }} className="btn-ghost">Cancel</button>
                 <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">
                   {saving && <Loader2 size={16} className="animate-spin" />}

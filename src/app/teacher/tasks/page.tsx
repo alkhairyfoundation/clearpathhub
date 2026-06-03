@@ -163,8 +163,8 @@ export default function TeacherTasksPage() {
 
         {selectedTask && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
                 <h3 className="text-lg font-bold text-slate-900">Submit Task</h3>
                 <button onClick={() => { setSelectedTask(null); setSubmissionText(''); setSubmissionFile(null); }} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
               </div>
@@ -184,7 +184,7 @@ export default function TeacherTasksPage() {
                   {submissionFile && <p className="text-xs text-slate-500 mt-1">{submissionFile.name}</p>}
                 </div>
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 bg-white sticky bottom-0">
                 <button onClick={() => { setSelectedTask(null); setSubmissionText(''); setSubmissionFile(null); }} className="btn-ghost">Cancel</button>
                 <button onClick={handleSubmit} disabled={submitting || (!submissionText.trim() && !submissionFile)} className="btn-primary disabled:opacity-50">
                   {submitting ? <><Loader2 size={16} className="animate-spin" /> Submitting...</> : <><Upload size={16} /> Submit</>}
