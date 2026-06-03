@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Eye, EyeOff, Loader2, ImageIcon } from 'lucide-react';
+import { ArrowLeft, Clock, AlertTriangle, Check, X, ChevronRight, ChevronLeft, Flag, Eye, EyeOff, Loader2, ImageIcon } from 'lucide-react';
 import Calculator from '@/components/Calculator';
 
 function gradeQuestion(question: any, answer: any): boolean {
@@ -49,6 +49,7 @@ export default function StudentTakeTestPage() {
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [tabSwitches, setTabSwitches] = useState(0);
   const [fullscreenExits, setFullscreenExits] = useState(0);
+  const [fullscreenBlocked, setFullscreenBlocked] = useState(false);
   const [error, setError] = useState('');
   const [securityEvents, setSecurityEvents] = useState<any[]>([]);
   const activityRef = useRef<HTMLDivElement>(null);
@@ -92,7 +93,7 @@ export default function StudentTakeTestPage() {
   }, [started, submitted, test]);
 
   useEffect(() => {
-    if (!started || submitted) return;
+    if (!started || submitted || !test?.require_fullscreen) return;
     function handleFullscreenChange() {
       if (!document.fullscreenElement) {
         setFullscreenExits(prev => {
@@ -100,18 +101,31 @@ export default function StudentTakeTestPage() {
           setSecurityEvents(events => [...events, { type: 'fullscreen_exit', time: new Date().toISOString(), count: next }]);
           return next;
         });
-        if (test?.require_fullscreen) {
-          document.documentElement.requestFullscreen().catch(() => {});
-        }
+        setFullscreenBlocked(true);
+      } else {
+        setFullscreenBlocked(false);
       }
     }
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    const interval = setInterval(() => {
+      if (started && !submitted && test?.require_fullscreen && !document.fullscreenElement) {
+        setFullscreenBlocked(true);
+      }
+    }, 2000);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      clearInterval(interval);
+    };
   }, [started, submitted, test]);
 
   useEffect(() => {
     if (!started || submitted) return;
     function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'F11') {
+        e.preventDefault();
+        setSecurityEvents(events => [...events, { type: 'keyboard_shortcut', key: e.key, time: new Date().toISOString() }]);
+        return;
+      }
       if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'u', 's', 'p'].includes(e.key.toLowerCase())) {
         e.preventDefault();
         setSecurityEvents(events => [...events, { type: 'keyboard_shortcut', key: e.key, time: new Date().toISOString() }]);
@@ -246,24 +260,74 @@ export default function StudentTakeTestPage() {
   if (!test) return <div className="card text-center"><AlertTriangle size={48} className="mx-auto text-yellow-500 mb-4" /><h2 className="text-xl font-bold">Test Not Found</h2><p className="text-slate-500">This test may not be published yet.</p></div>;
 
   if (submitted) return (
-    <div className="max-w-2xl mx-auto card text-center">
-      <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${score !== null && score >= (test.passing_score || 50) ? 'bg-green-100' : 'bg-red-100'}`}>
-        {score !== null && score >= (test.passing_score || 50) ? <Check size={40} className="text-green-600" /> : <AlertTriangle size={40} className="text-red-600" />}
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div className="card text-center">
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${score !== null && score >= (test.passing_score || 50) ? 'bg-green-100' : 'bg-red-100'}`}>
+          {score !== null && score >= (test.passing_score || 50) ? <Check size={40} className="text-green-600" /> : <AlertTriangle size={40} className="text-red-600" />}
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2">Test Submitted!</h1>
+        <p className="text-slate-500 mb-6">Your answers have been recorded</p>
+        <div className="bg-slate-50 rounded-xl p-6 mb-6">
+          <p className="text-sm text-slate-500 mb-1">Your Score</p>
+          <p className={`text-5xl font-bold ${score !== null && score >= (test.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{score}%</p>
+          <p className="text-sm text-slate-500 mt-2">Passing Score: {test.passing_score || 50}%</p>
+          <p className="text-sm text-slate-400 mt-1">{getAnsweredCount()} of {questions.length} answered</p>
+        </div>
+        {tabSwitches > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-700">
+            Tab switches detected: {tabSwitches}
+          </div>
+        )}
+        <button onClick={() => router.push('/student')} className="btn-primary">Back to Dashboard</button>
       </div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-2">Test Submitted!</h1>
-      <p className="text-slate-500 mb-6">Your answers have been recorded</p>
-      <div className="bg-slate-50 rounded-xl p-6 mb-6">
-        <p className="text-sm text-slate-500 mb-1">Your Score</p>
-        <p className={`text-5xl font-bold ${score !== null && score >= (test.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{score}%</p>
-        <p className="text-sm text-slate-500 mt-2">Passing Score: {test.passing_score || 50}%</p>
-        <p className="text-sm text-slate-400 mt-1">{getAnsweredCount()} of {questions.length} answered</p>
-      </div>
-      {tabSwitches > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-700">
-          Tab switches detected: {tabSwitches}
+
+      {/* Answer Review */}
+      {questions.length > 0 && (
+        <div className="card">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">Answer Review</h3>
+          <div className="space-y-4">
+            {questions.map((q, i) => {
+              const isCorrect = gradeQuestion(q, answers[i]);
+              const letter = (idx: number) => String.fromCharCode(65 + idx);
+              return (
+                <div key={q.id} className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isCorrect ? 'bg-green-200' : 'bg-red-200'}`}>
+                      {isCorrect ? <Check size={16} className="text-green-700" /> : <X size={16} className="text-red-700" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-900"><span className="text-slate-400">Q{i + 1}.</span> {q.question}</p>
+                      {(q.question_type === 'multiple_choice' || q.question_type === 'true_false') && q.options && (
+                        <div className="mt-2 space-y-1">
+                          {q.options.map((opt: string, oi: number) => (
+                            <div key={oi} className={`text-sm px-3 py-1.5 rounded-lg ${
+                              oi === q.correct_answer ? 'bg-green-200 text-green-800 font-medium' :
+                              oi === answers[i] && oi !== q.correct_answer ? 'bg-red-200 text-red-800' :
+                              'text-slate-600'
+                            }`}>
+                              {letter(oi)}. {opt}
+                              {oi === q.correct_answer && <span className="ml-2 text-green-700">✓ Correct</span>}
+                              {oi === answers[i] && oi !== q.correct_answer && <span className="ml-2 text-red-700">✗ Your answer</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {q.question_type === 'fill_blank' && (
+                        <div className="mt-2 text-sm">
+                          <span className="text-slate-500">Your answer: </span>
+                          <span className={isCorrect ? 'text-green-700 font-medium' : 'text-red-700 font-medium'}>{answers[i] || '(empty)'}</span>
+                          {!isCorrect && <><br /><span className="text-green-700">Correct: {q.options?.[q.correct_answer] || 'N/A'}</span></>}
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-400 mt-1">{q.points} pt(s)</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
-      <button onClick={() => router.push('/student')} className="btn-primary">Back to Dashboard</button>
     </div>
   );
 
@@ -279,7 +343,7 @@ export default function StudentTakeTestPage() {
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
         <p className="text-sm text-amber-800"><strong>Instructions:</strong> The timer starts when you click Begin. You can flag questions to review later. Auto-submit when time runs out. Do not switch tabs during the test.</p>
       </div>
-      <button onClick={() => setStarted(true)} className="btn-primary w-full">Begin Test</button>
+      <button onClick={() => { setStarted(true); if (test?.require_fullscreen) document.documentElement.requestFullscreen().catch(() => {}); }} className="btn-primary w-full">Begin Test</button>
     </div>
   );
 
@@ -388,6 +452,39 @@ export default function StudentTakeTestPage() {
       </div>
     </div>
     <Calculator />
+
+      {/* Fullscreen Blocking Overlay */}
+      {fullscreenBlocked && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={40} className="text-red-600" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Fullscreen Required</h2>
+            <p className="text-slate-600 mb-6">
+              You exited fullscreen mode during the test. You must re-enter fullscreen to continue.
+            </p>
+            <button
+              onClick={() => {
+                document.documentElement.requestFullscreen().then(() => {
+                  setFullscreenBlocked(false);
+                }).catch(() => {
+                  setFullscreenBlocked(true);
+                });
+              }}
+              className="btn-primary w-full py-3 text-lg"
+            >
+              Re-enter Fullscreen
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="btn-ghost w-full mt-2 text-sm text-slate-500"
+            >
+              Submit Test Now
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

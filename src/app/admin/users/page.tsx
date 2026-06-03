@@ -68,6 +68,16 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
   const [formData, setFormData] = useState<UserFormData>({
     email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '', class_id: '', avatar_url: '',
   });
+  const [studentData, setStudentData] = useState({
+    date_of_birth: '',
+    gender: '',
+    address: '',
+    guardian_name: '',
+    guardian_phone: '',
+    guardian_email: '',
+    blood_group: '',
+    emergency_contact: '',
+  });
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -169,6 +179,11 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       email: '', password: '', first_name: '', last_name: '',
       role: selectedRole, phone: '', class_id: '', avatar_url: '',
     });
+    setStudentData({
+      date_of_birth: '', gender: '', address: '',
+      guardian_name: '', guardian_phone: '', guardian_email: '',
+      blood_group: '', emergency_contact: '',
+    });
     setTeacherSubjectIds([]);
     if (selectedRole === 'student' || selectedRole === 'teacher') {
       const { data } = await supabase.from('classes').select('id, name, level').order('name');
@@ -208,6 +223,28 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
     } else {
       setTeacherSubjectIds([]);
     }
+    if (user.role === 'student') {
+      supabase.from('students').select('*').eq('profile_id', user.id).maybeSingle().then(({ data }) => {
+        if (data) {
+          setStudentData({
+            date_of_birth: data.date_of_birth || '',
+            gender: data.gender || '',
+            address: data.address || '',
+            guardian_name: data.guardian_name || '',
+            guardian_phone: data.guardian_phone || '',
+            guardian_email: data.guardian_email || '',
+            blood_group: data.blood_group || '',
+            emergency_contact: data.emergency_contact || '',
+          });
+        }
+      });
+    } else {
+      setStudentData({
+        date_of_birth: '', gender: '', address: '',
+        guardian_name: '', guardian_phone: '', guardian_email: '',
+        blood_group: '', emergency_contact: '',
+      });
+    }
     setShowModal(true);
   }
 
@@ -232,6 +269,14 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
         }
         if (formData.role === 'student') {
           body.class_id = formData.class_id || null;
+          body.date_of_birth = studentData.date_of_birth || null;
+          body.gender = studentData.gender || null;
+          body.address = studentData.address || null;
+          body.guardian_name = studentData.guardian_name || null;
+          body.guardian_phone = studentData.guardian_phone || null;
+          body.guardian_email = studentData.guardian_email || null;
+          body.blood_group = studentData.blood_group || null;
+          body.emergency_contact = studentData.emergency_contact || null;
         }
 
         const res = await fetch(`/api/admin/users/${editingUser.id}`, {
@@ -698,15 +743,73 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
               )}
 
               {formData.role === 'student' && (
-                <div>
-                  <label className="label">Class</label>
-                  <select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input">
-                    <option value="">Select Class</option>
-                    {classes.map(c => (
-                      <option key={c.id} value={c.id}>{c.name} (Level {c.level})</option>
-                    ))}
-                  </select>
-                </div>
+                <>
+                  <div>
+                    <label className="label">Class</label>
+                    <select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input">
+                      <option value="">Select Class</option>
+                      {classes.map(c => (
+                        <option key={c.id} value={c.id}>{c.name} (Level {c.level})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="border-t border-slate-200 pt-4">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">Additional Student Information</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="label">Date of Birth</label>
+                        <input type="date" value={studentData.date_of_birth} onChange={(e) => setStudentData({ ...studentData, date_of_birth: e.target.value })} className="input" />
+                      </div>
+                      <div>
+                        <label className="label">Gender</label>
+                        <select value={studentData.gender} onChange={(e) => setStudentData({ ...studentData, gender: e.target.value })} className="input">
+                          <option value="">Select Gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="label">Address</label>
+                      <textarea value={studentData.address} onChange={(e) => setStudentData({ ...studentData, address: e.target.value })} className="input" rows={2} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <label className="label">Guardian Name</label>
+                        <input type="text" value={studentData.guardian_name} onChange={(e) => setStudentData({ ...studentData, guardian_name: e.target.value })} className="input" />
+                      </div>
+                      <div>
+                        <label className="label">Guardian Phone</label>
+                        <input type="tel" value={studentData.guardian_phone} onChange={(e) => setStudentData({ ...studentData, guardian_phone: e.target.value })} className="input" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <label className="label">Guardian Email</label>
+                        <input type="email" value={studentData.guardian_email} onChange={(e) => setStudentData({ ...studentData, guardian_email: e.target.value })} className="input" />
+                      </div>
+                      <div>
+                        <label className="label">Blood Group</label>
+                        <select value={studentData.blood_group} onChange={(e) => setStudentData({ ...studentData, blood_group: e.target.value })} className="input">
+                          <option value="">Select Blood Group</option>
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="label">Emergency Contact</label>
+                      <input type="text" value={studentData.emergency_contact} onChange={(e) => setStudentData({ ...studentData, emergency_contact: e.target.value })} className="input" placeholder="Name and phone number" />
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-2">
@@ -766,6 +869,48 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                   <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
                     <span className="text-sm text-slate-500">Admission No.</span>
                     <span className="text-sm font-medium text-slate-900">{userExtraInfo.admission_number}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.gender && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Gender</span>
+                    <span className="text-sm font-medium text-slate-900 capitalize">{userExtraInfo.gender}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.date_of_birth && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Date of Birth</span>
+                    <span className="text-sm font-medium text-slate-900">{new Date(userExtraInfo.date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.address && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Address</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.address}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.guardian_name && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Guardian</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.guardian_name}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.guardian_phone && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Guardian Phone</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.guardian_phone}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.blood_group && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Blood Group</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.blood_group}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.emergency_contact && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm text-slate-500">Emergency Contact</span>
+                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.emergency_contact}</span>
                   </div>
                 )}
                 {(viewingUser.role === 'teacher' || viewingUser.role === 'accountant') && userExtraInfo?.staff_id && (

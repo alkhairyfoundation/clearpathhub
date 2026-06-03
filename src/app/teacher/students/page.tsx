@@ -37,6 +37,16 @@ export default function TeacherStudentsPage() {
     class_id: '',
     phone: '',
   });
+  const [studentExtra, setStudentExtra] = useState({
+    date_of_birth: '',
+    gender: '',
+    address: '',
+    guardian_name: '',
+    guardian_phone: '',
+    guardian_email: '',
+    blood_group: '',
+    emergency_contact: '',
+  });
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -87,6 +97,11 @@ export default function TeacherStudentsPage() {
       class_id: selectedClass || '',
       phone: '',
     });
+    setStudentExtra({
+      date_of_birth: '', gender: '', address: '',
+      guardian_name: '', guardian_phone: '', guardian_email: '',
+      blood_group: '', emergency_contact: '',
+    });
     setShowModal(true);
   }
 
@@ -101,6 +116,16 @@ export default function TeacherStudentsPage() {
       last_name: student.profile?.last_name || '',
       class_id: student.class_id || '',
       phone: student.profile?.phone || '',
+    });
+    setStudentExtra({
+      date_of_birth: student.date_of_birth || '',
+      gender: student.gender || '',
+      address: student.address || '',
+      guardian_name: student.guardian_name || '',
+      guardian_phone: student.guardian_phone || '',
+      guardian_email: student.guardian_email || '',
+      blood_group: student.blood_group || '',
+      emergency_contact: student.emergency_contact || '',
     });
     setShowModal(true);
   }
@@ -127,7 +152,17 @@ export default function TeacherStudentsPage() {
 
         const { error: studentError } = await supabase
           .from('students')
-          .update({ class_id: formData.class_id || null })
+          .update({
+            class_id: formData.class_id || null,
+            date_of_birth: studentExtra.date_of_birth || null,
+            gender: studentExtra.gender || null,
+            address: studentExtra.address || null,
+            guardian_name: studentExtra.guardian_name || null,
+            guardian_phone: studentExtra.guardian_phone || null,
+            guardian_email: studentExtra.guardian_email || null,
+            blood_group: studentExtra.blood_group || null,
+            emergency_contact: studentExtra.emergency_contact || null,
+          })
           .eq('id', editingStudent.id);
 
         if (studentError) throw new Error(studentError.message);
@@ -421,6 +456,63 @@ export default function TeacherStudentsPage() {
                   className="input"
                   placeholder="+234..."
                 />
+              </div>
+
+              <div className="border-t border-slate-200 pt-4">
+                <h4 className="text-sm font-semibold text-slate-700 mb-3">Additional Information</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Date of Birth</label>
+                    <input type="date" value={studentExtra.date_of_birth} onChange={(e) => setStudentExtra({ ...studentExtra, date_of_birth: e.target.value })} className="input" />
+                  </div>
+                  <div>
+                    <label className="label">Gender</label>
+                    <select value={studentExtra.gender} onChange={(e) => setStudentExtra({ ...studentExtra, gender: e.target.value })} className="input">
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="label">Address</label>
+                  <textarea value={studentExtra.address} onChange={(e) => setStudentExtra({ ...studentExtra, address: e.target.value })} className="input" rows={2} />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="label">Guardian Name</label>
+                    <input type="text" value={studentExtra.guardian_name} onChange={(e) => setStudentExtra({ ...studentExtra, guardian_name: e.target.value })} className="input" />
+                  </div>
+                  <div>
+                    <label className="label">Guardian Phone</label>
+                    <input type="tel" value={studentExtra.guardian_phone} onChange={(e) => setStudentExtra({ ...studentExtra, guardian_phone: e.target.value })} className="input" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="label">Guardian Email</label>
+                    <input type="email" value={studentExtra.guardian_email} onChange={(e) => setStudentExtra({ ...studentExtra, guardian_email: e.target.value })} className="input" />
+                  </div>
+                  <div>
+                    <label className="label">Blood Group</label>
+                    <select value={studentExtra.blood_group} onChange={(e) => setStudentExtra({ ...studentExtra, blood_group: e.target.value })} className="input">
+                      <option value="">Select Blood Group</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="label">Emergency Contact</label>
+                  <input type="text" value={studentExtra.emergency_contact} onChange={(e) => setStudentExtra({ ...studentExtra, emergency_contact: e.target.value })} className="input" placeholder="Name and phone number" />
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-2">

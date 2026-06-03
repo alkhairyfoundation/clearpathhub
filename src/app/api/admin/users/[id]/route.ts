@@ -61,7 +61,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const supabase = await createSupabaseAdminClient();
 
     const body = await request.json();
-    const { first_name, last_name, role, phone, password, subject_ids, class_id } = body;
+    const { first_name, last_name, role, phone, password, subject_ids, class_id,
+      date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact } = body;
 
     const updates: Record<string, any> = {};
     if (first_name !== undefined) updates.first_name = first_name;
@@ -144,15 +145,27 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
     }
 
-    // Update student class_id
-    if (class_id !== undefined) {
+    // Update student record
+    if (class_id !== undefined || date_of_birth !== undefined || gender !== undefined || address !== undefined ||
+        guardian_name !== undefined || guardian_phone !== undefined || guardian_email !== undefined ||
+        blood_group !== undefined || emergency_contact !== undefined) {
       const { data: studentRecord } = await supabase
         .from('students')
         .select('id')
         .eq('profile_id', params.id)
         .maybeSingle();
       if (studentRecord) {
-        await supabase.from('students').update({ class_id: class_id || null }).eq('id', studentRecord.id);
+        const studentUpdates: Record<string, any> = {};
+        if (class_id !== undefined) studentUpdates.class_id = class_id || null;
+        if (date_of_birth !== undefined) studentUpdates.date_of_birth = date_of_birth || null;
+        if (gender !== undefined) studentUpdates.gender = gender || null;
+        if (address !== undefined) studentUpdates.address = address || null;
+        if (guardian_name !== undefined) studentUpdates.guardian_name = guardian_name || null;
+        if (guardian_phone !== undefined) studentUpdates.guardian_phone = guardian_phone || null;
+        if (guardian_email !== undefined) studentUpdates.guardian_email = guardian_email || null;
+        if (blood_group !== undefined) studentUpdates.blood_group = blood_group || null;
+        if (emergency_contact !== undefined) studentUpdates.emergency_contact = emergency_contact || null;
+        await supabase.from('students').update(studentUpdates).eq('id', studentRecord.id);
       }
     }
 
