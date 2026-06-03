@@ -24,6 +24,7 @@ export default function AdminTestsPage() {
   const [formData, setFormData] = useState({
     title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test',
     exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50,
+    total_questions: 10,
     shuffle_questions: false, shuffle_options: false, require_fullscreen: false,
     prevent_tab_switch: false, max_tab_switches: 3,
   });
@@ -79,7 +80,7 @@ export default function AdminTestsPage() {
       setFormData({
         title: test.title, description: test.description || '', subject_id: test.subject_id || '', class_id: test.class_id || '',
         test_type: test.test_type, exam_date: test.exam_date || '', duration_minutes: test.duration_minutes || 30,
-        total_marks: test.total_marks || 100, passing_score: test.passing_score || 50,
+        total_marks: test.total_marks || 100, total_questions: test.total_questions || 10, passing_score: test.passing_score || 50,
         shuffle_questions: test.shuffle_questions || false, shuffle_options: test.shuffle_options || false,
         require_fullscreen: test.require_fullscreen || false, prevent_tab_switch: test.prevent_tab_switch || false,
         max_tab_switches: test.max_tab_switches || 3,
@@ -87,7 +88,7 @@ export default function AdminTestsPage() {
     } else {
       setEditingTest(null);
       setFormData({ title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test',
-        exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50,
+        exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50, total_questions: 10,
         shuffle_questions: false, shuffle_options: false, require_fullscreen: false,
         prevent_tab_switch: false, max_tab_switches: 3,
       });
@@ -183,6 +184,10 @@ export default function AdminTestsPage() {
       const { data: subject } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
       if (subject) query = query.eq('subject', subject.name);
     }
+    if (test.class_id) {
+      const { data: cls } = await supabase.from('classes').select('name').eq('id', test.class_id).maybeSingle();
+      if (cls) query = query.eq('level', cls.name);
+    }
     const { data } = await query.order('created_at', { ascending: false });
     setBankQuestions(data || []);
     setBankFiltered(data || []);
@@ -232,9 +237,15 @@ export default function AdminTestsPage() {
     try {
       const { data: subj } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
       if (!subj) { setError('Subject not found'); setSaving(false); return; }
-      const { data: bankQ } = await supabase.from('question_bank').select('*').eq('subject', subj.name).eq('is_active', true);
+      let query = supabase.from('question_bank').select('*').eq('subject', subj.name).eq('is_active', true);
+      if (test.class_id) {
+        const { data: cls } = await supabase.from('classes').select('name').eq('id', test.class_id).maybeSingle();
+        if (cls) query = query.eq('level', cls.name);
+      }
+      const { data: bankQ } = await query;
       if (bankQ && bankQ.length > 0) {
-        const shuffled = bankQ.sort(() => Math.random() - 0.5).slice(0, Math.min(bankQ.length, test.total_marks || 10));
+        const count = formData.total_questions || 10;
+        const shuffled = bankQ.sort(() => Math.random() - 0.5).slice(0, Math.min(bankQ.length, count));
         const toInsert = shuffled.map((q, i) => ({
           test_id: test.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
           points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', subject: q.subject || null, order_index: i,
@@ -404,7 +415,7 @@ export default function AdminTestsPage() {
               <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="e.g., Mathematics Mid-Term" /></div>
               <div className="grid grid-cols-2 gap-4"><div><label className="label">Subject</label><select value={formData.subject_id} onChange={(e) => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div><div><label className="label">Class</label><select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input"><option value="">Select</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div></div>
               <div className="grid grid-cols-2 gap-4"><div><label className="label">Type</label>                    <select value={formData.test_type} onChange={(e) => setFormData({ ...formData, test_type: e.target.value })} className="input"><option value="class_test">Class Test</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="term">Term</option><option value="practice">Practice</option></select></div><div><label className="label">Date</label><input type="date" value={formData.exam_date} onChange={(e) => setFormData({ ...formData, exam_date: e.target.value })} className="input" /></div></div>
-              <div className="grid grid-cols-3 gap-4"><div><label className="label">Duration (min)</label><input type="number" value={formData.duration_minutes} onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Total Marks</label><input type="number" value={formData.total_marks} onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Pass %</label><input type="number" value={formData.passing_score} onChange={(e) => setFormData({ ...formData, passing_score: parseInt(e.target.value) })} className="input" /></div></div>
+              <div className="grid grid-cols-4 gap-4"><div><label className="label">Duration (min)</label><input type="number" value={formData.duration_minutes} onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Total Marks</label><input type="number" value={formData.total_marks} onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Questions</label><input type="number" value={formData.total_questions} onChange={(e) => setFormData({ ...formData, total_questions: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Pass %</label><input type="number" value={formData.passing_score} onChange={(e) => setFormData({ ...formData, passing_score: parseInt(e.target.value) })} className="input" /></div></div>
               <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={2} /></div>
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-slate-800 mb-3 text-sm">Security Settings</h4>
