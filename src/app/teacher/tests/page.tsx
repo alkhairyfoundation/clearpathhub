@@ -202,14 +202,12 @@ export default function TeacherTestsPage() {
   async function openBankSelect() {
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let query = supabase.from('question_bank').select('*');
+    let query = supabase.from('question_bank').select('*').eq('is_active', true);
     if (selectedTest?.subject_id) {
-      const { data: subject } = await supabase.from('subjects').select('name').eq('id', selectedTest.subject_id).maybeSingle();
-      if (subject) query = query.ilike('subject', subject.name);
+      query = query.eq('subject_id', selectedTest.subject_id);
     }
     if (selectedTest?.class_id) {
-      const { data: cls } = await supabase.from('classes').select('level').eq('id', selectedTest.class_id).maybeSingle();
-      if (cls?.level) query = query.eq('level', cls.level);
+      query = query.eq('class_id', selectedTest.class_id);
     }
     const { data } = await query.order('created_at', { ascending: false });
     setBankQuestions(data || []);
@@ -259,12 +257,9 @@ export default function TeacherTestsPage() {
     if (!selectedTest || !selectedTest.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      const { data: subj } = await supabase.from('subjects').select('name').eq('id', selectedTest.subject_id).maybeSingle();
-      if (!subj) { setError('Subject not found'); setSaving(false); return; }
-      let query = supabase.from('question_bank').select('*').ilike('subject', subj.name).eq('is_active', true);
+      let query = supabase.from('question_bank').select('*').eq('subject_id', selectedTest.subject_id).eq('is_active', true);
       if (selectedTest.class_id) {
-        const { data: cls } = await supabase.from('classes').select('level').eq('id', selectedTest.class_id).maybeSingle();
-        if (cls?.level) query = query.eq('level', cls.level);
+        query = query.eq('class_id', selectedTest.class_id);
       }
       const { data: bankQ } = await query;
       if (bankQ && bankQ.length > 0) {
@@ -280,7 +275,7 @@ export default function TeacherTestsPage() {
         if (data) setQuestions(data);
         setSuccess(`Auto-populated ${toInsert.length} questions`);
       } else {
-        setWarning('No question bank questions found for this subject/level');
+        setWarning('No active question bank questions found for this subject/class');
       }
     } catch (err: any) {
       setError(err.message || 'Auto-populate failed');
