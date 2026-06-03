@@ -180,12 +180,22 @@ export default function AdminTestsPage() {
     setSelectedTest(test);
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let query = supabase.from('question_bank').select('*').eq('is_active', true);
+    let query = supabase.from('question_bank').select('*');
     if (test.subject_id) {
-      query = query.eq('subject_id', test.subject_id);
+      const { data: subj } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
+      if (subj) {
+        query = query.or(`subject_id.eq.${test.subject_id},subject.ilike.${subj.name}`);
+      } else {
+        query = query.eq('subject_id', test.subject_id);
+      }
     }
     if (test.class_id) {
-      query = query.eq('class_id', test.class_id);
+      const { data: cls } = await supabase.from('classes').select('level').eq('id', test.class_id).maybeSingle();
+      if (cls?.level) {
+        query = query.or(`class_id.eq.${test.class_id},level.eq.${cls.level}`);
+      } else {
+        query = query.eq('class_id', test.class_id);
+      }
     }
     const { data } = await query.order('created_at', { ascending: false });
     setBankQuestions(data || []);
@@ -234,9 +244,20 @@ export default function AdminTestsPage() {
     if (!test.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      let query = supabase.from('question_bank').select('*').eq('subject_id', test.subject_id).eq('is_active', true);
+      const { data: subj } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
+      let query = supabase.from('question_bank').select('*').eq('is_active', true);
+      if (subj) {
+        query = query.or(`subject_id.eq.${test.subject_id},subject.ilike.${subj.name}`);
+      } else {
+        query = query.eq('subject_id', test.subject_id);
+      }
       if (test.class_id) {
-        query = query.eq('class_id', test.class_id);
+        const { data: cls } = await supabase.from('classes').select('level').eq('id', test.class_id).maybeSingle();
+        if (cls?.level) {
+          query = query.or(`class_id.eq.${test.class_id},level.eq.${cls.level}`);
+        } else {
+          query = query.eq('class_id', test.class_id);
+        }
       }
       const { data: bankQ } = await query;
       if (bankQ && bankQ.length > 0) {

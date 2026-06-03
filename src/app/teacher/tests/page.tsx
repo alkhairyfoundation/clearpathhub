@@ -202,12 +202,22 @@ export default function TeacherTestsPage() {
   async function openBankSelect() {
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let query = supabase.from('question_bank').select('*').eq('is_active', true);
+    let query = supabase.from('question_bank').select('*');
     if (selectedTest?.subject_id) {
-      query = query.eq('subject_id', selectedTest.subject_id);
+      const { data: subj } = await supabase.from('subjects').select('name').eq('id', selectedTest.subject_id).maybeSingle();
+      if (subj) {
+        query = query.or(`subject_id.eq.${selectedTest.subject_id},subject.ilike.${subj.name}`);
+      } else {
+        query = query.eq('subject_id', selectedTest.subject_id);
+      }
     }
     if (selectedTest?.class_id) {
-      query = query.eq('class_id', selectedTest.class_id);
+      const { data: cls } = await supabase.from('classes').select('level').eq('id', selectedTest.class_id).maybeSingle();
+      if (cls?.level) {
+        query = query.or(`class_id.eq.${selectedTest.class_id},level.eq.${cls.level}`);
+      } else {
+        query = query.eq('class_id', selectedTest.class_id);
+      }
     }
     const { data } = await query.order('created_at', { ascending: false });
     setBankQuestions(data || []);
@@ -257,9 +267,20 @@ export default function TeacherTestsPage() {
     if (!selectedTest || !selectedTest.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      let query = supabase.from('question_bank').select('*').eq('subject_id', selectedTest.subject_id).eq('is_active', true);
+      const { data: subj } = await supabase.from('subjects').select('name').eq('id', selectedTest.subject_id).maybeSingle();
+      let query = supabase.from('question_bank').select('*').eq('is_active', true);
+      if (subj) {
+        query = query.or(`subject_id.eq.${selectedTest.subject_id},subject.ilike.${subj.name}`);
+      } else {
+        query = query.eq('subject_id', selectedTest.subject_id);
+      }
       if (selectedTest.class_id) {
-        query = query.eq('class_id', selectedTest.class_id);
+        const { data: cls } = await supabase.from('classes').select('level').eq('id', selectedTest.class_id).maybeSingle();
+        if (cls?.level) {
+          query = query.or(`class_id.eq.${selectedTest.class_id},level.eq.${cls.level}`);
+        } else {
+          query = query.eq('class_id', selectedTest.class_id);
+        }
       }
       const { data: bankQ } = await query;
       if (bankQ && bankQ.length > 0) {
