@@ -180,26 +180,33 @@ export default function AdminTestsPage() {
     setSelectedTest(test);
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let query = supabase.from('question_bank').select('*');
+    let subjName = '';
+    let clsLevel = '';
     if (test.subject_id) {
       const { data: subj } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
-      if (subj) {
-        query = query.or(`subject_id.eq.${test.subject_id},subject.ilike.${subj.name}`);
-      } else {
-        query = query.eq('subject_id', test.subject_id);
-      }
+      if (subj) subjName = subj.name;
     }
     if (test.class_id) {
       const { data: cls } = await supabase.from('classes').select('level').eq('id', test.class_id).maybeSingle();
-      if (cls?.level) {
-        query = query.or(`class_id.eq.${test.class_id},level.eq.${cls.level}`);
-      } else {
-        query = query.eq('class_id', test.class_id);
-      }
+      if (cls?.level) clsLevel = cls.level;
     }
-    const { data } = await query.order('created_at', { ascending: false });
-    setBankQuestions(data || []);
-    setBankFiltered(data || []);
+    const { data, error } = await supabase.from('question_bank').select('*').order('created_at', { ascending: false });
+    if (error) { setError('Failed to load question bank: ' + error.message); setShowBankSelect(true); return; }
+    const filtered = (data || []).filter(q => {
+      if (subjName) {
+        const matchFK = q.subject_id === test.subject_id;
+        const matchText = q.subject && q.subject.toLowerCase() === subjName.toLowerCase();
+        if (!matchFK && !matchText) return false;
+      }
+      if (clsLevel) {
+        const matchFK = q.class_id === test.class_id;
+        const matchText = q.level && q.level.toLowerCase() === clsLevel.toLowerCase();
+        if (!matchFK && !matchText) return false;
+      }
+      return true;
+    });
+    setBankQuestions(filtered);
+    setBankFiltered(filtered);
     setShowBankSelect(true);
   }
 
@@ -244,22 +251,26 @@ export default function AdminTestsPage() {
     if (!test.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
+      let subjName = '';
+      let clsLevel = '';
       const { data: subj } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
-      let query = supabase.from('question_bank').select('*').eq('is_active', true);
-      if (subj) {
-        query = query.or(`subject_id.eq.${test.subject_id},subject.ilike.${subj.name}`);
-      } else {
-        query = query.eq('subject_id', test.subject_id);
-      }
+      if (subj) subjName = subj.name;
       if (test.class_id) {
         const { data: cls } = await supabase.from('classes').select('level').eq('id', test.class_id).maybeSingle();
-        if (cls?.level) {
-          query = query.or(`class_id.eq.${test.class_id},level.eq.${cls.level}`);
-        } else {
-          query = query.eq('class_id', test.class_id);
-        }
+        if (cls?.level) clsLevel = cls.level;
       }
-      const { data: bankQ } = await query;
+      const { data: allBank } = await supabase.from('question_bank').select('*').eq('is_active', true);
+      const bankQ = (allBank || []).filter(q => {
+        const matchFK = q.subject_id === test.subject_id;
+        const matchText = q.subject && subjName && q.subject.toLowerCase() === subjName.toLowerCase();
+        if (!matchFK && !matchText) return false;
+        if (clsLevel) {
+          const matchClassFK = q.class_id === test.class_id;
+          const matchClassText = q.level && q.level.toLowerCase() === clsLevel.toLowerCase();
+          if (!matchClassFK && !matchClassText) return false;
+        }
+        return true;
+      });
       if (bankQ && bankQ.length > 0) {
         const count = formData.total_questions || 10;
         const shuffled = bankQ.sort(() => Math.random() - 0.5).slice(0, Math.min(bankQ.length, count));
