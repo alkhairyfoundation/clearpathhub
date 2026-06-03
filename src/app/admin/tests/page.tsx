@@ -183,11 +183,11 @@ export default function AdminTestsPage() {
     let query = supabase.from('question_bank').select('*');
     if (test.subject_id) {
       const { data: subject } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
-      if (subject) query = query.eq('subject', subject.name);
+      if (subject) query = query.ilike('subject', subject.name);
     }
     if (test.class_id) {
-      const { data: cls } = await supabase.from('classes').select('name').eq('id', test.class_id).maybeSingle();
-      if (cls) query = query.eq('level', cls.name);
+      const { data: cls } = await supabase.from('classes').select('level').eq('id', test.class_id).maybeSingle();
+      if (cls?.level) query = query.eq('level', cls.level);
     }
     const { data } = await query.order('created_at', { ascending: false });
     setBankQuestions(data || []);
@@ -238,10 +238,10 @@ export default function AdminTestsPage() {
     try {
       const { data: subj } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
       if (!subj) { setError('Subject not found'); setSaving(false); return; }
-      let query = supabase.from('question_bank').select('*').eq('subject', subj.name).eq('is_active', true);
+      let query = supabase.from('question_bank').select('*').ilike('subject', subj.name).eq('is_active', true);
       if (test.class_id) {
-        const { data: cls } = await supabase.from('classes').select('name').eq('id', test.class_id).maybeSingle();
-        if (cls) query = query.eq('level', cls.name);
+        const { data: cls } = await supabase.from('classes').select('level').eq('id', test.class_id).maybeSingle();
+        if (cls?.level) query = query.eq('level', cls.level);
       }
       const { data: bankQ } = await query;
       if (bankQ && bankQ.length > 0) {
