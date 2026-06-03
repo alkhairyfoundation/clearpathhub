@@ -100,12 +100,13 @@ export default function AdminTestsPage() {
     if (!formData.title.trim()) { setError('Title is required'); return; }
     setError(''); setSaving(true);
     try {
+      const { total_questions, ...dbData } = formData;
       if (editingTest) {
-        const { error: err } = await supabase.from('tests').update(formData).eq('id', editingTest.id);
+        const { error: err } = await supabase.from('tests').update(dbData).eq('id', editingTest.id);
         if (err) throw new Error(err.message);
         setSuccess('Test updated');
       } else {
-        const { error: err } = await supabase.from('tests').insert({ ...formData, created_by: profile?.id, is_published: false });
+        const { error: err } = await supabase.from('tests').insert({ ...dbData, created_by: profile?.id, is_published: false });
         if (err) throw new Error(err.message);
         setSuccess('Test created');
       }
