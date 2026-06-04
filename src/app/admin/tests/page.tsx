@@ -180,33 +180,10 @@ export default function AdminTestsPage() {
     setSelectedTest(test);
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let subjName = '';
-    let clsLevel = '';
-    if (test.subject_id) {
-      const { data: subj } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
-      if (subj) subjName = subj.name;
-    }
-    if (test.class_id) {
-      const { data: cls } = await supabase.from('classes').select('level').eq('id', test.class_id).maybeSingle();
-      if (cls?.level) clsLevel = cls.level;
-    }
     const { data, error } = await supabase.from('question_bank').select('*').order('created_at', { ascending: false });
     if (error) { setError('Failed to load question bank: ' + error.message); setShowBankSelect(true); return; }
-    const filtered = (data || []).filter(q => {
-      if (subjName) {
-        const matchFK = q.subject_id === test.subject_id;
-        const matchText = q.subject && q.subject.toLowerCase() === subjName.toLowerCase();
-        if (!matchFK && !matchText) return false;
-      }
-      if (clsLevel) {
-        const matchFK = q.class_id === test.class_id;
-        const matchText = q.level && q.level.toLowerCase() === clsLevel.toLowerCase();
-        if (!matchFK && !matchText) return false;
-      }
-      return true;
-    });
-    setBankQuestions(filtered);
-    setBankFiltered(filtered);
+    setBankQuestions(data || []);
+    setBankFiltered(data || []);
     setShowBankSelect(true);
   }
 
@@ -251,29 +228,10 @@ export default function AdminTestsPage() {
     if (!test.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      let subjName = '';
-      let clsLevel = '';
-      const { data: subj } = await supabase.from('subjects').select('name').eq('id', test.subject_id).maybeSingle();
-      if (subj) subjName = subj.name;
-      if (test.class_id) {
-        const { data: cls } = await supabase.from('classes').select('level').eq('id', test.class_id).maybeSingle();
-        if (cls?.level) clsLevel = cls.level;
-      }
-      const { data: allBank } = await supabase.from('question_bank').select('*').eq('is_active', true);
-      const bankQ = (allBank || []).filter(q => {
-        const matchFK = q.subject_id === test.subject_id;
-        const matchText = q.subject && subjName && q.subject.toLowerCase() === subjName.toLowerCase();
-        if (!matchFK && !matchText) return false;
-        if (clsLevel) {
-          const matchClassFK = q.class_id === test.class_id;
-          const matchClassText = q.level && q.level.toLowerCase() === clsLevel.toLowerCase();
-          if (!matchClassFK && !matchClassText) return false;
-        }
-        return true;
-      });
-      if (bankQ && bankQ.length > 0) {
+      const { data: allBank } = await supabase.from('question_bank').select('*');
+      if (allBank && allBank.length > 0) {
         const count = formData.total_questions || 10;
-        const shuffled = bankQ.sort(() => Math.random() - 0.5).slice(0, Math.min(bankQ.length, count));
+        const shuffled = allBank.sort(() => Math.random() - 0.5).slice(0, Math.min(allBank.length, count));
         const toInsert = shuffled.map((q, i) => ({
           test_id: test.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
           points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', subject: q.subject || null, order_index: i,
@@ -283,7 +241,7 @@ export default function AdminTestsPage() {
         if (data) setTestQuestions(data);
         setSuccess(`Auto-populated ${toInsert.length} questions`);
       } else {
-        setWarning('No active question bank questions found for this subject/class');
+        setWarning('No questions found in the question bank');
       }
     } catch (err: any) {
       setError(err.message || 'Auto-populate failed');
