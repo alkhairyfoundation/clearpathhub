@@ -170,7 +170,7 @@ export default function TeacherLessonsPage() {
               </div>
               <h3 className="font-semibold text-slate-800 mb-1">{lesson.title}</h3>
               <p className="text-sm text-slate-500 mb-3">{lesson.subject?.name}{lesson.class?.name ? ` — ${lesson.class.name}` : ''}</p>
-              <p className="text-sm text-slate-600 line-clamp-3 mb-4">{lesson.content}</p>
+              <p className="text-sm text-slate-600 line-clamp-3 mb-4">{lesson.content?.replace(/<[^>]*>/g, '').substring(0, 300)}</p>
               {lesson.attachments && lesson.attachments.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-slate-500"><Paperclip size={14} /><span>{lesson.attachments.length} attachment(s)</span></div>
               )}

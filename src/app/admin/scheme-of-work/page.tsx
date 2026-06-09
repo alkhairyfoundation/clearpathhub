@@ -49,7 +49,7 @@ export default function AdminSchemeOfWorkPage() {
     setLoading(false);
   }
 
-  const filteredSubjects = subjects.filter(s => !filters.class_id || s.class_id === filters.class_id);
+  const filteredSubjects = subjects.filter(s => !filters.class_id || !s.class_id || s.class_id === filters.class_id);
 
   async function loadEntries() {
     if (!filters.term_id || !filters.class_id || !filters.subject_id) return;

@@ -209,7 +209,7 @@ export default function StudentLessonsPage() {
                     </div>
                     <h3 className="font-semibold text-slate-800 mb-1">{lesson.title}</h3>
                     <p className="text-sm text-slate-500 mb-3">{lesson.subject?.name || 'No subject'}</p>
-                    <p className="text-sm text-slate-600 line-clamp-3 mb-4">{lesson.content}</p>
+                    <p className="text-sm text-slate-600 line-clamp-3 mb-4">{lesson.content?.replace(/<[^>]*>/g, '').substring(0, 300)}</p>
                     <div className="flex items-center gap-2 text-xs text-slate-500">
                       {lesson.class?.name && (
                         <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full font-medium">{lesson.class.name}</span>
@@ -255,7 +255,7 @@ export default function StudentLessonsPage() {
                 </button>
               </div>
               <div className="p-6">
-                <div className="prose max-w-none whitespace-pre-wrap">{selectedLesson.content}</div>
+                <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: selectedLesson.content || '' }} />
               </div>
               {selectedLesson.attachments && selectedLesson.attachments.length > 0 && (
                 <div className="p-6 border-t">

@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, FileText, Trash2, X, ArrowLeft, Paperclip, Search, Eye, Loader2, HelpCircle, CheckCircle } from 'lucide-react';
+import { Plus, FileText, Trash2, X, ArrowLeft, Paperclip, Search, Eye, Loader2, HelpCircle, CheckCircle, Pencil } from 'lucide-react';
 import type { Lesson, Subject } from '@/types';
 import FileUpload from '@/components/FileUpload';
 import { STORAGE_BUCKETS } from '@/lib/supabase';
@@ -19,6 +19,7 @@ export default function AdminLessonsPage() {
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<any>(null);
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
@@ -49,6 +50,19 @@ export default function AdminLessonsPage() {
     setLoading(false);
   }
 
+  function handleEdit(lesson: any) {
+    setEditingLesson(lesson);
+    setFormData({
+      title: lesson.title || '',
+      content: lesson.content || '',
+      subject_id: lesson.subject_id || '',
+      teacher_id: lesson.teacher_id || '',
+      class_id: lesson.class_id || '',
+      attachments: (lesson.attachments || []).join(','),
+    });
+    setShowModal(true);
+  }
+
   async function handleSave() {
     if (!formData.title.trim()) { setError('Title is required'); return; }
     setError(''); setSaving(true);
@@ -61,10 +75,19 @@ export default function AdminLessonsPage() {
         attachments: formData.attachments ? formData.attachments.split(',').map(a => a.trim()) : [],
         is_published: true,
       };
-      const { error } = await supabase.from('lessons').insert(data);
-      if (error) throw new Error(error.message);
-      setSuccess('Lesson created');
+
+      if (editingLesson) {
+        const { error } = await supabase.from('lessons').update(data).eq('id', editingLesson.id);
+        if (error) throw new Error(error.message);
+        setSuccess('Lesson updated');
+      } else {
+        const { error } = await supabase.from('lessons').insert(data);
+        if (error) throw new Error(error.message);
+        setSuccess('Lesson created');
+      }
+
       setShowModal(false);
+      setEditingLesson(null);
       setFormData({ title: '', content: '', subject_id: '', teacher_id: '', class_id: '', attachments: '' });
       fetchData();
       setTimeout(() => setSuccess(''), 3000);
@@ -172,13 +195,14 @@ export default function AdminLessonsPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center"><FileText className="text-emerald-600" size={24} /></div>
                 <div className="flex gap-1">
+                  <button onClick={() => handleEdit(lesson)} className="p-2 hover:bg-primary-50 rounded-lg" title="Edit Lesson"><Pencil size={16} className="text-primary-500" /></button>
                   <button onClick={() => openQuizManager(lesson)} className="p-2 hover:bg-primary-50 rounded-lg" title="Manage Quiz"><HelpCircle size={16} className="text-primary-500" /></button>
                   <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-gray-100 rounded-lg"><Trash2 size={16} className="text-red-500" /></button>
                 </div>
               </div>
               <h3 className="font-semibold text-slate-800 mb-1">{lesson.title}</h3>
               <p className="text-sm text-slate-500 mb-3">{lesson.subject?.name}{lesson.class?.name ? ` — ${lesson.class.name}` : ''}</p>
-              <p className="text-sm text-slate-600 line-clamp-3 mb-4">{lesson.content}</p>
+              <p className="text-sm text-slate-600 line-clamp-3 mb-4">{lesson.content?.replace(/<[^>]*>/g, '').substring(0, 300)}</p>
               {lesson.attachments && lesson.attachments.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-slate-500"><Paperclip size={14} /><span>{lesson.attachments.length} attachment(s)</span></div>
               )}
@@ -189,11 +213,14 @@ export default function AdminLessonsPage() {
           ))}
         </div>
 
-        {/* Create Lesson Modal */}
+        {/* Create/Edit Lesson Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800">Add Lesson</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button></div>
+              <div className="flex items-center justify-between p-6 border-b">
+                <h2 className="text-lg font-semibold text-slate-800">{editingLesson ? 'Edit Lesson' : 'Add Lesson'}</h2>
+                <button onClick={() => { setShowModal(false); setEditingLesson(null); setFormData({ title: '', content: '', subject_id: '', teacher_id: '', class_id: '', attachments: '' }); }} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+              </div>
               <div className="p-6 space-y-4">
                 <div><label className="label">Title *</label><input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Lesson title" /></div>
                 <div><label className="label">Subject</label><select value={formData.subject_id} onChange={e => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select Subject</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
@@ -237,7 +264,7 @@ export default function AdminLessonsPage() {
               </div>
               <div className="flex justify-end gap-3 p-6 border-t">
                 <button onClick={() => setShowModal(false)} className="btn-outline">Cancel</button>
-                <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">{saving ? <><Loader2 size={16} className="animate-spin" />Saving...</> : 'Publish'}</button>
+                <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">{saving ? <><Loader2 size={16} className="animate-spin" />Saving...</> : editingLesson ? 'Update' : 'Publish'}</button>
               </div>
             </div>
           </div>
