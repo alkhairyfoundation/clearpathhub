@@ -7,7 +7,8 @@ import {
   Menu, X, LayoutDashboard, Users, GraduationCap, UserCheck, BookOpen, 
   Calendar, BarChart3, Settings, QrCode, Megaphone, FileText, 
   Shield, DollarSign, ClipboardList, Award, Activity, ScanLine,
-  Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, ChevronDown, LogOut, Brain
+  Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, ChevronDown, LogOut, Brain,
+  Target
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
@@ -40,6 +41,10 @@ const navItems = {
     { href: '/admin/staff-id-cards', label: 'Staff ID Cards', icon: QrCode },
     { href: '/admin/school-qr', label: 'School QR Code', icon: QrCode },
     { href: '/admin/import-export', label: 'Import/Export', icon: Upload },
+    { href: '/admin/archetypes', label: 'Archetypes', icon: Target },
+    { href: '/admin/skills', label: 'Skills Bank', icon: Brain },
+    { href: '/admin/growth-frameworks', label: 'Growth Frameworks', icon: Clipboard },
+    { href: '/admin/portfolio-reports', label: 'Portfolio Reports', icon: BarChart3 },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
   ],
   teacher: [
@@ -55,11 +60,15 @@ const navItems = {
     { href: '/teacher/attendance', label: 'Attendance', icon: UserCheck },
     { href: '/teacher/staff-attendance', label: 'Staff Attendance', icon: ScanLine },
     { href: '/teacher/behavior', label: 'Behavior', icon: Activity },
+    { href: '/teacher/goal-approvals', label: 'Goal Approvals', icon: Target },
+    { href: '/teacher/portfolio-tracking', label: 'Portfolio Tracking', icon: Award },
     { href: '/teacher/scan-id', label: 'Scan ID', icon: ScanLine },
     { href: '/teacher/profile', label: 'Profile', icon: Settings },
   ],
   student: [
     { href: '/student', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/student/growth-path', label: 'My Growth Path', icon: Target },
+    { href: '/student/portfolio', label: 'My Portfolio', icon: Award },
     { href: '/student/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/student/lessons', label: 'Lessons', icon: FileText },
     { href: '/student/homework', label: 'Homework', icon: Clipboard },

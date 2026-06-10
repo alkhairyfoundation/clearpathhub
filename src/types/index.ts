@@ -848,6 +848,159 @@ export interface QuestionBank {
   class?: Class;
 }
 
+// ============================================================================
+// STUDENT GROWTH PORTFOLIO + IDENTITY BUILDER TYPES
+// ============================================================================
+
+export interface Archetype {
+  id: string;
+  name: string;
+  description: string;
+  icon_key: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  category?: string;
+  description: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface ArchetypeSkillMap {
+  id: string;
+  archetype_id: string;
+  skill_id: string;
+  recommendation_rank: number;
+}
+
+export interface ClassTermFramework {
+  id: string;
+  session_id: string;
+  term_id: string;
+  class_level: string;
+  published_at?: string;
+  created_by?: string;
+  created_at: string;
+  session?: AcademicSession;
+  term?: Term;
+  academic_competencies?: AcademicCompetency[];
+  skill_expectations?: SkillExpectation[];
+}
+
+export interface AcademicCompetency {
+  id: string;
+  framework_id: string;
+  subject_id: string;
+  competency_text: string;
+  order_index: number;
+  subject?: Subject;
+}
+
+export interface SkillExpectation {
+  id: string;
+  framework_id: string;
+  skill_id: string;
+  expectation_text?: string;
+  order_index: number;
+  skill?: Skill;
+}
+
+export interface StudentTermGoal {
+  id: string;
+  student_id: string;
+  session_id: string;
+  term_id: string;
+  archetype_id: string;
+  goal_statement_snapshot: string;
+  status: 'draft' | 'pending' | 'active' | 'archived';
+  submitted_at?: string;
+  approved_at?: string;
+  approved_by?: string;
+  reflection_text?: string;
+  created_at: string;
+  updated_at: string;
+  archetype?: Archetype;
+  student?: Profile;
+  session?: AcademicSession;
+  term?: Term;
+  goal_skills?: StudentGoalSkill[];
+  skill_rubrics?: StudentSkillRubric[];
+}
+
+export interface StudentGoalSkill {
+  id: string;
+  student_term_goal_id: string;
+  skill_id: string;
+  order_index: number;
+  skill?: Skill;
+}
+
+export interface StudentSkillRubric {
+  id: string;
+  student_id: string;
+  session_id: string;
+  term_id: string;
+  skill_id: string;
+  level: 'emerging' | 'developing' | 'secure' | 'strong';
+  updated_by?: string;
+  updated_at: string;
+  comment?: string;
+  created_at: string;
+  skill?: Skill;
+  evidence_links?: SkillEvidenceLink[];
+}
+
+export interface PortfolioEvidence {
+  id: string;
+  student_id: string;
+  session_id: string;
+  term_id: string;
+  evidence_type: 'attendance' | 'punctuality' | 'incident' | 'commendation' | 'audit' | 'assessment' | 'manual';
+  reference_id?: string;
+  text_snapshot?: string;
+  created_by?: string;
+  created_at: string;
+}
+
+export interface SkillEvidenceLink {
+  id: string;
+  student_skill_rubric_id: string;
+  portfolio_evidence_id: string;
+  evidence?: PortfolioEvidence;
+}
+
+export const RUBRIC_LEVELS = ['emerging', 'developing', 'secure', 'strong'] as const;
+export type RubricLevel = typeof RUBRIC_LEVELS[number];
+
+export const RUBRIC_COLORS: Record<RubricLevel, string> = {
+  emerging: 'bg-red-500',
+  developing: 'bg-amber-500',
+  secure: 'bg-blue-500',
+  strong: 'bg-emerald-500',
+};
+
+export const RUBRIC_LABELS: Record<RubricLevel, string> = {
+  emerging: 'Emerging',
+  developing: 'Developing',
+  secure: 'Secure',
+  strong: 'Strong',
+};
+
+export const GOAL_STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-slate-100 text-slate-600',
+  pending: 'bg-amber-100 text-amber-700',
+  active: 'bg-emerald-100 text-emerald-700',
+  archived: 'bg-slate-100 text-slate-500',
+};
+
+// ============================================================================
+// COMMUNICATION TYPES (existing)
+// ============================================================================
+
 export interface CommunicationGroup {
   id: string;
   name: string;

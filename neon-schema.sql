@@ -683,7 +683,147 @@ CREATE TABLE IF NOT EXISTS review_schedule (
 -- We'll handle authorization in the application layer rather than database level
 -- for simplicity with NextAuth
 
--- Indexes for performance
+-- ============================================================================
+-- PART 12: STUDENT GROWTH PORTFOLIO + IDENTITY BUILDER
+-- ============================================================================
+
+-- ARCHETYPES (Identity Cards)
+CREATE TABLE IF NOT EXISTS archetypes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  description TEXT NOT NULL,
+  icon_key TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- SKILLS BANK
+CREATE TABLE IF NOT EXISTS skills (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  category TEXT,
+  description TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ARCHETYPE -> SKILL RECOMMENDATION MAP
+CREATE TABLE IF NOT EXISTS archetype_skill_map (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  archetype_id UUID NOT NULL REFERENCES archetypes(id) ON DELETE CASCADE,
+  skill_id UUID NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+  recommendation_rank INTEGER DEFAULT 0,
+  UNIQUE(archetype_id, skill_id)
+);
+
+-- CLASS TERM FRAMEWORKS (Admin-defined expectations per class + term)
+CREATE TABLE IF NOT EXISTS class_term_frameworks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL REFERENCES academic_sessions(id),
+  term_id UUID NOT NULL REFERENCES terms(id),
+  class_level TEXT NOT NULL,
+  published_at TIMESTAMP,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(session_id, term_id, class_level)
+);
+
+-- ACADEMIC COMPETENCIES within a framework
+CREATE TABLE IF NOT EXISTS academic_competencies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  framework_id UUID NOT NULL REFERENCES class_term_frameworks(id) ON DELETE CASCADE,
+  subject_id UUID NOT NULL REFERENCES subjects(id),
+  competency_text TEXT NOT NULL,
+  order_index INTEGER DEFAULT 0,
+  UNIQUE(framework_id, subject_id, order_index)
+);
+
+-- SKILL EXPECTATIONS within a framework
+CREATE TABLE IF NOT EXISTS skill_expectations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  framework_id UUID NOT NULL REFERENCES class_term_frameworks(id) ON DELETE CASCADE,
+  skill_id UUID NOT NULL REFERENCES skills(id),
+  expectation_text TEXT,
+  order_index INTEGER DEFAULT 0,
+  UNIQUE(framework_id, skill_id)
+);
+
+-- STUDENT TERM GOALS (core goal record)
+CREATE TABLE IF NOT EXISTS student_term_goals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES academic_sessions(id),
+  term_id UUID NOT NULL REFERENCES terms(id),
+  archetype_id UUID NOT NULL REFERENCES archetypes(id),
+  goal_statement_snapshot TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('draft', 'pending', 'active', 'archived')),
+  submitted_at TIMESTAMP DEFAULT NOW(),
+  approved_at TIMESTAMP,
+  approved_by UUID REFERENCES profiles(id),
+  reflection_text TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(student_id, term_id)
+);
+
+-- STUDENT GOAL SKILLS (selected 3-5 skills per goal)
+CREATE TABLE IF NOT EXISTS student_goal_skills (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_term_goal_id UUID NOT NULL REFERENCES student_term_goals(id) ON DELETE CASCADE,
+  skill_id UUID NOT NULL REFERENCES skills(id),
+  order_index INTEGER DEFAULT 0,
+  UNIQUE(student_term_goal_id, skill_id)
+);
+
+-- STUDENT SKILL RUBRICS (teacher tracking per skill per term)
+CREATE TABLE IF NOT EXISTS student_skill_rubrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES academic_sessions(id),
+  term_id UUID NOT NULL REFERENCES terms(id),
+  skill_id UUID NOT NULL REFERENCES skills(id),
+  level TEXT NOT NULL CHECK (level IN ('emerging', 'developing', 'secure', 'strong')),
+  updated_by UUID REFERENCES profiles(id),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  comment TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(student_id, session_id, term_id, skill_id)
+);
+
+-- PORTFOLIO EVIDENCE (linked or manual evidence entries)
+CREATE TABLE IF NOT EXISTS portfolio_evidence (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES academic_sessions(id),
+  term_id UUID NOT NULL REFERENCES terms(id),
+  evidence_type TEXT NOT NULL CHECK (evidence_type IN ('attendance', 'punctuality', 'incident', 'commendation', 'audit', 'assessment', 'manual')),
+  reference_id UUID,
+  text_snapshot TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- SKILL <-> EVIDENCE LINKS
+CREATE TABLE IF NOT EXISTS skill_evidence_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_skill_rubric_id UUID NOT NULL REFERENCES student_skill_rubrics(id) ON DELETE CASCADE,
+  portfolio_evidence_id UUID NOT NULL REFERENCES portfolio_evidence(id) ON DELETE CASCADE,
+  UNIQUE(student_skill_rubric_id, portfolio_evidence_id)
+);
+
+-- Indexes for portfolio module
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_student_term_goals_student ON student_term_goals(student_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_student_term_goals_term ON student_term_goals(term_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_student_term_goals_status ON student_term_goals(status); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_student_skill_rubrics_student ON student_skill_rubrics(student_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_portfolio_evidence_student ON portfolio_evidence(student_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_archetypes_active ON archetypes(is_active); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_skills_active ON skills(is_active); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+
+-- ============================================================================
+-- INDEXES (existing)
+-- ============================================================================
+
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email); EXCEPTION WHEN undefined_column THEN NULL; END $$;
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role); EXCEPTION WHEN undefined_column THEN NULL; END $$;
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_students_profile_id ON students(profile_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
