@@ -3,6 +3,8 @@ import { query } from '@/lib/neon';
 import bcrypt from 'bcryptjs';
 import { getToken } from 'next-auth/jwt';
 
+export const dynamic = 'force-dynamic';
+
 interface StudentInput {
   first_name: string;
   last_name: string;
