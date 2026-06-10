@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { FileText, Download, Eye, Paperclip, ArrowLeft, Loader2, HelpCircle, CheckCircle, XCircle } from 'lucide-react';
+import { FileText, Download, Eye, Paperclip, ArrowLeft, Loader2, HelpCircle, CheckCircle, XCircle, Search } from 'lucide-react';
 
 const PAGE_SIZE = 9;
 
@@ -19,6 +19,9 @@ export default function StudentLessonsPage() {
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterSearch, setFilterSearch] = useState('');
 
   const [lessonQuiz, setLessonQuiz] = useState<any>(null);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
@@ -65,6 +68,11 @@ export default function StudentLessonsPage() {
       if (data) {
         setLessons(prev => reset ? data : [...prev, ...data]);
         setHasMore(data.length === PAGE_SIZE && (count ? (from + data.length) < count : true));
+      }
+
+      if (reset) {
+        const { data: subjectsData } = await supabase.from('subjects').select('id, name').order('name');
+        if (subjectsData) setSubjects(subjectsData);
       }
     } catch (err: any) {
       setError(err.message);
@@ -186,6 +194,19 @@ export default function StudentLessonsPage() {
         
         {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{error}</div>}
 
+        <div className="card p-4">
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input type="text" placeholder="Search lessons..." value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="input pl-10" />
+            </div>
+            <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)} className="input w-auto">
+              <option value="">All Subjects</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -193,13 +214,19 @@ export default function StudentLessonsPage() {
         ) : (
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {lessons.length === 0 ? (
+              {(() => {
+                const filtered = lessons.filter(l => {
+                  const matchSearch = !filterSearch || l.title.toLowerCase().includes(filterSearch.toLowerCase());
+                  const matchSubject = !filterSubject || l.subject_id === filterSubject;
+                  return matchSearch && matchSubject;
+                });
+                return filtered.length === 0 ? (
                 <div className="col-span-full bg-white rounded-xl p-12 text-center">
                   <FileText className="mx-auto text-gray-400 mb-4" size={48} />
                   <p className="text-slate-500">No lessons available</p>
                 </div>
               ) : (
-                lessons.map((lesson) => (
+                filtered.map((lesson) => (
                   <div key={lesson.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => openLesson(lesson)}>
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -223,7 +250,8 @@ export default function StudentLessonsPage() {
                     </div>
                   </div>
                 ))
-              )}
+              );
+              })()}
             </div>
 
             {hasMore && (

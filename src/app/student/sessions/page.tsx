@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Play, FileText, Clock, CheckCircle, XCircle, HelpCircle, BookOpen, Pause, PlayCircle, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { Play, FileText, Clock, CheckCircle, XCircle, HelpCircle, BookOpen, Pause, PlayCircle, Lock, AlertCircle, ArrowRight, Search } from 'lucide-react';
 
 interface CheckpointQuestion {
   id: string;
@@ -38,6 +38,9 @@ export default function StudentSessionsPage() {
   const [showPostQuiz, setShowPostQuiz] = useState(false);
   const [savingResults, setSavingResults] = useState(false);
   const [passedCheckpoints, setPassedCheckpoints] = useState(false);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterSearch, setFilterSearch] = useState('');
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [multiSelected, setMultiSelected] = useState<number[]>([]);
   const [textAnswer, setTextAnswer] = useState('');
@@ -71,12 +74,16 @@ export default function StudentSessionsPage() {
       const studentClassId = studentData?.class_id;
 
       let query = supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes(quiz_questions!quiz_id(*))').eq('is_published', true);
+      query = query.not('video_url', 'is', null);
       if (studentClassId) {
         query = query.eq('class_id', studentClassId);
       }
-      const { data: sessionsData, error: sessionsError } = await query.order('created_at', { ascending: false });
-      if (sessionsError) throw new Error(sessionsError.message);
+      const [{ data: sessionsData }, { data: subjectsData }] = await Promise.all([
+        query.order('created_at', { ascending: false }),
+        supabase.from('subjects').select('id, name').order('name'),
+      ]);
       if (sessionsData) setSessions(sessionsData);
+      if (subjectsData) setSubjects(subjectsData);
     } catch (err: any) {
       setError(err.message);
     }
@@ -366,15 +373,38 @@ export default function StudentSessionsPage() {
         <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
       ) : error ? (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
-      ) : sessions.length === 0 ? (
-        <div className="card text-center py-16">
-          <PlayCircle className="mx-auto text-slate-300 mb-4" size={48} />
-          <p className="font-medium text-slate-500">No video lessons available</p>
-          <p className="text-sm text-slate-400 mt-1">Lessons will appear here once assigned to your class</p>
-        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sessions.map((session) => {
+        <div className="card p-4">
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input type="text" placeholder="Search video lessons..." value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="input pl-10" />
+            </div>
+            <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)} className="input w-auto">
+              <option value="">All Subjects</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <>
+          {(() => {
+            const filtered = sessions.filter(s => {
+              const matchSearch = !filterSearch || s.title.toLowerCase().includes(filterSearch.toLowerCase());
+              const matchSubject = !filterSubject || s.subject_id === filterSubject;
+              return matchSearch && matchSubject;
+            });
+            return filtered.length === 0 ? (
+              <div className="card text-center py-16">
+                <PlayCircle className="mx-auto text-slate-300 mb-4" size={48} />
+                <p className="font-medium text-slate-500">No video lessons available</p>
+                <p className="text-sm text-slate-400 mt-1">Lessons will appear here once assigned to your class</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filtered.map((session) => {
             const youtubeId = session.video_type === 'youtube' ? extractYouTubeId(session.video_url || '') : null;
             const checkpoints = getCheckpoints(session);
             const postQuiz = getPostVideoQuiz(session);
@@ -405,7 +435,10 @@ export default function StudentSessionsPage() {
               </div>
             );
           })}
-        </div>
+              </div>
+            );
+          })()}
+        </>
       )}
 
       {showVideo && selectedSession && (

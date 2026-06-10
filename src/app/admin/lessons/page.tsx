@@ -24,6 +24,9 @@ export default function AdminLessonsPage() {
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterTeacher, setFilterTeacher] = useState('');
+  const [filterClass, setFilterClass] = useState('');
   const [formData, setFormData] = useState({ title: '', content: '', subject_id: '', teacher_id: '', class_id: '', attachments: '' });
   const [quizForm, setQuizForm] = useState({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1 });
   const [error, setError] = useState('');
@@ -166,7 +169,13 @@ export default function AdminLessonsPage() {
     if (selectedLesson) { openQuizManager(selectedLesson); }
   }
 
-  const filtered = lessons.filter(l => `${l.title} ${l.subject?.name || ''} ${l.teacher?.first_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filtered = lessons.filter(l => {
+    const matchSearch = `${l.title} ${l.subject?.name || ''} ${l.teacher?.first_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchSubject = !filterSubject || l.subject_id === filterSubject;
+    const matchTeacher = !filterTeacher || l.teacher_id === filterTeacher;
+    const matchClass = !filterClass || l.class_id === filterClass;
+    return matchSearch && matchSubject && matchTeacher && matchClass;
+  });
 
   return (
     <DashboardLayout title="Lesson Notes" subtitle="Create and manage lesson notes with quizzes">
@@ -180,8 +189,22 @@ export default function AdminLessonsPage() {
         </div>
 
         <div className="card p-4">
-          <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input type="text" placeholder="Search lessons..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="input pl-10" /></div>
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input type="text" placeholder="Search lessons..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="input pl-10" /></div>
+            <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)} className="input w-auto">
+              <option value="">All Subjects</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <select value={filterClass} onChange={e => setFilterClass(e.target.value)} className="input w-auto">
+              <option value="">All Classes</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <select value={filterTeacher} onChange={e => setFilterTeacher(e.target.value)} className="input w-auto">
+              <option value="">All Teachers</option>
+              {teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}
+            </select>
+          </div>
         </div>
 
         {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}

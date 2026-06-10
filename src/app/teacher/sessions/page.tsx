@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, CheckCircle, AlertCircle, HelpCircle, Pause, BookOpen, Loader2 } from 'lucide-react';
+import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, CheckCircle, AlertCircle, HelpCircle, Pause, BookOpen, Loader2, Search } from 'lucide-react';
 import type { Session, Subject } from '@/types';
 import FileUpload from '@/components/FileUpload';
 import { STORAGE_BUCKETS } from '@/lib/supabase';
@@ -69,6 +69,9 @@ export default function TeacherSessionsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterClass, setFilterClass] = useState('');
+  const [filterSearch, setFilterSearch] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') {
@@ -82,7 +85,7 @@ export default function TeacherSessionsPage() {
     setLoading(true);
     try {
       const [sessionsRes, subjectsRes, classesRes] = await Promise.all([
-        supabase.from('sessions').select('*, subject:subjects!subject_id(*), class:classes!class_id(name), quiz:quizzes(*)').eq('teacher_id', profile?.id).order('created_at', { ascending: false }),
+        supabase.from('sessions').select('*, subject:subjects!subject_id(*), class:classes!class_id(name), quiz:quizzes(*)').eq('teacher_id', profile?.id).not('video_url', 'is', null).order('created_at', { ascending: false }),
         supabase.from('subjects').select('*').order('name'),
         supabase.from('classes').select('id, name').order('level'),
       ]);
@@ -381,7 +384,34 @@ export default function TeacherSessionsPage() {
           </button>
         </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {!loading && (
+        <div className="card p-4">
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input type="text" placeholder="Search video lessons..." value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="input pl-10" />
+            </div>
+            <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)} className="input w-auto">
+              <option value="">All Subjects</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <select value={filterClass} onChange={e => setFilterClass(e.target.value)} className="input w-auto">
+              <option value="">All Classes</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {(() => {
+        const filtered = sessions.filter(s => {
+          const matchSearch = !filterSearch || s.title.toLowerCase().includes(filterSearch.toLowerCase());
+          const matchSubject = !filterSubject || s.subject_id === filterSubject;
+          const matchClass = !filterClass || s.class_id === filterClass;
+          return matchSearch && matchSubject && matchClass;
+        });
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
@@ -389,14 +419,14 @@ export default function TeacherSessionsPage() {
               <div className="h-3 bg-gray-200 rounded w-1/3"></div>
             </div>
           ))
-        ) : sessions.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="col-span-full bg-white rounded-xl shadow-md p-12 text-center">
             <FileVideo className="mx-auto text-gray-400 mb-4" size={48} />
             <p className="text-slate-500">No video lessons found</p>
             <button onClick={() => setShowModal(true)} className="btn-primary mt-4">Add First Lesson</button>
           </div>
         ) : (
-          sessions.map((session) => {
+          filtered.map((session) => {
             const youtubeId = session.video_type === 'youtube' ? extractYouTubeId(session.video_url || '') : null;
             const hasCheckpoint = session.quiz && session.quiz.length > 0;
             return (
@@ -443,6 +473,8 @@ export default function TeacherSessionsPage() {
           })
         )}
       </div>
+    );
+  })()}
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">

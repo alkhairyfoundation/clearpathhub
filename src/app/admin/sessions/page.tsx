@@ -23,6 +23,9 @@ export default function AdminSessionsPage() {
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterSubject, setFilterSubject] = useState('');
+  const [filterTeacher, setFilterTeacher] = useState('');
+  const [filterClass, setFilterClass] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [formData, setFormData] = useState({
@@ -43,7 +46,7 @@ export default function AdminSessionsPage() {
   async function fetchData() {
     setLoading(true);
     const [sessionsRes, subjectsRes, teachersRes, classesRes] = await Promise.all([
-      supabase.from('sessions').select('*, subject:subjects!subject_id(name), class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name), quiz:quizzes(id, title)').order('created_at', { ascending: false }),
+      supabase.from('sessions').select('*, subject:subjects!subject_id(name), class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name), quiz:quizzes(id, title)').not('video_url', 'is', null).order('created_at', { ascending: false }),
       supabase.from('subjects').select('id, name').order('name'),
       supabase.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
       supabase.from('classes').select('id, name').order('level'),
@@ -219,9 +222,13 @@ export default function AdminSessionsPage() {
     if (formData.video_url && formData.duration === 0) detectVideoDuration();
   }, [formData.video_url]);
 
-  const filtered = sessions.filter(s =>
-    `${s.title} ${s.subject?.name || ''} ${s.teacher?.first_name || ''} ${s.teacher?.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = sessions.filter(s => {
+    const matchSearch = `${s.title} ${s.subject?.name || ''} ${s.teacher?.first_name || ''} ${s.teacher?.last_name || ''}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchSubject = !filterSubject || s.subject_id === filterSubject;
+    const matchTeacher = !filterTeacher || s.teacher_id === filterTeacher;
+    const matchClass = !filterClass || s.class_id === filterClass;
+    return matchSearch && matchSubject && matchTeacher && matchClass;
+  });
 
   function formatDuration(seconds: number) {
     const m = Math.floor(seconds / 60);
@@ -248,9 +255,23 @@ export default function AdminSessionsPage() {
         </div>
 
         <div className="card p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input type="text" placeholder="Search video lessons..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="input pl-10" />
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input type="text" placeholder="Search video lessons..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="input pl-10" />
+            </div>
+            <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)} className="input w-auto">
+              <option value="">All Subjects</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <select value={filterClass} onChange={e => setFilterClass(e.target.value)} className="input w-auto">
+              <option value="">All Classes</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <select value={filterTeacher} onChange={e => setFilterTeacher(e.target.value)} className="input w-auto">
+              <option value="">All Teachers</option>
+              {teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}
+            </select>
           </div>
         </div>
 
