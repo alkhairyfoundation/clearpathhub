@@ -163,7 +163,7 @@ function ApplyPageContent() {
           .from('entrance_questions')
           .select('*')
           .eq('exam_id', codeResult.exam_id)
-          .order('created_at', { ascending: true });
+          .order('order_index', { ascending: true });
         if (questionsData) setQuestions(questionsData);
       } else {
         setError('Invalid or expired exam code. Please check and try again.');

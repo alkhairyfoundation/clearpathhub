@@ -167,6 +167,7 @@ async function handleCreateExam() {
       if (!formData.subjects || formData.subjects.length === 0) { setError('Please select at least one subject'); return; }
       setError(''); setSaving(true);
       try {
+        const subjects = formData.subjects || [];
         const { data: examData, error } = await supabase
           .from('entrance_exams')
           .insert({
@@ -182,6 +183,7 @@ async function handleCreateExam() {
             require_fullscreen: formData.require_fullscreen,
             prevent_tab_switch: formData.prevent_tab_switch,
             max_tab_switches: formData.max_tab_switches,
+            subjects,
             is_published: true,
             created_by: profile?.id,
           })
@@ -242,7 +244,7 @@ async function handleCreateExam() {
             .select('*')
             .eq('subject', subject)
             .in('level', bankLevels)
-            .eq('is_active', true);
+            .in('status', ['published', 'active']);
 
           if (subjectQuestions && subjectQuestions.length > 0) {
             // Distribution favoring harder questions if available
@@ -283,17 +285,23 @@ async function handleCreateExam() {
         
         // Insert selected questions into entrance_questions
         if (allSelectedQuestions.length > 0) {
-          const questionsToInsert = allSelectedQuestions.map(q => {
+          const questionsToInsert = allSelectedQuestions.map((q, index) => {
             const qt = (q.question_type || 'MCQ').toUpperCase();
             const mappedType = qt === 'MULTIPLE_CHOICE' ? 'MCQ' : qt === 'TRUE_FALSE' ? 'TRUE_FALSE' : qt === 'FILL_IN_THE_GAP' || qt === 'FILL_BLANK' ? 'FILL_IN_THE_GAP' : 'MCQ';
             return {
             exam_id: examId,
             question: q.question,
+            question_image: q.question_image || null,
             options: q.options || [''],
             correct_answer: q.correct_answer ?? 0,
             points: q.points ?? 1,
             question_type: mappedType,
             subject: q.subject || null,
+            difficulty_level: q.difficulty_level || null,
+            topic: q.topic || null,
+            subtopic: q.subtopic || null,
+            explanation: q.explanation || null,
+            order_index: index,
           };
           });
           
@@ -330,6 +338,11 @@ async function handleCreateExam() {
 
     const totalQuestions = exam.total_questions || 40;
     
+    // Persist subjects on the exam if they were derived from defaults
+    if (!exam.subjects || !Array.isArray(exam.subjects) || exam.subjects.length === 0) {
+      await supabase.from('entrance_exams').update({ subjects }).eq('id', exam.id);
+    }
+    
     try {
       await autoPopulateExamQuestions(exam.id, level, subjects, totalQuestions);
       setSuccess('Questions populated successfully!');
@@ -359,7 +372,7 @@ async function handleCreateExam() {
          .in('id', selectedIds);
        
         if (selectedQbank && selectedQbank.length > 0) {
-          const toInsert = selectedQbank.map(q => {
+          const toInsert = selectedQbank.map((q, index) => {
             const qt = (q.question_type || 'MCQ').toUpperCase();
             const mappedType = qt === 'MULTIPLE_CHOICE' ? 'MCQ' : qt === 'TRUE_FALSE' ? 'TRUE_FALSE' : qt === 'FILL_IN_THE_GAP' || qt === 'FILL_BLANK' ? 'FILL_IN_THE_GAP' : 'MCQ';
             return {
@@ -371,10 +384,15 @@ async function handleCreateExam() {
             points: q.points ?? 1,
             question_type: mappedType,
             subject: q.subject || null,
+            difficulty_level: q.difficulty_level || null,
+            topic: q.topic || null,
+            subtopic: q.subtopic || null,
+            explanation: q.explanation || null,
+            order_index: index,
           };
           });
-         
-         await supabase.from('entrance_questions').insert(toInsert);
+          
+          await supabase.from('entrance_questions').insert(toInsert);
          
          const { data: updated } = await supabase.from('entrance_questions').select('*').eq('exam_id', examId);
          if (updated) setQuestions(updated);
@@ -393,7 +411,7 @@ async function handleCreateExam() {
       setSelectedBankIds(new Set());
       setBankSelectSearch('');
       const qbLevels = getQuestionBankLevels(exam.level);
-      let query = supabase.from('question_bank').select('*').in('level', qbLevels);
+      let query = supabase.from('question_bank').select('*').in('level', qbLevels).in('status', ['published', 'active']);
       const examSubjects = exam.subjects;
       if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
         query = query.in('subject', examSubjects);

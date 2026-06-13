@@ -167,7 +167,7 @@ export default function StudentTakeEntranceExamPage() {
       .from('entrance_questions')
       .select('*')
       .eq('exam_id', appData.exam_id)
-      .order('created_at');
+      .order('order_index', { ascending: true });
 
     if (questionsData) {
       let qs = questionsData;
