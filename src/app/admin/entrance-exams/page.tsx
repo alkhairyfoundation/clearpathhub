@@ -45,7 +45,7 @@ const [formData, setFormData] = useState({
       'SS3': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
     };
     const [questionData, setQuestionData] = useState({
-      question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '',
+      question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'MCQ', subject: '',
       level: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: ''
     });
    const [admissionData, setAdmissionData] = useState({
@@ -105,9 +105,8 @@ const [showAnalyticsFilterModal, setShowAnalyticsFilterModal] = useState(false);
 function resetQuestionDefaults(type: string) {
       let opts = ['', '', '', ''];
       let correct: any = 0;
-      if (type === 'true_false') { opts = ['True', 'False']; correct = 0; }
-      else if (type === 'fill_blank') { opts = []; correct = 0; }
-      else if (type === 'MCQ') { opts = ['', '', '', '']; correct = 0; }
+      if (type === 'true_false' || type === 'TRUE_FALSE') { opts = ['True', 'False']; correct = 0; }
+      else if (type === 'fill_blank' || type === 'FILL_IN_THE_GAP') { opts = []; correct = 0; }
       
       setQuestionData({ 
         ...questionData, 
@@ -284,15 +283,19 @@ async function handleCreateExam() {
         
         // Insert selected questions into entrance_questions
         if (allSelectedQuestions.length > 0) {
-          const questionsToInsert = allSelectedQuestions.map(q => ({
+          const questionsToInsert = allSelectedQuestions.map(q => {
+            const qt = (q.question_type || 'MCQ').toUpperCase();
+            const mappedType = qt === 'MULTIPLE_CHOICE' ? 'MCQ' : qt === 'TRUE_FALSE' ? 'TRUE_FALSE' : qt === 'FILL_IN_THE_GAP' || qt === 'FILL_BLANK' ? 'FILL_IN_THE_GAP' : 'MCQ';
+            return {
             exam_id: examId,
             question: q.question,
             options: q.options || [''],
             correct_answer: q.correct_answer ?? 0,
             points: q.points ?? 1,
-            question_type: q.question_type || 'multiple_choice',
+            question_type: mappedType,
             subject: q.subject || null,
-          }));
+          };
+          });
           
           const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
           if (error) throw new Error(`Failed to insert questions: ${error.message}`);
@@ -355,17 +358,21 @@ async function handleCreateExam() {
          .select('*')
          .in('id', selectedIds);
        
-       if (selectedQbank && selectedQbank.length > 0) {
-         const toInsert = selectedQbank.map(q => ({
-           exam_id: examId,
-           question: q.question,
-           question_image: q.question_image || null,
-           options: q.options || [''],
-           correct_answer: q.correct_answer ?? 0,
-           points: q.points ?? 1,
-           question_type: q.question_type || 'multiple_choice',
-           subject: q.subject || null,
-         }));
+        if (selectedQbank && selectedQbank.length > 0) {
+          const toInsert = selectedQbank.map(q => {
+            const qt = (q.question_type || 'MCQ').toUpperCase();
+            const mappedType = qt === 'MULTIPLE_CHOICE' ? 'MCQ' : qt === 'TRUE_FALSE' ? 'TRUE_FALSE' : qt === 'FILL_IN_THE_GAP' || qt === 'FILL_BLANK' ? 'FILL_IN_THE_GAP' : 'MCQ';
+            return {
+            exam_id: examId,
+            question: q.question,
+            question_image: q.question_image || null,
+            options: q.options || [''],
+            correct_answer: q.correct_answer ?? 0,
+            points: q.points ?? 1,
+            question_type: mappedType,
+            subject: q.subject || null,
+          };
+          });
          
          await supabase.from('entrance_questions').insert(toInsert);
          
@@ -422,13 +429,13 @@ async function handleCreateExam() {
       options: questionData.options,
       correct_answer: questionData.correct_answer,
       points: questionData.points || 1,
-      question_type: questionData.question_type || 'multiple_choice',
+      question_type: questionData.question_type || 'MCQ',
       subject: questionData.subject || null,
     };
     if (questionData.question_image) payload.question_image = questionData.question_image;
     const { error } = await supabase.from('entrance_questions').insert(payload);
     if (!error) {
-      setQuestionData({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', level: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: '' });
+      setQuestionData({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'MCQ', subject: '', level: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: '' });
       const { data } = await supabase.from('entrance_questions').select('*').eq('exam_id', selectedExam.id);
       if (data) setQuestions(data);
     }

@@ -79,10 +79,15 @@ export default function TeacherQuestionBankPage() {
     try {
       const tagsArr = form.tags.split(',').map(t => t.trim()).filter(Boolean);
       const options = form.question_type === 'true_false' ? ['True', 'False'] : form.options.filter(o => o.trim());
+      const selectedSubject = subjects.find(s => s.id === form.subject_id);
+      const selectedClass = classes.find(c => c.id === form.class_id);
       const payload = {
-        subject_id: form.subject_id, class_id: form.class_id || null, topic: form.topic || 'General',
-        subtopic: form.subtopic, difficulty: form.difficulty, question_type: form.question_type,
-        question: form.question, options, correct_answer: form.correct_answer,
+        subject_id: form.subject_id, subject: selectedSubject?.name || null,
+        class_id: form.class_id || null, level: selectedClass?.name || null,
+        topic: form.topic || 'General', subtopic: form.subtopic,
+        difficulty: form.difficulty, difficulty_level: form.difficulty,
+        question_type: form.question_type, question: form.question,
+        options, correct_answer: form.correct_answer,
         explanation: form.explanation || null, tags: tagsArr, created_by: profile?.id,
       };
       if (editing) {
@@ -128,8 +133,10 @@ export default function TeacherQuestionBankPage() {
         if (parts.length < 4) continue;
         const [question, optA, optB, optC, optD, correctIdx, explanation] = parts;
         const options = [optA, optB, optC || '', optD || ''].filter(Boolean);
+        const firstSubject = subjects[0];
         const { error } = await supabase.from('question_bank').insert({
-          subject_id: subjects[0]?.id, topic: 'Imported', difficulty: 'medium',
+          subject_id: firstSubject?.id, subject: firstSubject?.name || null,
+          topic: 'Imported', difficulty: 'medium', difficulty_level: 'medium',
           question_type: 'multiple_choice', question, options,
           correct_answer: parseInt(correctIdx) || 0, explanation: explanation || null,
           status: 'draft', created_by: profile?.id, tags: ['imported'],
