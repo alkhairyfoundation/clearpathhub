@@ -11,7 +11,7 @@ import {
   GraduationCap, ChevronDown, CheckCircle, XCircle, Filter
 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export default function AdminEntranceExamsPage() {
   const { profile } = useAuth();
@@ -930,7 +930,7 @@ function viewAnalyticsDetails(record: any) {
           doc.text('SUBJECT PERFORMANCE', 18, y + 0.5);
 
           y += 9;
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: y,
             head: [['Subject', 'Correct', 'Total', 'Score', 'Assessment']],
             body: subjectEntries.map(([subj, d]: [string, any]) => {
@@ -939,7 +939,7 @@ function viewAnalyticsDetails(record: any) {
               return [subj, `${d.correct}`, `${d.total}`, `${pct}%`, assess];
             }),
             theme: 'striped',
-            headStyles: { fillColor: [...primaryColor] as number[] },
+            headStyles: { fillColor: [...primaryColor] as [number, number, number] },
             columnStyles: { 0: { cellWidth: 50 }, 4: { cellWidth: 30 } },
             margin: { left: 14, right: 14 },
             tableLineWidth: 0,
@@ -959,7 +959,7 @@ function viewAnalyticsDetails(record: any) {
           doc.text('DIFFICULTY BREAKDOWN', 18, y + 0.5);
 
           y += 9;
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: y,
             head: [['Difficulty Level', 'Correct', 'Total', 'Score', 'Verdict']],
             body: difficultyEntries.map(([diff, d]: [string, any]) => {
@@ -968,7 +968,7 @@ function viewAnalyticsDetails(record: any) {
               return [diff, `${d.correct}`, `${d.total}`, `${pct}%`, color];
             }),
             theme: 'striped',
-            headStyles: { fillColor: [...primaryColor] as number[] },
+            headStyles: { fillColor: [...primaryColor] as [number, number, number] },
             margin: { left: 14, right: 14 },
             tableLineWidth: 0,
           });
@@ -1022,12 +1022,12 @@ function viewAnalyticsDetails(record: any) {
             ];
           });
 
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: y,
             head: [['#', 'Subject', 'Question', 'Diff', 'Correct Answer', 'Given Answer', 'Correct', 'Pts']],
             body: questionRows,
             theme: 'striped',
-            headStyles: { fillColor: [...primaryColor] as number[], fontSize: 7 },
+            headStyles: { fillColor: [...primaryColor] as [number, number, number], fontSize: 7 },
             bodyStyles: { fontSize: 6.5 },
             columnStyles: {
               0: { cellWidth: 8 },
@@ -1065,7 +1065,7 @@ function viewAnalyticsDetails(record: any) {
           doc.text('TOPIC PERFORMANCE', 18, y + 0.5);
 
           y += 9;
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: y,
             head: [['Topic', 'Correct', 'Total', 'Score', 'Status']],
             body: topicEntries.map(([topic, d]: [string, any]) => {
@@ -1074,7 +1074,7 @@ function viewAnalyticsDetails(record: any) {
               return [topic, `${d.correct}`, `${d.total}`, `${pct}%`, status];
             }),
             theme: 'striped',
-            headStyles: { fillColor: [...primaryColor] as number[] },
+            headStyles: { fillColor: [...primaryColor] as [number, number, number] },
             margin: { left: 14, right: 14 },
             tableLineWidth: 0,
           });

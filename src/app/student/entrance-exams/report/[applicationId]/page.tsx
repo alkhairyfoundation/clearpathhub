@@ -8,7 +8,7 @@ import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Download, Loader2, Check, X, Award, AlertCircle, BookOpen, GraduationCap, Clock, FileText } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 type QuestionDetail = {
   question_index: number;
@@ -319,13 +319,13 @@ export default function StudentEntranceReportPage() {
         doc.setFontSize(9);
         doc.text('SUBJECT PERFORMANCE', 18, y + 0.5);
         y += 9;
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: y, head: [['Subject', 'Correct', 'Total', 'Score', 'Assessment']],
           body: subjectEntries.map(([subj, d]: [string, any]) => {
             const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
             return [subj, `${d.correct}`, `${d.total}`, `${pct}%`, pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'];
           }),
-          theme: 'striped', headStyles: { fillColor: [...primaryColor] as number[] },
+          theme: 'striped', headStyles: { fillColor: [...primaryColor] as [number, number, number] },
           columnStyles: { 0: { cellWidth: 50 }, 4: { cellWidth: 30 } },
           margin: { left: 14, right: 14 }, tableLineWidth: 0,
         });
@@ -342,13 +342,13 @@ export default function StudentEntranceReportPage() {
         doc.setFontSize(9);
         doc.text('DIFFICULTY BREAKDOWN', 18, y + 0.5);
         y += 9;
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: y, head: [['Difficulty Level', 'Correct', 'Total', 'Score', 'Verdict']],
           body: difficultyEntries.map(([diff, d]: [string, any]) => {
             const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
             return [diff, `${d.correct}`, `${d.total}`, `${pct}%`, pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'];
           }),
-          theme: 'striped', headStyles: { fillColor: [...primaryColor] as number[] },
+          theme: 'striped', headStyles: { fillColor: [...primaryColor] as [number, number, number] },
           margin: { left: 14, right: 14 }, tableLineWidth: 0,
         });
         y = (doc as any).lastAutoTable.finalY + 5;
@@ -371,10 +371,10 @@ export default function StudentEntranceReportPage() {
           return [i + 1, q.subject || '—', qShort, q.difficulty_level || '—', formatCorrectAnswer(q), formatAnswer(q), q.is_correct ? 'Yes' : 'No', `${q.points_earned || 0}/${q.points || 1}`];
         });
 
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: y, head: [['#', 'Subject', 'Question', 'Diff', 'Correct Answer', 'Given Answer', 'Correct', 'Pts']],
           body: questionRows, theme: 'striped',
-          headStyles: { fillColor: [...primaryColor] as number[], fontSize: 7 },
+          headStyles: { fillColor: [...primaryColor] as [number, number, number], fontSize: 7 },
           bodyStyles: { fontSize: 6.5 },
           columnStyles: { 0: { cellWidth: 8 }, 1: { cellWidth: 18 }, 2: { cellWidth: 55 }, 3: { cellWidth: 12 }, 4: { cellWidth: 28 }, 5: { cellWidth: 28 }, 6: { cellWidth: 12, halign: 'center' }, 7: { cellWidth: 12, halign: 'center' } },
           margin: { left: 10, right: 10 }, tableLineWidth: 0,
@@ -400,13 +400,13 @@ export default function StudentEntranceReportPage() {
         doc.setFontSize(9);
         doc.text('TOPIC PERFORMANCE', 18, y + 0.5);
         y += 9;
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: y, head: [['Topic', 'Correct', 'Total', 'Score', 'Status']],
           body: topicEntries.map(([topic, d]: [string, any]) => {
             const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
             return [topic, `${d.correct}`, `${d.total}`, `${pct}%`, pct >= 80 ? 'Mastered' : pct >= 60 ? 'Good' : pct >= 40 ? 'Developing' : 'Needs Work'];
           }),
-          theme: 'striped', headStyles: { fillColor: [...primaryColor] as number[] },
+          theme: 'striped', headStyles: { fillColor: [...primaryColor] as [number, number, number] },
           margin: { left: 14, right: 14 }, tableLineWidth: 0,
         });
         y = (doc as any).lastAutoTable.finalY + 5;
