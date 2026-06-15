@@ -193,6 +193,105 @@ export default function StudentEntranceReportPage() {
     return parts.join(' ');
   }
 
+  // ── Entrance PDF Enhancements ──
+  function drawEntranceBarChart(doc: any, bySubj: Record<string, SubjectBreakdown>, x: number, y: number, w: number, maxY: number): number {
+    const items = Object.entries(bySubj)
+      .map(([name, d]) => ({ name, pct: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 }))
+      .sort((a, b) => b.pct - a.pct);
+    if (items.length === 0) return y;
+    const barH = 4.5, gap = 2.5, labelW = 36, pctW = 12, barMaxW = w - labelW - pctW;
+    const chartH = items.length * (barH + gap) + 11;
+    if (y + chartH > maxY) { doc.addPage(); y = 25; }
+    doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
+    doc.line(x, y, x + w, y); y += 3;
+    doc.setFontSize(8); doc.setTextColor(30, 58, 95); doc.setFont('helvetica', 'bold');
+    doc.text('Subject Performance Overview', x, y); y += 5.5;
+    items.forEach((item, i) => {
+      const by = y + i * (barH + gap);
+      doc.setFontSize(6.5); doc.setTextColor(60, 60, 60); doc.setFont('helvetica', 'normal');
+      doc.text(item.name.substring(0, 14), x, by + barH - 0.5);
+      doc.setFillColor(238, 238, 238);
+      doc.roundedRect(x + labelW, by, barMaxW, barH, 0.8, 0.8, 'F');
+      const barW = Math.max((item.pct / 100) * barMaxW, 1);
+      const bc: [number, number, number] = item.pct >= 70 ? [22, 163, 74] : item.pct >= 40 ? [245, 158, 11] : [220, 38, 38];
+      doc.setFillColor(...bc);
+      doc.roundedRect(x + labelW, by, barW, barH, 0.8, 0.8, 'F');
+      doc.setTextColor(80, 80, 80); doc.setFontSize(6);
+      doc.text(`${item.pct}%`, x + labelW + barMaxW + 1.5, by + barH - 0.5);
+    });
+    return y + items.length * (barH + gap) + 3;
+  }
+
+  function drawEntranceInsights(doc: any, bySubj: Record<string, SubjectBreakdown>, byDiff: Record<string, DifficultyBreakdown>, byTop: Record<string, TopicBreakdown>, x: number, y: number, w: number, maxY: number): number {
+    const subjItems = Object.entries(bySubj)
+      .map(([name, d]) => ({ name, pct: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 }))
+      .filter(s => s.pct > 0);
+    if (subjItems.length === 0 && Object.keys(byDiff).length === 0) return y;
+    let estH = 12;
+    if (subjItems.length > 0) estH += 6 + Math.min(subjItems.length, 2) * 4.5;
+    estH += 6 + Math.min(Object.keys(byDiff).length, 3) * 4.5;
+    if (y + estH > maxY) { doc.addPage(); y = 25; }
+    doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
+    doc.line(x, y, x + w, y); y += 3;
+    doc.setFontSize(8); doc.setTextColor(30, 58, 95); doc.setFont('helvetica', 'bold');
+    doc.text('Performance Insights', x, y); y += 5;
+    if (subjItems.length > 0) {
+      const sorted = [...subjItems].sort((a, b) => b.pct - a.pct);
+      doc.setFontSize(6.5); doc.setTextColor(22, 163, 74);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Strongest', x, y); y += 3.5;
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+      sorted.slice(0, 2).forEach(s => { doc.text(`${s.name}: ${s.pct}%`, x + 3, y + 0.5); y += 4; });
+      y += 1;
+      const weak = sorted.filter(s => s.pct < 40);
+      if (weak.length > 0) {
+        doc.setFontSize(6.5); doc.setTextColor(220, 38, 38);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Needs Improvement', x, y); y += 3.5;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+        weak.forEach(s => { doc.text(`${s.name}: ${s.pct}%`, x + 3, y + 0.5); y += 4; });
+        y += 1;
+      }
+    }
+    const diffWeak = Object.entries(byDiff).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.4);
+    if (diffWeak.length > 0) {
+      doc.setFontSize(6.5); doc.setTextColor(245, 158, 11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Difficulty Challenges', x, y); y += 3.5;
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+      diffWeak.slice(0, 3).forEach(([diff, d]) => {
+        const pct = Math.round((d.correct / d.total) * 100);
+        doc.text(`${diff}: ${pct}% correct`, x + 3, y + 0.5); y += 4;
+      });
+      y += 1;
+    }
+    const topWeak = Object.entries(byTop).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.4);
+    if (topWeak.length > 0) {
+      if (y + 8 > maxY) { doc.addPage(); y = 25; }
+      doc.setFontSize(6.5); doc.setTextColor(124, 58, 237);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Topics to Focus On', x, y); y += 3.5;
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+      topWeak.slice(0, 4).forEach(([t, d]) => {
+        const pct = Math.round((d.correct / d.total) * 100);
+        doc.text(`${t}: ${pct}%`, x + 3, y + 0.5); y += 4;
+      });
+    }
+    return y + 2;
+  }
+
+  function drawProgressDots(doc: any, data: any, earned: number, max: number): void {
+    if (max <= 0) return;
+    const dotR = 0.6;
+    const spacing = 2.2;
+    const startX = data.cell.x + (data.cell.width - (max * spacing)) / 2;
+    const dotY = data.cell.y + data.cell.height / 2;
+    for (let i = 0; i < max; i++) {
+      doc.setFillColor(i < earned ? 22 : 200, i < earned ? 163 : 200, i < earned ? 74 : 200);
+      doc.circle(startX + i * spacing, dotY, dotR, 'F');
+    }
+  }
+
   async function downloadPDF() {
     if (!application || !exam) return;
     setDownloading(true);
@@ -330,6 +429,8 @@ export default function StudentEntranceReportPage() {
           margin: { left: 14, right: 14 }, tableLineWidth: 0,
         });
         y = (doc as any).lastAutoTable.finalY + 5;
+        const pageH = doc.internal.pageSize.getHeight();
+        y = drawEntranceBarChart(doc, bySubject, 18, y, pw - 36, pageH - 15);
       }
 
       const difficultyEntries = Object.entries(byDifficulty);
@@ -352,6 +453,8 @@ export default function StudentEntranceReportPage() {
           margin: { left: 14, right: 14 }, tableLineWidth: 0,
         });
         y = (doc as any).lastAutoTable.finalY + 5;
+        const pageH2 = doc.internal.pageSize.getHeight();
+        y = drawEntranceInsights(doc, bySubject, byDifficulty, byTopic, 18, y, pw - 36, pageH2 - 15);
       }
 
       if (questionsData.length > 0) {
@@ -385,6 +488,13 @@ export default function StudentEntranceReportPage() {
               doc.setTextColor(isC ? 22 : 220, isC ? 163 : 38, isC ? 38 : 38);
               doc.setFont('helvetica', 'bold');
               doc.text(isC ? 'Yes' : 'No', data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1.5, { align: 'center' });
+            }
+            if (data.section === 'body' && data.column.index === 7) {
+              const raw = data.cell.raw.toString();
+              const parts = raw.split('/');
+              const earned = parseInt(parts[0]) || 0;
+              const max = parseInt(parts[1]) || 1;
+              drawProgressDots(doc, data, earned, max);
             }
           },
         });

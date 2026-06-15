@@ -945,6 +945,30 @@ function viewAnalyticsDetails(record: any) {
             tableLineWidth: 0,
           });
           y = (doc as any).lastAutoTable.finalY + 5;
+          // ── Subject Bar Chart ──
+          const subjItems = Object.entries(bySubject).map(([name, d]: [string, any]) => ({ name, pct: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).sort((a: any, b: any) => b.pct - a.pct);
+          if (subjItems.length > 0) {
+            if (y + subjItems.length * 8 + 15 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+            const barH = 4, gap = 2, lw = 36, pw2 = 14, bmw = pw - 36 - lw - pw2;
+            doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
+            doc.line(18, y, 18 + pw - 36, y); y += 3;
+            doc.setFontSize(8); doc.setTextColor(30, 58, 95); doc.setFont('helvetica', 'bold');
+            doc.text('Subject Performance Overview', 18, y); y += 5;
+            subjItems.forEach((item: any, i: number) => {
+              const by = y + i * (barH + gap);
+              doc.setFontSize(6.5); doc.setTextColor(60, 60, 60); doc.setFont('helvetica', 'normal');
+              doc.text(item.name.substring(0, 14), 18, by + barH - 0.5);
+              doc.setFillColor(238, 238, 238);
+              doc.roundedRect(18 + lw, by, bmw, barH, 0.8, 0.8, 'F');
+              const bw = Math.max((item.pct / 100) * bmw, 1);
+              const bc: [number, number, number] = item.pct >= 70 ? [22, 163, 74] : item.pct >= 40 ? [245, 158, 11] : [220, 38, 38];
+              doc.setFillColor(...bc);
+              doc.roundedRect(18 + lw, by, bw, barH, 0.8, 0.8, 'F');
+              doc.setTextColor(80, 80, 80); doc.setFontSize(6);
+              doc.text(`${item.pct}%`, 18 + lw + bmw + 1.5, by + barH - 0.5);
+            });
+            y += subjItems.length * (barH + gap) + 3;
+          }
         }
 
         // ── Difficulty-wise Performance ──
@@ -973,6 +997,40 @@ function viewAnalyticsDetails(record: any) {
             tableLineWidth: 0,
           });
           y = (doc as any).lastAutoTable.finalY + 5;
+          // ── Performance Insights ──
+          const subjSorted = Object.entries(bySubject).map(([n, d]: [string, any]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter((s: any) => s.p > 0).sort((a: any, b: any) => b.p - a.p);
+          const diffWeak = Object.entries(byDifficulty).filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
+          const topWeak = Object.entries(byTopic).filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
+          if (subjSorted.length > 0 || diffWeak.length > 0 || topWeak.length > 0) {
+            if (y + 30 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+            doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
+            doc.line(14, y, 14 + pw - 28, y); y += 3;
+            doc.setFontSize(8); doc.setTextColor(30, 58, 95); doc.setFont('helvetica', 'bold');
+            doc.text('Performance Insights', 18, y); y += 5;
+            doc.setFontSize(6.5); doc.setTextColor(22, 163, 74); doc.setFont('helvetica', 'bold');
+            doc.text('Strengths', 18, y); y += 3.5;
+            doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+            const best = subjSorted.slice(0, 2);
+            best.forEach((s: any) => { doc.text(`${s.n}: ${s.p}%`, 21, y + 0.5); y += 4; });
+            y += 1;
+            const weakSubj = subjSorted.filter((s: any) => s.p < 40);
+            if (weakSubj.length > 0 || diffWeak.length > 0) {
+              if (y + 10 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+              doc.setFontSize(6.5); doc.setTextColor(220, 38, 38); doc.setFont('helvetica', 'bold');
+              doc.text('Needs Improvement', 18, y); y += 3.5;
+              doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+              weakSubj.forEach((s: any) => { doc.text(`${s.n}: ${s.p}%`, 21, y + 0.5); y += 4; });
+              diffWeak.slice(0, 2).forEach(([d, dd]: [string, any]) => { const p = Math.round((dd.correct / dd.total) * 100); doc.text(`${d}: ${p}%`, 21, y + 0.5); y += 4; });
+            }
+            if (topWeak.length > 0) {
+              if (y + 10 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+              doc.setFontSize(6.5); doc.setTextColor(124, 58, 237); doc.setFont('helvetica', 'bold');
+              doc.text('Topics to Focus On', 18, y); y += 3.5;
+              doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
+              topWeak.slice(0, 3).forEach(([t, td]: [string, any]) => { const p = Math.round((td.correct / td.total) * 100); doc.text(`${t}: ${p}%`, 21, y + 0.5); y += 4; });
+            }
+            y += 2;
+          }
         }
 
         // ═══════════════════════════════════════════
@@ -1046,6 +1104,21 @@ function viewAnalyticsDetails(record: any) {
                 doc.setTextColor(isCorrect ? 22 : 220, isCorrect ? 163 : 38, isCorrect ? 74 : 38);
                 doc.setFont('helvetica', 'bold');
                 doc.text(isCorrect ? 'Yes' : 'No', data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1.5, { align: 'center' });
+              }
+              if (data.section === 'body' && data.column.index === 7) {
+                const raw = data.cell.raw.toString();
+                const parts = raw.split('/');
+                const earned = parseInt(parts[0]) || 0;
+                const max = parseInt(parts[1]) || 1;
+                if (max > 0) {
+                  const dotR = 0.6, spacing = 2.2;
+                  const startX = data.cell.x + (data.cell.width - max * spacing) / 2;
+                  const dotY = data.cell.y + data.cell.height / 2;
+                  for (let i = 0; i < max; i++) {
+                    doc.setFillColor(i < earned ? 22 : 200, i < earned ? 163 : 200, i < earned ? 74 : 200);
+                    doc.circle(startX + i * spacing, dotY, dotR, 'F');
+                  }
+                }
               }
             },
             tableLineWidth: 0,
