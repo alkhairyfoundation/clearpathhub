@@ -46,14 +46,58 @@ export async function POST(request: Request) {
       }
     }
 
-    if (studentEmail) {
+    if (studentEmail && answersData) {
+      const bySubject: Record<string, { correct: number; total: number }> = {};
+      const byDifficulty: Record<string, { correct: number; total: number }> = {};
+      const byTopic: Record<string, { correct: number; total: number }> = {};
+
+      const questionsDetail = answersData.map((a: any) => {
+        const subj = a.subject || 'UNSPECIFIED';
+        const diff = a.difficulty_level || 'UNSPECIFIED';
+        const topic = a.topic || 'General';
+
+        if (!bySubject[subj]) bySubject[subj] = { correct: 0, total: 0 };
+        bySubject[subj].total++;
+        if (a.is_correct) bySubject[subj].correct++;
+
+        if (!byDifficulty[diff]) byDifficulty[diff] = { correct: 0, total: 0 };
+        byDifficulty[diff].total++;
+        if (a.is_correct) byDifficulty[diff].correct++;
+
+        if (!byTopic[topic]) byTopic[topic] = { correct: 0, total: 0 };
+        byTopic[topic].total++;
+        if (a.is_correct) byTopic[topic].correct++;
+
+        return {
+          question_index: a.question_index,
+          question: a.question,
+          question_type: a.question_type,
+          subject: subj,
+          difficulty_level: diff,
+          topic,
+          correct_answer: a.correct_answer,
+          given_answer: a.given_answer,
+          is_correct: a.is_correct,
+          points: a.points || 1,
+          points_earned: a.is_correct ? (a.points || 1) : 0,
+        };
+      });
+
       await adminClient.from('student_analytics').insert({
         application_id: applicationId,
         student_email: studentEmail,
         subject: 'COMBINED',
         score,
         mastery_level: masteryLevel,
-        topic_performance: {},
+        topic_performance: {
+          by_subject: bySubject,
+          by_difficulty: byDifficulty,
+          by_topic: byTopic,
+          questions: questionsDetail,
+          total_questions: answersData.length,
+          correct_count: answersData.filter((a: any) => a.is_correct).length,
+          time_taken_minutes: timeTaken || 0,
+        },
         time_taken_seconds: timeTaken * 60,
       });
     }

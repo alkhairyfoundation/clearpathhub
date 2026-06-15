@@ -125,6 +125,11 @@ export default function StudentEntranceExamsPage() {
                         <p className="text-lg font-semibold text-slate-700">{app.exam?.passing_score || 50}%</p>
                       </div>
                     </div>
+                    <div className="mt-3 pt-3 border-t border-slate-200">
+                      <Link href={`/student/entrance-exams/report/${app.id}`} className="btn-outline text-sm flex items-center gap-2 w-full justify-center">
+                        <FileText size={14} /> View Full Analysis Report
+                      </Link>
+                    </div>
                   </div>
                 )}
 

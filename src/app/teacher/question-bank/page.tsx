@@ -45,7 +45,7 @@ export default function TeacherQuestionBankPage() {
   async function fetchData() {
     setLoading(true);
     const [qRes, sRes, cRes] = await Promise.all([
-      supabase.from('question_bank').select('*, subject:subjects(name, code)').or('created_by.eq.' + (profile?.id || '') + ',created_by.is.null').order('created_at', { ascending: false }),
+      supabase.from('question_bank').select('*, subject:subjects(name, code)').order('created_at', { ascending: false }),
       supabase.from('subjects').select('*, class:classes!class_id(name)').eq('teacher_id', profile?.id).order('name'),
       supabase.from('classes').select('*').order('level'),
     ]);

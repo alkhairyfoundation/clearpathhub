@@ -11,6 +11,7 @@ import {
   GraduationCap, ChevronDown, CheckCircle, XCircle, Filter
 } from 'lucide-react';
 import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function AdminEntranceExamsPage() {
   const { profile } = useAuth();
@@ -243,8 +244,7 @@ async function handleCreateExam() {
             .from('question_bank')
             .select('*')
             .eq('subject', subject)
-            .in('level', bankLevels)
-            .in('status', ['published', 'active']);
+            .in('level', bankLevels);
 
           if (subjectQuestions && subjectQuestions.length > 0) {
             // Distribution favoring harder questions if available
@@ -411,7 +411,7 @@ async function handleCreateExam() {
       setSelectedBankIds(new Set());
       setBankSelectSearch('');
       const qbLevels = getQuestionBankLevels(exam.level);
-      let query = supabase.from('question_bank').select('*').in('level', qbLevels).in('status', ['published', 'active']);
+      let query = supabase.from('question_bank').select('*').in('level', qbLevels);
       const examSubjects = exam.subjects;
       if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
         query = query.in('subject', examSubjects);
@@ -764,17 +764,18 @@ function viewAnalyticsDetails(record: any) {
           .limit(1)
           .maybeSingle();
 
-        const schoolName = schoolSettings?.school_name || 'ClearPath Edu Hub';
-        const primaryColor: [number, number, number] = [30, 58, 95];
-        const goldColor: [number, number, number] = [179, 146, 47];
-
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const pw = doc.internal.pageSize.getWidth();
-
         const exam = application?.exam;
         const score = record.score || 0;
         const passingScore = exam?.passing_score || 50;
         const passed = score >= passingScore;
+        const tp = record.topic_performance || {};
+        const questionsData = tp.questions || [];
+        const bySubject = tp.by_subject || {};
+        const byDifficulty = tp.by_difficulty || {};
+        const byTopic = tp.by_topic || {};
+        const totalQ = tp.total_questions || questionsData.length || exam?.total_questions || 0;
+        const correctQ = tp.correct_count || questionsData.filter((q: any) => q.is_correct).length || 0;
+        const wrongQ = totalQ - correctQ;
         const timeTakenMins = record.time_taken_seconds
           ? Math.round(record.time_taken_seconds / 60)
           : record.time_taken || 'N/A';
@@ -782,22 +783,54 @@ function viewAnalyticsDetails(record: any) {
           ? new Date(application.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
           : 'N/A';
 
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, pw, 40, 'F');
-        doc.setFillColor(...goldColor);
-        doc.rect(0, 38, pw, 2, 'F');
+        if (questionsData.length === 0 && application?.answers) {
+          const answers = typeof application.answers === 'string' ? JSON.parse(application.answers) : application.answers;
+          if (Array.isArray(answers)) questionsData.push(...answers);
+        }
 
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'bold');
-        doc.text(schoolName, pw / 2, 16, { align: 'center' });
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text('ENTRANCE EXAM ANALYSIS REPORT', pw / 2, 24, { align: 'center' });
-        doc.setFontSize(7);
-        doc.text(`Generated: ${new Date().toLocaleString()}`, pw / 2, 31, { align: 'center' });
+        const schoolName = schoolSettings?.school_name || 'ClearPath Edu Hub';
+        const primaryColor: [number, number, number] = [30, 58, 95];
+        const goldColor: [number, number, number] = [179, 146, 47];
 
-        let y = 52;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pw = doc.internal.pageSize.getWidth();
+
+        // ── Helper: draw school header ──
+        const drawSchoolHeader = (d: typeof doc) => {
+          d.setFillColor(...primaryColor);
+          d.rect(0, 0, pw, 40, 'F');
+          d.setFillColor(...goldColor);
+          d.rect(0, 38, pw, 2, 'F');
+          d.setTextColor(255, 255, 255);
+          d.setFontSize(20);
+          d.setFont('helvetica', 'bold');
+          d.text(schoolName, pw / 2, 16, { align: 'center' });
+          d.setFontSize(9);
+          d.setFont('helvetica', 'normal');
+          d.text('ENTRANCE EXAM ANALYSIS REPORT', pw / 2, 24, { align: 'center' });
+          d.setFontSize(7);
+          d.text(`Generated: ${new Date().toLocaleString()}`, pw / 2, 31, { align: 'center' });
+        };
+
+        // ── Helper: draw footer ──
+        const drawFooter = (d: typeof doc) => {
+          const ph = d.internal.pageSize.getHeight();
+          d.setFillColor(...primaryColor);
+          d.rect(0, ph - 12, pw, 12, 'F');
+          d.setTextColor(255, 255, 255);
+          d.setFontSize(6);
+          d.setFont('helvetica', 'normal');
+          d.text(schoolName + ' — Official Document', pw / 2, ph - 6, { align: 'center' });
+          d.text('This report is system-generated and does not require a signature.', pw / 2, ph - 2.5, { align: 'center' });
+        };
+
+        // ═══════════════════════════════════════════
+        // PAGE 1
+        // ═══════════════════════════════════════════
+        drawSchoolHeader(doc);
+
+        // ── Student Information ──
+        let y = 50;
         doc.setFillColor(...primaryColor);
         doc.rect(14, y - 4, pw - 28, 7, 'F');
         doc.setTextColor(255, 255, 255);
@@ -810,7 +843,7 @@ function viewAnalyticsDetails(record: any) {
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         const studentInfo = [
-          ['Full Name', record.student_name || application?.first_name + ' ' + application?.last_name || 'N/A'],
+          ['Full Name', record.student_name || (application?.first_name || '') + ' ' + (application?.last_name || '') || 'N/A'],
           ['Email', record.student_email || application?.email || 'N/A'],
           ['Phone', application?.phone || 'N/A'],
           ['Applied Class', application?.applied_class || 'N/A'],
@@ -825,6 +858,7 @@ function viewAnalyticsDetails(record: any) {
           doc.text(value, 55, rowY);
         });
 
+        // ── Score Summary ──
         y += studentInfo.length * 5.5 + 7;
         doc.setFillColor(...primaryColor);
         doc.rect(14, y - 4, pw - 28, 7, 'F');
@@ -847,9 +881,11 @@ function viewAnalyticsDetails(record: any) {
         const resultsInfo = [
           ['Exam Title', exam?.title || 'N/A'],
           ['Academic Year', exam?.academic_year || 'N/A'],
-          ['Exam Date', exam?.exam_date ? new Date(exam.exam_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'],
-          ['Subject', record.subject || exam?.level || 'N/A'],
-          ['Total Questions', `${exam?.total_questions || 'N/A'}`],
+          ['Exam Level', exam?.level || 'N/A'],
+          ['Total Questions', `${totalQ}`],
+          ['Correct Answers', `${correctQ}`],
+          ['Wrong Answers', `${wrongQ}`],
+          ['Accuracy', `${totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0}%`],
           ['Passing Score', `${passingScore}%`],
           ['Score Obtained', `${score}%`],
           ['Mastery Level', record.mastery_level || 'N/A'],
@@ -857,121 +893,242 @@ function viewAnalyticsDetails(record: any) {
           ['Status', passed ? 'PASSED' : 'FAILED'],
         ];
         resultsInfo.forEach(([label, value], i) => {
-          const rowY = y + i * 5.5;
+          const rowY = y + i * 5;
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(60, 60, 60);
-          doc.setFontSize(8);
+          doc.setFontSize(7.5);
           doc.text(label + ':', 18, rowY);
           doc.setFont('helvetica', 'normal');
           if (label === 'Status') {
             doc.setTextColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 38 : 38);
             doc.text(value, 55, rowY);
+          } else if (label === 'Mastery Level') {
+            doc.setTextColor(30, 58, 95);
+            doc.text(value, 55, rowY);
+          } else if (label === 'Accuracy') {
+            const acc = totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0;
+            doc.setTextColor(acc >= 70 ? 22 : acc >= 50 ? 180 : 220, acc >= 70 ? 163 : acc >= 50 ? 130 : 38, acc >= 70 ? 74 : acc >= 50 ? 40 : 38);
+            doc.text(value, 55, rowY);
           } else {
+            doc.setTextColor(60, 60, 60);
             doc.text(value, 55, rowY);
           }
         });
 
-        const subjectScores = application?.subject_scores;
-        const subjectEntries = subjectScores && typeof subjectScores === 'object'
-          ? Object.entries(subjectScores)
-          : [];
-
-        const topicPerf = record.topic_performance || {};
-        const topicEntries = Object.entries(topicPerf);
-
-        const hasBreakdown = subjectEntries.length > 0 || topicEntries.length > 0;
-
-        if (hasBreakdown) {
-          y += resultsInfo.length * 5.5 + 7;
+        // ── Subject-wise Performance ──
+        const subjectEntries = Object.entries(bySubject);
+        if (subjectEntries.length > 0) {
+          y += resultsInfo.length * 5 + 7;
+          if (y > 240) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
           doc.setFillColor(...primaryColor);
           doc.rect(14, y - 4, pw - 28, 7, 'F');
           doc.setTextColor(255, 255, 255);
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(9);
-          doc.text('PERFORMANCE BREAKDOWN', 18, y + 0.5);
+          doc.text('SUBJECT PERFORMANCE', 18, y + 0.5);
 
-          y += 10;
-          doc.setFillColor(245, 247, 250);
-          doc.rect(14, y - 3, pw - 28, 6, 'F');
-          doc.setTextColor(100, 100, 100);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(7);
-          doc.text('Subject / Topic', 18, y + 0.5);
-          doc.text('Score', pw / 2 - 5, y + 0.5, { align: 'center' });
-          doc.text('Correct', pw / 2 + 20, y + 0.5, { align: 'center' });
-          doc.text('Total', pw / 2 + 45, y + 0.5, { align: 'center' });
-
-          y += 7;
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(60, 60, 60);
-
-          let breakRows: [string, any][] = [];
-
-          if (subjectEntries.length > 0) {
-            subjectEntries.forEach(([subj, data]: [string, any]) => {
-              breakRows.push([subj, typeof data === 'object' ? data : { score: data, correct: 0, total: 0 }]);
-            });
-          }
-          if (topicEntries.length > 0) {
-            topicEntries.forEach(([topic, data]: [string, any]) => {
-              if (!subjectEntries.some(([s]) => s === topic)) {
-                breakRows.push([topic, data]);
-              }
-            });
-          }
-
-          breakRows.forEach(([name, data], i) => {
-            const rowY = y + i * 5.5;
-            if (rowY > 270) return;
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            doc.text(name, 18, rowY);
-            doc.text(`${data.score || data}%`, pw / 2 - 5, rowY, { align: 'center' });
-            doc.text(`${data.correct || 0}`, pw / 2 + 20, rowY, { align: 'center' });
-            doc.text(`${data.total || 0}`, pw / 2 + 45, rowY, { align: 'center' });
-            if (i % 2 === 0) {
-              doc.setFillColor(250, 251, 252);
-              doc.rect(14, rowY - 2.5, pw - 28, 5.5, 'F');
-            }
+          y += 9;
+          (doc as any).autoTable({
+            startY: y,
+            head: [['Subject', 'Correct', 'Total', 'Score', 'Assessment']],
+            body: subjectEntries.map(([subj, d]: [string, any]) => {
+              const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+              const assess = pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak';
+              return [subj, `${d.correct}`, `${d.total}`, `${pct}%`, assess];
+            }),
+            theme: 'striped',
+            headStyles: { fillColor: [...primaryColor] as number[] },
+            columnStyles: { 0: { cellWidth: 50 }, 4: { cellWidth: 30 } },
+            margin: { left: 14, right: 14 },
+            tableLineWidth: 0,
           });
-          y += breakRows.length * 5.5 + 3;
-
-          if (y < 250) {
-            y += 3;
-            doc.setFillColor(240, 242, 245);
-            doc.roundedRect(18, y, pw - 36, 5, 2.5, 2.5, 'F');
-            doc.setFillColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
-            doc.roundedRect(18, y, Math.max((pw - 36) * score / 100, 4), 5, 2.5, 2.5, 'F');
-            doc.setTextColor(100, 100, 100);
-            doc.setFontSize(6);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Overall Score: ${score}% — ${getRecommendations(record)}`, pw / 2, y + 9, { align: 'center' });
-          }
+          y = (doc as any).lastAutoTable.finalY + 5;
         }
 
-        y = Math.max(y + 12, 240);
-        if (y < 270) {
+        // ── Difficulty-wise Performance ──
+        const difficultyEntries = Object.entries(byDifficulty);
+        if (difficultyEntries.length > 0) {
+          if (y > 240) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+          doc.setFillColor(...primaryColor);
+          doc.rect(14, y - 4, pw - 28, 7, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.text('DIFFICULTY BREAKDOWN', 18, y + 0.5);
+
+          y += 9;
+          (doc as any).autoTable({
+            startY: y,
+            head: [['Difficulty Level', 'Correct', 'Total', 'Score', 'Verdict']],
+            body: difficultyEntries.map(([diff, d]: [string, any]) => {
+              const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+              const color = pct >= 70 ? 'text-green-600' : pct >= 40 ? 'text-amber-600' : 'text-red-600';
+              return [diff, `${d.correct}`, `${d.total}`, `${pct}%`, color];
+            }),
+            theme: 'striped',
+            headStyles: { fillColor: [...primaryColor] as number[] },
+            margin: { left: 14, right: 14 },
+            tableLineWidth: 0,
+          });
+          y = (doc as any).lastAutoTable.finalY + 5;
+        }
+
+        // ═══════════════════════════════════════════
+        // PER-QUESTION BREAKDOWN (new page)
+        // ═══════════════════════════════════════════
+        if (questionsData.length > 0) {
+          doc.addPage();
+          y = 45;
+          drawSchoolHeader(doc);
+
+          doc.setFillColor(...primaryColor);
+          doc.rect(14, y - 4, pw - 28, 7, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.text('PER-QUESTION ANALYSIS', 18, y + 0.5);
+
+          y += 9;
+
+          const questionRows = questionsData.map((q: any, i: number) => {
+            const isCorrect = q.is_correct;
+            let correctAnswerText = `${q.correct_answer}`;
+            if (q.options && Array.isArray(q.options) && typeof q.correct_answer === 'number' && q.options[q.correct_answer]) {
+              correctAnswerText = `${q.correct_answer + 1}. ${q.options[q.correct_answer]}`;
+            }
+            let givenAnswerText = `${q.given_answer}`;
+            if (q.options && Array.isArray(q.options) && typeof q.given_answer === 'number' && q.options[q.given_answer]) {
+              givenAnswerText = `${q.given_answer + 1}. ${q.options[q.given_answer]}`;
+            }
+            if (q.question_type === 'TRUE_FALSE' || q.question_type === 'true_false') {
+              if (typeof q.correct_answer === 'number') correctAnswerText = q.correct_answer === 0 ? 'True' : 'False';
+              if (typeof q.given_answer === 'number') givenAnswerText = q.given_answer === 0 ? 'True' : 'False';
+            }
+            const questionShort = q.question ? (q.question.length > 50 ? q.question.substring(0, 47) + '...' : q.question) : '';
+            const subject = q.subject || '—';
+            const diff = q.difficulty_level || '—';
+
+            return [
+              i + 1,
+              subject,
+              questionShort,
+              diff,
+              correctAnswerText,
+              givenAnswerText,
+              isCorrect ? 'Yes' : 'No',
+              `${q.points_earned || 0}/${q.points || 1}`,
+            ];
+          });
+
+          (doc as any).autoTable({
+            startY: y,
+            head: [['#', 'Subject', 'Question', 'Diff', 'Correct Answer', 'Given Answer', 'Correct', 'Pts']],
+            body: questionRows,
+            theme: 'striped',
+            headStyles: { fillColor: [...primaryColor] as number[], fontSize: 7 },
+            bodyStyles: { fontSize: 6.5 },
+            columnStyles: {
+              0: { cellWidth: 8 },
+              1: { cellWidth: 18 },
+              2: { cellWidth: 55 },
+              3: { cellWidth: 12 },
+              4: { cellWidth: 28 },
+              5: { cellWidth: 28 },
+              6: { cellWidth: 12, halign: 'center' },
+              7: { cellWidth: 12, halign: 'center' },
+            },
+            margin: { left: 10, right: 10 },
+            didDrawCell: (data: any) => {
+              if (data.section === 'body' && data.column.index === 6) {
+                const isCorrect = data.cell.raw === 'Yes';
+                doc.setTextColor(isCorrect ? 22 : 220, isCorrect ? 163 : 38, isCorrect ? 74 : 38);
+                doc.setFont('helvetica', 'bold');
+                doc.text(isCorrect ? 'Yes' : 'No', data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1.5, { align: 'center' });
+              }
+            },
+            tableLineWidth: 0,
+          });
+          y = (doc as any).lastAutoTable.finalY + 5;
+        }
+
+        // ── Topic Performance ──
+        const topicEntries = Object.entries(byTopic);
+        if (topicEntries.length > 0) {
+          if (y > 240) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+          doc.setFillColor(...primaryColor);
+          doc.rect(14, y - 4, pw - 28, 7, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.text('TOPIC PERFORMANCE', 18, y + 0.5);
+
+          y += 9;
+          (doc as any).autoTable({
+            startY: y,
+            head: [['Topic', 'Correct', 'Total', 'Score', 'Status']],
+            body: topicEntries.map(([topic, d]: [string, any]) => {
+              const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+              const status = pct >= 80 ? 'Mastered' : pct >= 60 ? 'Good' : pct >= 40 ? 'Developing' : 'Needs Work';
+              return [topic, `${d.correct}`, `${d.total}`, `${pct}%`, status];
+            }),
+            theme: 'striped',
+            headStyles: { fillColor: [...primaryColor] as number[] },
+            margin: { left: 14, right: 14 },
+            tableLineWidth: 0,
+          });
+          y = (doc as any).lastAutoTable.finalY + 5;
+        }
+
+        // ── Performance Summary Bar ──
+        if (y < 250) {
+          y += 3;
+          doc.setFillColor(240, 242, 245);
+          doc.roundedRect(18, y, pw - 36, 6, 3, 3, 'F');
+          doc.setFillColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
+          doc.roundedRect(18, y, Math.max((pw - 36) * score / 100, 6), 6, 3, 3, 'F');
+          doc.setTextColor(100, 100, 100);
+          doc.setFontSize(7);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`Overall Score: ${score}% | ${correctQ} of ${totalQ} correct`, pw / 2, y + 10, { align: 'center' });
+        }
+
+        // ── Recommendations (new page if needed) ──
+        const weakSubjects = subjectEntries
+          .filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.5)
+          .map(([s]: [string, any]) => s);
+        const weakDifficulties = difficultyEntries
+          .filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4)
+          .map(([d]: [string, any]) => d);
+        const weakTopics = topicEntries
+          .filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4)
+          .map(([t]: [string, any]) => t);
+
+        const recommendations = buildDetailedRecommendations(record.mastery_level, score, weakSubjects, weakDifficulties, weakTopics, totalQ, correctQ);
+
+        if (recommendations) {
+          if (y > 250) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+          y = Math.max(y + 10, 245);
+          const pageH = doc.internal.pageSize.getHeight();
+          if (y + 40 > pageH) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
           doc.setFillColor(253, 237, 236);
-          doc.roundedRect(14, y, pw - 28, 20, 2, 2, 'F');
+          doc.roundedRect(14, y, pw - 28, 22, 2, 2, 'F');
           doc.setTextColor(180, 80, 60);
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(8);
-          doc.text('Recommendations', 18, y + 5);
+          doc.text('Recommendations for Improvement', 18, y + 5);
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(7);
+          doc.setTextColor(100, 60, 40);
+          const split = doc.splitTextToSize(recommendations, pw - 40);
+          const linesUsed = split.length;
+          const boxHeight = Math.max(22, linesUsed * 4 + 8);
           doc.setFillColor(253, 237, 236);
-          const recText = getRecommendations(record);
-          const split = doc.splitTextToSize(recText, pw - 40);
+          doc.roundedRect(14, y, pw - 28, boxHeight, 2, 2, 'F');
           doc.text(split, 18, y + 11);
+          y += boxHeight + 5;
         }
 
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 285, pw, 12, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(6);
-        doc.setFont('helvetica', 'normal');
-        doc.text(schoolName + ' — Official Document', pw / 2, 291, { align: 'center' });
-        doc.text('This report is system-generated and does not require a signature.', pw / 2, 295, { align: 'center' });
+        drawFooter(doc);
 
         doc.save(`Entrance_Exam_Report_${record.student_name?.replace(/\s+/g, '_') || 'Student'}_${new Date().toISOString().split('T')[0]}.pdf`);
         setSuccess('Report downloaded successfully');
@@ -982,14 +1139,54 @@ function viewAnalyticsDetails(record: any) {
         setDownloadingReport(null);
       }
     }
-    
+
+    function buildDetailedRecommendations(mastery: string, score: number, weakSubjects: string[], weakDifficulties: string[], weakTopics: string[], totalQuestions: number, correctQuestions: number): string {
+      const parts: string[] = [];
+
+      if (mastery === 'MASTERED') {
+        parts.push('OUTSTANDING PERFORMANCE: The student demonstrates exceptional understanding across all areas.');
+        parts.push('Recommendation: Consider advanced placement, enrichment programs, or mentorship opportunities.');
+      } else if (mastery === 'PROFICIENT') {
+        parts.push('STRONG PERFORMANCE: The student shows solid comprehension of the material.');
+        parts.push('Recommendation: Continue with current curriculum. Provide extension activities and challenge problems to reinforce learning.');
+      } else if (mastery === 'EXCELLENT') {
+        parts.push('GOOD PERFORMANCE: The student performs well overall with some areas to strengthen.');
+        parts.push('Recommendation: Focus on strengthening weaker areas through targeted practice and review sessions.');
+      } else if (mastery === 'GOOD') {
+        parts.push('BASIC UNDERSTANDING: The student has foundational knowledge but needs improvement.');
+        parts.push('Recommendation: Enroll in remedial support programs. Schedule additional practice sessions. Revisit core concepts.');
+      } else {
+        parts.push('SIGNIFICANT SUPPORT NEEDED: The student requires intensive academic intervention.');
+        parts.push('Recommendation: Consider one-on-one tutoring, foundational skill development, and a structured learning plan.');
+      }
+
+      if (weakSubjects.length > 0) {
+        parts.push(`Weak Subjects: ${weakSubjects.join(', ')}. Focused study and additional practice in these subjects is strongly advised.`);
+      }
+
+      if (weakDifficulties.length > 0) {
+        const diffAdvice = weakDifficulties.map(d => {
+          if (d === 'VERY_HARD' || d === 'HARD') return `${d} questions: Start with easier problems to build confidence, then gradually increase difficulty.`;
+          if (d === 'MEDIUM') return `Medium difficulty: Review fundamental concepts and practice with varied question formats.`;
+          return `${d} questions: Master the basics before moving to advanced topics.`;
+        });
+        parts.push(...diffAdvice);
+      }
+
+      if (weakTopics.length > 0) {
+        parts.push(`Topics requiring attention: ${weakTopics.join(', ')}. Targeted revision in these topic areas will significantly improve overall performance.`);
+      }
+
+      const accuracy = totalQuestions > 0 ? Math.round((correctQuestions / totalQuestions) * 100) : 0;
+      parts.push(`Accuracy Rate: ${accuracy}% (${correctQuestions}/${totalQuestions} questions answered correctly). Consistent practice is key to improvement.`);
+
+      return parts.join(' ');
+    }
+
     function getRecommendations(record: any): string {
-      const mastery = record.mastery_level;
-      if (mastery === 'MASTERED') return 'Student demonstrates exceptional understanding. Recommend advanced placement or enrichment programs.';
-      if (mastery === 'PROFICIENT') return 'Student shows strong comprehension. Continue with current curriculum and provide extension activities.';
-      if (mastery === 'EXCELLENT') return 'Student performs well. Focus on strengthening weaker areas through targeted practice.';
-      if (mastery === 'GOOD') return 'Student has basic understanding. Recommend remedial support and additional practice sessions.';
-      return 'Student requires significant support. Consider intensive tutoring and foundational skill development.';
+      const tp = record.topic_performance || {};
+      const qs = tp.questions || [];
+      return buildDetailedRecommendations(record.mastery_level, record.score || 0, [], [], [], qs.length, qs.filter((q: any) => q.is_correct).length);
     }
 
   const filteredApps = applications.filter(a =>
