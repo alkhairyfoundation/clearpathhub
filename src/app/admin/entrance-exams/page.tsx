@@ -1545,18 +1545,121 @@ function viewAnalyticsDetails(record: any) {
          )}
          
          {/* Analytics Details Modal */}
-         {showAnalyticsDetailModal && selectedAnalytics && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
-                <div className="p-5 border-b flex justify-between"><h3>Details</h3><button onClick={() => setShowAnalyticsDetailModal(false)}><X size={20} /></button></div>
-                <div className="p-5 space-y-4">
-                  <p><strong>{selectedAnalytics.student_name}</strong> - {selectedAnalytics.score}%</p>
-                  <p>Mastery: {selectedAnalytics.mastery_level}</p>
-                </div>
-                <div className="p-5 border-t flex justify-end gap-2"><button onClick={() => setShowAnalyticsDetailModal(false)}>Close</button><button onClick={() => downloadAnalyticsReport(selectedAnalytics.id)} className="btn-primary">PDF</button></div>
-              </div>
-            </div>
-         )}
+          {showAnalyticsDetailModal && selectedAnalytics && (
+            (() => {
+              const tp = selectedAnalytics.topic_performance || {};
+              const bySubject = tp.by_subject || {};
+              const byDifficulty = tp.by_difficulty || {};
+              const byTopic = tp.by_topic || {};
+              const questions = tp.questions || [];
+              const subjectEntries = Object.entries(bySubject);
+              const difficultyEntries = Object.entries(byDifficulty);
+              const topicEntries = Object.entries(byTopic);
+              const totalQ = tp.total_questions || questions.length || 0;
+              const correctQ = tp.correct_count || questions.filter((q: any) => q.is_correct).length || 0;
+              return (
+             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+               <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                 <div className="p-5 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="text-lg font-bold">Analytics Details</h3><button onClick={() => setShowAnalyticsDetailModal(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={20} /></button></div>
+                 <div className="p-5 space-y-5">
+                   {/* Student Info */}
+                   <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
+                     <div><p className="font-bold text-lg">{selectedAnalytics.student_name}</p><p className="text-sm text-slate-500">Mastery: {selectedAnalytics.mastery_level}</p></div>
+                     <div className={`text-2xl font-bold ${(selectedAnalytics.score || 0) >= 70 ? 'text-green-600' : 'text-red-600'}`}>{selectedAnalytics.score}%</div>
+                   </div>
+
+                   {/* Subject Bar Chart */}
+                   {subjectEntries.length > 0 && (
+                     <div className="bg-white border rounded-xl p-4">
+                       <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Subject Performance Overview</p>
+                       <div className="space-y-2">
+                         {subjectEntries.map(([subj, d]: [string, any]) => {
+                           const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+                           const barColor = pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500';
+                           return (
+                             <div key={subj} className="flex items-center gap-3">
+                               <span className="w-24 text-xs text-slate-700 text-right truncate shrink-0">{subj}</span>
+                               <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                                 <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
+                               </div>
+                               <span className={`w-10 text-xs font-bold text-right ${pct >= 70 ? 'text-green-600' : pct >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{pct}%</span>
+                             </div>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   )}
+
+                   {/* Performance Insights */}
+                   {(() => {
+                     const sorted = subjectEntries.map(([n, d]: [string, any]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter((s: any) => s.p > 0).sort((a: any, b: any) => b.p - a.p);
+                     const weakSubj = sorted.filter((s: any) => s.p < 40);
+                     const weakDiff = difficultyEntries.filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
+                     const weakTop = topicEntries.filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
+                     if (sorted.length === 0 && weakDiff.length === 0 && weakTop.length === 0) return null;
+                     return (
+                       <div className="bg-white border rounded-xl p-4">
+                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Performance Insights</p>
+                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                           {sorted.length >= 2 && (
+                             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                               <p className="text-xs font-bold text-green-700 uppercase mb-1">Strengths</p>
+                               {sorted.slice(0, 2).map(s => <p key={s.n} className="text-sm text-green-800">{s.n}: {s.p}%</p>)}
+                             </div>
+                           )}
+                           {(weakSubj.length > 0 || weakDiff.length > 0) && (
+                             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                               <p className="text-xs font-bold text-red-700 uppercase mb-1">Needs Improvement</p>
+                               {weakSubj.map(s => <p key={s.n} className="text-sm text-red-800">{s.n}: {s.p}%</p>)}
+                               {weakDiff.slice(0, 2).map(([d, dd]: [string, any]) => <p key={d} className="text-sm text-red-800">{d}: {Math.round((dd.correct / dd.total) * 100)}%</p>)}
+                             </div>
+                           )}
+                           {weakTop.length > 0 && (
+                             <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                               <p className="text-xs font-bold text-purple-700 uppercase mb-1">Topics to Focus On</p>
+                               {weakTop.slice(0, 3).map(([t, td]: [string, any]) => <p key={t} className="text-sm text-purple-800">{t}: {Math.round((td.correct / td.total) * 100)}%</p>)}
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     );
+                   })()}
+
+                   {/* Per-Question Analysis */}
+                   {questions.length > 0 && (
+                     <div className="bg-white border rounded-xl p-4">
+                       <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Per-Question Analysis</p>
+                       <div className="overflow-x-auto max-h-64 overflow-y-auto">
+                         <table className="w-full text-xs">
+                           <thead><tr className="bg-slate-100"><th className="p-2 text-center">#</th><th className="p-2 text-left">Q</th><th className="p-2 text-center">Pts</th><th className="p-2 text-center">Result</th></tr></thead>
+                           <tbody className="divide-y divide-slate-100">
+                             {questions.map((q: any, i: number) => (
+                               <tr key={i} className={q.is_correct ? '' : 'bg-red-50'}>
+                                 <td className="p-2 text-center text-slate-400">{i + 1}</td>
+                                 <td className="p-2 max-w-[200px] truncate" title={q.question}>{q.question}</td>
+                                 <td className="p-2 text-center">
+                                   <span className="inline-flex items-center gap-0.5">
+                                     {Array.from({ length: q.points || 1 }).map((_, di) => (
+                                       <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200'}`} />
+                                     ))}
+                                     <span className="ml-1 text-slate-400">{(q.points_earned || 0)}/{(q.points || 1)}</span>
+                                   </span>
+                                 </td>
+                                 <td className="p-2 text-center">{q.is_correct ? <Check size={14} className="text-green-500 inline" /> : <X size={14} className="text-red-500 inline" />}</td>
+                               </tr>
+                             ))}
+                           </tbody>
+                         </table>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+                 <div className="p-5 border-t flex justify-end gap-2 sticky bottom-0 bg-white"><button onClick={() => setShowAnalyticsDetailModal(false)} className="btn-outline">Close</button><button onClick={() => downloadAnalyticsReport(selectedAnalytics.id)} className="btn-primary">Download PDF</button></div>
+               </div>
+             </div>
+              );
+            })()
+          )}
       </div>
     </DashboardLayout>
   );
