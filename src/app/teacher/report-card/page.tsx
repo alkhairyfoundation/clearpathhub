@@ -10,7 +10,7 @@ import {
   Calendar, CheckCircle, Loader2, Save, Edit3, X, AlertCircle, ChevronDown, ChevronUp, Eye
 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 type ExamType = 'ca1' | 'ca2' | 'ca3' | 'exam';
 const SCORE_LABELS: Record<string, string> = { ca1: 'Mid-Term Test', ca2: '', ca3: '', exam: 'Exam' };
@@ -66,6 +66,476 @@ function computeRemark(avg: number): string {
 function getGradePoint(grade: string): number {
   const gp: Record<string, number> = { 'A+': 5, 'A': 5, 'B': 4, 'C': 3, 'D': 2, 'F': 0 };
   return gp[grade] || 0;
+}
+
+// ── PDF Enhancement Helpers ──
+
+function drawSubjectBarChart(doc: jsPDF, subjects: any[], x: number, y: number, w: number, maxH: number, pageWidth: number): number {
+  const sorted = subjects.map(s => {
+    const total = Math.min(100, (s.ca1?.score ?? 0) + (s.exam?.score ?? 0));
+    return { name: s.subject_name, total };
+  }).sort((a, b) => b.total - a.total);
+  const barH = 4.5;
+  const gap = 2.5;
+  const labelW = 38;
+  const pctW = 14;
+  const barMaxW = w - labelW - pctW;
+  const chartH = sorted.length * (barH + gap) + 8;
+
+  if (sorted.length === 0) return y;
+  if (y + chartH > maxH) { doc.addPage(); y = 30; }
+
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(x, y, x + w, y);
+  y += 3;
+  doc.setFontSize(8);
+  doc.setTextColor(30, 58, 95);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Subject Performance Overview', x, y);
+  y += 5;
+
+  sorted.forEach((s, i) => {
+    const by = y + i * (barH + gap);
+    doc.setFontSize(6.5);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'normal');
+    doc.text(s.name, x, by + barH - 0.5);
+    doc.setFillColor(238, 238, 238);
+    doc.roundedRect(x + labelW, by, barMaxW, barH, 0.8, 0.8, 'F');
+    const barW = Math.max((s.total / 100) * barMaxW, 1.5);
+    const barColor: [number, number, number] = s.total >= 70 ? [22, 163, 74] : s.total >= 50 ? [245, 158, 11] : [220, 38, 38];
+    doc.setFillColor(...barColor);
+    doc.roundedRect(x + labelW, by, barW, barH, 0.8, 0.8, 'F');
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(6);
+    doc.text(`${s.total}%`, x + labelW + barMaxW + 1.5, by + barH - 0.5);
+  });
+  return y + sorted.length * (barH + gap) + 3;
+}
+
+function drawDomainRadarChart(doc: jsPDF, domainGrades: Record<string, number>, cx: number, cy: number, radius: number): void {
+  const allFields: { key: string; label: string; domain: string }[] = [
+    ...COGNITIVE_FIELDS.map(f => ({ ...f, domain: 'Cognitive' })),
+    ...AFFECTIVE_FIELDS.map(f => ({ ...f, domain: 'Affective' })),
+    ...PSYCHOMOTOR_FIELDS.map(f => ({ ...f, domain: 'Psychomotor' })),
+  ];
+  const n = allFields.length;
+  const angleStep = (2 * Math.PI) / n;
+
+  for (let level = 1; level <= 5; level++) {
+    const r = (level / 5) * radius;
+    doc.setDrawColor(210, 210, 210);
+    doc.setLineWidth(0.2);
+    doc.circle(cx, cy, r);
+    doc.setFontSize(4);
+    doc.setTextColor(180, 180, 180);
+    doc.text(`${level}`, cx + r + 1, cy + 0.5);
+  }
+
+  const lines: number[][] = [];
+  const labelPositions: { x: number; y: number; label: string; domain: string }[] = [];
+
+  allFields.forEach((field, i) => {
+    const angle = -Math.PI / 2 + i * angleStep;
+    const endX = cx + radius * Math.cos(angle);
+    const endY = cy + radius * Math.sin(angle);
+    doc.setDrawColor(200, 200, 215);
+    doc.setLineWidth(0.2);
+    doc.line(cx, cy, endX, endY);
+    const val = domainGrades[field.key] || 0;
+    const valR = (val / 5) * radius;
+    const px = cx + valR * Math.cos(angle);
+    const py = cy + valR * Math.sin(angle);
+    lines.push([px, py]);
+    const labelR = radius + 9;
+    const lx = cx + labelR * Math.cos(angle);
+    const ly = cy + labelR * Math.sin(angle);
+    labelPositions.push({ x: lx, y: ly, label: field.label, domain: field.domain });
+  });
+
+  if (lines.length > 2) {
+    const poly: number[][] = [];
+    lines.forEach((p, i) => {
+      if (i === 0) { poly.push([p[0] - cx, p[1] - cy]); }
+      else { poly.push([p[0] - lines[i - 1][0], p[1] - lines[i - 1][1]]); }
+    });
+    doc.setFillColor(30, 58, 95, 0.12);
+    doc.setDrawColor(30, 58, 95);
+    doc.setLineWidth(0.6);
+    doc.lines(poly, cx, cy, [1, 1], 'DF');
+  }
+
+  const domainColors: Record<string, [number, number, number]> = {
+    Cognitive: [30, 58, 95],
+    Affective: [22, 163, 74],
+    Psychomotor: [124, 58, 237],
+  };
+  labelPositions.forEach((lp) => {
+    doc.setFontSize(4.5);
+    const c = domainColors[lp.domain] || [80, 80, 80];
+    doc.setTextColor(c[0], c[1], c[2]);
+    doc.setFont('helvetica', 'bold');
+    doc.text(lp.label, lp.x, lp.y, { align: 'center' });
+  });
+
+  doc.setFontSize(4);
+  doc.setTextColor(150, 150, 150);
+  let legendY = cy + radius + 18;
+  Object.entries(domainColors).forEach(([name, color]) => {
+    doc.setFillColor(color[0], color[1], color[2]);
+    doc.rect(cx - radius, legendY, 3, 3, 'F');
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.text(name, cx - radius + 5, legendY + 2);
+    legendY += 4;
+  });
+}
+
+function getPerformanceInsights(subjectScores: any[]): {
+  strengths: { name: string; score: number }[];
+  weaknesses: { name: string; score: number }[];
+  gapAnalysis: { name: string; gap: number }[];
+  sortedByScore: { name: string; score: number }[];
+} {
+  const withScores = subjectScores.map(s => {
+    const total = Math.min(100, (s.ca1?.score ?? 0) + (s.exam?.score ?? 0));
+    return { name: s.subject_name, score: total };
+  }).filter(s => s.score > 0);
+  const sorted = [...withScores].sort((a, b) => b.score - a.score);
+  return {
+    strengths: sorted.filter(s => s.score >= 75),
+    weaknesses: sorted.filter(s => s.score < 50),
+    gapAnalysis: sorted.filter(s => s.score < 70).map(s => ({ name: s.name, gap: 70 - s.score })),
+    sortedByScore: sorted,
+  };
+}
+
+function drawPerformanceSummary(doc: jsPDF, insights: ReturnType<typeof getPerformanceInsights>, x: number, y: number, w: number, maxH: number): number {
+  const lineH = 4.5;
+  let estH = 10;
+  if (insights.strengths.length > 0) estH += 8 + insights.strengths.length * lineH;
+  if (insights.weaknesses.length > 0) estH += 8 + insights.weaknesses.length * lineH;
+  if (insights.gapAnalysis.length > 0) estH += 8 + insights.gapAnalysis.length * lineH;
+  if (y + estH > maxH) { doc.addPage(); y = 30; }
+
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(x, y, x + w, y);
+  y += 3;
+  doc.setFontSize(9);
+  doc.setTextColor(30, 58, 95);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Performance Analysis', x, y);
+  y += 5;
+
+  if (insights.sortedByScore.length > 0) {
+    const best = insights.sortedByScore[0];
+    const worst = insights.sortedByScore[insights.sortedByScore.length - 1];
+    doc.setFontSize(7);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Best: ${best.name} (${best.score}%)`, x, y);
+    doc.text(`   Lowest: ${worst.name} (${worst.score}%)`, x + 55, y);
+    y += 5;
+  }
+
+  if (insights.strengths.length > 0) {
+    doc.setFontSize(7.5);
+    doc.setTextColor(22, 163, 74);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Strengths', x, y);
+    y += 3.5;
+    doc.setFontSize(6.5);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'normal');
+    insights.strengths.forEach(s => {
+      doc.setFillColor(22, 163, 74, 0.15);
+      doc.rect(x, y - 1.5, w, lineH, 'F');
+      doc.text(`${s.name}: ${s.score}%`, x + 2, y + 1);
+      y += lineH;
+    });
+    y += 1;
+  }
+
+  if (insights.weaknesses.length > 0) {
+    doc.setFontSize(7.5);
+    doc.setTextColor(220, 38, 38);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Weaknesses — Needs Improvement', x, y);
+    y += 3.5;
+    doc.setFontSize(6.5);
+    doc.setTextColor(60, 60, 60);
+    insights.weaknesses.forEach(s => {
+      doc.setFillColor(220, 38, 38, 0.1);
+      doc.rect(x, y - 1.5, w, lineH, 'F');
+      doc.text(`${s.name}: ${s.score}%`, x + 2, y + 1);
+      y += lineH;
+    });
+    y += 1;
+  }
+
+  if (insights.gapAnalysis.length > 0) {
+    doc.setFontSize(7.5);
+    doc.setTextColor(245, 158, 11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Gap Analysis — Points to reach 70% (Satisfactory)', x, y);
+    y += 3.5;
+    doc.setFontSize(6.5);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'normal');
+    insights.gapAnalysis.forEach(g => {
+      doc.setFillColor(245, 158, 11, 0.1);
+      doc.rect(x, y - 1.5, w, lineH, 'F');
+      doc.text(`${g.name}: needs ${g.gap} more points`, x + 2, y + 1);
+      y += lineH;
+    });
+    y += 1;
+  }
+  return y;
+}
+
+function generateRecommendations(
+  subjectScores: any[],
+  domainGrades: Record<string, number>,
+  attendanceData: { rate: number },
+  totalAvg: number
+): { subjectRecs: string[]; domainRecs: string[]; generalRecs: string[] } {
+  const subjectRecs: string[] = [];
+  const domainRecs: string[] = [];
+  const generalRecs: string[] = [];
+
+  subjectScores.forEach(s => {
+    const total = Math.min(100, (s.ca1?.score ?? 0) + (s.exam?.score ?? 0));
+    const name = s.subject_name;
+    if (total < 40) {
+      subjectRecs.push(`${name} (${total}%): Critical — requires intensive remedial tutoring. Focus on core concepts and foundational topics. Schedule extra classes and use practice worksheets.`);
+    } else if (total < 50) {
+      subjectRecs.push(`${name} (${total}%): Needs significant improvement. Review past topics, attempt weekly assignments, and seek peer or teacher assistance regularly.`);
+    } else if (total < 60) {
+      subjectRecs.push(`${name} (${total}%): Below average. Focus on weak areas, practice past questions, and allocate more study time to this subject.`);
+    } else if (total < 70) {
+      subjectRecs.push(`${name} (${total}%): Fair performance. Concentrate on challenging topics, join study groups, and attempt advanced exercises to strengthen understanding.`);
+    } else if (total < 85) {
+      subjectRecs.push(`${name} (${total}%): Good. Review mistakes from assessments, aim for deeper mastery, and help peers to reinforce your own understanding.`);
+    } else {
+      subjectRecs.push(`${name} (${total}%): Excellent! Maintain this standard by exploring advanced topics and consider mentoring classmates.`);
+    }
+  });
+
+  const allDomainFields = [
+    { key: 'cognitive_knowledge', label: 'Knowledge', domain: 'Cognitive', group: COGNITIVE_FIELDS },
+    { key: 'cognitive_comprehension', label: 'Comprehension', domain: 'Cognitive', group: COGNITIVE_FIELDS },
+    { key: 'cognitive_application', label: 'Application', domain: 'Cognitive', group: COGNITIVE_FIELDS },
+    { key: 'cognitive_analysis', label: 'Analysis', domain: 'Cognitive', group: COGNITIVE_FIELDS },
+    { key: 'cognitive_synthesis', label: 'Synthesis', domain: 'Cognitive', group: COGNITIVE_FIELDS },
+    { key: 'cognitive_evaluation', label: 'Evaluation', domain: 'Cognitive', group: COGNITIVE_FIELDS },
+    { key: 'affective_punctuality', label: 'Punctuality', domain: 'Affective', group: AFFECTIVE_FIELDS },
+    { key: 'affective_attitude', label: 'Attitude', domain: 'Affective', group: AFFECTIVE_FIELDS },
+    { key: 'affective_participation', label: 'Participation', domain: 'Affective', group: AFFECTIVE_FIELDS },
+    { key: 'affective_teamwork', label: 'Teamwork', domain: 'Affective', group: AFFECTIVE_FIELDS },
+    { key: 'affective_leadership', label: 'Leadership', domain: 'Affective', group: AFFECTIVE_FIELDS },
+    { key: 'affective_attentiveness', label: 'Attentiveness', domain: 'Affective', group: AFFECTIVE_FIELDS },
+    { key: 'psychomotor_handwriting', label: 'Handwriting', domain: 'Psychomotor', group: PSYCHOMOTOR_FIELDS },
+    { key: 'psychomotor_verbal_fluency', label: 'Verbal Fluency', domain: 'Psychomotor', group: PSYCHOMOTOR_FIELDS },
+    { key: 'psychomotor_sports', label: 'Sports', domain: 'Psychomotor', group: PSYCHOMOTOR_FIELDS },
+    { key: 'psychomotor_creative_arts', label: 'Creative Arts', domain: 'Psychomotor', group: PSYCHOMOTOR_FIELDS },
+    { key: 'psychomotor_practical_skills', label: 'Practical Skills', domain: 'Psychomotor', group: PSYCHOMOTOR_FIELDS },
+  ];
+
+  const lowTraits = allDomainFields.filter(f => (domainGrades[f.key] || 0) < 3);
+  if (lowTraits.length > 0) {
+    lowTraits.slice(0, 5).forEach(f => {
+      const tips: Record<string, string> = {
+        cognitive_knowledge: 'Read widely beyond the syllabus. Use summaries and flashcards to reinforce facts.',
+        cognitive_comprehension: 'Practice explaining concepts in your own words. Teach someone else to deepen understanding.',
+        cognitive_application: 'Solve real-world problems using classroom knowledge. Attempt practical exercises.',
+        cognitive_analysis: 'Break down complex problems into parts. Practice comparing and contrasting ideas.',
+        cognitive_synthesis: 'Combine ideas from different subjects. Create mind maps and project plans.',
+        cognitive_evaluation: 'Critique arguments and justify decisions. Practice writing balanced essays.',
+        affective_punctuality: 'Set a daily schedule and arrive 5 minutes early to every class. Use alarms and planners.',
+        affective_attitude: 'Practice gratitude and positive self-talk. Set small daily goals to build confidence.',
+        affective_participation: 'Speak up at least once per class. Prepare questions in advance to contribute.',
+        affective_teamwork: 'Volunteer for group projects. Practice active listening and compromise.',
+        affective_leadership: 'Take initiative in group tasks. Mentor a junior student to build leadership skills.',
+        affective_attentiveness: 'Practice mindfulness. Sit in front of the class to minimize distractions.',
+        psychomotor_handwriting: 'Practice handwriting daily. Use cursive writing exercises to improve control.',
+        psychomotor_verbal_fluency: 'Read aloud daily. Join debates or public speaking clubs.',
+        psychomotor_sports: 'Participate in at least one sport weekly. Focus on coordination and team games.',
+        psychomotor_creative_arts: 'Explore drawing, painting, or music. Take a creative workshop.',
+        psychomotor_practical_skills: 'Engage in hands-on projects. Learn basic DIY and laboratory skills.',
+      };
+      domainRecs.push(`${f.label} (${f.domain}): ${tips[f.key] || 'Practice and seek guidance to improve.'}`);
+    });
+  }
+
+  const avgDomains: Record<string, number> = { Cognitive: 0, Affective: 0, Psychomotor: 0 };
+  const domainCounts: Record<string, number> = { Cognitive: 0, Affective: 0, Psychomotor: 0 };
+  allDomainFields.forEach(f => {
+    const val = domainGrades[f.key];
+    if (val != null) { avgDomains[f.domain] += val; domainCounts[f.domain]++; }
+  });
+  Object.keys(avgDomains).forEach(k => {
+    avgDomains[k] = domainCounts[k] > 0 ? avgDomains[k] / domainCounts[k] : 0;
+  });
+
+  if (avgDomains.Cognitive < 3) generalRecs.push('Cognitive skills need strengthening. Focus on critical thinking exercises like puzzles, logic problems, and case studies.');
+  if (avgDomains.Affective < 3) generalRecs.push('Affective skills need development. Practice self-discipline, teamwork, and positive classroom behaviors.');
+  if (avgDomains.Psychomotor < 3) generalRecs.push('Psychomotor skills need improvement. Engage in hands-on activities, sports, and creative arts.');
+
+  if (attendanceData.rate < 80) {
+    generalRecs.push(`Attendance is ${attendanceData.rate}%. Regular attendance (above 90%) is strongly linked to better academic performance. Aim to attend all classes.`);
+  } else if (attendanceData.rate >= 80) {
+    generalRecs.push(`Attendance is ${attendanceData.rate}% — good. Consistent attendance reinforces learning and improves outcomes.`);
+  }
+
+  if (totalAvg < 50) generalRecs.push('Overall performance is below expectation. A structured study plan with daily review sessions and regular assessments is recommended. Consider speaking with the academic counselor.');
+  else if (totalAvg < 70) generalRecs.push('Overall performance is fair to good. A consistent study routine focusing on weaker subjects will help raise the average. Set weekly targets.');
+  else generalRecs.push('Overall performance is commendable. Keep up the excellent work and challenge yourself with advanced learning materials.');
+
+  return { subjectRecs, domainRecs, generalRecs };
+}
+
+function drawRecommendationsBox(doc: jsPDF, recs: ReturnType<typeof generateRecommendations>, x: number, y: number, w: number, maxH: number): number {
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(x, y, x + w, y);
+  y += 3;
+  doc.setFontSize(10);
+  doc.setTextColor(30, 58, 95);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Personalized Recommendations', x, y);
+  y += 5;
+
+  if (recs.subjectRecs.length > 0) {
+    doc.setFontSize(8);
+    doc.setTextColor(22, 163, 74);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Subject-Specific Guidance', x, y);
+    y += 4;
+    doc.setFontSize(6.5);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'normal');
+    recs.subjectRecs.forEach(r => {
+      const lines = doc.splitTextToSize(`• ${r}`, w - 10);
+      if (y + lines.length * 3.5 > maxH) { doc.addPage(); y = 30; }
+      doc.text(lines, x + 3, y);
+      y += lines.length * 3.5 + 1.5;
+    });
+    y += 2;
+  }
+
+  if (recs.domainRecs.length > 0) {
+    if (y + 8 > maxH) { doc.addPage(); y = 30; }
+    doc.setFontSize(8);
+    doc.setTextColor(124, 58, 237);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Character & Skill Development', x, y);
+    y += 4;
+    doc.setFontSize(6.5);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'normal');
+    recs.domainRecs.forEach(r => {
+      const lines = doc.splitTextToSize(`• ${r}`, w - 10);
+      if (y + lines.length * 3.5 > maxH) { doc.addPage(); y = 30; }
+      doc.text(lines, x + 3, y);
+      y += lines.length * 3.5 + 1.5;
+    });
+    y += 2;
+  }
+
+  if (recs.generalRecs.length > 0) {
+    if (y + 8 > maxH) { doc.addPage(); y = 30; }
+    doc.setFontSize(8);
+    doc.setTextColor(245, 158, 11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('General Advice', x, y);
+    y += 4;
+    doc.setFontSize(6.5);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'normal');
+    recs.generalRecs.forEach(r => {
+      const lines = doc.splitTextToSize(`• ${r}`, w - 10);
+      if (y + lines.length * 3.5 > maxH) { doc.addPage(); y = 30; }
+      doc.text(lines, x + 3, y);
+      y += lines.length * 3.5 + 1.5;
+    });
+    y += 2;
+  }
+  return y;
+}
+
+function drawAttendanceInsight(doc: jsPDF, attendanceData: { present: number; total: number; rate: number }, totalAvg: number, x: number, y: number, w: number, maxH: number): number {
+  if (y + 25 > maxH) { doc.addPage(); y = 30; }
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(x, y, x + w, y);
+  y += 3;
+  doc.setFontSize(8);
+  doc.setTextColor(30, 58, 95);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Attendance & Performance Correlation', x, y);
+  y += 4;
+  doc.setFillColor(238, 238, 238);
+  doc.roundedRect(x, y, w, 12, 2, 2, 'F');
+  doc.setFillColor(30, 58, 95, 0.15);
+  doc.roundedRect(x, y, (attendanceData.rate / 100) * w, 12, 2, 2, 'F');
+  doc.setFontSize(7);
+  doc.setTextColor(60, 60, 60);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Attendance: ${attendanceData.present}/${attendanceData.total} days (${attendanceData.rate}%)`, x + 4, y + 5);
+  doc.setTextColor(30, 58, 95);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Average Score: ${totalAvg}%`, x + 4, y + 10);
+  y += 16;
+  doc.setFontSize(6.5);
+  doc.setTextColor(100, 100, 100);
+  doc.setFont('helvetica', 'normal');
+  if (attendanceData.rate >= 90) {
+    doc.text('Excellent attendance. Research shows consistent attendance is a strong predictor of academic success. Keep it up!', x, y);
+  } else if (attendanceData.rate >= 80) {
+    doc.text('Good attendance. Students with attendance above 90% typically score 10–15% higher on average. Try to improve further.', x, y);
+  } else if (attendanceData.rate >= 70) {
+    doc.text('Moderate attendance. Each missed class represents lost learning opportunities. Aim for at least 90% attendance next term.', x, y);
+  } else {
+    doc.text('Low attendance. Chronic absenteeism significantly impacts academic performance. Please prioritize regular school attendance.', x, y);
+  }
+  y += 5;
+  return y;
+}
+
+function drawProgressBarInCell(doc: jsPDF, data: any, score: number): void {
+  const barH = 1.2;
+  const barY = data.cell.y + data.cell.height - barH - 0.5;
+  const barMaxW = data.cell.width - 2;
+  const barW = Math.max((score / 100) * barMaxW, 0.5);
+  const barColor: [number, number, number] = score >= 70 ? [22, 163, 74] : score >= 50 ? [245, 158, 11] : [220, 38, 38];
+  doc.setFillColor(...barColor);
+  doc.roundedRect(data.cell.x + 1, barY, barW, barH, 0.5, 0.5, 'F');
+}
+
+function drawPageHeader(doc: jsPDF, schoolName: string, address: string | undefined, motto: string | undefined, pageWidth: number): void {
+  doc.setFillColor(30, 58, 95);
+  doc.rect(0, 0, pageWidth, 28, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(schoolName, pageWidth / 2, 10, { align: 'center' });
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  if (address) doc.text(address, pageWidth / 2, 16, { align: 'center' });
+  if (motto) doc.text(`"${motto}"`, pageWidth / 2, 21, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('OFFICIAL REPORT CARD', pageWidth / 2, 26, { align: 'center' });
+}
+
+function drawSimplePageHeader(doc: jsPDF, schoolName: string, pageWidth: number): void {
+  doc.setFillColor(30, 58, 95);
+  doc.rect(0, 0, pageWidth, 18, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`${schoolName} — Report Card (continued)`, pageWidth / 2, 12, { align: 'center' });
 }
 
 function ReportCardContent() {
@@ -309,133 +779,174 @@ function ReportCardContent() {
     if (!selectedStudent || !selectedTerm) return;
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const ml = 14;
+    const contentW = pageWidth - ml * 2;
+    const maxY = pageHeight - 15;
     const schoolName = schoolSettings?.school_name || 'Mastery Engine';
     const totals = calcTotals();
     const isThirdTerm = selectedTerm.name?.toLowerCase().includes('third');
     const cumulative = isThirdTerm ? getCumulativeSubjects() : [];
+    let y = 0;
 
-    // School Header
-    doc.setFillColor(30, 58, 95);
-    doc.rect(0, 0, pageWidth, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.text(schoolName, pageWidth / 2, 14, { align: 'center' });
-    doc.setFontSize(10);
-    if (schoolSettings?.school_address) doc.text(schoolSettings.school_address, pageWidth / 2, 22, { align: 'center' });
-    if (schoolSettings?.school_motto) doc.text(`"${schoolSettings.school_motto}"`, pageWidth / 2, 28, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('OFFICIAL REPORT CARD', pageWidth / 2, 35, { align: 'center' });
+    // ═══════════════ PAGE 1 ═══════════════
+    drawPageHeader(doc, schoolName, schoolSettings?.school_address, schoolSettings?.school_motto, pageWidth);
+    y = 36;
 
-    // Student Info
     doc.setTextColor(60, 60, 60);
-    doc.setFontSize(11);
-    doc.text(`Student: ${selectedStudent.name}`, 14, 50);
-    doc.text(`Class: ${selectedStudent.class?.name || 'N/A'}`, 14, 57);
-    doc.text(`Admission No: ${selectedStudent.admission_number || 'N/A'}`, 14, 64);
-    doc.text(`Term: ${selectedTerm.name} (${selectedTerm.session?.name || ''})`, 14, 71);
-    doc.text(`Attendance: ${attendanceData.present}/${attendanceData.total} days (${attendanceData.rate}%)`, 14, 78);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    y += 2;
+    const infoLines = [
+      `Student: ${selectedStudent.name}`,
+      `Class: ${selectedStudent.class?.name || 'N/A'}  |  Adm No: ${selectedStudent.admission_number || 'N/A'}`,
+      `Term: ${selectedTerm.name} (${selectedTerm.session?.name || ''})  |  Attendance: ${attendanceData.present}/${attendanceData.total} days (${attendanceData.rate}%)`,
+    ];
+    infoLines.forEach(line => { doc.text(line, ml, y); y += 5.5; });
+    y += 1;
+
+    const totalColIdx = isThirdTerm ? 4 : 3;
 
     if (!isThirdTerm) {
-      // Standard Single-Term Report
-      (doc as any).autoTable({
-        startY: 86,
+      autoTable(doc, {
+        startY: y,
         head: [['Subject', 'Mid-Term Test\n(/40)', 'Exam\n(/60)', 'Total', 'Grade', 'Remark']],
         body: subjectScores.map(s => {
           const total = totalScore(s.ca1?.score, s.exam?.score);
+          return [s.subject_name, s.ca1?.score ?? '-', s.exam?.score ?? '-', `${total}%`, calculateGrade(total), computeRemark(total)];
+        }),
+        theme: 'striped',
+        headStyles: { fillColor: [30, 58, 95] },
+        foot: [[{ content: `Overall Average: ${totals.totalAvg}% (${totals.totalGrade}) — ${totals.remark}`, colSpan: 6, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }]],
+        didDrawCell: (data: any) => {
+          if (data.section === 'body' && data.column.index === totalColIdx) {
+            const val = parseFloat(data.cell.raw.toString());
+            if (!isNaN(val)) drawProgressBarInCell(doc, data, val);
+          }
+        },
+      });
+    } else {
+      autoTable(doc, {
+        startY: y,
+        head: [['Subject', 'Term 1', 'Term 2', 'Term 3', 'Cumulative', 'Grade', 'Remark']],
+        body: cumulative.map(c => {
+          const isLow = c.cumulative_avg != null && c.cumulative_avg < 50;
+          const cs = isLow ? { textColor: [220, 38, 38] as [number, number, number] } : undefined;
+          const w = (v: string) => cs ? { content: v, styles: cs } : v;
           return [
-            s.subject_name,
-            s.ca1?.score ?? '-', s.exam?.score ?? '-',
-            `${total}%`,
-            calculateGrade(total),
-            computeRemark(total),
+            w(c.subject_name),
+            w(c.term1_avg != null ? `${c.term1_avg}%` : '-'),
+            w(c.term2_avg != null ? `${c.term2_avg}%` : '-'),
+            w(c.term3_avg != null ? `${c.term3_avg}%` : '-'),
+            w(c.cumulative_avg != null ? `${c.cumulative_avg}%` : '-'),
+            w(c.cumulative_avg != null ? calculateGrade(c.cumulative_avg) : '-'),
+            w(c.cumulative_avg != null ? computeRemark(c.cumulative_avg) : '-'),
           ];
         }),
         theme: 'striped',
         headStyles: { fillColor: [30, 58, 95] },
-        foot: [[{
-          content: `Overall Average: ${totals.totalAvg}% (${totals.totalGrade}) — ${totals.remark}`,
-          colSpan: 6,
-          styles: { fontStyle: 'bold', fillColor: [240, 240, 240] }
-        }]],
-        footStyles: { fillColor: [240, 240, 240] },
-      });
-    } else {
-      // Cumulative 3-Term Report
-      (doc as any).autoTable({
-        startY: 86,
-        head: [['Subject', 'Term 1', 'Term 2', 'Term 3', 'Cumulative', 'Grade', 'Remark']],
-        body: cumulative.map(c => ({
-          content: [
-            c.subject_name,
-            c.term1_avg != null ? `${c.term1_avg}%` : '-',
-            c.term2_avg != null ? `${c.term2_avg}%` : '-',
-            c.term3_avg != null ? `${c.term3_avg}%` : '-',
-            c.cumulative_avg != null ? `${c.cumulative_avg}%` : '-',
-            c.cumulative_avg != null ? calculateGrade(c.cumulative_avg) : '-',
-            c.cumulative_avg != null ? computeRemark(c.cumulative_avg) : '-',
-          ],
-          styles: c.cumulative_avg != null && c.cumulative_avg < 50 ? { textColor: [220, 38, 38] } : {},
-        })),
-        theme: 'striped',
-        headStyles: { fillColor: [30, 58, 95] },
         foot: [[{ content: `Cumulative Average: ${totals.totalAvg}% (${totals.totalGrade}) — ${totals.remark}`, colSpan: 7, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }]],
-        footStyles: { fillColor: [240, 240, 240] },
+        didDrawCell: (data: any) => {
+          if (data.section === 'body' && data.column.index === totalColIdx) {
+            const raw = data.cell.raw.toString();
+            const val = parseFloat(raw);
+            if (!isNaN(val)) drawProgressBarInCell(doc, data, val);
+          }
+        },
       });
     }
 
-    // Domain Grades section
+    y = (doc as any).lastAutoTable.finalY + 8;
+
+    // Bar chart
+    y = drawSubjectBarChart(doc, subjectScores, ml, y, contentW, maxY, pageWidth);
+
+    // Domain Assessment + Radar
     const domainKeys = Object.keys(domainGrades);
     if (domainKeys.length > 0) {
-      const domainY = (doc as any).lastAutoTable.finalY + 10;
-      doc.setFontSize(11);
-      doc.setTextColor(30, 58, 95);
-      doc.text('Domain Assessment', 14, domainY);
+      if (y + 25 > maxY) { doc.addPage(); y = 30; }
       doc.setFontSize(9);
-      doc.setTextColor(80, 80, 80);
-
+      doc.setTextColor(30, 58, 95);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Domain Assessment', ml, y);
+      y += 2;
       const domainData: any[] = [
         ...COGNITIVE_FIELDS.filter(f => domainGrades[f.key] != null).map(f => ['Cognitive', f.label, `${domainGrades[f.key]}/5`]),
         ...AFFECTIVE_FIELDS.filter(f => domainGrades[f.key] != null).map(f => ['Affective', f.label, `${domainGrades[f.key]}/5`]),
         ...PSYCHOMOTOR_FIELDS.filter(f => domainGrades[f.key] != null).map(f => ['Psychomotor', f.label, `${domainGrades[f.key]}/5`]),
       ];
       if (domainData.length > 0) {
-        (doc as any).autoTable({
-          startY: domainY + 5,
-          head: [['Domain', 'Trait', 'Rating']],
-          body: domainData,
-          theme: 'striped',
-          headStyles: { fillColor: [100, 100, 100] },
-        });
+        autoTable(doc, { startY: y + 3, head: [['Domain', 'Trait', 'Rating']], body: domainData, theme: 'striped', headStyles: { fillColor: [100, 100, 100] } });
+        y = (doc as any).lastAutoTable.finalY + 6;
+        if (y + 60 > maxY) { doc.addPage(); y = 30; }
+        doc.setFontSize(8);
+        doc.setTextColor(30, 58, 95);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Domain Skills Radar', ml, y);
+        y += 3;
+        const radarCx = pageWidth / 2;
+        const radarCy = y + 40;
+        drawDomainRadarChart(doc, domainGrades, radarCx, radarCy, 35);
+        y = radarCy + 58;
       }
     }
 
+    // Performance Insights
+    const insights = getPerformanceInsights(subjectScores);
+    y = drawPerformanceSummary(doc, insights, ml, y, contentW, maxY);
+
+    // Attendance Insight
+    y = drawAttendanceInsight(doc, attendanceData, totals.totalAvg, ml, y, contentW, maxY);
+
     // Remarks
-    const remarksY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 10 : 86;
-    let splitTextHeight = 0;
+    if (y + 20 > maxY) { doc.addPage(); y = 30; }
     if (reportRemarks.teacher_remarks) {
-      doc.setFontSize(11);
+      doc.setFontSize(9);
       doc.setTextColor(30, 58, 95);
-      doc.text("Teacher's Remark", 14, remarksY);
-      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text("Teacher's Remark", ml, y);
+      y += 3;
+      doc.setFontSize(8);
       doc.setTextColor(60, 60, 60);
-      const split = doc.splitTextToSize(reportRemarks.teacher_remarks, pageWidth - 28);
-      doc.text(split, 14, remarksY + 7);
-      splitTextHeight = split.length * 5;
+      doc.setFont('helvetica', 'normal');
+      const split = doc.splitTextToSize(reportRemarks.teacher_remarks, contentW);
+      if (y + split.length * 3.5 > maxY) { doc.addPage(); y = 30; }
+      doc.text(split, ml, y);
+      y += split.length * 3.5 + 4;
     }
     if (reportRemarks.principal_remarks) {
-      const py = (doc as any).lastAutoTable?.finalY || remarksY + 10 + splitTextHeight;
-      doc.setFontSize(11);
+      if (y + 15 > maxY) { doc.addPage(); y = 30; }
+      doc.setFontSize(9);
       doc.setTextColor(30, 58, 95);
-      doc.text("Principal's Remark", 14, py);
-      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text("Principal's Remark", ml, y);
+      y += 3;
+      doc.setFontSize(8);
       doc.setTextColor(60, 60, 60);
-      const split2 = doc.splitTextToSize(reportRemarks.principal_remarks, pageWidth - 28);
-      doc.text(split2, 14, py + 7);
+      doc.setFont('helvetica', 'normal');
+      const split2 = doc.splitTextToSize(reportRemarks.principal_remarks, contentW);
+      if (y + split2.length * 3.5 > maxY) { doc.addPage(); y = 30; }
+      doc.text(split2, ml, y);
+      y += split2.length * 3.5 + 4;
     }
 
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
-    doc.text(`Generated: ${new Date().toLocaleDateString()} | ClearPath Edu Hub`, pageWidth / 2, 285, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString()} | Page 1 | ClearPath Edu Hub`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+    // ═══════════════ PAGE 2: Recommendations ═══════════════
+    doc.addPage();
+    drawSimplePageHeader(doc, schoolName, pageWidth);
+    y = 25;
+
+    const recs = generateRecommendations(subjectScores, domainGrades, attendanceData, totals.totalAvg);
+    y = drawRecommendationsBox(doc, recs, ml + 3, y, contentW - 6, maxY);
+
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString()} | Page 2 | ClearPath Edu Hub`, pageWidth / 2, pageHeight - 8, { align: 'center' });
 
     doc.save(`report-card-${selectedStudent.name.replace(/\s+/g, '-')}-${selectedTerm.name}.pdf`);
   }
@@ -447,6 +958,8 @@ function ReportCardContent() {
     const totals = calcTotals();
     const isThirdTerm = selectedTerm.name?.toLowerCase().includes('third');
     const cumulative = isThirdTerm ? getCumulativeSubjects() : [];
+    const insights = getPerformanceInsights(subjectScores);
+    const recs = generateRecommendations(subjectScores, domainGrades, attendanceData, totals.totalAvg);
 
     let scoreRows = '';
     if (isThirdTerm) {
@@ -460,6 +973,24 @@ function ReportCardContent() {
       });
     }
 
+    // Bar chart bars
+    let barChartHtml = '';
+    const sortedForBar = [...insights.sortedByScore];
+    if (sortedForBar.length > 0) {
+      barChartHtml = '<h3 style="color:#1e3a5f;margin-top:20px;font-size:14px">Subject Performance Overview</h3><div style="margin-top:8px">';
+      sortedForBar.forEach(s => {
+        const color = s.score >= 70 ? '#16a34a' : s.score >= 50 ? '#f59e0b' : '#dc2626';
+        barChartHtml += `<div style="display:flex;align-items:center;margin-bottom:4px;font-size:11px">
+          <span style="width:120px;font-weight:600;color:#333">${s.name}</span>
+          <div style="flex:1;background:#eee;border-radius:4px;height:16px;overflow:hidden">
+            <div style="width:${s.score}%;background:${color};height:16px;border-radius:4px"></div>
+          </div>
+          <span style="width:40px;text-align:right;font-weight:bold;color:#555">${s.score}%</span>
+        </div>`;
+      });
+      barChartHtml += '</div>';
+    }
+
     const domainRows = Object.keys(domainGrades).length > 0 ? `
       <h3 style="color:#1e3a5f;margin-top:20px;font-size:14px">Domain Assessment</h3>
       <table><thead><tr><th>Domain</th><th>Trait</th><th>Rating</th></tr></thead><tbody>
@@ -468,6 +999,64 @@ function ReportCardContent() {
           return `<tr><td>${domain}</td><td>${f.label}</td><td>${domainGrades[f.key]}/5</td></tr>`;
         }).join('')}
       </tbody></table>` : '';
+
+    // Performance insights HTML
+    let insightsHtml = '';
+    if (insights.sortedByScore.length > 0) {
+      insightsHtml = '<h3 style="color:#1e3a5f;margin-top:20px;font-size:14px">Performance Analysis</h3>';
+      const best = insights.sortedByScore[0];
+      const worst = insights.sortedByScore[insights.sortedByScore.length - 1];
+      insightsHtml += `<p style="font-size:12px;color:#555"><strong>Best:</strong> ${best.name} (${best.score}%) &nbsp;|&nbsp; <strong>Lowest:</strong> ${worst.name} (${worst.score}%)</p>`;
+      if (insights.strengths.length > 0) {
+        insightsHtml += '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px;margin-top:8px">';
+        insightsHtml += '<p style="font-weight:bold;color:#16a34a;margin:0 0 5px">Strengths</p>';
+        insights.strengths.forEach(s => { insightsHtml += `<p style="font-size:11px;color:#333;margin:2px 0">✅ ${s.name}: ${s.score}%</p>`; });
+        insightsHtml += '</div>';
+      }
+      if (insights.weaknesses.length > 0) {
+        insightsHtml += '<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px;margin-top:8px">';
+        insightsHtml += '<p style="font-weight:bold;color:#dc2626;margin:0 0 5px">Weaknesses — Needs Improvement</p>';
+        insights.weaknesses.forEach(s => { insightsHtml += `<p style="font-size:11px;color:#333;margin:2px 0">⚠️ ${s.name}: ${s.score}%</p>`; });
+        insightsHtml += '</div>';
+      }
+      if (insights.gapAnalysis.length > 0) {
+        insightsHtml += '<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px;margin-top:8px">';
+        insightsHtml += '<p style="font-weight:bold;color:#f59e0b;margin:0 0 5px">Gap Analysis — Points to reach 70%</p>';
+        insights.gapAnalysis.forEach(g => { insightsHtml += `<p style="font-size:11px;color:#333;margin:2px 0">📊 ${g.name}: needs ${g.gap} more points</p>`; });
+        insightsHtml += '</div>';
+      }
+    }
+
+    // Attendance insight HTML
+    const attColor = attendanceData.rate >= 90 ? '#16a34a' : attendanceData.rate >= 80 ? '#f59e0b' : '#dc2626';
+    const attMsg = attendanceData.rate >= 90
+      ? 'Excellent attendance — a strong predictor of academic success.'
+      : attendanceData.rate >= 80
+        ? 'Good attendance. Students above 90% typically score 10–15% higher.'
+        : attendanceData.rate >= 70
+          ? 'Moderate attendance. Aim for at least 90% next term.'
+          : 'Low attendance significantly impacts performance. Please prioritize regular attendance.';
+
+    // Recommendations HTML
+    let recsHtml = '<h3 style="color:#1e3a5f;margin-top:25px;font-size:14px">Personalized Recommendations</h3>';
+    if (recs.subjectRecs.length > 0) {
+      recsHtml += '<div style="margin-top:8px">';
+      recsHtml += '<p style="font-weight:bold;color:#16a34a;margin:0 0 5px;font-size:12px">Subject-Specific Guidance</p>';
+      recs.subjectRecs.forEach(r => { recsHtml += `<p style="font-size:11px;color:#333;margin:3px 0">• ${r}</p>`; });
+      recsHtml += '</div>';
+    }
+    if (recs.domainRecs.length > 0) {
+      recsHtml += '<div style="margin-top:10px">';
+      recsHtml += '<p style="font-weight:bold;color:#7c3aed;margin:0 0 5px;font-size:12px">Character & Skill Development</p>';
+      recs.domainRecs.forEach(r => { recsHtml += `<p style="font-size:11px;color:#333;margin:3px 0">• ${r}</p>`; });
+      recsHtml += '</div>';
+    }
+    if (recs.generalRecs.length > 0) {
+      recsHtml += '<div style="margin-top:10px">';
+      recsHtml += '<p style="font-weight:bold;color:#f59e0b;margin:0 0 5px;font-size:12px">General Advice</p>';
+      recs.generalRecs.forEach(r => { recsHtml += `<p style="font-size:11px;color:#333;margin:3px 0">• ${r}</p>`; });
+      recsHtml += '</div>';
+    }
 
     w.document.write(`<!DOCTYPE html><html><head><title>Report Card - ${selectedStudent.name}</title><style>
       body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:40px;background:#f8fafc;color:#333}
@@ -485,6 +1074,7 @@ function ReportCardContent() {
       .remarks{margin-top:20px;padding:15px;background:#f1f5f9;border-radius:8px;font-size:12px}
       .remarks strong{color:#1e3a5f}
       .footer{margin-top:25px;font-size:9px;color:#94a3b8;text-align:center}
+      .page-break{page-break-before:always;margin-top:30px;padding-top:20px;border-top:2px dashed #ccc}
       @media print{body{background:white;padding:10px}.card{box-shadow:none}}
     </style></head><body><div class="card">
       <div class="header"><h1>${schoolSettings?.school_name || 'Mastery Engine'}</h1>
@@ -504,10 +1094,28 @@ function ReportCardContent() {
         <div class="summary-box"><div class="val">${totals.totalGrade}</div><div class="lbl">Grade</div></div>
         <div class="summary-box"><div class="val">${totals.remark}</div><div class="lbl">Rating</div></div>
       </div>
+      ${barChartHtml}
       ${domainRows}
+      ${insightsHtml}
+      <div style="margin-top:15px;background:#f1f5f9;border-radius:8px;padding:10px">
+        <strong style="color:#1e3a5f;font-size:12px">Attendance & Performance:</strong>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+          <div style="flex:1;background:#e2e8f0;border-radius:6px;height:14px;overflow:hidden">
+            <div style="width:${attendanceData.rate}%;background:${attColor};height:14px;border-radius:6px"></div>
+          </div>
+          <span style="font-weight:bold;font-size:12px;color:#333">${attendanceData.rate}%</span>
+          <span style="font-size:12px;color:#555">| Avg Score: ${totals.totalAvg}%</span>
+        </div>
+        <p style="font-size:11px;color:#666;margin:6px 0 0">${attMsg}</p>
+      </div>
       ${reportRemarks.teacher_remarks ? `<div class="remarks"><strong>Teacher's Remark:</strong><br>${reportRemarks.teacher_remarks}</div>` : ''}
       ${reportRemarks.principal_remarks ? `<div class="remarks"><strong>Principal's Remark:</strong><br>${reportRemarks.principal_remarks}</div>` : ''}
-      <p class="footer">Generated on ${new Date().toLocaleDateString()} | ClearPath Edu Hub</p>
+      <p class="footer">Generated on ${new Date().toLocaleDateString()} | Page 1 | ClearPath Edu Hub</p>
+    </div>
+    <div class="card" style="margin-top:30px">
+      <h2 style="color:#1e3a5f;font-size:18px;margin-bottom:10px">Detailed Recommendations</h2>
+      ${recsHtml}
+      <p class="footer">Generated on ${new Date().toLocaleDateString()} | Page 2 | ClearPath Edu Hub</p>
     </div></body></html>`);
     w.document.close();
     setTimeout(() => w.print(), 500);

@@ -1017,7 +1017,7 @@ function viewAnalyticsDetails(record: any) {
               diff,
               correctAnswerText,
               givenAnswerText,
-              isCorrect ? 'Yes' : 'No',
+              '',
               `${q.points_earned || 0}/${q.points || 1}`,
             ];
           });

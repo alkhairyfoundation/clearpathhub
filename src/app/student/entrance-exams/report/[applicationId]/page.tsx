@@ -368,7 +368,7 @@ export default function StudentEntranceReportPage() {
 
         const questionRows = questionsData.map((q, i) => {
           const qShort = q.question ? (q.question.length > 50 ? q.question.substring(0, 47) + '...' : q.question) : '';
-          return [i + 1, q.subject || '—', qShort, q.difficulty_level || '—', formatCorrectAnswer(q), formatAnswer(q), q.is_correct ? 'Yes' : 'No', `${q.points_earned || 0}/${q.points || 1}`];
+          return [i + 1, q.subject || '—', qShort, q.difficulty_level || '—', formatCorrectAnswer(q), formatAnswer(q), '', `${q.points_earned || 0}/${q.points || 1}`];
         });
 
         autoTable(doc, {
