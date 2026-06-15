@@ -39,7 +39,7 @@ const [formData, setFormData] = useState({
     });
 
     const SUBJECT_OPTIONS: Record<string, string[]> = {
-      'PRIMARY': ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'VERBAL REASONING', 'QUANTITATIVE REASONING'],
+      'PRIMARY': ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'VERBAL REASONING', 'QUANTITATIVE REASONING', 'ISLAMIC STUDIES', 'GENERAL KNOWLEDGE'],
       'JSS': ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PREVocational STUDIES'],
       'SS1': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
       'SS2': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
@@ -449,6 +449,10 @@ async function handleCreateExam() {
       points: questionData.points || 1,
       question_type: questionData.question_type || 'MCQ',
       subject: questionData.subject || null,
+      difficulty_level: questionData.difficulty_level || null,
+      topic: questionData.topic || null,
+      subtopic: questionData.subtopic || null,
+      explanation: questionData.explanation || null,
     };
     if (questionData.question_image) payload.question_image = questionData.question_image;
     const { error } = await supabase.from('entrance_questions').insert(payload);
@@ -1485,6 +1489,14 @@ function viewAnalyticsDetails(record: any) {
               <div className="p-5 space-y-4">
                 <select value={questionData.question_type} onChange={e => resetQuestionDefaults(e.target.value)} className="input"><option value="MCQ">Multiple Choice</option><option value="TRUE_FALSE">True/False</option><option value="FILL_IN_THE_GAP">Fill Blank</option></select>
                 <textarea value={questionData.question} onChange={e => setQuestionData({...questionData, question: e.target.value})} className="input" placeholder="Question text" />
+                <div className="grid grid-cols-2 gap-3">
+                  <select value={questionData.subject} onChange={e => setQuestionData({...questionData, subject: e.target.value})} className="input"><option value="">Subject</option><option value="MATHEMATICS">Mathematics</option><option value="ENGLISH">English</option><option value="BASIC SCIENCE">Basic Science</option><option value="VERBAL REASONING">Verbal Reasoning</option><option value="QUANTITATIVE REASONING">Quantitative Reasoning</option><option value="ISLAMIC STUDIES">Islamic Studies</option><option value="GENERAL KNOWLEDGE">General Knowledge</option></select>
+                  <select value={questionData.difficulty_level} onChange={e => setQuestionData({...questionData, difficulty_level: e.target.value})} className="input"><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option><option value="VERY_HARD">Very Hard</option></select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input type="text" value={questionData.topic} onChange={e => setQuestionData({...questionData, topic: e.target.value})} className="input" placeholder="Topic (e.g. Fractions, Grammar)" />
+                  <input type="text" value={questionData.subtopic} onChange={e => setQuestionData({...questionData, subtopic: e.target.value})} className="input" placeholder="Subtopic (optional)" />
+                </div>
                 {questionData.question_type === 'MCQ' && questionData.options.map((opt, i) => (<div key={i} className="flex gap-2 mb-2"><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} /><input type="text" value={opt} onChange={e => {const os = [...questionData.options]; os[i] = e.target.value; setQuestionData({...questionData, options: os});}} className="input flex-1" /></div>))}
                 <div className="mt-4 border-t pt-4"><div className="flex justify-between"><h4>{questions.length} Questions Added</h4><button onClick={() => openBankSelectModal(selectedExam)} className="text-xs text-primary-600">+ From Bank</button></div>{questions.map((q, i) => (<div key={q.id} className="flex justify-between p-2 bg-slate-50 mt-2"><span>{i+1}. {q.question}</span><button onClick={() => handleRemoveQuestion(q.id)} className="text-red-500"><Trash2 size={12} /></button></div>))}</div>
               </div>
