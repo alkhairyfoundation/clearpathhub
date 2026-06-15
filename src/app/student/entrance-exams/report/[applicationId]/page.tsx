@@ -366,6 +366,7 @@ export default function StudentEntranceReportPage() {
         doc.text('PER-QUESTION ANALYSIS', 18, y + 0.5);
         y += 9;
 
+        const rowCorrectness = questionsData.map((q: any) => q.is_correct);
         const questionRows = questionsData.map((q, i) => {
           const qShort = q.question ? (q.question.length > 50 ? q.question.substring(0, 47) + '...' : q.question) : '';
           return [i + 1, q.subject || '—', qShort, q.difficulty_level || '—', formatCorrectAnswer(q), formatAnswer(q), '', `${q.points_earned || 0}/${q.points || 1}`];
@@ -380,7 +381,7 @@ export default function StudentEntranceReportPage() {
           margin: { left: 10, right: 10 }, tableLineWidth: 0,
           didDrawCell: (data: any) => {
             if (data.section === 'body' && data.column.index === 6) {
-              const isC = data.cell.raw === 'Yes';
+              const isC = rowCorrectness[data.row.index] === true;
               doc.setTextColor(isC ? 22 : 220, isC ? 163 : 38, isC ? 38 : 38);
               doc.setFont('helvetica', 'bold');
               doc.text(isC ? 'Yes' : 'No', data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1.5, { align: 'center' });

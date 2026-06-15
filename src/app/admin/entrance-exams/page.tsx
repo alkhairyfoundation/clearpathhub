@@ -992,8 +992,8 @@ function viewAnalyticsDetails(record: any) {
 
           y += 9;
 
+          const rowCorrectness = questionsData.map((q: any) => q.is_correct);
           const questionRows = questionsData.map((q: any, i: number) => {
-            const isCorrect = q.is_correct;
             let correctAnswerText = `${q.correct_answer}`;
             if (q.options && Array.isArray(q.options) && typeof q.correct_answer === 'number' && q.options[q.correct_answer]) {
               correctAnswerText = `${q.correct_answer + 1}. ${q.options[q.correct_answer]}`;
@@ -1042,7 +1042,7 @@ function viewAnalyticsDetails(record: any) {
             margin: { left: 10, right: 10 },
             didDrawCell: (data: any) => {
               if (data.section === 'body' && data.column.index === 6) {
-                const isCorrect = data.cell.raw === 'Yes';
+                const isCorrect = rowCorrectness[data.row.index] === true;
                 doc.setTextColor(isCorrect ? 22 : 220, isCorrect ? 163 : 38, isCorrect ? 74 : 38);
                 doc.setFont('helvetica', 'bold');
                 doc.text(isCorrect ? 'Yes' : 'No', data.cell.x + data.cell.width / 2, data.cell.y + data.cell.height / 2 + 1.5, { align: 'center' });
