@@ -769,10 +769,17 @@ function viewAnalyticsDetails(record: any) {
         const passingScore = exam?.passing_score || 50;
         const passed = score >= passingScore;
         const tp = record.topic_performance || {};
-        const questionsData = tp.questions || [];
+        let questionsData = tp.questions || [];
         const bySubject = tp.by_subject || {};
         const byDifficulty = tp.by_difficulty || {};
         const byTopic = tp.by_topic || {};
+
+        // Fallback: if analytics questions are empty, try raw answers from application
+        if (questionsData.length === 0 && application?.answers) {
+          const answers = typeof application.answers === 'string' ? JSON.parse(application.answers) : application.answers;
+          if (Array.isArray(answers)) questionsData = answers;
+        }
+
         const totalQ = tp.total_questions || questionsData.length || exam?.total_questions || 0;
         const correctQ = tp.correct_count || questionsData.filter((q: any) => q.is_correct).length || 0;
         const wrongQ = totalQ - correctQ;
@@ -782,11 +789,6 @@ function viewAnalyticsDetails(record: any) {
         const completedDate = application?.completed_at
           ? new Date(application.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
           : 'N/A';
-
-        if (questionsData.length === 0 && application?.answers) {
-          const answers = typeof application.answers === 'string' ? JSON.parse(application.answers) : application.answers;
-          if (Array.isArray(answers)) questionsData.push(...answers);
-        }
 
         const schoolName = schoolSettings?.school_name || 'ClearPath Edu Hub';
         const primaryColor: [number, number, number] = [30, 58, 95];
