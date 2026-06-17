@@ -40,7 +40,7 @@ const [formData, setFormData] = useState({
 
     const SUBJECT_OPTIONS: Record<string, string[]> = {
       'PRIMARY': ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'VERBAL REASONING', 'QUANTITATIVE REASONING', 'ISLAMIC STUDIES', 'GENERAL KNOWLEDGE'],
-      'JSS': ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PREVocational STUDIES'],
+      'JSS': ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PRE-VOCATIONAL STUDIES'],
       'SS1': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
       'SS2': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
       'SS3': ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'],
@@ -211,7 +211,7 @@ async function handleCreateExam() {
     function getQuestionBankLevels(examLevel: string): string[] {
       switch (examLevel) {
         case 'PRIMARY':
-          return ['PRIMARY 1', 'PRIMARY 2', 'PRIMARY 3', 'PRIMARY 4', 'PRIMARY 5', 'PRIMARY 6'];
+          return ['PRIMARY', 'PRIMARY 1', 'PRIMARY 2', 'PRIMARY 3', 'PRIMARY 4', 'PRIMARY 5', 'PRIMARY 6'];
         case 'JSS':
           return ['JSS1', 'JSS2', 'JSS3'];
         case 'SS1':
@@ -328,7 +328,7 @@ async function handleCreateExam() {
       if (level === 'PRIMARY') {
         subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'VERBAL REASONING', 'QUANTITATIVE REASONING'];
       } else if (level === 'JSS') {
-        subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PREVocational STUDIES'];
+        subjects = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BUSINESS STUDIES', 'PRE-VOCATIONAL STUDIES'];
       } else if (level?.includes('SS')) {
         subjects = ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'];
       } else {
@@ -649,19 +649,42 @@ async function handleCreateExam() {
      );
    }
    
-   async function addQuestionToBank(questionData: any) {
-     setQuestionBankError('');
-     setQuestionBankSuccess('');
-     try {
-       const { error } = await supabase.from('question_bank').insert(questionData);
-       if (error) throw new Error(error.message);
-       setQuestionBankSuccess('Question added successfully');
-       await fetchQuestionBank();
-       setShowQuestionBankModal(false);
-     } catch (err: any) {
-       setQuestionBankError(err.message || 'Failed to add question');
-     }
-   }
+    async function addQuestionToBank(data: any) {
+      setQuestionBankError('');
+      setQuestionBankSuccess('');
+      try {
+        const payload = {
+          question: data.question,
+          subject: data.subject || null,
+          level: data.level || null,
+          difficulty_level: data.difficulty_level || 'MEDIUM',
+          topic: data.topic || 'General',
+          subtopic: data.subtopic || null,
+          question_type: data.question_type || 'MCQ',
+          options: data.options || [''],
+          correct_answer: data.correct_answer ?? 0,
+          points: data.points ?? 1,
+          explanation: data.explanation || null,
+          question_image: data.question_image || null,
+          is_active: true,
+          status: 'active',
+        };
+        if (editingQuestion) {
+          const { error } = await supabase.from('question_bank').update(payload).eq('id', editingQuestion.id);
+          if (error) throw new Error(error.message);
+          setQuestionBankSuccess('Question updated successfully');
+        } else {
+          const { error } = await supabase.from('question_bank').insert(payload);
+          if (error) throw new Error(error.message);
+          setQuestionBankSuccess('Question added successfully');
+        }
+        setEditingQuestion(null);
+        await fetchQuestionBank();
+        setShowQuestionBankModal(false);
+      } catch (err: any) {
+        setQuestionBankError(err.message || 'Failed to save question');
+      }
+    }
    
    async function updateQuestionInBank(id: string, questionData: any) {
      setQuestionBankError('');
@@ -689,10 +712,24 @@ async function handleCreateExam() {
      }
    }
    
-   function editQuestion(question: any) {
-     setEditingQuestion(question);
-     setShowQuestionBankModal(true);
-   }
+    function editQuestion(question: any) {
+      setEditingQuestion(question);
+      setQuestionData({
+        question: question.question || '',
+        question_image: question.question_image || '',
+        options: question.options || ['', '', '', ''],
+        correct_answer: question.correct_answer ?? 0,
+        points: question.points ?? 1,
+        question_type: question.question_type || 'MCQ',
+        subject: question.subject || '',
+        level: question.level || '',
+        difficulty_level: question.difficulty_level || 'MEDIUM',
+        topic: question.topic || '',
+        subtopic: question.subtopic || '',
+        explanation: question.explanation || '',
+      });
+      setShowQuestionBankModal(true);
+    }
    
    function openQuestionBankModal() {
      setEditingQuestion(null);
@@ -1426,8 +1463,8 @@ function viewAnalyticsDetails(record: any) {
                  <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-bold text-slate-900">Question Bank</h2><button onClick={() => setShowQuestionBankModal(true)} className="btn-primary"><Plus size={18} />Add Question</button></div>
                  <div className="mb-4">
                    <div className="flex gap-4">
-                     <div><label className="label">Subject</label><select value={questionBankFilter.subject} onChange={e => setQuestionBankFilter({...questionBankFilter, subject: e.target.value})} className="input"><option value="">All Subjects</option><option value="ENGLISH">English</option><option value="MATHEMATICS">Mathematics</option></select></div>
-                     <div><label className="label">Level</label><select value={questionBankFilter.level} onChange={e => setQuestionBankFilter({...questionBankFilter, level: e.target.value})} className="input"><option value="">All Levels</option><option value="PRIMARY 1">Primary 1</option><option value="PRIMARY 2">Primary 2</option><option value="PRIMARY 3">Primary 3</option><option value="PRIMARY 4">Primary 4</option><option value="PRIMARY 5">Primary 5</option><option value="PRIMARY 6">Primary 6</option><option value="JSS1">JSS 1</option><option value="JSS2">JSS 2</option><option value="JSS3">JSS 3</option><option value="SS1">SS 1</option><option value="SS2">SS 2</option></select></div>
+                      <div><label className="label">Subject</label><select value={questionBankFilter.subject} onChange={e => setQuestionBankFilter({...questionBankFilter, subject: e.target.value})} className="input"><option value="">All Subjects</option><option value="MATHEMATICS">Mathematics</option><option value="ENGLISH">English</option><option value="BASIC SCIENCE">Basic Science</option><option value="VERBAL REASONING">Verbal Reasoning</option><option value="QUANTITATIVE REASONING">Quantitative Reasoning</option><option value="ISLAMIC STUDIES">Islamic Studies</option><option value="GENERAL KNOWLEDGE">General Knowledge</option><option value="PHYSICS">Physics</option><option value="CHEMISTRY">Chemistry</option><option value="BIOLOGY">Biology</option><option value="GEOGRAPHY">Geography</option><option value="BUSINESS STUDIES">Business Studies</option><option value="PRE-VOCATIONAL STUDIES">Pre-Vocational Studies</option></select></div>
+                      <div><label className="label">Level</label><select value={questionBankFilter.level} onChange={e => setQuestionBankFilter({...questionBankFilter, level: e.target.value})} className="input"><option value="">All Levels</option><option value="PRIMARY">Primary</option><option value="PRIMARY 1">Primary 1</option><option value="PRIMARY 2">Primary 2</option><option value="PRIMARY 3">Primary 3</option><option value="PRIMARY 4">Primary 4</option><option value="PRIMARY 5">Primary 5</option><option value="PRIMARY 6">Primary 6</option><option value="JSS1">JSS 1</option><option value="JSS2">JSS 2</option><option value="JSS3">JSS 3</option><option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option></select></div>
                      <div><label className="label">Difficulty</label><select value={questionBankFilter.difficulty} onChange={e => setQuestionBankFilter({...questionBankFilter, difficulty: e.target.value})} className="input"><option value="">All Difficulties</option><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option><option value="VERY_HARD">Very Hard</option></select></div>
                      <div><label className="label">Type</label><select value={questionBankFilter.questionType} onChange={e => setQuestionBankFilter({...questionBankFilter, questionType: e.target.value})} className="input"><option value="">All Types</option><option value="MCQ">MCQ</option><option value="FILL_IN_THE_GAP">Gap Fill</option><option value="TRUE_FALSE">True/False</option></select></div>
                    </div>
@@ -1545,12 +1582,24 @@ function viewAnalyticsDetails(record: any) {
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                <div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3>{editingQuestion ? 'Edit' : 'Add'} Question</h3><button onClick={() => setShowQuestionBankModal(false)}><X size={20} /></button></div>
-               <div className="p-5 space-y-4">
-                 <textarea value={questionData.question} onChange={e => setQuestionData({...questionData, question: e.target.value})} className="input" placeholder="Question" />
-                 <select value={questionData.subject} onChange={e => setQuestionData({...questionData, subject: e.target.value})} className="input"><option value="">Subject</option><option value="ENGLISH">English</option><option value="MATHEMATICS">Maths</option></select>
-                 <select value={questionData.level} onChange={e => setQuestionData({...questionData, level: e.target.value})} className="input"><option value="">Level</option><option value="JSS1">JSS 1</option><option value="SS1">SS 1</option><option value="PRIMARY 1">Primary 1</option></select>
-                 <select value={questionData.difficulty_level} onChange={e => setQuestionData({...questionData, difficulty_level: e.target.value})} className="input"><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option></select>
-               </div>
+                <div className="p-5 space-y-4">
+                  <textarea value={questionData.question} onChange={e => setQuestionData({...questionData, question: e.target.value})} className="input" placeholder="Question" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={questionData.subject} onChange={e => setQuestionData({...questionData, subject: e.target.value})} className="input"><option value="">Subject</option><option value="MATHEMATICS">Mathematics</option><option value="ENGLISH">English</option><option value="BASIC SCIENCE">Basic Science</option><option value="VERBAL REASONING">Verbal Reasoning</option><option value="QUANTITATIVE REASONING">Quantitative Reasoning</option><option value="ISLAMIC STUDIES">Islamic Studies</option><option value="GENERAL KNOWLEDGE">General Knowledge</option><option value="PHYSICS">Physics</option><option value="CHEMISTRY">Chemistry</option><option value="BIOLOGY">Biology</option><option value="GEOGRAPHY">Geography</option><option value="BUSINESS STUDIES">Business Studies</option><option value="PRE-VOCATIONAL STUDIES">Pre-Vocational Studies</option></select>
+                    <select value={questionData.level} onChange={e => setQuestionData({...questionData, level: e.target.value})} className="input"><option value="">Level</option><option value="PRIMARY">Primary</option><option value="PRIMARY 1">Primary 1</option><option value="PRIMARY 2">Primary 2</option><option value="PRIMARY 3">Primary 3</option><option value="PRIMARY 4">Primary 4</option><option value="PRIMARY 5">Primary 5</option><option value="PRIMARY 6">Primary 6</option><option value="JSS1">JSS 1</option><option value="JSS2">JSS 2</option><option value="JSS3">JSS 3</option><option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option></select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="text" value={questionData.topic} onChange={e => setQuestionData({...questionData, topic: e.target.value})} className="input" placeholder="Topic (e.g. Algebra, Grammar)" />
+                    <input type="text" value={questionData.subtopic} onChange={e => setQuestionData({...questionData, subtopic: e.target.value})} className="input" placeholder="Subtopic (optional)" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={questionData.difficulty_level} onChange={e => setQuestionData({...questionData, difficulty_level: e.target.value})} className="input"><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option><option value="VERY_HARD">Very Hard</option></select>
+                    <select value={questionData.question_type} onChange={e => setQuestionData({...questionData, question_type: e.target.value})} className="input"><option value="MCQ">Multiple Choice</option><option value="TRUE_FALSE">True/False</option><option value="FILL_IN_THE_GAP">Fill Blank</option></select>
+                  </div>
+                  {questionData.question_type === 'MCQ' && questionData.options.map((opt, i) => (
+                    <div key={i} className="flex gap-2"><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} /><input type="text" value={opt} onChange={e => {const os = [...questionData.options]; os[i] = e.target.value; setQuestionData({...questionData, options: os});}} className="input flex-1" placeholder={`Option ${String.fromCharCode(65 + i)}`} /></div>
+                  ))}
+                </div>
                <div className="p-5 border-t flex justify-end gap-2 bg-white sticky bottom-0"><button onClick={() => setShowQuestionBankModal(false)}>Cancel</button><button onClick={() => addQuestionToBank(questionData)} className="btn-primary">Save</button></div>
              </div>
            </div>
