@@ -7,7 +7,7 @@ import {
   Calendar, BarChart3, Settings, QrCode, Megaphone, FileText, 
   Shield, DollarSign, ClipboardList, Award, Activity, ScanLine,
   Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, HelpCircle, Brain,
-  Target
+  Target, TrendingUp, Zap, Trophy, CheckCircle, Star, Bot, Map
 } from 'lucide-react';
 import type { UserRole } from '@/types';
 
@@ -73,15 +73,28 @@ const navItems = {
   student: [
     { href: '/student', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/student/growth-path', label: 'My Growth Path', icon: Target },
+    { href: '/student/growth-map', label: 'Growth Map', icon: Map },
+    { href: '/student/learning-path', label: 'Learning Path', icon: BookOpen },
+    { href: '/student/retention', label: 'Knowledge Retention', icon: Brain },
+    { href: '/student/ai-coach', label: 'AI Coach', icon: Bot },
     { href: '/student/portfolio', label: 'My Portfolio', icon: Award },
     { href: '/student/practice', label: 'Daily Practice', icon: Brain },
     { href: '/student/practice/history', label: 'Practice History', icon: BarChart3 },
+    { href: '/student/goals/weekly', label: 'Weekly Goals', icon: Calendar },
+    { href: '/student/goals/monthly', label: 'Monthly Goals', icon: BarChart3 },
+    { href: '/student/goals/yearly', label: 'Year Goals', icon: TrendingUp },
     { href: '/student/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/student/lessons', label: 'Lessons', icon: FileText },
     { href: '/student/homework', label: 'Homework', icon: Clipboard },
     { href: '/student/quizzes', label: 'Quizzes', icon: Award },
     { href: '/student/results', label: 'Results', icon: BarChart3 },
     { href: '/student/attendance', label: 'Attendance', icon: UserCheck },
+    { href: '/student/accountability', label: 'Accountability', icon: CheckCircle },
+    { href: '/student/xp-history', label: 'XP & Levels', icon: Zap },
+    { href: '/student/leaderboard', label: 'Leaderboard', icon: Trophy },
+    { href: '/student/promotion', label: 'Promotion', icon: TrendingUp },
+    { href: '/student/islamic-growth', label: 'Islamic Growth', icon: Star },
+    { href: '/student/skills-growth', label: 'Skills Growth', icon: Award },
     { href: '/student/announcements', label: 'Announcements', icon: Megaphone },
     { href: '/student/entrance-exams', label: 'Entrance Exams', icon: FileCheck },
     { href: '/student/id-card', label: 'My ID Card', icon: QrCode },

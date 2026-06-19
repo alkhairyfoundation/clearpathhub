@@ -1034,3 +1034,442 @@ export interface GroupMessage {
   sender?: Profile;
   group?: CommunicationGroup;
 }
+
+// ============================================================================
+// V2: GROWTH & MASTERY LEARNING PLATFORM TYPES
+// ============================================================================
+
+// PERFORMANCE COLOR SYSTEM
+export interface PerformanceColor {
+  id: string;
+  student_id: string;
+  context_type: string;
+  context_id?: string;
+  score_range_min?: number;
+  score_range_max?: number;
+  color: MasteryColorKey;
+  label: string;
+  created_at: string;
+}
+
+export type MasteryColorKey = 'red' | 'orange' | 'yellow' | 'light_green' | 'green' | 'dark_green' | 'blue' | 'purple';
+
+export interface MasteryColorConfig {
+  range: [number, number] | null;
+  label: string;
+  hex: string;
+  textColor: string;
+  bgColor: string;
+  borderColor: string;
+}
+
+// DAILY ACCOUNTABILITY
+export interface DailyAccountability {
+  id: string;
+  student_id: string;
+  date: string;
+  attendance_score: number;
+  participation_score: number;
+  homework_completion_score: number;
+  study_time_score: number;
+  quran_score: number;
+  prayer_tracking_score: number;
+  character_score: number;
+  skill_activity_score: number;
+  community_service_score: number;
+  behavior_score: number;
+  discipline_deductions: number;
+  total_score: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// GOAL HIERARCHY
+export type GoalPeriodType = 'daily' | 'weekly' | 'monthly' | 'term' | 'yearly';
+export type GoalDimension = 'academic' | 'islamic' | 'skills';
+export type GoalStatus = 'active' | 'completed' | 'missed' | 'in_progress';
+
+export interface GoalHierarchy {
+  id: string;
+  student_id: string;
+  period_type: GoalPeriodType;
+  dimension: GoalDimension;
+  period_start: string;
+  period_end: string;
+  goal_text: string;
+  target_metric?: string;
+  target_value?: number;
+  achieved_value?: number;
+  status: GoalStatus;
+  parent_goal_id?: string;
+  source_goal_id?: string;
+  source_type?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  parent_goal?: GoalHierarchy;
+  child_goals?: GoalHierarchy[];
+}
+
+// MASTERY LEARNING ENGINE
+export type MasteryStage = 'lesson' | 'practice' | 'challenge' | 'mastery_verification' | 'advancement';
+
+export interface MasteryLearningPath {
+  id: string;
+  student_id: string;
+  subject_id: string;
+  topic: string;
+  stage: MasteryStage;
+  is_unlocked: boolean;
+  is_completed: boolean;
+  completed_at?: string;
+  attempts_count: number;
+  max_attempts: number;
+  teacher_intervention_required: boolean;
+  intervention_resolved_at?: string;
+  score_on_completion?: number;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  subject?: Subject;
+}
+
+export interface TopicPrerequisite {
+  id: string;
+  subject_id: string;
+  topic: string;
+  prerequisite_topic: string;
+  prerequisite_subject_id: string;
+  order_index: number;
+  created_at: string;
+}
+
+// KNOWLEDGE RETENTION SYSTEM
+export interface RetentionCheck {
+  id: string;
+  student_id: string;
+  subject_id: string;
+  topic: string;
+  mastery_score_at_verification: number;
+  check_days: number;
+  check_date: string;
+  retest_score?: number;
+  passed?: boolean;
+  entered_reinforcement: boolean;
+  reinforcement_completed: boolean;
+  created_at: string;
+  updated_at: string;
+  subject?: Subject;
+}
+
+// PROMOTION ENGINE
+export type PromotionStatus = 'ready' | 'needs_intervention' | 'conditional' | 'not_ready';
+
+export interface PromotionReadiness {
+  id: string;
+  student_id: string;
+  academic_year: string;
+  term: string;
+  academic_mastery_score: number;
+  islamic_development_score: number;
+  skills_development_score: number;
+  behavior_score: number;
+  attendance_score: number;
+  consistency_score: number;
+  leadership_score: number;
+  retention_score: number;
+  overall_score: number;
+  promotion_status: PromotionStatus;
+  supporting_evidence: Record<string, any>;
+  recommended_next_class?: string;
+  conditional_requirements?: string[];
+  created_at: string;
+  updated_at: string;
+  student?: Profile;
+}
+
+// AI COACH
+export type AICoachInteractionType = 'goal_suggestion' | 'lesson_recommendation' | 'revision_plan' | 'motivation' | 'gap_analysis' | 'prediction' | 'study_tip' | 'intervention_alert';
+
+export interface AICoachInteraction {
+  id: string;
+  student_id: string;
+  interaction_type: AICoachInteractionType;
+  trigger_event?: string;
+  prompt_text?: string;
+  response_text?: string;
+  recommendations?: Record<string, any>[];
+  context?: Record<string, any>;
+  effectiveness_rating?: number;
+  user_feedback?: string;
+  created_at: string;
+}
+
+// ADVANCED GAMIFICATION
+export interface XPTransaction {
+  id: string;
+  student_id: string;
+  xp_amount: number;
+  xp_type: string;
+  source: string;
+  source_id?: string;
+  multiplier: number;
+  description?: string;
+  created_at: string;
+}
+
+export interface StudentLevel {
+  id: string;
+  student_id: string;
+  level: number;
+  current_xp: number;
+  total_xp: number;
+  xp_to_next_level: number;
+  mastery_points: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BadgeDefinition {
+  id: string;
+  badge_type: string;
+  name: string;
+  description: string;
+  icon_key: string;
+  category: 'academic' | 'islamic' | 'skills' | 'streak' | 'mastery' | 'challenge' | 'leadership' | 'community';
+  tier: number;
+  xp_reward: number;
+  criteria: Record<string, any>;
+  is_hidden: boolean;
+  is_active: boolean;
+  created_at: string;
+}
+
+export type LeaderboardType = 'class_weekly' | 'school_monthly' | 'islamic' | 'skills' | 'mastery';
+
+export interface LeaderboardSnapshot {
+  id: string;
+  leaderboard_type: LeaderboardType;
+  period_start: string;
+  period_end: string;
+  class_id?: string;
+  rankings: LeaderboardEntry[];
+  created_at: string;
+}
+
+export interface LeaderboardEntry {
+  student_id: string;
+  name: string;
+  score: number;
+  rank: number;
+  avatar_url?: string;
+  class_name?: string;
+  level?: number;
+  streak?: number;
+}
+
+// THREE-DIMENSIONAL GROWTH
+export interface IslamicTracking {
+  id: string;
+  student_id: string;
+  date: string;
+  salah_fajr: boolean;
+  salah_dhuhr: boolean;
+  salah_asr: boolean;
+  salah_maghrib: boolean;
+  salah_isha: boolean;
+  quran_surah?: string;
+  quran_ayah_start?: number;
+  quran_ayah_end?: number;
+  quran_memorized_ayahs: number;
+  quran_revision_ayahs: number;
+  adab_rating?: number;
+  dhikr_completed: boolean;
+  charity_action?: string;
+  notes?: string;
+  self_reported: boolean;
+  verified_by?: string;
+  verified_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SkillsTracking {
+  id: string;
+  student_id: string;
+  skill_id: string;
+  date: string;
+  activity_type: string;
+  activity_description?: string;
+  duration_minutes: number;
+  self_rating?: number;
+  teacher_rating?: number;
+  evidence_url?: string;
+  created_at: string;
+  skill?: Skill;
+}
+
+// NOTIFICATION SYSTEM
+export interface NotificationPreferences {
+  id: string;
+  profile_id: string;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  in_app_notifications: boolean;
+  sms_notifications: boolean;
+  practice_goal_alerts: boolean;
+  mastery_alerts: boolean;
+  streak_milestones: boolean;
+  teacher_feedback_alerts: boolean;
+  parent_daily_reports: boolean;
+  behavior_alerts: boolean;
+  intervention_alerts: boolean;
+  badge_alerts: boolean;
+  announcement_alerts: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserNotification {
+  id: string;
+  recipient_id: string;
+  sender_id?: string;
+  title: string;
+  message: string;
+  notification_type: string;
+  related_id?: string;
+  related_type?: string;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  is_read: boolean;
+  read_at?: string;
+  is_archived: boolean;
+  action_url?: string;
+  created_at: string;
+  sender?: Profile;
+}
+
+// REPORTING
+export type ReportFrequency = 'daily' | 'weekly' | 'monthly' | 'term' | 'annual';
+export type ReportRecipientRole = 'student' | 'parent' | 'teacher' | 'admin';
+
+export interface ReportSchedule {
+  id: string;
+  report_type: string;
+  frequency: ReportFrequency;
+  recipient_role: ReportRecipientRole;
+  is_active: boolean;
+  last_generated_at?: string;
+  next_scheduled_at?: string;
+  config: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GeneratedReport {
+  id: string;
+  report_type: string;
+  recipient_id: string;
+  period_start: string;
+  period_end: string;
+  report_data: ReportData;
+  pdf_url?: string;
+  is_delivered: boolean;
+  delivered_at?: string;
+  created_at: string;
+}
+
+export interface ReportData {
+  summary: ReportSummary;
+  academic: ReportSection;
+  islamic: ReportSection;
+  skills: ReportSection;
+  charts?: ReportChart[];
+  recommendations?: string[];
+  teacher_comments?: string[];
+}
+
+export interface ReportSummary {
+  student_name: string;
+  class_name: string;
+  period_label: string;
+  overall_score: number;
+  overall_grade: string;
+  days_active: number;
+  goals_completed: number;
+  goals_missed: number;
+}
+
+export interface ReportSection {
+  score: number;
+  level: string;
+  strengths: string[];
+  weaknesses: string[];
+  trend: 'improving' | 'declining' | 'stable';
+  details: Record<string, any>;
+}
+
+export interface ReportChart {
+  type: 'bar' | 'line' | 'pie' | 'radar';
+  title: string;
+  labels: string[];
+  datasets: { label: string; data: number[] }[];
+}
+
+// SCHOOL HEALTH
+export interface SchoolHealthSnapshot {
+  id: string;
+  snapshot_date: string;
+  overall_health_score: number;
+  academic_health_score: number;
+  islamic_health_score: number;
+  skills_health_score: number;
+  attendance_rate: number;
+  avg_mastery_score: number;
+  active_students_pct: number;
+  parent_engagement_rate: number;
+  teacher_effectiveness_score: number;
+  promotion_readiness_rate: number;
+  at_risk_student_pct: number;
+  intervention_success_rate: number;
+  metadata: Record<string, any>;
+  created_at: string;
+}
+
+// GROWTH MAP (game-like progression)
+export interface GrowthMapNode {
+  id: string;
+  label: string;
+  type: 'lesson' | 'practice' | 'challenge' | 'mastery' | 'achievement' | 'leadership' | 'islamic' | 'skills';
+  x: number;
+  y: number;
+  status: 'locked' | 'unlocked' | 'in_progress' | 'completed';
+  subject_id?: string;
+  topic?: string;
+  prerequisite_ids: string[];
+  unlocked_by_ids: string[];
+  metadata: Record<string, any>;
+}
+
+export interface GrowthMapConfig {
+  id: string;
+  class_level: string;
+  nodes: GrowthMapNode[];
+  connections: { from: string; to: string }[];
+  is_active: boolean;
+  created_at: string;
+}
+
+// XP MULTIPLIERS
+export const XP_MULTIPLIERS = {
+  first_practice_of_day: 2.0,
+  streak_3_bonus: 1.5,
+  streak_7_bonus: 2.0,
+  streak_30_bonus: 3.0,
+  perfect_week: 2.0,
+  mastery_achieved: 2.0,
+  teacher_commendation: 1.5,
+  challenge_win: 1.5,
+  no_multiplier: 1.0,
+} as const;

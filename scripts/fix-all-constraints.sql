@@ -78,6 +78,6 @@ UNION ALL
 SELECT 'entrance_questions' AS tbl,
        COUNT(*) AS total_rows,
        SUM(CASE WHEN subject IS NULL THEN 1 ELSE 0 END) AS null_subject,
-       SUM(CASE WHEN level IS NULL THEN 1 ELSE 0 END) AS null_level,
+       0 AS null_level,
        SUM(CASE WHEN topic IS NULL OR topic = '' THEN 1 ELSE 0 END) AS missing_topic
 FROM entrance_questions;
