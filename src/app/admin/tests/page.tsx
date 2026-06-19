@@ -180,7 +180,10 @@ export default function AdminTestsPage() {
     setSelectedTest(test);
     setSelectedBankIds(new Set());
     setBankSearch('');
-    const { data, error } = await supabase.from('question_bank').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('question_bank').select('*').eq('status', 'published');
+    const subjectName = test.subject?.name?.toUpperCase();
+    if (subjectName) query = query.eq('subject', subjectName);
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) { setError('Failed to load question bank: ' + error.message); setShowBankSelect(true); return; }
     setBankQuestions(data || []);
     setBankFiltered(data || []);
@@ -228,7 +231,10 @@ export default function AdminTestsPage() {
     if (!test.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      const { data: allBank } = await supabase.from('question_bank').select('*');
+      let bankQuery = supabase.from('question_bank').select('*').eq('status', 'published');
+      const subjectName = test.subject?.name?.toUpperCase();
+      if (subjectName) bankQuery = bankQuery.eq('subject', subjectName);
+      const { data: allBank } = await bankQuery;
       if (allBank && allBank.length > 0) {
         const count = formData.total_questions || 10;
         const shuffled = allBank.sort(() => Math.random() - 0.5).slice(0, Math.min(allBank.length, count));

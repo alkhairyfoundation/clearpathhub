@@ -243,6 +243,7 @@ async function handleCreateExam() {
           const { data: subjectQuestions } = await supabase
             .from('question_bank')
             .select('*')
+            .eq('status', 'published')
             .eq('subject', subject)
             .in('level', bankLevels);
 
@@ -411,7 +412,7 @@ async function handleCreateExam() {
       setSelectedBankIds(new Set());
       setBankSelectSearch('');
       const qbLevels = getQuestionBankLevels(exam.level);
-      let query = supabase.from('question_bank').select('*').in('level', qbLevels);
+      let query = supabase.from('question_bank').select('*').eq('status', 'published').in('level', qbLevels);
       const examSubjects = exam.subjects;
       if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
         query = query.in('subject', examSubjects);
