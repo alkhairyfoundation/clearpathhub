@@ -23,8 +23,8 @@ export async function GET(req: NextRequest) {
           `SELECT p.id, p.first_name, p.last_name, c.name as class_name,
                   COALESCE(sl.level, 1) as level, COALESCE(sl.total_xp, 0) as total_xp
            FROM profiles p
-           LEFT JOIN students s ON s.profile_id = p.id
-           LEFT JOIN classes c ON c.id = s.class_id
+           LEFT JOIN student_classes sc ON sc.student_id = p.id
+           LEFT JOIN classes c ON c.id = sc.class_id
            LEFT JOIN student_levels sl ON sl.student_id = p.id
            WHERE p.id = $1`, [sid]
         ),

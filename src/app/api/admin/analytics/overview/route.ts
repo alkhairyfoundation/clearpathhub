@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
+function classFilterExpr(classId: string | null, alias: string): string {
+  if (!classId) return '';
+  return ` AND EXISTS (SELECT 1 FROM student_classes sc WHERE sc.student_id = ${alias} AND sc.class_id = '${classId}')`;
+}
+
+function classWhereExpr(classId: string | null, alias: string): string {
+  if (!classId) return '';
+  return ` WHERE EXISTS (SELECT 1 FROM student_classes sc WHERE sc.student_id = ${alias} AND sc.class_id = '${classId}')`;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const token = await getToken({ req });
@@ -19,8 +29,12 @@ export async function GET(req: NextRequest) {
     const { default: { Pool } } = await import('pg');
     const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
 
-    const classFilter = classId ? `AND s.class_id = '${classId}'` : '';
-    const hasFilter = classId || subjectId || term || academicYear;
+    const classFilter = classFilterExpr(classId, 'p.id');
+    const classWhere = classWhereExpr(classId, 'p.id');
+    const classFilterR = classFilterExpr(classId, 'r.student_id');
+    const classFilterA = classFilterExpr(classId, 'a.student_id');
+    const classFilterPs = classFilterExpr(classId, 'ps.student_id');
+    const classFilterLs = classFilterExpr(classId, 'ls.student_id');
 
     const [
       studentCountResult,
@@ -37,14 +51,13 @@ export async function GET(req: NextRequest) {
       subjectPerfResult,
       monthlyAttendanceResult,
     ] = await Promise.all([
-      pool.query(`SELECT COUNT(*) FROM students s ${classFilter ? `WHERE s.class_id = '${classId}'` : ''}`),
+      pool.query(`SELECT COUNT(*) FROM profiles WHERE role = 'student'${classFilter}`),
       pool.query(`SELECT COUNT(*) FROM subjects`),
       pool.query(
         `SELECT ROUND(AVG(r.score), 1) as avg_score,
                 COUNT(*) as total_results
          FROM results r
-         JOIN students s ON s.profile_id = r.student_id
-         WHERE r.score IS NOT NULL ${classFilter}`,
+         WHERE r.score IS NOT NULL ${classFilterR}`,
       ),
       pool.query(
         `SELECT ROUND(
@@ -52,8 +65,7 @@ export async function GET(req: NextRequest) {
           NULLIF(COUNT(*), 0) * 100, 1
         ) as attendance_rate
         FROM attendance a
-        JOIN students s ON s.profile_id = a.student_id
-        ${classFilter ? `WHERE s.class_id = '${classId}'` : ''}`,
+        ${classWhereExpr(classId, 'a.student_id')}`,
       ),
       pool.query(`SELECT ROUND(AVG(mastery_score), 1) as avg_mastery FROM mastery_scores`),
       pool.query(
@@ -63,15 +75,13 @@ export async function GET(req: NextRequest) {
       ),
       pool.query(
         `SELECT COUNT(*) FROM practice_sessions ps
-         JOIN students s ON s.profile_id = ps.student_id
-         WHERE ps.date = CURRENT_DATE ${classFilter}`,
+         WHERE ps.date = CURRENT_DATE ${classFilterPs}`,
       ),
       pool.query(
         `SELECT ROUND(AVG(current_streak), 1) as avg_streak,
                 MAX(current_streak) as max_streak
          FROM learning_streaks ls
-         JOIN students s ON s.profile_id = ls.student_id
-         ${classFilter ? `WHERE s.class_id = '${classId}'` : ''}`,
+         ${classWhereExpr(classId, 'ls.student_id')}`,
       ),
       pool.query(`SELECT id, name FROM classes ORDER BY name`),
       pool.query(`SELECT id, name FROM subjects ORDER BY name`),
@@ -86,8 +96,7 @@ export async function GET(req: NextRequest) {
           END as grade,
           COUNT(*) as count
          FROM results r
-         JOIN students s ON s.profile_id = r.student_id
-         ${classFilter ? `WHERE s.class_id = '${classId}'` : ''}
+         WHERE 1=1 ${classFilterR}
          GROUP BY grade
          ORDER BY grade`,
       ),
@@ -97,8 +106,7 @@ export async function GET(req: NextRequest) {
                 COUNT(*) as count
          FROM results r
          JOIN subjects sub ON sub.id = r.subject_id
-         JOIN students s ON s.profile_id = r.student_id
-         WHERE r.score IS NOT NULL ${classFilter}
+         WHERE r.score IS NOT NULL ${classFilterR}
          GROUP BY sub.name ORDER BY sub.name`,
       ),
       pool.query(
@@ -108,15 +116,15 @@ export async function GET(req: NextRequest) {
                   NULLIF(COUNT(*), 0) * 100, 1
                 ) as rate
          FROM attendance a
-         JOIN students s ON s.profile_id = a.student_id
-         ${classFilter ? `WHERE s.class_id = '${classId}'` : ''}
+         WHERE 1=1 ${classFilterA}
          GROUP BY month ORDER BY month`,
       ),
     ]);
 
-    // Student list with summary stats
     const studentListResult = await pool.query(
-      `SELECT p.id, p.first_name, p.last_name, c.name as class_name,
+      `SELECT DISTINCT ON (p.id)
+              p.id, p.first_name, p.last_name,
+              c.name as class_name,
               COALESCE(sl.total_xp, 0) as total_xp,
               COALESCE(sl.level, 1) as level,
               COALESCE(ls.current_streak, 0) as current_streak,
@@ -130,12 +138,12 @@ export async function GET(req: NextRequest) {
                WHERE srp2.student_id = p.id
                ORDER BY srp2.prediction_date DESC LIMIT 1) as risk_level
        FROM profiles p
-       JOIN students s ON s.profile_id = p.id
-       JOIN classes c ON c.id = s.class_id
+       LEFT JOIN student_classes sc ON sc.student_id = p.id
+       LEFT JOIN classes c ON c.id = sc.class_id
        LEFT JOIN student_levels sl ON sl.student_id = p.id
        LEFT JOIN learning_streaks ls ON ls.student_id = p.id
-       ${classFilter ? `WHERE s.class_id = '${classId}'` : ''}
-       ORDER BY p.first_name, p.last_name`,
+       WHERE p.role = 'student'${classFilter}
+       ORDER BY p.id, p.first_name, p.last_name`,
     );
 
     await pool.end();
