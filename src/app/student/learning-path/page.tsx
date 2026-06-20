@@ -35,13 +35,13 @@ export default function LearningPathPage() {
       }
       const [subjRes, pathRes, scoreRes] = await Promise.all([
         subjQuery,
-        supabase.from('mastery_learning_path').select('*').eq('student_id', profile?.id),
-        supabase.from('mastery_scores').select('*').eq('student_id', profile?.id),
+        fetch(`/api/mastery/path?studentId=${profile?.id}`).then(r => r.json()),
+        fetch(`/api/mastery/scores?studentId=${profile?.id}`).then(r => r.json()),
       ]);
 
       if (subjRes.data) setSubjects(subjRes.data);
-      if (pathRes.data) setMasteryPaths(pathRes.data);
-      if (scoreRes.data) setMasteryScores(scoreRes.data);
+      if (pathRes.path) setMasteryPaths(pathRes.path);
+      if (scoreRes.scores) setMasteryScores(scoreRes.scores);
     } catch (err: any) {
       setError(err.message);
     }

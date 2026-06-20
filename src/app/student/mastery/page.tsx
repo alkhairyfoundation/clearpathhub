@@ -46,10 +46,10 @@ export default function StudentMasteryPage() {
   async function fetchData() {
     setLoading(true);
     const [scoresRes, subjectsRes] = await Promise.all([
-      supabase.from('mastery_scores').select('*, subject:subjects!subject_id(name, code)').eq('student_id', profile?.id).order('mastery_score', { ascending: false }),
+      fetch(`/api/mastery/scores?studentId=${profile?.id}&withSubject=true`).then(r => r.json()),
       supabase.from('subjects').select('*, class:classes!class_id(name)').order('name'),
     ]);
-    if (!scoresRes.error && scoresRes.data) setScores(scoresRes.data);
+    if (scoresRes.scores) setScores(scoresRes.scores);
     if (!subjectsRes.error && subjectsRes.data) setSubjects(subjectsRes.data);
     setLoading(false);
   }

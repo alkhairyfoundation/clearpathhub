@@ -41,13 +41,9 @@ export default function TeacherGoalApprovalsPage() {
 
       if (studentIds.length === 0) { setGoals([]); setLoading(false); return; }
 
-      const { data } = await supabase
-        .from('student_term_goals')
-        .select('*, student:profiles!student_id(first_name, last_name), archetype:archetypes(name), goal_skills:student_goal_skills(*, skill:skills(*))')
-        .in('student_id', studentIds)
-        .order('submitted_at', { ascending: false });
-
-      setGoals(data || []);
+      const res = await fetch(`/api/student-term-goals?studentIds=${studentIds.join(',')}`);
+      const data = await res.json();
+      setGoals(data.goals || []);
     } catch (err) {
       console.error(err);
     } finally { setLoading(false); }
@@ -67,28 +63,29 @@ export default function TeacherGoalApprovalsPage() {
     if (!selectedGoal) return;
     setSaving(true); setError('');
     try {
-      const { data: session } = await supabase.from('academic_sessions').select('*').eq('is_current', true).single();
-      const { data: term } = await supabase.from('terms').select('*').eq('is_current', true).single();
+      await fetch('/api/student-term-goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          goal_id: selectedGoal.id,
+          status: 'active',
+          approved_at: new Date().toISOString(),
+          approved_by: profile!.id,
+        }),
+      });
 
-      const { error: gErr } = await supabase.from('student_term_goals').update({
-        status: 'active', approved_at: new Date().toISOString(), approved_by: profile!.id,
-      }).eq('id', selectedGoal.id);
-      if (gErr) throw new Error(gErr.message);
+      const rubrics = Object.entries(rubricLevels).map(([skillId, level]) => ({
+        skill_id: skillId,
+        level,
+        updated_by: profile!.id,
+      }));
 
-      if (session && term) {
-        const rubricInserts = Object.entries(rubricLevels).map(([skillId, level]) => ({
-          student_id: selectedGoal.student_id,
-          session_id: session.id,
-          term_id: term.id,
-          skill_id: skillId,
-          level,
-          updated_by: profile!.id,
-        }));
-        const { error: rErr } = await supabase.from('student_skill_rubrics').upsert(rubricInserts, {
-          onConflict: 'student_id,session_id,term_id,skill_id',
-        });
-        if (rErr) throw new Error(rErr.message);
-      }
+      await fetch('/api/portfolio/rubric', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: selectedGoal.student_id, rubrics }),
+      });
 
       setSuccess('Goal approved!');
       setTimeout(() => { setShowModal(false); fetchGoals(); }, 800);

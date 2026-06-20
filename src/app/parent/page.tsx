@@ -38,14 +38,18 @@ useEffect(() => {
         setStats(prev => ({ ...prev, totalChildren: childrenRes.data.length }));
 
         const childIds = childrenRes.data.map(c => c.profile_id);
+        const apiCall = async (action: string, data: any = {}) => {
+          const res = await fetch('/api/manage-tests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) });
+          return res.json();
+        };
         if (childIds.length > 0) {
           const [resultsData, quizData, testData, homeworkData, behaviorData, examLogsData, invoiceData] = await Promise.all([
             supabase.from('results').select('score, subject:subjects!subject_id(name), created_at').in('student_id', childIds).order('created_at', { ascending: false }),
             supabase.from('quiz_attempts').select('id, score, passed, completed_at, quiz:quizzes!quiz_id(title)').in('student_id', childIds).order('completed_at', { ascending: false }),
-            supabase.from('test_attempts').select('id, score, passed, completed_at, test:tests!test_id(title), tab_switches, fullscreen_exits').in('student_id', childIds).order('completed_at', { ascending: false }),
+            apiCall('list_attempts_by_students', { student_ids: childIds }),
             supabase.from('homework_submissions').select('id, marks, submitted_at, homework:homework!homework_id(title, subject:subjects!subject_id(name))').in('student_id', childIds).order('submitted_at', { ascending: false }),
             supabase.from('behavioral_reports').select('id, rating, behavior, created_at').in('student_id', childIds).order('created_at', { ascending: false }),
-            supabase.from('exam_activity_logs').select('id, event_type, severity, created_at').in('student_id', childIds).order('created_at', { ascending: false }),
+            apiCall('list_exam_logs', { student_ids: childIds }),
             supabase.from('invoices').select('id, amount, status').in('student_id', childIds).eq('status', 'pending'),
           ]);
 
@@ -53,15 +57,15 @@ useEffect(() => {
             const avg = Math.round(resultsData.data.reduce((sum: number, r: any) => sum + r.score, 0) / resultsData.data.length);
             setStats(prev => ({ ...prev, avgPerformance: avg }));
           }
-          setStats(prev => ({ ...prev, totalQuizzes: quizData.data?.length || 0, totalTests: testData.data?.length || 0, totalHomework: homeworkData.data?.length || 0, behaviorReports: behaviorData.data?.length || 0, securityEvents: examLogsData.data?.length || 0, pendingFees: invoiceData.data?.length || 0 }));
+          setStats(prev => ({ ...prev, totalQuizzes: quizData.data?.length || 0, totalTests: testData.attempts?.length || 0, totalHomework: homeworkData.data?.length || 0, behaviorReports: behaviorData.data?.length || 0, securityEvents: examLogsData.logs?.length || 0, pendingFees: invoiceData.data?.length || 0 }));
 
           const activity: any[] = [];
           (resultsData.data || []).slice(0, 5).forEach((r: any) => activity.push({ type: 'result', label: `${r.subject?.name || 'Subject'} - ${r.score}%`, time: r.created_at, icon: 'score', href: '/parent/progress' }));
           (quizData.data || []).slice(0, 5).forEach((q: any) => activity.push({ type: 'quiz', label: `${q.quiz?.title || 'Quiz'} - ${q.score}%`, time: q.completed_at, icon: 'quiz', href: '/parent/progress' }));
-          (testData.data || []).slice(0, 5).forEach((t: any) => activity.push({ type: 'test', label: `${t.test?.title || 'Test'} - ${t.score}%`, time: t.completed_at, icon: 'test', href: '/parent/progress' }));
+          (testData.attempts || []).slice(0, 5).forEach((t: any) => activity.push({ type: 'test', label: `${t.test?.title || 'Test'} - ${t.score}%`, time: t.completed_at, icon: 'test', href: '/parent/progress' }));
           (homeworkData.data || []).slice(0, 5).forEach((h: any) => activity.push({ type: 'homework', label: `${h.homework?.title || 'Homework'}${h.marks != null ? ` - ${h.marks} marks` : ''}`, time: h.submitted_at, icon: 'homework', href: '/parent/progress' }));
           (behaviorData.data || []).slice(0, 5).forEach((b: any) => activity.push({ type: 'behavior', label: b.behavior || `Rating: ${b.rating}/5`, time: b.created_at, icon: 'behavior', href: '/parent/behavior' }));
-          (examLogsData.data || []).slice(0, 5).forEach((e: any) => activity.push({ type: 'security', label: `Security: ${e.event_type}`, time: e.created_at, icon: 'security', href: '/parent/behavior' }));
+          (examLogsData.logs || []).slice(0, 5).forEach((e: any) => activity.push({ type: 'security', label: `Security: ${e.event_type}`, time: e.created_at, icon: 'security', href: '/parent/behavior' }));
           activity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
           setRecentActivity(activity.slice(0, 10));
         }

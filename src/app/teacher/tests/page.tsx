@@ -60,6 +60,11 @@ export default function TeacherTestsPage() {
     question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: ''
   });
 
+  async function api(action: string, data: any = {}) {
+    const res = await fetch('/api/manage-tests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) });
+    return res.json();
+  }
+
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
     fetchData();
@@ -68,11 +73,11 @@ export default function TeacherTestsPage() {
   async function fetchData() {
     setLoading(true);
     const [testsRes, subjectsRes, classesRes] = await Promise.all([
-      supabase.from('tests').select('*, subject:subjects!subject_id(name), class:classes!class_id(name)').eq('created_by', profile?.id).order('created_at', { ascending: false }),
+      api('list_tests', { created_by: profile?.id }),
       supabase.from('subjects').select('id, name').eq('teacher_id', profile?.id).order('name'),
       supabase.from('classes').select('id, name').order('level'),
     ]);
-    if (testsRes.data) setTests(testsRes.data);
+    if (testsRes.tests) setTests(testsRes.tests);
     if (subjectsRes.data) setSubjects(subjectsRes.data);
     if (classesRes.data) setClasses(classesRes.data);
     setLoading(false);
@@ -116,12 +121,10 @@ export default function TeacherTestsPage() {
     try {
       const { total_questions, ...dbData } = formData;
       if (editingTest) {
-        const { error: err } = await supabase.from('tests').update(dbData).eq('id', editingTest.id);
-        if (err) throw new Error(err.message);
+        await api('update_test', { id: editingTest.id, ...dbData });
         setSuccess('Test updated');
       } else {
-        const { error: err } = await supabase.from('tests').insert({ ...dbData, created_by: profile?.id, is_published: false });
-        if (err) throw new Error(err.message);
+        await api('create_test', { ...dbData, created_by: profile?.id });
         setSuccess('Test created');
       }
       setShowTestModal(false);
@@ -135,8 +138,7 @@ export default function TeacherTestsPage() {
 
   async function togglePublish(test: any) {
     try {
-      const { error } = await supabase.from('tests').update({ is_published: !test.is_published }).eq('id', test.id);
-      if (error) throw new Error(error.message);
+      await api('update_test', { id: test.id, is_published: !test.is_published });
       setSuccess(test.is_published ? 'Test unpublished' : 'Test published');
     } catch (err: any) {
       setError(err.message || 'Failed to toggle publish');
@@ -148,10 +150,7 @@ export default function TeacherTestsPage() {
     if (!confirm('Delete this test and all questions?')) return;
     setDeleting(id);
     try {
-      const { error: attemptsError } = await supabase.from('test_attempts').delete().eq('test_id', id);
-      if (attemptsError) throw new Error(attemptsError.message);
-      const { error: testError } = await supabase.from('tests').delete().eq('id', id);
-      if (testError) throw new Error(testError.message);
+      await api('delete_test', { id });
       setSuccess('Test deleted');
       fetchData();
     } catch (err: any) {
@@ -162,8 +161,8 @@ export default function TeacherTestsPage() {
 
   async function openQuestions(test: any) {
     setSelectedTest(test);
-    const { data } = await supabase.from('test_questions').select('*').eq('test_id', test.id).order('order_index');
-    if (data) setQuestions(data);
+    const res = await api('list_questions', { test_id: test.id });
+    if (res.questions) setQuestions(res.questions);
     setShowQuestionsModal(true);
   }
 
@@ -180,19 +179,18 @@ export default function TeacherTestsPage() {
       order_index: questions.length,
     };
     if (questionForm.question_image) payload.question_image = questionForm.question_image;
-    const { error } = await supabase.from('test_questions').insert(payload);
-    if (!error) {
+    const res = await api('create_question', payload);
+    if (res.question) {
       setQuestionForm({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
-      const { data } = await supabase.from('test_questions').select('*').eq('test_id', selectedTest.id).order('order_index');
-      if (data) setQuestions(data);
+      const refreshed = await api('list_questions', { test_id: selectedTest.id });
+      if (refreshed.questions) setQuestions(refreshed.questions);
     }
     setSaving(false);
   }
 
   async function handleDeleteQuestion(qId: string) {
     try {
-      const { error } = await supabase.from('test_questions').delete().eq('id', qId);
-      if (error) throw new Error(error.message);
+      await api('delete_question', { id: qId });
       setQuestions(questions.filter(q => q.id !== qId));
     } catch (err: any) {
       setError(err.message || 'Failed to delete question');
@@ -232,15 +230,13 @@ export default function TeacherTestsPage() {
     try {
       const { data: selected } = await supabase.from('question_bank').select('*').in('id', Array.from(selectedBankIds));
       if (selected && selected.length > 0) {
-        const toInsert = selected.map((q, i) => ({
+        const newQuestions = selected.map((q: any) => ({
           test_id: selectedTest.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
-          points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', subject: q.subject || null, order_index: questions.length + i,
+          points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', order_index: questions.length,
         }));
-        const { error: insertErr } = await supabase.from('test_questions').insert(toInsert);
-        if (insertErr) throw new Error(insertErr.message);
-        const { data } = await supabase.from('test_questions').select('*').eq('test_id', selectedTest.id).order('order_index');
-        if (data) setQuestions(data);
-        setSuccess(`Added ${toInsert.length} question(s) from bank`);
+        const res = await api('bulk_insert_questions', { test_id: selectedTest.id, questions: newQuestions });
+        if (res.questions) setQuestions(res.questions);
+        setSuccess(`Added ${questions.length} question(s) from bank`);
       }
       setShowBankSelect(false);
     } catch (err: any) {
@@ -261,15 +257,13 @@ export default function TeacherTestsPage() {
       if (allBank && allBank.length > 0) {
         const count = formData.total_questions || 10;
         const shuffled = allBank.sort(() => Math.random() - 0.5).slice(0, Math.min(allBank.length, count));
-        const toInsert = shuffled.map((q, i) => ({
+        const questions = shuffled.map((q: any) => ({
           test_id: selectedTest.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
-          points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', subject: q.subject || null, order_index: questions.length + i,
+          points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', order_index: 0,
         }));
-        const { error: insertErr } = await supabase.from('test_questions').insert(toInsert);
-        if (insertErr) throw new Error(insertErr.message);
-        const { data } = await supabase.from('test_questions').select('*').eq('test_id', selectedTest.id).order('order_index');
-        if (data) setQuestions(data);
-        setSuccess(`Auto-populated ${toInsert.length} questions`);
+        const res = await api('bulk_insert_questions', { test_id: selectedTest.id, questions });
+        if (res.questions) setQuestions(res.questions);
+        setSuccess(`Auto-populated ${questions.length} questions`);
       } else {
         setWarning('No questions found in the question bank');
       }
@@ -286,11 +280,11 @@ export default function TeacherTestsPage() {
     setAnalysisLoading(true);
     try {
       const [questionsRes, attemptsRes] = await Promise.all([
-        supabase.from('test_questions').select('*').eq('test_id', test.id).order('order_index'),
-        supabase.from('test_attempts').select('*, student:profiles!student_id(first_name, last_name)').eq('test_id', test.id).order('created_at', { ascending: false }),
+        api('list_questions', { test_id: test.id }),
+        api('list_attempts', { test_id: test.id }),
       ]);
-      const questions = questionsRes.data || [];
-      const attempts = attemptsRes.data || [];
+      const questions = questionsRes.questions || [];
+      const attempts = attemptsRes.attempts || [];
       setAnalysisAttempts(attempts);
 
       const analysis = questions.map((q: any) => {

@@ -41,10 +41,10 @@ export default function SkillsGrowthPage() {
     try {
       const [skillsData, trackingRes] = await Promise.all([
         fetch('/api/skills').then(r => r.json()),
-        supabase.from('skills_tracking').select('*, skill:skills(*)').eq('student_id', profile?.id).order('date', { ascending: false }).limit(50),
+        fetch(`/api/skills-tracking?studentId=${profile?.id}`).then(r => r.json()),
       ]);
       if (Array.isArray(skillsData)) setSkills(skillsData);
-      if (trackingRes.data) setTracking(trackingRes.data);
+      if (trackingRes.tracking) setTracking(trackingRes.tracking);
     } catch (err) {
       console.error(err);
     }
@@ -55,16 +55,21 @@ export default function SkillsGrowthPage() {
     if (!selectedSkill || !description.trim()) return;
     try {
       const todayStr = new Date().toISOString().split('T')[0];
-      const { error } = await supabase.from('skills_tracking').insert({
-        student_id: profile?.id,
-        skill_id: selectedSkill,
-        date: todayStr,
-        activity_type: activityType,
-        activity_description: description,
-        duration_minutes: duration,
-        self_rating: selfRating,
+      const res = await fetch('/api/skills-tracking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: profile?.id,
+          skill_id: selectedSkill,
+          date: todayStr,
+          activity_type: activityType,
+          activity_description: description,
+          duration_minutes: duration,
+          self_rating: selfRating,
+        }),
       });
-      if (error) throw error;
+      const trackingData = await res.json();
+      if (!res.ok) throw new Error(trackingData.error || 'Failed to log activity');
 
       setDescription('');
       setDuration(30);

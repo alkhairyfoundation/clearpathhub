@@ -40,14 +40,7 @@ export default function YearlyGoalsPage() {
       setCurrentTerm(term);
 
       if (session) {
-        const { data } = await supabase
-          .from('goal_hierarchy')
-          .select('*')
-          .eq('student_id', profile?.id)
-          .eq('period_type', 'yearly')
-          .gte('period_start', session.start_date)
-          .lte('period_end', session.end_date)
-          .order('dimension');
+        const { goals: data } = await fetch(`/api/goals/hierarchy?studentId=${profile?.id}&periodType=yearly`).then(r => r.json());
         if (data) setGoals(data);
 
         if (!data || data.length === 0) {
@@ -63,13 +56,8 @@ export default function YearlyGoalsPage() {
 
   async function generateYearlyGoals(session: any, term: any) {
     try {
-      const existingRes = await supabase
-        .from('goal_hierarchy')
-        .select('id')
-        .eq('student_id', profile?.id)
-        .eq('period_type', 'yearly')
-        .maybeSingle();
-      if (existingRes.data) return;
+      const existingRes = await fetch(`/api/goals/hierarchy?studentId=${profile?.id}&periodType=yearly`).then(r => r.json());
+      if (existingRes.goals && existingRes.goals.length > 0) return;
 
       const dimensions = [
         { key: 'academic', text: `Achieve academic excellence in ${session.name} by completing all term objectives` },
@@ -77,21 +65,26 @@ export default function YearlyGoalsPage() {
         { key: 'skills', text: `Develop life skills including leadership, communication, and critical thinking in ${session.name}` },
       ];
 
-      const goalsToInsert = dimensions.map(d => ({
-        student_id: profile?.id,
-        period_type: 'yearly',
-        dimension: d.key,
-        period_start: session.start_date,
-        period_end: session.end_date,
-        goal_text: d.text,
-        target_metric: 'terms_completed',
-        target_value: 3,
-        achieved_value: term?.is_current ? 1 : 0,
-        status: 'active',
-      }));
-
-      const { data } = await supabase.from('goal_hierarchy').insert(goalsToInsert).select();
-      return data;
+      const results = [];
+      for (const d of dimensions) {
+        const res = await fetch('/api/goals/hierarchy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id: profile?.id,
+            period_type: 'yearly',
+            dimension: d.key,
+            period_start: session.start_date,
+            period_end: session.end_date,
+            goal_text: d.text,
+            target_metric: 'terms_completed',
+            target_value: 3,
+          }),
+        });
+        const data = await res.json();
+        if (data.goal) results.push(data.goal);
+      }
+      return results.length > 0 ? results : null;
     } catch (err) {
       console.error('Failed to generate yearly goals:', err);
       return null;

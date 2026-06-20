@@ -54,6 +54,11 @@ export default function AdminTestsPage() {
   const [analysisAttempts, setAnalysisAttempts] = useState<any[]>([]);
   const [analysisLoading, setAnalysisLoading] = useState(false);
 
+  async function api(action: string, data: any = {}) {
+    const res = await fetch('/api/manage-tests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) });
+    return res.json();
+  }
+
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchData();
@@ -62,13 +67,13 @@ export default function AdminTestsPage() {
   async function fetchData() {
     setLoading(true);
     const [testsRes, attemptsRes, subjectsRes, classesRes] = await Promise.all([
-      supabase.from('tests').select('*, subject:subjects!subject_id(name), class:classes!class_id(name)').order('created_at', { ascending: false }),
-      supabase.from('test_attempts').select('*, student:profiles!student_id(first_name, last_name), test:tests!test_id(title)').order('created_at', { ascending: false }).limit(50),
+      api('list_tests'),
+      api('list_attempts', { limit: '50' }),
       supabase.from('subjects').select('id, name').order('name'),
       supabase.from('classes').select('id, name').order('level'),
     ]);
-    if (testsRes.data) setTests(testsRes.data);
-    if (attemptsRes.data) setAttempts(attemptsRes.data);
+    if (testsRes.tests) setTests(testsRes.tests);
+    if (attemptsRes.attempts) setAttempts(attemptsRes.attempts);
     if (subjectsRes.data) setSubjects(subjectsRes.data);
     if (classesRes.data) setClasses(classesRes.data);
     setLoading(false);
@@ -102,12 +107,10 @@ export default function AdminTestsPage() {
     try {
       const { total_questions, ...dbData } = formData;
       if (editingTest) {
-        const { error: err } = await supabase.from('tests').update(dbData).eq('id', editingTest.id);
-        if (err) throw new Error(err.message);
+        await api('update_test', { id: editingTest.id, ...dbData });
         setSuccess('Test updated');
       } else {
-        const { error: err } = await supabase.from('tests').insert({ ...dbData, created_by: profile?.id, is_published: false });
-        if (err) throw new Error(err.message);
+        await api('create_test', { ...dbData, created_by: profile?.id });
         setSuccess('Test created');
       }
       setTimeout(() => { setShowTestModal(false); fetchData(); }, 1000);
@@ -120,8 +123,7 @@ export default function AdminTestsPage() {
 
   async function togglePublish(test: any) {
     try {
-      const { error } = await supabase.from('tests').update({ is_published: !test.is_published }).eq('id', test.id);
-      if (error) throw new Error(error.message);
+      await api('update_test', { id: test.id, is_published: !test.is_published });
     } catch (err: any) {
       setError(err.message);
     }
@@ -132,8 +134,8 @@ export default function AdminTestsPage() {
     setSelectedTest(test);
     setEditingQuestion(null);
     setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
-    const { data } = await supabase.from('test_questions').select('*').eq('test_id', test.id).order('order_index');
-    setTestQuestions(data || []);
+    const res = await api('list_questions', { test_id: test.id });
+    setTestQuestions(res.questions || []);
     setShowQuestionModal(true);
   }
 
@@ -148,14 +150,14 @@ export default function AdminTestsPage() {
     if (!selectedTest || !questionForm.question.trim()) return;
     setSavingQuestion(true);
     try {
-      const payload = { test_id: selectedTest.id, question: questionForm.question, options: questionForm.options, correct_answer: questionForm.correct_answer, points: questionForm.points || 1, question_type: questionForm.question_type, subject: questionForm.subject || null, order_index: testQuestions.length };
+      const payload = { test_id: selectedTest.id, question: questionForm.question, options: questionForm.options, correct_answer: questionForm.correct_answer, points: questionForm.points || 1, question_type: questionForm.question_type, order_index: testQuestions.length };
       if (editingQuestion) {
-        await supabase.from('test_questions').update(payload).eq('id', editingQuestion.id);
+        await api('update_question', { id: editingQuestion.id, ...payload });
       } else {
-        await supabase.from('test_questions').insert(payload);
+        await api('create_question', payload);
       }
-      const { data } = await supabase.from('test_questions').select('*').eq('test_id', selectedTest.id).order('order_index');
-      if (data) setTestQuestions(data);
+      const res = await api('list_questions', { test_id: selectedTest.id });
+      if (res.questions) setTestQuestions(res.questions);
       setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
       setEditingQuestion(null);
     } catch (err: any) {
@@ -172,7 +174,7 @@ export default function AdminTestsPage() {
 
   async function handleDeleteQuestion(id: string) {
     if (!confirm('Remove this question?')) return;
-    await supabase.from('test_questions').delete().eq('id', id);
+    await api('delete_question', { id });
     setTestQuestions(prev => prev.filter(q => q.id !== id));
   }
 
@@ -210,14 +212,13 @@ export default function AdminTestsPage() {
     try {
       const { data: selected } = await supabase.from('question_bank').select('*').in('id', Array.from(selectedBankIds));
       if (selected && selected.length > 0) {
-        const toInsert = selected.map((q, i) => ({
+        const questions = selected.map((q: any) => ({
           test_id: selectedTest.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
-          points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', subject: q.subject || null, order_index: testQuestions.length + i,
+          points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', order_index: testQuestions.length,
         }));
-        await supabase.from('test_questions').insert(toInsert);
-        const { data } = await supabase.from('test_questions').select('*').eq('test_id', selectedTest.id).order('order_index');
-        if (data) setTestQuestions(data);
-        setSuccess(`Added ${toInsert.length} question(s) from bank`);
+        const res = await api('bulk_insert_questions', { test_id: selectedTest.id, questions });
+        if (res.questions) setTestQuestions(res.questions);
+        setSuccess(`Added ${questions.length} question(s) from bank`);
       }
       setShowBankSelect(false);
     } catch (err: any) {
@@ -238,14 +239,13 @@ export default function AdminTestsPage() {
       if (allBank && allBank.length > 0) {
         const count = formData.total_questions || 10;
         const shuffled = allBank.sort(() => Math.random() - 0.5).slice(0, Math.min(allBank.length, count));
-        const toInsert = shuffled.map((q, i) => ({
+        const questions = shuffled.map((q: any) => ({
           test_id: test.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
-          points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', subject: q.subject || null, order_index: i,
+          points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', order_index: 0,
         }));
-        await supabase.from('test_questions').insert(toInsert);
-        const { data } = await supabase.from('test_questions').select('*').eq('test_id', test.id).order('order_index');
-        if (data) setTestQuestions(data);
-        setSuccess(`Auto-populated ${toInsert.length} questions`);
+        const res = await api('bulk_insert_questions', { test_id: test.id, questions });
+        if (res.questions) setTestQuestions(res.questions);
+        setSuccess(`Auto-populated ${questions.length} questions`);
       } else {
         setWarning('No questions found in the question bank');
       }
@@ -262,11 +262,11 @@ export default function AdminTestsPage() {
     setAnalysisLoading(true);
     try {
       const [questionsRes, attemptsRes] = await Promise.all([
-        supabase.from('test_questions').select('*').eq('test_id', test.id).order('order_index'),
-        supabase.from('test_attempts').select('*, student:profiles!student_id(first_name, last_name)').eq('test_id', test.id).order('created_at', { ascending: false }),
+        api('list_questions', { test_id: test.id }),
+        api('list_attempts', { test_id: test.id }),
       ]);
-      const questions = questionsRes.data || [];
-      const attempts = attemptsRes.data || [];
+      const questions = questionsRes.questions || [];
+      const attempts = attemptsRes.attempts || [];
       setAnalysisAttempts(attempts);
 
       // Per-question analysis
@@ -296,10 +296,7 @@ export default function AdminTestsPage() {
     if (!confirm('Delete this test and all associated questions and attempts?')) return;
     setDeleting(id);
     try {
-      await supabase.from('test_questions').delete().eq('test_id', id);
-      await supabase.from('test_attempts').delete().eq('test_id', id);
-      const { error } = await supabase.from('tests').delete().eq('id', id);
-      if (error) throw new Error(error.message);
+      await api('delete_test', { id });
       setSuccess('Test deleted');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err: any) {

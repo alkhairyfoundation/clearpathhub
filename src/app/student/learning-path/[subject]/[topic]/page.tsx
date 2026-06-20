@@ -46,30 +46,32 @@ export default function TopicLearningPathPage() {
     try {
       const [subjRes, pathRes, scoreRes, lessonsRes] = await Promise.all([
         supabase.from('subjects').select('*, class:classes!class_id(name)').eq('id', subjectId).single(),
-        supabase.from('mastery_learning_path').select('*').eq('student_id', profile?.id).eq('subject_id', subjectId).eq('topic', topicName).order('stage'),
-        supabase.from('mastery_scores').select('*').eq('student_id', profile?.id).eq('subject_id', subjectId).eq('topic', topicName).maybeSingle(),
+        fetch(`/api/mastery/path?studentId=${profile?.id}&subjectId=${subjectId}&topic=${encodeURIComponent(topicName)}`).then(r => r.json()),
+        fetch(`/api/mastery/scores?studentId=${profile?.id}&subjectId=${subjectId}&topic=${encodeURIComponent(topicName)}`).then(r => r.json()),
         supabase.from('lessons').select('*').eq('subject_id', subjectId).eq('topic', topicName).eq('is_published', true),
       ]);
 
       if (subjRes.data) setSubject(subjRes.data);
-      if (scoreRes.data) setMasteryScore(scoreRes.data);
+      if (scoreRes.scores && scoreRes.scores.length > 0) setMasteryScore(scoreRes.scores[0]);
       if (lessonsRes.data) setLessons(lessonsRes.data);
 
-      if (!pathRes.data || pathRes.data.length === 0) {
+      if (!pathRes.path || pathRes.path.length === 0) {
         setInitializing(true);
-        const stages = STAGES.map((s, i) => ({
-          student_id: profile?.id,
-          subject_id: subjectId,
-          topic: topicName,
-          stage: s.key,
-          is_unlocked: i === 0,
-          max_attempts: 3,
-        }));
-        const { data: newPaths } = await supabase.from('mastery_learning_path').insert(stages).select();
-        if (newPaths) setPathStages(newPaths);
+        await fetch('/api/mastery/path', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id: profile?.id,
+            subject_id: subjectId,
+            topic: topicName,
+            action: 'initialize',
+          }),
+        });
+        const refreshRes = await fetch(`/api/mastery/path?studentId=${profile?.id}&subjectId=${subjectId}&topic=${encodeURIComponent(topicName)}`).then(r => r.json());
+        if (refreshRes.path) setPathStages(refreshRes.path);
         setInitializing(false);
       } else {
-        setPathStages(pathRes.data);
+        setPathStages(pathRes.path);
       }
     } catch (err: any) {
       setError(err.message);
@@ -107,19 +109,20 @@ export default function TopicLearningPathPage() {
 
     try {
       for (const s of flattened) {
-        await supabase.from('mastery_learning_path').upsert({
-          id: s.id,
-          student_id: s.student_id,
-          subject_id: s.subject_id,
-          topic: s.topic,
-          stage: s.stage,
-          is_unlocked: s.is_unlocked,
-          is_completed: s.is_completed,
-          completed_at: s.completed_at,
-          attempts_count: s.attempts_count,
-          score_on_completion: s.score_on_completion,
-          teacher_intervention_required: s.teacher_intervention_required,
-        }, { onConflict: 'student_id, subject_id, topic, stage' });
+        if (s.is_completed || s.is_unlocked) {
+          await fetch('/api/mastery/path', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              student_id: s.student_id,
+              subject_id: s.subject_id,
+              topic: s.topic,
+              stage: s.stage,
+              action: 'complete_stage',
+              score: s.score_on_completion,
+            }),
+          });
+        }
       }
       setPathStages(flattened);
     } catch (err) {

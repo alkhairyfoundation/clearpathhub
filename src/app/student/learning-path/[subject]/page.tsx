@@ -35,18 +35,18 @@ export default function SubjectLearningPathPage() {
     try {
       const [subjRes, pathRes, scoreRes, sowRes] = await Promise.all([
         supabase.from('subjects').select('*, class:classes!class_id(name)').eq('id', subjectId).single(),
-        supabase.from('mastery_learning_path').select('*').eq('student_id', profile?.id).eq('subject_id', subjectId),
-        supabase.from('mastery_scores').select('*').eq('student_id', profile?.id).eq('subject_id', subjectId),
+        fetch(`/api/mastery/path?studentId=${profile?.id}&subjectId=${subjectId}`).then(r => r.json()),
+        fetch(`/api/mastery/scores?studentId=${profile?.id}&subjectId=${subjectId}`).then(r => r.json()),
         supabase.from('scheme_of_work').select('topic').eq('subject_id', subjectId),
       ]);
 
       if (subjRes.data) setSubject(subjRes.data);
-      if (pathRes.data) setPaths(pathRes.data);
-      if (scoreRes.data) setMasteryScores(scoreRes.data);
+      if (pathRes.path) setPaths(pathRes.path);
+      if (scoreRes.scores) setMasteryScores(scoreRes.scores);
 
       // Extract unique topics from SOW and existing paths
       const sowTopics = (sowRes.data || []).map((s: any) => s.topic).filter(Boolean);
-      const pathTopics = [...new Set((pathRes.data || []).map((p: any) => p.topic))];
+      const pathTopics = [...new Set((pathRes.path || []).map((p: any) => p.topic))];
       const allTopics = [...new Set([...sowTopics, ...pathTopics])];
       setTopics(allTopics);
     } catch (err: any) {

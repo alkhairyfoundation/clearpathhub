@@ -46,16 +46,16 @@ export default function StudentPracticePage() {
       // Adaptive question selection based on mastery scores and spaced repetition
       let selectedQuestions: any[] = [];
       const [masteryRes, reviewRes] = await Promise.all([
-        supabase.from('mastery_scores').select('subject_id, topic, mastery_score, level').eq('student_id', profile?.id),
+        fetch(`/api/mastery/scores?studentId=${profile?.id}`).then(r => r.json()),
         supabase.from('review_schedule').select('subject_id, topic, subtopic').eq('student_id', profile?.id).lte('next_review_date', new Date().toISOString().split('T')[0]),
       ]);
-      const masteryData = masteryRes.data || [];
+      const masteryData: { subject_id: string; topic: string; mastery_score: number; level: string }[] = masteryRes.scores || [];
       const dueReviews = reviewRes.data || [];
 
       // Categorize topics for adaptive selection
-      const weakTopics = masteryData.filter(m => m.mastery_score < 60).map(m => m.topic);
+      const weakTopics = masteryData.filter((m: any) => m.mastery_score < 60).map((m: any) => m.topic);
       const dueTopicSet = new Set(dueReviews.map(r => r.topic));
-      const masteredTopics = masteryData.filter(m => m.mastery_score >= 80).map(m => m.topic);
+      const masteredTopics = masteryData.filter((m: any) => m.mastery_score >= 80).map((m: any) => m.topic);
 
       // Get current SOW topic (skip if no class assigned)
       let sowTopic: string | null = null;

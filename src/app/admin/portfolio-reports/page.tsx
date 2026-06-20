@@ -30,12 +30,12 @@ export default function AdminPortfolioReportsPage() {
     setLoading(true);
     try {
       const [goalRes, rubricRes] = await Promise.all([
-        supabase.from('student_term_goals').select('*, archetype:archetypes(name)'),
-        supabase.from('student_skill_rubrics').select('*, skill:skills(name)'),
+        fetch('/api/student-term-goals').then(r => r.json()),
+        fetch('/api/portfolio/rubric').then(r => r.json()),
       ]);
 
-      const goals = goalRes.data || [];
-      const rubrics = rubricRes.data || [];
+      const goals = goalRes.goals || goalRes.goal ? [goalRes.goal] : [];
+      const rubrics = rubricRes.rubrics || [];
 
       const levelOrder = ['emerging', 'developing', 'secure', 'strong'];
       const archDist: Record<string, number> = {};

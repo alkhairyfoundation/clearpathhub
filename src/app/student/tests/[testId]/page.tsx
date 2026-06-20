@@ -155,18 +155,16 @@ export default function StudentTakeTestPage() {
 
   async function fetchTest() {
     try {
-      const [testRes, questionsRes] = await Promise.all([
-        supabase.from('tests').select('*, subject:subjects!subject_id(name), class:classes!class_id(name)').eq('id', testId).eq('is_published', true).single(),
-        supabase.from('test_questions').select('*').eq('test_id', testId).order('order_index'),
-      ]);
-      if (testRes.error) throw new Error(testRes.error.message);
-      if (testRes.data) {
-        setTest(testRes.data);
-        setTimeLeft((testRes.data.duration_minutes || 30) * 60);
+      const res = await fetch(`/api/student-tests/${testId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Test not found');
+      if (data.test) {
+        setTest(data.test);
+        setTimeLeft((data.test.duration_minutes || 30) * 60);
       }
-      if (questionsRes.data) {
-        let qs = questionsRes.data;
-        if (testRes.data?.shuffle_questions) {
+      if (data.questions) {
+        let qs = data.questions;
+        if (data.test?.shuffle_questions) {
           qs = [...qs].sort(() => Math.random() - 0.5);
         }
         setQuestions(qs);
@@ -210,43 +208,28 @@ export default function StudentTakeTestPage() {
   async function handleSubmit() {
     if (!test || !profile) return;
     setSubmitting(true);
-    let correct = 0;
-    questions.forEach((q, i) => {
-      if (gradeQuestion(q, answers[i])) correct++;
-    });
-    const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
 
     const startedAt = new Date(Date.now() - ((test.duration_minutes || 30) * 60 - timeLeft) * 1000);
 
     try {
-      const { data: attempt, error: attemptError } = await supabase.from('test_attempts').insert({
-        test_id: testId,
-        student_id: profile.id,
-        answers,
-        score: finalScore,
-        passed: finalScore >= (test.passing_score || 50),
-        tab_switches: tabSwitches,
-        fullscreen_exits: fullscreenExits,
-        time_taken: (test.duration_minutes || 30) * 60 - timeLeft,
-        started_at: startedAt.toISOString(),
-        completed_at: new Date().toISOString(),
-      }).select().single();
-
-      if (attemptError) throw new Error(attemptError.message);
-
-      if (attempt && securityEvents.length > 0) {
-        const logs = securityEvents.map(e => ({
-          attempt_id: attempt.id,
+      const res = await fetch(`/api/student-tests/${testId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           student_id: profile.id,
-          event_type: e.type,
-          event_data: { key: e.key, count: e.count },
-          severity: e.type === 'tab_switch' || e.type === 'fullscreen_exit' ? (e.count >= 3 ? 'high' : 'medium') : 'low',
-          created_at: e.time,
-        }));
-        await supabase.from('exam_activity_logs').insert(logs);
-      }
+          answers,
+          tab_switches: tabSwitches,
+          fullscreen_exits: fullscreenExits,
+          time_taken: (test.duration_minutes || 30) * 60 - timeLeft,
+          started_at: startedAt.toISOString(),
+          security_events: securityEvents,
+        }),
+      });
 
-      setScore(finalScore);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit test');
+
+      setScore(data.attempt.score);
       setSubmitted(true);
     } catch (err: any) {
       console.error('Failed to save test attempt:', err.message);

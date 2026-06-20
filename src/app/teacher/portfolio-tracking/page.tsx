@@ -58,25 +58,17 @@ export default function TeacherPortfolioTrackingPage() {
       if (!session || !term) { setLoading(false); return; }
 
       const [goalRes, rubricRes, evidenceRes] = await Promise.all([
-        supabase.from('student_term_goals')
-          .select('*, archetype:archetypes(*), goal_skills:student_goal_skills(*, skill:skills(*))')
-          .eq('student_id', studentId).eq('session_id', session.id).eq('term_id', term.id)
-          .maybeSingle(),
-        supabase.from('student_skill_rubrics')
-          .select('*, skill:skills(*)')
-          .eq('student_id', studentId).eq('session_id', session.id).eq('term_id', term.id),
-        supabase.from('portfolio_evidence')
-          .select('*')
-          .eq('student_id', studentId).eq('session_id', session.id).eq('term_id', term.id)
-          .order('created_at', { ascending: false }),
+        fetch(`/api/student-term-goals?studentId=${studentId}&sessionId=${session.id}&termId=${term.id}`).then(r => r.json()),
+        fetch(`/api/portfolio/rubric?studentId=${studentId}&sessionId=${session.id}&termId=${term.id}`).then(r => r.json()),
+        fetch(`/api/portfolio-evidence?studentId=${studentId}&sessionId=${session.id}&termId=${term.id}`).then(r => r.json()),
       ]);
 
-      setGoal(goalRes.data);
-      setRubrics(rubricRes.data || []);
-      setEvidence(evidenceRes.data || []);
+      setGoal(goalRes.goal);
+      setRubrics(rubricRes.rubrics || []);
+      setEvidence(evidenceRes.evidence || []);
 
       const updates: Record<string, string> = {};
-      (rubricRes.data || []).forEach((r: any) => { updates[r.skill_id] = r.level; });
+      (rubricRes.rubrics || []).forEach((r: any) => { updates[r.skill_id] = r.level; });
       setRubricUpdates(updates);
     } catch (err) {
       console.error(err);
@@ -87,24 +79,18 @@ export default function TeacherPortfolioTrackingPage() {
     if (!goal || !selectedStudent) return;
     setSaving(true); setError('');
     try {
-      const { data: session } = await supabase.from('academic_sessions').select('*').eq('is_current', true).single();
-      const { data: term } = await supabase.from('terms').select('*').eq('is_current', true).single();
-      if (!session || !term) throw new Error('No active session');
-
-      const updates = Object.entries(rubricUpdates).map(([skillId, level]) => ({
-        student_id: selectedStudent,
-        session_id: session.id,
-        term_id: term.id,
+      const rubrics = Object.entries(rubricUpdates).map(([skillId, level]) => ({
         skill_id: skillId,
         level,
         updated_by: profile!.id,
       }));
 
-      for (const update of updates) {
-        await supabase.from('student_skill_rubrics').upsert(update, {
-          onConflict: 'student_id,session_id,term_id,skill_id',
-        });
-      }
+      const res = await fetch('/api/portfolio/rubric', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: selectedStudent, rubrics }),
+      });
+      if (!res.ok) throw new Error('Failed to update rubrics');
 
       setSuccess('Rubrics updated!');
       setTimeout(() => setSuccess(''), 3000);
@@ -117,28 +103,30 @@ export default function TeacherPortfolioTrackingPage() {
     if (!selectedStudent || !evidenceForm.text_snapshot.trim()) return;
     setSaving(true);
     try {
-      const { data: session } = await supabase.from('academic_sessions').select('*').eq('is_current', true).single();
-      const { data: term } = await supabase.from('terms').select('*').eq('is_current', true).single();
+      const sessionRes = await supabase.from('academic_sessions').select('*').eq('is_current', true).single();
+      const termRes = await supabase.from('terms').select('*').eq('is_current', true).single();
+      const session = sessionRes.data;
+      const term = termRes.data;
       if (!session || !term) throw new Error('No active session');
 
-      await supabase.from('portfolio_evidence').insert({
-        student_id: selectedStudent,
-        session_id: session.id,
-        term_id: term.id,
-        evidence_type: evidenceForm.evidence_type,
-        text_snapshot: evidenceForm.text_snapshot,
-        created_by: profile!.id,
+      await fetch('/api/portfolio-evidence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: selectedStudent,
+          session_id: session.id,
+          term_id: term.id,
+          evidence_type: evidenceForm.evidence_type,
+          text_snapshot: evidenceForm.text_snapshot,
+          created_by: profile!.id,
+        }),
       });
 
       setEvidenceForm({ evidence_type: 'manual', text_snapshot: '' });
       setShowEvidenceModal(false);
 
-      const { data: newEvidence } = await supabase
-        .from('portfolio_evidence')
-        .select('*')
-        .eq('student_id', selectedStudent).eq('session_id', session.id).eq('term_id', term.id)
-        .order('created_at', { ascending: false });
-      setEvidence(newEvidence || []);
+      const evidenceRes = await fetch(`/api/portfolio-evidence?studentId=${selectedStudent}&sessionId=${session.id}&termId=${term.id}`).then(r => r.json());
+      setEvidence(evidenceRes.evidence || []);
 
       setSuccess('Evidence added!');
       setTimeout(() => setSuccess(''), 3000);

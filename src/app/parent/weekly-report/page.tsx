@@ -40,13 +40,16 @@ function WeeklyReportContent() {
           const weekEnd = new Date(weekStart);
           weekEnd.setDate(weekStart.getDate() + 7);
 
-          const [attendanceRes, resultsRes, homeworkRes, behaviorRes, quizRes, testRes] = await Promise.all([
+          const testRes = await fetch('/api/manage-tests', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'list_attempts', student_id: selectedChild.profile_id, date_from: weekStart.toISOString(), date_to: weekEnd.toISOString() })
+          }).then(r => r.json());
+          const [attendanceRes, resultsRes, homeworkRes, behaviorRes, quizRes] = await Promise.all([
             supabase.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', weekStart.toISOString().split('T')[0]).lt('date', weekEnd.toISOString().split('T')[0]),
             supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
             supabase.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', selectedChild.profile_id).gte('submitted_at', weekStart.toISOString()).lt('submitted_at', weekEnd.toISOString()),
             supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
             supabase.from('quiz_attempts').select('*, quiz:quizzes!quiz_id(title)').eq('student_id', selectedChild.profile_id).gte('completed_at', weekStart.toISOString()).lt('completed_at', weekEnd.toISOString()),
-            supabase.from('test_attempts').select('*, test:tests!test_id(title)').eq('student_id', selectedChild.profile_id).gte('completed_at', weekStart.toISOString()).lt('completed_at', weekEnd.toISOString()),
           ]);
 
         const totalAttendance = attendanceRes.data?.length || 0;
@@ -63,7 +66,7 @@ function WeeklyReportContent() {
           homework: homeworkRes.data || [],
           behavior: behaviorRes.data || [],
           quizzes: quizRes.data || [],
-          tests: testRes.data || [],
+          tests: testRes.attempts || [],
           positiveNotes: behaviorRes.data?.filter((b: any) => b.type === 'positive').length || 0,
           concerns: behaviorRes.data?.filter((b: any) => b.type === 'concern' || b.type === 'warning').length || 0,
         });

@@ -24,28 +24,11 @@ export default function StudentTestsPage() {
     setLoading(true);
     const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
     
-    let testsQuery = supabase.from('tests')
-      .select('*, subject:subjects!subject_id(name), class:classes!class_id(name)')
-      .eq('is_published', true);
+    const res = await fetch(`/api/student-tests?studentId=${profile?.id}&classId=${student?.class_id || ''}`);
+    const data = await res.json();
     
-    const [testsRes, attemptsRes] = await Promise.all([
-      testsQuery.order('created_at', { ascending: false }),
-      supabase.from('test_attempts').select('*').eq('student_id', profile?.id),
-    ]);
-    
-    if (testsRes.data) {
-      let filteredTests = testsRes.data;
-      if (student?.class_id) {
-        filteredTests = testsRes.data.filter(t => t.class_id === student.class_id);
-      }
-      setTests(filteredTests);
-    }
-    
-    if (attemptsRes.data) {
-      const map: Record<string, any> = {};
-      attemptsRes.data.forEach(a => { map[a.test_id] = a; });
-      setAttempts(map);
-    }
+    if (data.tests) setTests(data.tests);
+    if (data.attempts) setAttempts(data.attempts);
     setLoading(false);
   }
 

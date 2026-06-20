@@ -44,13 +44,8 @@ export default function StudentGrowthPathPage() {
       const session = sessionRes.data;
       const term = termRes.data;
       if (session && term) {
-        const { data: goal } = await supabase
-          .from('student_term_goals')
-          .select('*, goal_skills:student_goal_skills(*, skill:skills(*))')
-          .eq('student_id', profile!.id)
-          .eq('session_id', session.id)
-          .eq('term_id', term.id)
-          .maybeSingle();
+        const res = await fetch(`/api/student-term-goals?studentId=${profile!.id}&sessionId=${session.id}&termId=${term.id}`);
+        const { goal } = await res.json();
 
         if (goal) {
           setExistingGoal(goal);
@@ -87,38 +82,40 @@ export default function StudentGrowthPathPage() {
       if (!session || !term) { throw new Error('No active session or term'); }
 
       if (existingGoal) {
-        const { error: gErr } = await supabase.from('student_term_goals').update({
-          archetype_id: selectedArchetype,
-          goal_statement_snapshot: goalStatement,
-          status: existingGoal.status === 'active' ? 'active' : 'pending',
-        }).eq('id', existingGoal.id);
-        if (gErr) throw new Error(gErr.message);
-
-        await supabase.from('student_goal_skills').delete().eq('student_term_goal_id', existingGoal.id);
-        const goalSkills = selectedSkills.map((sid, i) => ({
-          student_term_goal_id: existingGoal.id, skill_id: sid, order_index: i,
-        }));
-        const { error: gsErr } = await supabase.from('student_goal_skills').insert(goalSkills);
-        if (gsErr) throw new Error(gsErr.message);
-
+        const res = await fetch('/api/student-term-goals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            goal_id: existingGoal.id,
+            student_id: profile!.id,
+            session_id: session.id,
+            term_id: term.id,
+            archetype_id: selectedArchetype,
+            goal_statement_snapshot: goalStatement,
+            status: existingGoal.status === 'active' ? 'active' : 'pending',
+            skill_ids: selectedSkills,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to update goal');
         setSuccess('Goal updated!');
       } else {
-        const { data: newGoal, error: gErr } = await supabase.from('student_term_goals').insert({
-          student_id: profile!.id,
-          session_id: session.id,
-          term_id: term.id,
-          archetype_id: selectedArchetype,
-          goal_statement_snapshot: goalStatement,
-          status: 'pending',
-        }).select().single();
-        if (gErr) throw new Error(gErr.message);
-
-        const goalSkills = selectedSkills.map((sid, i) => ({
-          student_term_goal_id: newGoal.id, skill_id: sid, order_index: i,
-        }));
-        const { error: gsErr } = await supabase.from('student_goal_skills').insert(goalSkills);
-        if (gsErr) throw new Error(gsErr.message);
-
+        const res = await fetch('/api/student-term-goals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create',
+            student_id: profile!.id,
+            session_id: session.id,
+            term_id: term.id,
+            archetype_id: selectedArchetype,
+            goal_statement_snapshot: goalStatement,
+            skill_ids: selectedSkills,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to create goal');
         setSuccess('Goal submitted for review!');
       }
 

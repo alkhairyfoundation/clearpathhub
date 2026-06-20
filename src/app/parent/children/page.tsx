@@ -46,18 +46,21 @@ export default function ParentChildrenPage() {
         const profileIds = data.map(c => c.profile_id);
 
         if (profileIds.length > 0) {
-          const [resultsRes, attendanceRes, quizRes, testRes, homeworkRes] = await Promise.all([
+          const testRes = await fetch('/api/manage-tests', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'list_attempts_by_students', student_ids: profileIds })
+          }).then(r => r.json());
+          const [resultsRes, attendanceRes, quizRes, homeworkRes] = await Promise.all([
             supabase.from('results').select('student_id, score').in('student_id', profileIds),
             supabase.from('attendance').select('student_id, status').in('student_id', profileIds),
             supabase.from('quiz_attempts').select('student_id, id, score').in('student_id', profileIds),
-            supabase.from('test_attempts').select('student_id, id, score').in('student_id', profileIds),
             supabase.from('homework_submissions').select('student_id, id, marks').in('student_id', profileIds),
           ]);
 
           const resultsByChild = groupBy(resultsRes.data || [], 'student_id');
           const attendanceByChild = groupBy(attendanceRes.data || [], 'student_id');
           const quizByChild = groupBy(quizRes.data || [], 'student_id');
-          const testByChild = groupBy(testRes.data || [], 'student_id');
+          const testByChild = groupBy(testRes.attempts || [], 'student_id');
           const homeworkByChild = groupBy(homeworkRes.data || [], 'student_id');
 
           for (const child of data) {

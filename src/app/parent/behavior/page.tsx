@@ -36,10 +36,13 @@ function BehaviorContent() {
           setChild(selectedChild);
           const [reportsRes, examLogsRes] = await Promise.all([
             supabase.from('behavioral_reports').select('*').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20),
-            supabase.from('exam_activity_logs').select('*').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20),
+            fetch('/api/manage-tests', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'list_exam_logs', student_ids: [selectedChild.profile_id] })
+            }).then(r => r.json()),
           ]);
           if (reportsRes.data) setReports(reportsRes.data);
-          if (examLogsRes.data) setExamActivityLogs(examLogsRes.data);
+          if (examLogsRes.logs) setExamActivityLogs(examLogsRes.logs);
         }
       }
     } catch (err: any) {

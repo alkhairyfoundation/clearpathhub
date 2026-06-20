@@ -42,14 +42,14 @@ export default function GrowthMapPage() {
       const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
       const [subjRes, pathRes, scoreRes] = await Promise.all([
         supabase.from('subjects').select('*').eq('class_id', student?.class_id),
-        supabase.from('mastery_learning_path').select('*').eq('student_id', profile?.id),
-        supabase.from('mastery_scores').select('*').eq('student_id', profile?.id),
+        fetch(`/api/mastery/path?studentId=${profile?.id}`).then(r => r.json()),
+        fetch(`/api/mastery/scores?studentId=${profile?.id}`).then(r => r.json()),
       ]);
 
       const mapNodes: MapNode[] = [];
       const subjects = subjRes.data || [];
-      const paths = pathRes.data || [];
-      const scores = scoreRes.data || [];
+      const paths = (pathRes.path || []) as any[];
+      const scores = (scoreRes.scores || []) as any[];
 
       subjects.forEach((subj, si) => {
         mapNodes.push({

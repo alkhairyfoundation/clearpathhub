@@ -24,11 +24,11 @@ export default function StudentResultsPage() {
     setLoading(true);
     const [resRes, testsRes, quizzesRes] = await Promise.all([
       supabase.from('results').select('*, subject:subjects!subject_id(*)').eq('student_id', profile?.id).order('created_at', { ascending: false }),
-      supabase.from('test_attempts').select('*, test:tests!test_id(title, subject:subjects!subject_id(name))').eq('student_id', profile?.id).order('completed_at', { ascending: false }),
+      fetch(`/api/test-attempts?studentId=${profile?.id}`).then(r => r.json()),
       supabase.from('quiz_attempts').select('*, quiz:quizzes!quiz_id(title)').eq('student_id', profile?.id).order('completed_at', { ascending: false }),
     ]);
     if (resRes.data) setResults(resRes.data);
-    if (testsRes.data) setTestAttempts(testsRes.data);
+    if (testsRes.attempts) setTestAttempts(testsRes.attempts);
     if (quizzesRes.data) setQuizAttempts(quizzesRes.data);
     setLoading(false);
   }

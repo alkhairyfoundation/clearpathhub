@@ -32,25 +32,17 @@ export default function StudentPortfolioPage() {
       if (!session || !term) { setLoading(false); return; }
 
       const [goalRes, rubricRes, evidenceRes] = await Promise.all([
-        supabase.from('student_term_goals')
-          .select('*, archetype:archetypes(*), goal_skills:student_goal_skills(*, skill:skills(*))')
-          .eq('student_id', profile!.id).eq('session_id', session.id).eq('term_id', term.id)
-          .maybeSingle(),
-        supabase.from('student_skill_rubrics')
-          .select('*, skill:skills(*)')
-          .eq('student_id', profile!.id).eq('session_id', session.id).eq('term_id', term.id),
-        supabase.from('portfolio_evidence')
-          .select('*')
-          .eq('student_id', profile!.id).eq('session_id', session.id).eq('term_id', term.id)
-          .order('created_at', { ascending: false }),
+        fetch(`/api/student-term-goals?studentId=${profile!.id}&sessionId=${session.id}&termId=${term.id}`).then(r => r.json()),
+        fetch(`/api/portfolio/rubric?studentId=${profile!.id}&sessionId=${session.id}&termId=${term.id}`).then(r => r.json()),
+        fetch(`/api/portfolio-evidence?studentId=${profile!.id}&sessionId=${session.id}&termId=${term.id}`).then(r => r.json()),
       ]);
 
-      if (goalRes.data) setGoal(goalRes.data);
-      if (rubricRes.data) setRubrics(rubricRes.data);
-      if (evidenceRes.data) setEvidence(evidenceRes.data);
+      if (goalRes.goal) setGoal(goalRes.goal);
+      if (rubricRes.rubrics) setRubrics(rubricRes.rubrics);
+      if (evidenceRes.evidence) setEvidence(evidenceRes.evidence);
 
-      if (goalRes.data && goalRes.data.reflection) {
-        setReflection(goalRes.data.reflection);
+      if (goalRes.goal && goalRes.goal.reflection_text) {
+        setReflection(goalRes.goal.reflection_text);
       }
     } catch (err) {
       console.error(err);
@@ -61,7 +53,15 @@ export default function StudentPortfolioPage() {
     if (!goal) return;
     setSavingReflection(true);
     try {
-      await supabase.from('student_term_goals').update({ reflection_text: reflection }).eq('id', goal.id);
+      await fetch('/api/student-term-goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          goal_id: goal.id,
+          reflection_text: reflection,
+        }),
+      });
     } catch (err) { /* ignore */ }
     setSavingReflection(false);
   }
