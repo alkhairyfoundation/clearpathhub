@@ -33,13 +33,13 @@ export default function StudentGrowthPathPage() {
     try {
       const [archRes, skillRes, sessionRes, termRes] = await Promise.all([
         supabase.from('archetypes').select('*').eq('is_active', true).order('name'),
-        supabase.from('skills').select('*').eq('is_active', true).order('name'),
+        fetch('/api/skills').then(r => r.json()),
         supabase.from('academic_sessions').select('*').eq('is_current', true).single(),
         supabase.from('terms').select('*').eq('is_current', true).single(),
       ]);
 
       if (archRes.data) setArchetypes(archRes.data);
-      if (skillRes.data) setSkills(skillRes.data);
+      if (Array.isArray(skillRes)) setSkills(skillRes); else if (skillRes?.data) setSkills(skillRes.data);
 
       const session = sessionRes.data;
       const term = termRes.data;

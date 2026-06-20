@@ -37,17 +37,17 @@ export default function AdminGrowthFrameworksPage() {
 
   async function loadData() {
     setLoading(true);
-    const [sessionsRes, termsRes, subjectsRes, skillsRes, frameworksRes] = await Promise.all([
+    const [sessionsRes, termsRes, subjectsRes, skillsData, frameworksRes] = await Promise.all([
       supabase.from('academic_sessions').select('*').order('name', { ascending: false }),
       supabase.from('terms').select('*').order('name'),
       supabase.from('subjects').select('*').order('name'),
-      supabase.from('skills').select('*').eq('is_active', true).order('name'),
+      fetch('/api/skills').then(r => r.json()),
       supabase.from('class_term_frameworks').select('*, session:academic_sessions(*), term:terms(*)'),
     ]);
     if (!sessionsRes.error && sessionsRes.data) setSessions(sessionsRes.data);
     if (!termsRes.error && termsRes.data) setTerms(termsRes.data);
     if (!subjectsRes.error && subjectsRes.data) setSubjects(subjectsRes.data);
-    if (!skillsRes.error && skillsRes.data) setSkills(skillsRes.data);
+    if (Array.isArray(skillsData)) setSkills(skillsData);
     if (!frameworksRes.error && frameworksRes.data) setFrameworks(frameworksRes.data);
     setLoading(false);
   }

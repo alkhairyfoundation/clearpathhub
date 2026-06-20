@@ -39,11 +39,11 @@ export default function SkillsGrowthPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [skillsRes, trackingRes] = await Promise.all([
-        supabase.from('skills').select('*').eq('is_active', true),
+      const [skillsData, trackingRes] = await Promise.all([
+        fetch('/api/skills').then(r => r.json()),
         supabase.from('skills_tracking').select('*, skill:skills(*)').eq('student_id', profile?.id).order('date', { ascending: false }).limit(50),
       ]);
-      if (skillsRes.data) setSkills(skillsRes.data);
+      if (Array.isArray(skillsData)) setSkills(skillsData);
       if (trackingRes.data) setTracking(trackingRes.data);
     } catch (err) {
       console.error(err);
