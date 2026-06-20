@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, X, Loader2, ArrowLeft, Brain } from 'lucide-react';
 import type { Skill } from '@/types';
@@ -27,10 +26,19 @@ export default function AdminSkillsPage() {
     fetchSkills();
   }, [profile]);
 
+  async function api(path: string, options?: RequestInit) {
+    const res = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...options });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  }
+
   async function fetchSkills() {
     setLoading(true);
-    const { data, error } = await supabase.from('skills').select('*').order('name');
-    if (!error && data) setSkills(data);
+    try {
+      const data = await api('/api/admin/skills');
+      setSkills(data);
+    } catch { /* skills empty or offline */ }
     setLoading(false);
   }
 
@@ -52,12 +60,10 @@ export default function AdminSkillsPage() {
     try {
       const payload = { ...formData, category: formData.category || null };
       if (editing) {
-        const { error: err } = await supabase.from('skills').update(payload).eq('id', editing.id);
-        if (err) throw new Error(err.message);
+        await api('/api/admin/skills', { method: 'PUT', body: JSON.stringify({ id: editing.id, ...payload }) });
         setSuccess('Skill updated');
       } else {
-        const { error: err } = await supabase.from('skills').insert(payload);
-        if (err) throw new Error(err.message);
+        await api('/api/admin/skills', { method: 'POST', body: JSON.stringify(payload) });
         setSuccess('Skill created');
       }
       setTimeout(() => { setShowModal(false); fetchSkills(); }, 800);
@@ -67,18 +73,20 @@ export default function AdminSkillsPage() {
   }
 
   async function handleToggleActive(item: Skill) {
-    const { error } = await supabase.from('skills').update({ is_active: !item.is_active }).eq('id', item.id);
-    if (!error) fetchSkills();
+    try {
+      await api('/api/admin/skills', { method: 'PUT', body: JSON.stringify({ id: item.id, is_active: !item.is_active }) });
+      fetchSkills();
+    } catch { /* ignore */ }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this skill?')) return;
     setDeleting(id);
     try {
-      const { error } = await supabase.from('skills').delete().eq('id', id);
-      if (error) throw new Error(error.message);
+      await api(`/api/admin/skills?id=${id}`, { method: 'DELETE' });
       setSuccess('Skill deleted');
       setTimeout(() => setSuccess(''), 3000);
+      fetchSkills();
     } catch (err: any) {
       setError(err.message || 'Failed to delete');
     } finally { setDeleting(null); }
