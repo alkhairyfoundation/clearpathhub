@@ -16,6 +16,16 @@ type ExamType = 'ca1' | 'ca2' | 'ca3' | 'exam';
 const SCORE_LABELS: Record<string, string> = { ca1: 'Mid-Term Test', ca2: '', ca3: '', exam: 'Exam' };
 const SCORE_MAX: Record<string, number> = { ca1: 40, exam: 60 };
 
+function buildScoreTypes(config: any): { key: string; label: string; maxScore: number }[] {
+  if (!config) return [{ key: 'ca1', label: 'Mid-Term Test', maxScore: 40 }, { key: 'exam', label: 'Exam', maxScore: 60 }];
+  const types: { key: string; label: string; maxScore: number }[] = [];
+  if (config.ca1_enabled) types.push({ key: 'ca1', label: config.ca1_label || 'Mid-Term Test', maxScore: config.ca1_max || 40 });
+  if (config.ca2_enabled) types.push({ key: 'ca2', label: config.ca2_label || '2nd CA', maxScore: config.ca2_max || 10 });
+  if (config.ca3_enabled) types.push({ key: 'ca3', label: config.ca3_label || '3rd CA', maxScore: config.ca3_max || 10 });
+  if (config.exam_enabled) types.push({ key: 'exam', label: config.exam_label || 'Exam', maxScore: config.exam_max || 60 });
+  return types;
+}
+
 function totalScore(ca1?: number | null, exam?: number | null): number {
   return Math.min(100, (ca1 ?? 0) + (exam ?? 0));
 }
@@ -513,9 +523,28 @@ function drawProgressBarInCell(doc: jsPDF, data: any, score: number): void {
   doc.roundedRect(data.cell.x + 1, barY, barW, barH, 0.5, 0.5, 'F');
 }
 
-function drawPageHeader(doc: jsPDF, schoolName: string, address: string | undefined, motto: string | undefined, pageWidth: number): void {
+async function urlToBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return ''; }
+}
+
+function drawPageHeader(doc: jsPDF, schoolName: string, address: string | undefined, motto: string | undefined, pageWidth: number, logoBase64?: string): void {
   doc.setFillColor(30, 58, 95);
   doc.rect(0, 0, pageWidth, 28, 'F');
+
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'PNG', 5, 3, 12, 12);
+    } catch (e) { /* skip logo */ }
+  }
+
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
@@ -551,6 +580,9 @@ function ReportCardContent() {
   const [success, setSuccess] = useState('');
 
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
+  const [assessmentConfig, setAssessmentConfig] = useState<any>(null);
+  const [logoBase64, setLogoBase64] = useState<string>('');
+  const [photoBase64, setPhotoBase64] = useState<string>('');
   const [terms, setTerms] = useState<any[]>([]);
   const [selectedTerm, setSelectedTerm] = useState<any>(null);
   const [allTerms, setAllTerms] = useState<any[]>([]);
@@ -587,6 +619,10 @@ function ReportCardContent() {
           .in('class_id', (await supabase.from('subjects').select('class_id').eq('teacher_id', profile?.id)).data?.map(s => s.class_id).filter(Boolean) || ['none']),
       ]);
       setSchoolSettings(settingsRes.data);
+      setAssessmentConfig(settingsRes.data?.assessment_config || null);
+      if (settingsRes.data?.school_logo) {
+        urlToBase64(settingsRes.data.school_logo).then(b64 => { if (b64) setLogoBase64(b64); });
+      }
       setTerms(termsRes.data || []);
       setAllTerms(termsRes.data || []);
       setSelectedTerm(termParam ? (termsRes.data || []).find((t: any) => t.id === termParam) : (termsRes.data || []).find((t: any) => t.is_current) || (termsRes.data || [])[0]);
@@ -650,6 +686,11 @@ function ReportCardContent() {
       const total = attRes.data?.length || 0;
       const present = attRes.data?.filter((a: any) => a.status === 'present').length || 0;
       setAttendanceData({ total, present, rate: total > 0 ? Math.round((present / total) * 100) : 0 });
+
+      // Load student photo
+      if (selectedStudent.profile?.avatar_url) {
+        urlToBase64(selectedStudent.profile.avatar_url).then(b64 => { if (b64) setPhotoBase64(b64); });
+      }
 
       // For 3rd term, fetch Term 1 + Term 2 results
       if (selectedTerm.name?.toLowerCase().includes('third')) {
@@ -790,36 +831,63 @@ function ReportCardContent() {
     let y = 0;
 
     // ═══════════════ PAGE 1 ═══════════════
-    drawPageHeader(doc, schoolName, schoolSettings?.school_address, schoolSettings?.school_motto, pageWidth);
+    drawPageHeader(doc, schoolName, schoolSettings?.school_address, schoolSettings?.school_motto, pageWidth, logoBase64);
     y = 36;
 
     doc.setTextColor(60, 60, 60);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     y += 2;
+
+    // Student photo + info
+    let infoX = ml;
+    if (photoBase64) {
+      try {
+        doc.addImage(photoBase64, 'PNG', ml, y, 12, 14);
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.rect(ml, y, 12, 14);
+        infoX = ml + 16;
+      } catch (e) { /* skip photo */ }
+    }
+
     const infoLines = [
       `Student: ${selectedStudent.name}`,
       `Class: ${selectedStudent.class?.name || 'N/A'}  |  Adm No: ${selectedStudent.admission_number || 'N/A'}`,
       `Term: ${selectedTerm.name} (${selectedTerm.session?.name || ''})  |  Attendance: ${attendanceData.present}/${attendanceData.total} days (${attendanceData.rate}%)`,
     ];
-    infoLines.forEach(line => { doc.text(line, ml, y); y += 5.5; });
+    infoLines.forEach(line => { doc.text(line, infoX, y); y += 5.5; });
     y += 1;
 
     const totalColIdx = isThirdTerm ? 4 : 3;
 
     if (!isThirdTerm) {
+      const config = assessmentConfig;
+      const headers = buildScoreTypes(config);
+      const headRow: string[] = ['Subject'];
+      headers.forEach(h => { headRow.push(`${h.label}\n(/${h.maxScore})`); });
+      headRow.push('Total', 'Grade', 'Remark');
+
       autoTable(doc, {
         startY: y,
-        head: [['Subject', 'Mid-Term Test\n(/40)', 'Exam\n(/60)', 'Total', 'Grade', 'Remark']],
-        body: subjectScores.map(s => {
-          const total = totalScore(s.ca1?.score, s.exam?.score);
-          return [s.subject_name, s.ca1?.score ?? '-', s.exam?.score ?? '-', `${total}%`, calculateGrade(total), computeRemark(total)];
+        head: [headRow],
+        body: subjectScores.map((s: any) => {
+          const row: any[] = [s.subject_name];
+          let total = 0;
+          headers.forEach(h => {
+            const val = s[h.key]?.score;
+            row.push(val != null ? val : '-');
+            total += val ?? 0;
+          });
+          total = Math.min(100, total);
+          row.push(`${total}%`, calculateGrade(total), computeRemark(total));
+          return row;
         }),
         theme: 'striped',
         headStyles: { fillColor: [30, 58, 95] },
-        foot: [[{ content: `Overall Average: ${totals.totalAvg}% (${totals.totalGrade}) — ${totals.remark}`, colSpan: 6, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }]],
+        foot: [[{ content: `Overall Average: ${totals.totalAvg}% (${totals.totalGrade}) — ${totals.remark}`, colSpan: headRow.length, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } }]],
         didDrawCell: (data: any) => {
-          if (data.section === 'body' && data.column.index === totalColIdx) {
+          if (data.section === 'body' && data.column.index === headRow.length - 3) {
             const val = parseFloat(data.cell.raw.toString());
             if (!isNaN(val)) drawProgressBarInCell(doc, data, val);
           }
@@ -968,8 +1036,18 @@ function ReportCardContent() {
       });
     } else {
       subjectScores.forEach((s: any) => {
-        const total = totalScore(s.ca1?.score, s.exam?.score);
-        scoreRows += `<tr><td>${s.subject_name}</td><td>${s.ca1?.score ?? '-'}</td><td>${s.exam?.score ?? '-'}</td><td style="font-weight:bold">${total}%</td><td>${calculateGrade(total)}</td><td>${computeRemark(total)}</td></tr>`;
+        const config = assessmentConfig;
+        const headers = buildScoreTypes(config);
+        let total = 0;
+        const cells = headers.map(h => {
+          const val = s[h.key]?.score;
+          total += val ?? 0;
+          return val != null ? val : '-';
+        });
+        total = Math.min(100, total);
+        const grade = calculateGrade(total);
+        const remark = computeRemark(total);
+        scoreRows += `<tr><td>${s.subject_name}</td>${cells.map(c => `<td>${c}</td>`).join('')}<td style="font-weight:bold">${total}%</td><td>${grade}</td><td>${remark}</td></tr>`;
       });
     }
 
@@ -1077,18 +1155,19 @@ function ReportCardContent() {
       .page-break{page-break-before:always;margin-top:30px;padding-top:20px;border-top:2px dashed #ccc}
       @media print{body{background:white;padding:10px}.card{box-shadow:none}}
     </style></head><body><div class="card">
-      <div class="header"><h1>${schoolSettings?.school_name || 'Mastery Engine'}</h1>
+      <div class="header">${logoBase64 ? `<img src="${logoBase64}" style="height:50px;margin-bottom:8px" />` : ''}<h1>${schoolSettings?.school_name || 'Mastery Engine'}</h1>
         ${schoolSettings?.school_address ? `<p>${schoolSettings.school_address}</p>` : ''}
         ${schoolSettings?.school_motto ? `<p>"${schoolSettings.school_motto}"</p>` : ''}
         <p style="font-size:14px;font-weight:bold;margin-top:5px">OFFICIAL REPORT CARD</p>
       </div>
-      <div style="font-size:12px;margin-bottom:15px">
+      <div style="font-size:12px;margin-bottom:15px;position:relative;min-height:70px">
+        ${photoBase64 ? `<div style="float:right"><img src="${photoBase64}" style="width:60px;height:70px;object-fit:cover;border-radius:4px;border:2px solid #ccc" /></div>` : ''}
         <strong>Student:</strong> ${selectedStudent.name} &nbsp;|&nbsp; <strong>Class:</strong> ${selectedStudent.class?.name || 'N/A'} &nbsp;|&nbsp;
         <strong>Admission:</strong> ${selectedStudent.admission_number || 'N/A'} &nbsp;|&nbsp;
         <strong>Term:</strong> ${selectedTerm.name} (${selectedTerm.session?.name || ''}) &nbsp;|&nbsp;
         <strong>Attendance:</strong> ${attendanceData.present}/${attendanceData.total} days (${attendanceData.rate}%)
       </div>
-      <table><thead><tr>${isThirdTerm ? '<th>Subject</th><th>Term 1</th><th>Term 2</th><th>Term 3</th><th>Cumulative</th><th>Grade</th><th>Remark</th>' : '<th>Subject</th><th>Mid-Term Test<br><span style="font-weight:normal;font-size:10px">(/40)</span></th><th>Exam<br><span style="font-weight:normal;font-size:10px">(/60)</span></th><th>Total</th><th>Grade</th><th>Remark</th>'}</tr></thead><tbody>${scoreRows}</tbody></table>
+      <table><thead><tr>${(() => { if (isThirdTerm) return '<th>Subject</th><th>Term 1</th><th>Term 2</th><th>Term 3</th><th>Cumulative</th><th>Grade</th><th>Remark</th>'; const hdrs = buildScoreTypes(assessmentConfig); return '<th>Subject</th>' + hdrs.map(h => `<th>${h.label}<br><span style="font-weight:normal;font-size:10px">(/${h.maxScore})</span></th>`).join('') + '<th>Total</th><th>Grade</th><th>Remark</th>'; })()}</tr></thead><tbody>${scoreRows}</tbody></table>
       <div class="summary">
         <div class="summary-box"><div class="val">${totals.totalAvg}%</div><div class="lbl">Overall Average</div></div>
         <div class="summary-box"><div class="val">${totals.totalGrade}</div><div class="lbl">Grade</div></div>
@@ -1223,20 +1302,33 @@ function ReportCardContent() {
                 ) : (
                   /* Standard Single-Term Table */
                   <table className="w-full text-sm">
-                    <thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Subject</th><th className="p-3 text-center font-semibold text-slate-600">CA 1</th><th className="p-3 text-center font-semibold text-slate-600">CA 2</th><th className="p-3 text-center font-semibold text-slate-600">CA 3</th><th className="p-3 text-center font-semibold text-slate-600">Exam</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Grade</th><th className="p-3 text-center font-semibold text-slate-600">Remark</th></tr></thead>
-                    <tbody>{subjectScores.length === 0 ? <tr><td colSpan={8} className="p-6 text-center text-slate-400">No scores entered yet</td></tr> : subjectScores.map((s: any, i: number) => {
-                      const scores = [s.ca1?.score, s.ca2?.score, s.ca3?.score, s.exam?.score].filter((x: any) => x != null) as number[];
-                      const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+                    <thead><tr className="bg-slate-100">
+                      <th className="p-3 text-left font-semibold text-slate-600">Subject</th>
+                      {buildScoreTypes(assessmentConfig).map(h => (
+                        <th key={h.key} className="p-3 text-center font-semibold text-slate-600">{h.label}<br /><span className="font-normal text-xs">(/{h.maxScore})</span></th>
+                      ))}
+                      <th className="p-3 text-center font-semibold text-slate-600">Total</th>
+                      <th className="p-3 text-center font-semibold text-slate-600">Grade</th>
+                      <th className="p-3 text-center font-semibold text-slate-600">Remark</th>
+                    </tr></thead>
+                    <tbody>{subjectScores.length === 0 ? <tr><td colSpan={buildScoreTypes(assessmentConfig).length + 3} className="p-6 text-center text-slate-400">No scores entered yet</td></tr> : subjectScores.map((s: any, i: number) => {
+                      const headers = buildScoreTypes(assessmentConfig);
+                      let total = 0;
+                      const cells = headers.map(h => {
+                        const val = s[h.key]?.score;
+                        total += val ?? 0;
+                        return val != null ? val : '-';
+                      });
+                      total = Math.min(100, total);
+                      const grade = calculateGrade(total);
+                      const remark = computeRemark(total);
                       return (
-                        <tr key={i} className={`border-t border-slate-100 ${avg > 0 && avg < 50 ? 'bg-red-50' : ''}`}>
+                        <tr key={i} className={`border-t border-slate-100 ${total > 0 && total < 50 ? 'bg-red-50' : ''}`}>
                           <td className="p-3 font-medium text-slate-800">{s.subject_name}</td>
-                          <td className="p-3 text-center font-bold">{s.ca1?.score ?? '-'}</td>
-                          <td className="p-3 text-center font-bold">{s.ca2?.score ?? '-'}</td>
-                          <td className="p-3 text-center font-bold">{s.ca3?.score ?? '-'}</td>
-                          <td className="p-3 text-center font-bold">{s.exam?.score ?? '-'}</td>
-                          <td className={`p-3 text-center font-bold ${scores.length > 0 ? (avg >= 70 ? 'text-green-600' : avg >= 50 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}`}>{scores.length > 0 ? `${avg}%` : '-'}</td>
-                          <td className="p-3 text-center font-bold text-slate-600">{scores.length > 0 ? calculateGrade(avg) : '-'}</td>
-                          <td className="p-3 text-center text-slate-600">{scores.length > 0 ? computeRemark(avg) : '-'}</td>
+                          {cells.map((c, ci) => <td key={ci} className="p-3 text-center font-bold">{c}</td>)}
+                          <td className={`p-3 text-center font-bold ${total > 0 ? (total >= 70 ? 'text-green-600' : total >= 50 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}`}>{total > 0 ? `${total}%` : '-'}</td>
+                          <td className="p-3 text-center font-bold text-slate-600">{grade}</td>
+                          <td className="p-3 text-center text-slate-600">{remark}</td>
                         </tr>
                       );
                     })}</tbody>

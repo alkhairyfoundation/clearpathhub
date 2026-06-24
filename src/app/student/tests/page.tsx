@@ -35,7 +35,10 @@ export default function StudentTestsPage() {
   return (
     <DashboardLayout title="Tests" subtitle="View and take tests">
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-slate-900">Available Tests</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-900">Available Tests</h1>
+          <Link href="/student/results" className="btn-outline text-sm flex items-center gap-2"><FileText size={14} />View Results</Link>
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>

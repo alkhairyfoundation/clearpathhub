@@ -62,6 +62,7 @@ const navItems = {
     { href: '/teacher/tests', label: 'Tests', icon: TestTube2 },
     { href: '/teacher/quizzes', label: 'Quizzes', icon: Award },
     { href: '/teacher/results', label: 'Results & Analytics', icon: BarChart3 },
+    { href: '/teacher/report-card', label: 'Report Card', icon: Award },
     { href: '/teacher/attendance', label: 'Attendance', icon: UserCheck },
     { href: '/teacher/staff-attendance', label: 'Staff Attendance', icon: ScanLine },
     { href: '/teacher/behavior', label: 'Behavior', icon: Activity },

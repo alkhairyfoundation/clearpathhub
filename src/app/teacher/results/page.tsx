@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -26,15 +26,13 @@ interface StudentScoreRow {
   dirty: boolean;
 }
 
-const SCORE_TYPES: { key: ExamType; label: string; maxScore: number }[] = [
-  { key: 'ca1', label: 'Mid-Term Test', maxScore: 40 },
-  { key: 'exam', label: 'Exam', maxScore: 60 },
-];
-
-function totalScore(row: StudentScoreRow): number {
-  const midterm = row.ca1?.score ?? 0;
-  const exam = row.exam?.score ?? 0;
-  return Math.min(100, midterm + exam);
+function totalScore(row: StudentScoreRow, config?: any): number {
+  let total = 0;
+  const types = config ? buildScoreTypes(config) : [{ key: 'ca1' as ExamType, maxScore: 40 }, { key: 'exam' as ExamType, maxScore: 60 }];
+  for (const t of types) {
+    total += row[t.key]?.score ?? 0;
+  }
+  return Math.min(100, total);
 }
 
 function calculateGrade(score: number): string {
@@ -52,6 +50,16 @@ function safeScore(val: string | number): number {
   return Math.max(0, n);
 }
 
+function buildScoreTypes(config: any): { key: ExamType; label: string; maxScore: number }[] {
+  if (!config) return [{ key: 'ca1', label: 'Mid-Term Test', maxScore: 40 }, { key: 'exam', label: 'Exam', maxScore: 60 }];
+  const types: { key: ExamType; label: string; maxScore: number }[] = [];
+  if (config.ca1_enabled) types.push({ key: 'ca1', label: config.ca1_label || 'Mid-Term Test', maxScore: config.ca1_max || 40 });
+  if (config.ca2_enabled) types.push({ key: 'ca2', label: config.ca2_label || '2nd CA', maxScore: config.ca2_max || 10 });
+  if (config.ca3_enabled) types.push({ key: 'ca3', label: config.ca3_label || '3rd CA', maxScore: config.ca3_max || 10 });
+  if (config.exam_enabled) types.push({ key: 'exam', label: config.exam_label || 'Exam', maxScore: config.exam_max || 60 });
+  return types;
+}
+
 export default function TeacherResultsPage() {
   const { profile } = useAuth();
   const router = useRouter();
@@ -67,6 +75,7 @@ export default function TeacherResultsPage() {
   const [selectedClassId, setSelectedClassId] = useState('');
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [assessmentConfig, setAssessmentConfig] = useState<any>(null);
   const [students, setStudents] = useState<{ id: string; profile_id: string; name: string; admission_number?: string }[]>([]);
   const [rows, setRows] = useState<StudentScoreRow[]>([]);
   const [allResults, setAllResults] = useState<any[]>([]);
@@ -74,6 +83,8 @@ export default function TeacherResultsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [formData, setFormData] = useState({ student_id: '', subject_id: '', exam_type: 'ca1' as ExamType, score: 0, grade: '', remarks: '' });
+
+  const scoreTypes = buildScoreTypes(assessmentConfig);
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -94,12 +105,13 @@ export default function TeacherResultsPage() {
 
       const teacherClassIds = Array.from(new Set(teacherSubjects?.map(s => s.class_id).filter(Boolean) || [])) as string[];
 
-      const [{ data: termData }, { data: classData }, { data: subjData }] = await Promise.all([
+      const [{ data: termData }, { data: classData }, { data: subjData }, { data: settingsData }] = await Promise.all([
         supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
         teacherClassIds.length > 0
           ? supabase.from('classes').select('*').in('id', teacherClassIds).order('name')
           : { data: [], error: null },
         supabase.from('subjects').select('*').eq('teacher_id', profile?.id).order('name'),
+        supabase.from('school_settings').select('assessment_config').limit(1).maybeSingle(),
       ]);
 
       setTerms(termData || []);
@@ -111,6 +123,7 @@ export default function TeacherResultsPage() {
       if (cls.length > 0) setSelectedClassId(cls[0].id);
 
       setSubjects(subjData || []);
+      setAssessmentConfig(settingsData?.assessment_config || null);
     } catch (err: any) { setError(err.message); }
     setLoading(false);
   }
@@ -119,7 +132,7 @@ export default function TeacherResultsPage() {
     if (selectedClassId && subjects.length > 0) {
       const filtered = subjects.filter(s => s.class_id === selectedClassId);
       if (filtered.length > 0) setSelectedSubjectId(filtered[0].id);
-      else if (subjects.length > 0) setSelectedSubjectId(subjects[0].id);
+      else setSelectedSubjectId('');
     }
   }, [selectedClassId, subjects]);
 
@@ -158,7 +171,7 @@ export default function TeacherResultsPage() {
           student_id: s.profile_id,
           student_name: s.name,
           admission_number: s.admission_number,
-          ca1: getCell('ca1'), ca2: null, ca3: null, exam: getCell('exam'), dirty: false
+          ...(() => { const ci: any = {}; const sts = buildScoreTypes(assessmentConfig); sts.forEach((st: any) => { ci[st.key] = getCell(st.key); }); return ci; })(), dirty: false
         };
       });
       setRows(matrix);
@@ -185,7 +198,8 @@ export default function TeacherResultsPage() {
   }
 
   function cellCount(row: StudentScoreRow): number {
-    return [row.ca1, row.exam].filter(Boolean).length;
+    const types = buildScoreTypes(assessmentConfig);
+    return types.filter(t => row[t.key] != null).length;
   }
 
   async function saveRow(row: StudentScoreRow) {
@@ -193,7 +207,8 @@ export default function TeacherResultsPage() {
     const term = selectedTerm?.name || '';
     const academicYear = selectedTerm?.session?.name || '';
 
-    for (const et of ['ca1', 'exam'] as ExamType[]) {
+    const saveTypes = buildScoreTypes(assessmentConfig);
+    for (const et of saveTypes.map(st => st.key)) {
       const cell = row[et];
       if (!cell) continue;
       if (cell.result_id) {
@@ -413,7 +428,7 @@ export default function TeacherResultsPage() {
                   <thead>
                     <tr className="bg-slate-50 text-left">
                       <th className="py-3 px-4 font-semibold text-slate-600 sticky left-0 bg-slate-50 z-10 min-w-[180px]">Student</th>
-                      {SCORE_TYPES.map(st => (
+                      {scoreTypes.map(st => (
                         <th key={st.key} className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[100px]">{st.label}<br /><span className="text-[10px] font-normal text-slate-400">(/{st.maxScore})</span></th>
                       ))}
                       <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[60px]">Total</th>
@@ -437,7 +452,7 @@ export default function TeacherResultsPage() {
                               {row.dirty && <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Unsaved changes" />}
                             </div>
                           </td>
-                          {SCORE_TYPES.map(st => {
+                          {scoreTypes.map(st => {
                              const cell = row[st.key];
                             return (
                               <td key={st.key} className="py-2.5 px-3 text-center">
@@ -468,14 +483,12 @@ export default function TeacherResultsPage() {
                                 <SendResultButton
                                   studentId={row.student_id}
                                   studentName={row.student_name}
-                                  results={[row.ca1, row.exam]
-                                    .filter(Boolean)
-                                    .map((c, i) => ({
-                                      subject_name: currentSubject?.name || 'Subject',
-                                      exam_type: SCORE_TYPES[i].label,
-                                      score: c!.score,
-                                      grade: c!.grade,
-                                    }))}
+                                  results={scoreTypes.filter(st => row[st.key] != null).map(st => ({
+                                    subject_name: currentSubject?.name || 'Subject',
+                                    exam_type: st.label,
+                                    score: row[st.key]!.score,
+                                    grade: row[st.key]!.grade,
+                                  }))}
                                 />
                               )}
                               {filled > 0 && (
@@ -547,20 +560,22 @@ export default function TeacherResultsPage() {
                 </div>
                 <div><label className="label">Assessment Type</label>
                   <select value={formData.exam_type} onChange={e => {
-                    const max = e.target.value === 'ca1' ? 40 : 60;
+                    const st = scoreTypes.find(s => s.key === e.target.value);
+                    const max = st?.maxScore ?? 100;
                     setFormData({ ...formData, exam_type: e.target.value as ExamType, score: Math.min(formData.score, max) });
                   }} className="input">
-                    <option value="ca1">Mid-Term Test (/40)</option>
-                    <option value="exam">Exam (/60)</option>
+                    {scoreTypes.map(st => (
+                      <option key={st.key} value={st.key}>{st.label} (/{st.maxScore})</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="label">Score</label>
-                  <input type="number" min={0} max={formData.exam_type === 'ca1' ? 40 : 60}
+                  <input type="number" min={0} max={scoreTypes.find(st => st.key === formData.exam_type)?.maxScore ?? 100}
                     value={formData.score ?? ''}
                     onChange={e => {
                       const raw = e.target.value;
-                      const max = formData.exam_type === 'ca1' ? 40 : 60;
+                      const max = scoreTypes.find(st => st.key === formData.exam_type)?.maxScore ?? 100;
                       const score = raw === '' ? 0 : Math.min(max, Math.max(0, parseInt(raw) || 0));
                       setFormData({ ...formData, score, grade: calculateGrade(score) });
                     }}

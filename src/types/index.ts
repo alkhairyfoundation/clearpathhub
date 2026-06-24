@@ -30,6 +30,20 @@ export interface SchoolSettings {
   session_end?: string;
   current_session_id?: string;
   current_term_id?: string;
+  assessment_config?: {
+    ca1_enabled: boolean;
+    ca1_max: number;
+    ca1_label: string;
+    ca2_enabled: boolean;
+    ca2_max: number;
+    ca2_label: string;
+    ca3_enabled: boolean;
+    ca3_max: number;
+    ca3_label: string;
+    exam_enabled: boolean;
+    exam_max: number;
+    exam_label: string;
+  };
 }
 
 export interface AcademicSession {

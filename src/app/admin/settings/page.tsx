@@ -17,6 +17,12 @@ export default function AdminSettingsPage() {
     school_name: '', school_motto: '', school_address: '', school_phone: '', school_email: '',
     primary_color: '#b3922f', secondary_color: '#063b29', accent_color: '#10b981',
     academic_year: new Date().getFullYear().toString(), term: 'First Term',
+    assessment_config: {
+      ca1_enabled: true, ca1_max: 40, ca1_label: 'Mid-Term Test',
+      ca2_enabled: false, ca2_max: 10, ca2_label: '2nd CA',
+      ca3_enabled: false, ca3_max: 10, ca3_label: '3rd CA',
+      exam_enabled: true, exam_max: 60, exam_label: 'Exam',
+    },
   });
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -183,6 +189,109 @@ export default function AdminSettingsPage() {
                 <label className="label">Session End</label>
                 <input type="date" value={settings.session_end || ''} onChange={(e) => setSettings({ ...settings, session_end: e.target.value })} className="input" />
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Assessment Configuration */}
+        <div className="card">
+          <div className="flex items-center gap-2 mb-5">
+            <FileText className="text-amber-600" size={20} />
+            <h2 className="text-lg font-semibold text-slate-900">Assessment Configuration</h2>
+          </div>
+          <p className="text-xs text-slate-500 mb-4">Configure how many Continuous Assessment (CA) columns appear on score entry and report cards, and their max scores.</p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={settings.assessment_config?.ca1_enabled ?? true}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca1_enabled: e.target.checked } })}
+                  className="w-4 h-4" />
+                <label className="text-sm font-medium text-slate-700">CA1</label>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500">Max Score</label>
+                <input type="number" min={0} max={100} value={settings.assessment_config?.ca1_max ?? 40}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca1_max: parseInt(e.target.value) || 0 } })}
+                  className="input py-1 text-sm" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-slate-500">Label</label>
+                <input type="text" value={settings.assessment_config?.ca1_label ?? 'Mid-Term Test'}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca1_label: e.target.value } })}
+                  className="input py-1 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={settings.assessment_config?.ca2_enabled ?? false}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca2_enabled: e.target.checked } })}
+                  className="w-4 h-4" />
+                <label className="text-sm font-medium text-slate-700">CA2</label>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500">Max Score</label>
+                <input type="number" min={0} max={100} value={settings.assessment_config?.ca2_max ?? 10}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca2_max: parseInt(e.target.value) || 0 } })}
+                  className="input py-1 text-sm" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-slate-500">Label</label>
+                <input type="text" value={settings.assessment_config?.ca2_label ?? '2nd CA'}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca2_label: e.target.value } })}
+                  className="input py-1 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={settings.assessment_config?.ca3_enabled ?? false}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca3_enabled: e.target.checked } })}
+                  className="w-4 h-4" />
+                <label className="text-sm font-medium text-slate-700">CA3</label>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500">Max Score</label>
+                <input type="number" min={0} max={100} value={settings.assessment_config?.ca3_max ?? 10}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca3_max: parseInt(e.target.value) || 0 } })}
+                  className="input py-1 text-sm" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-slate-500">Label</label>
+                <input type="text" value={settings.assessment_config?.ca3_label ?? '3rd CA'}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca3_label: e.target.value } })}
+                  className="input py-1 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" checked={settings.assessment_config?.exam_enabled ?? true}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, exam_enabled: e.target.checked } })}
+                  className="w-4 h-4" />
+                <label className="text-sm font-medium text-slate-700">Exam</label>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500">Max Score</label>
+                <input type="number" min={0} max={100} value={settings.assessment_config?.exam_max ?? 60}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, exam_max: parseInt(e.target.value) || 0 } })}
+                  className="input py-1 text-sm" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs text-slate-500">Label</label>
+                <input type="text" value={settings.assessment_config?.exam_label ?? 'Exam'}
+                  onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, exam_label: e.target.value } })}
+                  className="input py-1 text-sm" />
+              </div>
+            </div>
+            <div className="text-xs text-slate-400 bg-slate-50 p-3 rounded-lg">
+              Total: {(settings.assessment_config?.ca1_enabled ? settings.assessment_config?.ca1_max ?? 0 : 0) +
+                (settings.assessment_config?.ca2_enabled ? settings.assessment_config?.ca2_max ?? 0 : 0) +
+                (settings.assessment_config?.ca3_enabled ? settings.assessment_config?.ca3_max ?? 0 : 0) +
+                (settings.assessment_config?.exam_enabled ? settings.assessment_config?.exam_max ?? 0 : 0)} / 100
+              {((settings.assessment_config?.ca1_enabled ? settings.assessment_config?.ca1_max ?? 0 : 0) +
+                (settings.assessment_config?.ca2_enabled ? settings.assessment_config?.ca2_max ?? 0 : 0) +
+                (settings.assessment_config?.ca3_enabled ? settings.assessment_config?.ca3_max ?? 0 : 0) +
+                (settings.assessment_config?.exam_enabled ? settings.assessment_config?.exam_max ?? 0 : 0)) !== 100 && (
+                <span className="text-red-500 ml-2">(Should total 100)</span>
+              )}
             </div>
           </div>
         </div>

@@ -6,7 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-import { ArrowLeft, Download, Loader2, Check, X, Award, AlertCircle, BookOpen, GraduationCap, Clock, FileText, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Download, Loader2, Check, X, Award, AlertCircle, BookOpen, GraduationCap, Clock, FileText, BarChart3, Shield, AlertTriangle } from 'lucide-react';
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -125,6 +126,31 @@ export default function StudentEntranceReportPage() {
     return 'text-red-600';
   }
 
+  function getLetterGrade(pct: number): string {
+    if (pct >= 90) return 'A+';
+    if (pct >= 80) return 'A';
+    if (pct >= 70) return 'B';
+    if (pct >= 60) return 'C';
+    if (pct >= 50) return 'D';
+    return 'F';
+  }
+
+  function getLetterGradeColor(pct: number): string {
+    if (pct >= 80) return 'text-green-600';
+    if (pct >= 70) return 'text-blue-600';
+    if (pct >= 60) return 'text-amber-600';
+    if (pct >= 50) return 'text-orange-600';
+    return 'text-red-600';
+  }
+
+  const radarData = Object.entries(bySubject)
+    .filter(([_, d]) => d.total > 0)
+    .map(([subject, d]) => ({
+      subject,
+      score: Math.round((d.correct / d.total) * 100),
+      fullMark: 100,
+    }));
+
   function getBarColor(pct: number): string {
     if (pct >= 80) return 'bg-green-500';
     if (pct >= 60) return 'bg-blue-500';
@@ -194,6 +220,46 @@ export default function StudentEntranceReportPage() {
   }
 
   // ── Entrance PDF Enhancements ──
+  function drawEntranceRadarChart(doc: any, bySubj: Record<string, SubjectBreakdown>, cx: number, cy: number, radius: number): void {
+    const items = Object.entries(bySubj).filter(([_, d]) => d.total > 0);
+    const n = items.length;
+    if (n < 3) return;
+    const angleStep = (2 * Math.PI) / n;
+    for (let level = 1; level <= 5; level++) {
+      const r = (level / 5) * radius;
+      doc.setDrawColor(210, 210, 210);
+      doc.setLineWidth(0.2);
+      doc.ellipse(cx, cy, r, r);
+    }
+    const pts: number[][] = [];
+    items.forEach(([subject, d], i) => {
+      const angle = -Math.PI / 2 + i * angleStep;
+      const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+      const endX = cx + radius * Math.cos(angle);
+      const endY = cy + radius * Math.sin(angle);
+      doc.setDrawColor(200, 200, 215);
+      doc.setLineWidth(0.2);
+      doc.line(cx, cy, endX, endY);
+      const valR = (pct / 100) * radius;
+      const px = cx + valR * Math.cos(angle);
+      const py = cy + valR * Math.sin(angle);
+      pts.push([px, py]);
+      const labelR = radius + 10;
+      const lx = cx + labelR * Math.cos(angle);
+      const ly = cy + labelR * Math.sin(angle);
+      doc.setFontSize(4.5);
+      doc.setTextColor(80, 80, 80);
+      doc.setFont('helvetica', 'bold');
+      doc.text(subject.substring(0, 10), lx, ly, { align: 'center' });
+    });
+    if (pts.length > 2) {
+      doc.setFillColor(30, 58, 95, 0.12);
+      doc.setDrawColor(30, 58, 95);
+      doc.setLineWidth(0.6);
+      doc.lines(pts, cx, cy, [1, 1], 'DF');
+    }
+  }
+
   function drawEntranceBarChart(doc: any, bySubj: Record<string, SubjectBreakdown>, x: number, y: number, w: number, maxY: number): number {
     const items = Object.entries(bySubj)
       .map(([name, d]) => ({ name, pct: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 }))
@@ -211,11 +277,11 @@ export default function StudentEntranceReportPage() {
       doc.setFontSize(6.5); doc.setTextColor(60, 60, 60); doc.setFont('helvetica', 'normal');
       doc.text(item.name.substring(0, 14), x, by + barH - 0.5);
       doc.setFillColor(238, 238, 238);
-      doc.roundedRect(x + labelW, by, barMaxW, barH, 0.8, 0.8, 'F');
+      doc.rect(x + labelW, by, barMaxW, barH, 'F');
       const barW = Math.max((item.pct / 100) * barMaxW, 1);
       const bc: [number, number, number] = item.pct >= 70 ? [22, 163, 74] : item.pct >= 40 ? [245, 158, 11] : [220, 38, 38];
       doc.setFillColor(...bc);
-      doc.roundedRect(x + labelW, by, barW, barH, 0.8, 0.8, 'F');
+      doc.rect(x + labelW, by, barW, barH, 'F');
       doc.setTextColor(80, 80, 80); doc.setFontSize(6);
       doc.text(`${item.pct}%`, x + labelW + barMaxW + 1.5, by + barH - 0.5);
     });
@@ -288,7 +354,7 @@ export default function StudentEntranceReportPage() {
     const dotY = data.cell.y + data.cell.height / 2;
     for (let i = 0; i < max; i++) {
       doc.setFillColor(i < earned ? 22 : 200, i < earned ? 163 : 200, i < earned ? 74 : 200);
-      doc.circle(startX + i * spacing, dotY, dotR, 'F');
+      doc.ellipse(startX + i * spacing, dotY, dotR, dotR, 'F');
     }
   }
 
@@ -371,7 +437,7 @@ export default function StudentEntranceReportPage() {
       const scoreX = pw - 40;
       doc.setDrawColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
       doc.setFillColor(passed ? 240 : 254, passed ? 253 : 242, passed ? 244 : 242);
-      doc.circle(scoreX, y + 12, 12, 'FD');
+      doc.ellipse(scoreX, y + 12, 12, 12, 'FD');
       doc.setTextColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
@@ -419,18 +485,32 @@ export default function StudentEntranceReportPage() {
         doc.text('SUBJECT PERFORMANCE', 18, y + 0.5);
         y += 9;
         autoTable(doc, {
-          startY: y, head: [['Subject', 'Correct', 'Total', 'Score', 'Assessment']],
+          startY: y, head: [['Subject', 'Correct', 'Total', 'Score', 'Grade', 'Assessment']],
           body: subjectEntries.map(([subj, d]: [string, any]) => {
             const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
-            return [subj, `${d.correct}`, `${d.total}`, `${pct}%`, pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'];
+            return [subj, `${d.correct}`, `${d.total}`, `${pct}%`, getLetterGrade(pct), pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'];
           }),
           theme: 'striped', headStyles: { fillColor: [...primaryColor] as [number, number, number] },
-          columnStyles: { 0: { cellWidth: 50 }, 4: { cellWidth: 30 } },
+          columnStyles: { 0: { cellWidth: 45 }, 4: { cellWidth: 15 }, 5: { cellWidth: 25 } },
           margin: { left: 14, right: 14 }, tableLineWidth: 0,
         });
         y = (doc as any).lastAutoTable.finalY + 5;
         const pageH = doc.internal.pageSize.getHeight();
-        y = drawEntranceBarChart(doc, bySubject, 18, y, pw - 36, pageH - 15);
+        // Radar chart
+        if (subjectEntries.length >= 3) {
+          const radarCx = pw / 2;
+          const radarCy = y + 45;
+          const pageH2 = doc.internal.pageSize.getHeight();
+          if (radarCy + 55 > pageH2) { doc.addPage(); y = 45; drawHeader(doc); }
+          doc.setFontSize(8);
+          doc.setTextColor(30, 58, 95);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Subject Performance Radar', 18, y);
+          y += 3;
+          drawEntranceRadarChart(doc, bySubject, radarCx, y + 35, 32);
+          y = y + 78;
+        }
+        y = drawEntranceBarChart(doc, bySubject, 18, y, pw - 36, doc.internal.pageSize.getHeight() - 15);
       }
 
       const difficultyEntries = Object.entries(byDifficulty);
@@ -526,9 +606,9 @@ export default function StudentEntranceReportPage() {
       if (y < 250) {
         y += 3;
         doc.setFillColor(240, 242, 245);
-        doc.roundedRect(18, y, pw - 36, 6, 3, 3, 'F');
+        doc.rect(18, y, pw - 36, 6, 'F');
         doc.setFillColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
-        doc.roundedRect(18, y, Math.max((pw - 36) * score / 100, 6), 6, 3, 3, 'F');
+        doc.rect(18, y, Math.max((pw - 36) * score / 100, 6), 6, 'F');
         doc.setTextColor(100, 100, 100);
         doc.setFontSize(7);
         doc.setFont('helvetica', 'normal');
@@ -544,7 +624,7 @@ export default function StudentEntranceReportPage() {
         const split = doc.splitTextToSize(recText, pw - 40);
         const boxHeight = Math.max(22, split.length * 4 + 8);
         doc.setFillColor(253, 237, 236);
-        doc.roundedRect(14, y, pw - 28, boxHeight, 2, 2, 'F');
+        doc.rect(14, y, pw - 28, boxHeight, 'F');
         doc.setTextColor(180, 80, 60);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
@@ -631,8 +711,55 @@ export default function StudentEntranceReportPage() {
           <div className="card"><p className="text-xs text-slate-500">Total Questions</p><p className="text-2xl font-bold">{totalQ}</p></div>
           <div className="card"><p className="text-xs text-slate-500">Correct</p><p className="text-2xl font-bold text-green-600">{correctQ}</p></div>
           <div className="card"><p className="text-xs text-slate-500">Wrong</p><p className="text-2xl font-bold text-red-600">{wrongQ}</p></div>
-          <div className="card"><p className="text-xs text-slate-500">Accuracy</p><p className={`text-2xl font-bold ${getGradeColor(accuracy)}`}>{accuracy}%</p></div>
+          <div className="card"><p className="text-xs text-slate-500">Grade</p><p className={`text-2xl font-bold ${getLetterGradeColor(accuracy)}`}>{getLetterGrade(accuracy)}</p></div>
         </div>
+
+        {/* Time Taken + Mastery Level + Security Events */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {analytics?.time_taken_seconds && (
+            <div className="card flex items-center gap-3">
+              <Clock size={20} className="text-primary-600" />
+              <div><p className="text-xs text-slate-500">Time Taken</p><p className="text-lg font-bold">{Math.floor(analytics.time_taken_seconds / 60)}m {analytics.time_taken_seconds % 60}s</p></div>
+            </div>
+          )}
+          {analytics?.mastery_level && (
+            <div className="card flex items-center gap-3">
+              <Award size={20} className={`${analytics.mastery_level === 'MASTERED' ? 'text-green-600' : analytics.mastery_level === 'PROFICIENT' ? 'text-blue-600' : analytics.mastery_level === 'EXCELLENT' ? 'text-primary-600' : analytics.mastery_level === 'GOOD' ? 'text-amber-600' : 'text-red-600'}`} />
+              <div><p className="text-xs text-slate-500">Mastery Level</p><p className="text-lg font-bold">{analytics.mastery_level}</p></div>
+            </div>
+          )}
+          {application?.security_events && Array.isArray(application.security_events) && application.security_events.length > 0 && (
+            <div className="card flex items-center gap-3">
+              <Shield size={20} className="text-amber-600" />
+              <div>
+                <p className="text-xs text-slate-500">Security Events</p>
+                <p className="text-lg font-bold text-amber-600">{application.security_events.length}</p>
+                <p className="text-xs text-slate-400">
+                  {application.security_events.filter((e: any) => e.type === 'tab_switch').length} tab switches
+                  {application.security_events.filter((e: any) => e.type === 'fullscreen_exit').length > 0 ? `, ${application.security_events.filter((e: any) => e.type === 'fullscreen_exit').length} fullscreen exits` : ''}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Subject Radar Chart */}
+        {radarData.length >= 3 && (
+          <div className="card">
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={16} /> Subject Performance Radar</h3>
+            <div className="w-full max-w-md mx-auto">
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart data={radarData}>
+                  <PolarGrid stroke="#e2e8f0" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
+                  <Radar name="Score" dataKey="score" stroke="#1e3a5f" fill="#1e3a5f" fillOpacity={0.2} />
+                  <Tooltip formatter={(value: number) => [`${value}%`, 'Score']} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
 
         {/* Subject Performance */}
         {subjectEntries.length > 0 && (
@@ -640,7 +767,7 @@ export default function StudentEntranceReportPage() {
             <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><BookOpen size={16} /> Subject Performance</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Subject</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Assessment</th></tr></thead>
+                <thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Subject</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Grade</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Assessment</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {subjectEntries.map(([subj, d]: [string, any]) => {
                     const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
@@ -650,6 +777,7 @@ export default function StudentEntranceReportPage() {
                         <td className="p-3 text-center">{d.correct}</td>
                         <td className="p-3 text-center">{d.total}</td>
                         <td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td>
+                        <td className="p-3 text-center"><span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getLetterGradeColor(pct)}`}>{getLetterGrade(pct)}</span></td>
                         <td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td>
                         <td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td>
                       </tr>
