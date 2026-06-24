@@ -34,17 +34,17 @@ export async function POST(req: NextRequest) {
         }
 
         case 'create_test': {
-          const { title, description, subject_id, class_id, duration_minutes, passing_score, total_marks, shuffle_questions, created_by } = body;
+          const { title, description, subject_id, class_id, test_type, exam_date, duration_minutes, passing_score, total_marks, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, created_by } = body;
           const result = await pool.query(
-            `INSERT INTO tests (title, description, subject_id, class_id, duration_minutes, passing_score, total_marks, shuffle_questions, created_by, is_published)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false) RETURNING *`,
-            [title, description || '', subject_id, class_id || null, duration_minutes || 30, passing_score || 50, total_marks || 0, shuffle_questions || false, created_by]
+            `INSERT INTO tests (title, description, subject_id, class_id, test_type, exam_date, duration_minutes, passing_score, total_marks, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, created_by, is_published)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, true) RETURNING *`,
+            [title, description || '', subject_id, class_id || null, test_type || 'class_test', exam_date || null, duration_minutes || 30, passing_score || 50, total_marks || 0, shuffle_questions || false, shuffle_options || false, require_fullscreen || false, prevent_tab_switch || false, max_tab_switches || 3, created_by]
           );
           return NextResponse.json({ test: result.rows[0] }, { status: 201 });
         }
 
         case 'update_test': {
-          const { id, title, description, subject_id, class_id, duration_minutes, passing_score, total_marks, shuffle_questions, is_published } = body;
+          const { id, title, description, subject_id, class_id, test_type, exam_date, duration_minutes, passing_score, total_marks, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, is_published } = body;
           const sets: string[] = [];
           const params: any[] = [];
           let idx = 1;
@@ -52,10 +52,16 @@ export async function POST(req: NextRequest) {
           if (description !== undefined) { sets.push(`description = $${idx++}`); params.push(description); }
           if (subject_id !== undefined) { sets.push(`subject_id = $${idx++}`); params.push(subject_id); }
           if (class_id !== undefined) { sets.push(`class_id = $${idx++}`); params.push(class_id); }
+          if (test_type !== undefined) { sets.push(`test_type = $${idx++}`); params.push(test_type); }
+          if (exam_date !== undefined) { sets.push(`exam_date = $${idx++}`); params.push(exam_date); }
           if (duration_minutes !== undefined) { sets.push(`duration_minutes = $${idx++}`); params.push(duration_minutes); }
           if (passing_score !== undefined) { sets.push(`passing_score = $${idx++}`); params.push(passing_score); }
           if (total_marks !== undefined) { sets.push(`total_marks = $${idx++}`); params.push(total_marks); }
           if (shuffle_questions !== undefined) { sets.push(`shuffle_questions = $${idx++}`); params.push(shuffle_questions); }
+          if (shuffle_options !== undefined) { sets.push(`shuffle_options = $${idx++}`); params.push(shuffle_options); }
+          if (require_fullscreen !== undefined) { sets.push(`require_fullscreen = $${idx++}`); params.push(require_fullscreen); }
+          if (prevent_tab_switch !== undefined) { sets.push(`prevent_tab_switch = $${idx++}`); params.push(prevent_tab_switch); }
+          if (max_tab_switches !== undefined) { sets.push(`max_tab_switches = $${idx++}`); params.push(max_tab_switches); }
           if (is_published !== undefined) { sets.push(`is_published = $${idx++}`); params.push(is_published); }
           params.push(id);
           const result = await pool.query(

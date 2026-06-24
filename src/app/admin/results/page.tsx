@@ -110,25 +110,22 @@ export default function AdminResultsPage() {
       const firstClassId = cls.length > 0 ? cls[0].id : '';
       if (firstClassId) setSelectedClassId(firstClassId);
 
-      const [{ data: subjData }, { data: settingsData }] = await Promise.all([
-        firstClassId
-          ? supabase.from('subjects').select('*').eq('class_id', firstClassId).order('name')
-          : supabase.from('subjects').select('*').order('name'),
-        supabase.from('school_settings').select('assessment_config').limit(1).maybeSingle(),
-      ]);
-
-      setSubjects(subjData || []);
+      const { data: settingsData } = await supabase.from('school_settings').select('assessment_config').limit(1).maybeSingle();
       setAssessmentConfig(settingsData?.assessment_config || null);
     } catch (err: any) { setError(err.message); }
     setLoading(false);
   }
 
+  // Fetch subjects whenever class changes
   useEffect(() => {
-    if (selectedClassId && subjects.length > 0) {
-      const filtered = subjects.filter(s => s.class_id === selectedClassId);
-      if (filtered.length > 0) setSelectedSubjectId(filtered[0].id);
-    }
-  }, [selectedClassId, subjects]);
+    if (!selectedClassId) return;
+    setSelectedSubjectId('');
+    supabase.from('subjects').select('*').eq('class_id', selectedClassId).order('name')
+      .then(({ data }) => {
+        setSubjects(data || []);
+        if (data && data.length > 0) setSelectedSubjectId(data[0].id);
+      });
+  }, [selectedClassId]);
 
   async function fetchMatrix() {
     setLoading(true);
