@@ -600,7 +600,7 @@ function ReportCardContent() {
   const [showRemarksEditor, setShowRemarksEditor] = useState(false);
 
   useEffect(() => {
-    if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
+    if (!profile || (profile.role !== 'teacher' && profile.role !== 'admin')) { router.push('/login'); return; }
     fetchInitial();
   }, [profile]);
 
@@ -611,12 +611,9 @@ function ReportCardContent() {
   async function fetchInitial() {
     setLoading(true);
     try {
-      const [settingsRes, termsRes, studentRes] = await Promise.all([
+      const [settingsRes, termsRes] = await Promise.all([
         supabase.from('school_settings').select('*').limit(1).maybeSingle(),
         supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
-        supabase.from('students')
-          .select('id, profile_id, admission_number, profile:profiles!profile_id(first_name, last_name, avatar_url), class:classes!class_id(name)')
-          .in('class_id', (await supabase.from('subjects').select('class_id').eq('teacher_id', profile?.id)).data?.map(s => s.class_id).filter(Boolean) || ['none']),
       ]);
       setSchoolSettings(settingsRes.data);
       setAssessmentConfig(settingsRes.data?.assessment_config || null);
@@ -627,9 +624,19 @@ function ReportCardContent() {
       setAllTerms(termsRes.data || []);
       setSelectedTerm(termParam ? (termsRes.data || []).find((t: any) => t.id === termParam) : (termsRes.data || []).find((t: any) => t.is_current) || (termsRes.data || [])[0]);
 
+      // Admin sees all students; teacher sees only students in their assigned classes
+      let studentQuery = supabase.from('students')
+        .select('id, profile_id, admission_number, profile:profiles!profile_id(first_name, last_name, avatar_url), class:classes!class_id(name)');
+      if (profile?.role !== 'admin') {
+        const classIds = (await supabase.from('subjects').select('class_id').eq('teacher_id', profile?.id)).data?.map(s => s.class_id).filter(Boolean) || [];
+        studentQuery = studentQuery.in('class_id', classIds.length > 0 ? classIds : ['none']);
+      }
+      const studentRes = await studentQuery;
+
       const studentsData = (studentRes.data || []).map((s: any) => ({ ...s, name: `${s.profile?.first_name || ''} ${s.profile?.last_name || ''}`.trim() }));
       setStudents(studentsData);
-      setSelectedStudent(studentParam ? studentsData.find((s: any) => s.profile_id === studentParam) : studentsData[0]);
+      const matched = studentParam ? studentsData.find((s: any) => s.profile_id === studentParam) : null;
+      setSelectedStudent(matched || studentsData[0]);
     } catch (err: any) { setError(err.message); }
     setLoading(false);
   }
