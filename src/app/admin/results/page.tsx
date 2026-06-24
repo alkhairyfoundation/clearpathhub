@@ -120,7 +120,7 @@ export default function AdminResultsPage() {
   useEffect(() => {
     if (!selectedClassId) return;
     setSelectedSubjectId('');
-    supabase.from('subjects').select('*').eq('class_id', selectedClassId).order('name')
+    supabase.from('subjects').select('*').or(`class_id.eq.${selectedClassId},class_id.is.null`).order('name')
       .then(({ data }) => {
         setSubjects(data || []);
         if (data && data.length > 0) setSelectedSubjectId(data[0].id);
@@ -342,7 +342,7 @@ export default function AdminResultsPage() {
           <div>
             <label className="text-xs text-slate-500 font-medium block mb-1">Subject</label>
             <select value={selectedSubjectId} onChange={e => setSelectedSubjectId(e.target.value)} className="input py-1.5 text-sm w-auto min-w-[160px]">
-              {subjects.filter(s => !selectedClassId || s.class_id === selectedClassId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {subjects.filter(s => !selectedClassId || !s.class_id || s.class_id === selectedClassId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
         </div>

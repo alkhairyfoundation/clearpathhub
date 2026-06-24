@@ -130,7 +130,7 @@ export default function TeacherResultsPage() {
 
   useEffect(() => {
     if (selectedClassId && subjects.length > 0) {
-      const filtered = subjects.filter(s => s.class_id === selectedClassId);
+      const filtered = subjects.filter(s => !s.class_id || s.class_id === selectedClassId);
       if (filtered.length > 0) setSelectedSubjectId(filtered[0].id);
       else setSelectedSubjectId('');
     }
@@ -352,7 +352,7 @@ export default function TeacherResultsPage() {
           <div>
             <label className="text-xs text-slate-500 font-medium block mb-1">Subject</label>
             <select value={selectedSubjectId} onChange={e => setSelectedSubjectId(e.target.value)} className="input py-1.5 text-sm w-auto min-w-[160px]">
-              {subjects.filter(s => !selectedClassId || s.class_id === selectedClassId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {subjects.filter(s => !selectedClassId || !s.class_id || s.class_id === selectedClassId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
         </div>
