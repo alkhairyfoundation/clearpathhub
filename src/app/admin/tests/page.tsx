@@ -56,7 +56,9 @@ export default function AdminTestsPage() {
 
   async function api(action: string, data: any = {}) {
     const res = await fetch('/api/manage-tests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) });
-    return res.json();
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || `Server error (${res.status})`);
+    return json;
   }
 
   useEffect(() => {
@@ -66,16 +68,20 @@ export default function AdminTestsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const [testsRes, attemptsRes, subjectsRes, classesRes] = await Promise.all([
-      api('list_tests'),
-      api('list_attempts', { limit: '50' }),
-      supabase.from('subjects').select('id, name').order('name'),
-      supabase.from('classes').select('id, name').order('level'),
-    ]);
-    if (testsRes.tests) setTests(testsRes.tests);
-    if (attemptsRes.attempts) setAttempts(attemptsRes.attempts);
-    if (subjectsRes.data) setSubjects(subjectsRes.data);
-    if (classesRes.data) setClasses(classesRes.data);
+    try {
+      const [testsRes, attemptsRes, subjectsRes, classesRes] = await Promise.all([
+        api('list_tests'),
+        api('list_attempts', { limit: '50' }),
+        supabase.from('subjects').select('id, name').order('name'),
+        supabase.from('classes').select('id, name').order('level'),
+      ]);
+      if (testsRes.tests) setTests(testsRes.tests);
+      if (attemptsRes.attempts) setAttempts(attemptsRes.attempts);
+      if (subjectsRes.data) setSubjects(subjectsRes.data);
+      if (classesRes.data) setClasses(classesRes.data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load tests');
+    }
     setLoading(false);
   }
 
