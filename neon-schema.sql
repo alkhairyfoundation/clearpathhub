@@ -684,7 +684,89 @@ CREATE TABLE IF NOT EXISTS review_schedule (
 -- for simplicity with NextAuth
 
 -- ============================================================================
--- PART 12: STUDENT GROWTH PORTFOLIO + IDENTITY BUILDER
+-- PART 12: MOCK EXAMS (BECE/WAEC Preparation)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS mock_exams (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  exam_type TEXT NOT NULL CHECK (exam_type IN ('JSS3_BECE', 'SS3_WAEC')),
+  academic_year TEXT NOT NULL,
+  exam_date DATE,
+  duration_minutes INTEGER DEFAULT 120,
+  passing_score INTEGER DEFAULT 50,
+  total_questions INTEGER DEFAULT 60,
+  shuffle_questions BOOLEAN DEFAULT true,
+  require_fullscreen BOOLEAN DEFAULT false,
+  prevent_tab_switch BOOLEAN DEFAULT false,
+  max_tab_switches INTEGER DEFAULT 3,
+  max_attempts INTEGER DEFAULT 0,
+  is_published BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS mock_questions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  exam_id UUID REFERENCES mock_exams(id) ON DELETE CASCADE,
+  question TEXT NOT NULL,
+  question_image TEXT,
+  options TEXT[] NOT NULL,
+  option_images TEXT[],
+  correct_answer INTEGER NOT NULL,
+  points INTEGER DEFAULT 1,
+  question_type TEXT DEFAULT 'multiple_choice',
+  subject TEXT NOT NULL,
+  difficulty_level TEXT CHECK (difficulty_level IN ('EASY', 'MEDIUM', 'HARD', 'VERY_HARD')),
+  topic TEXT,
+  subtopic TEXT,
+  explanation TEXT,
+  skill_tag TEXT,
+  bloom_level TEXT,
+  curriculum TEXT,
+  grade_level TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS mock_attempts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  exam_id UUID REFERENCES mock_exams(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES profiles(id),
+  score INTEGER,
+  mastery_level TEXT CHECK (mastery_level IN ('POOR', 'GOOD', 'EXCELLENT', 'PROFICIENT', 'MASTERED')),
+  answers JSONB,
+  subject_scores JSONB,
+  topic_mastery JSONB,
+  security_events JSONB,
+  time_taken_seconds INTEGER,
+  attempt_number INTEGER DEFAULT 1,
+  started_at TIMESTAMP DEFAULT NOW(),
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS mock_analytics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES profiles(id),
+  exam_id UUID REFERENCES mock_exams(id) ON DELETE CASCADE,
+  total_attempts INTEGER DEFAULT 0,
+  best_score NUMERIC(5,2),
+  average_score NUMERIC(5,2),
+  latest_score NUMERIC(5,2),
+  mastery_level TEXT,
+  topic_performance JSONB,
+  weakest_subjects TEXT[],
+  strongest_subjects TEXT[],
+  recommended_pathway TEXT,
+  pathway_reasoning TEXT,
+  updated_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ============================================================================
+-- PART 13: STUDENT GROWTH PORTFOLIO + IDENTITY BUILDER
 -- ============================================================================
 
 -- ARCHETYPES (Identity Cards)

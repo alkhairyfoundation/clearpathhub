@@ -6,8 +6,8 @@ import {
   LayoutDashboard, Users, GraduationCap, UserCheck, BookOpen, 
   Calendar, BarChart3, Settings, QrCode, Megaphone, FileText, 
   Shield, DollarSign, ClipboardList, Award, Activity, ScanLine,
-  Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, HelpCircle, Brain,
-  Target, TrendingUp, Zap, Trophy, CheckCircle, Star, Bot, Map
+  Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, ClipboardEdit, HelpCircle, Brain,
+  Target, TrendingUp, Zap, Trophy, CheckCircle, Star, Bot, Map,
 } from 'lucide-react';
 import type { UserRole } from '@/types';
 
@@ -36,6 +36,7 @@ const navItems = {
     { href: '/admin/tests', label: 'Tests', icon: TestTube2 },
     { href: '/admin/evaluation', label: 'Teacher Evaluation', icon: ClipboardList },
     { href: '/admin/entrance-exams', label: 'Entrance Exams', icon: FileCheck },
+    { href: '/admin/mock-exams', label: 'Mock Exams', icon: ClipboardEdit },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/id-cards', label: 'Student ID Cards', icon: QrCode },
     { href: '/admin/scan-id', label: 'Scan Student ID', icon: ScanLine },
@@ -60,6 +61,7 @@ const navItems = {
     { href: '/teacher/homework', label: 'Homework', icon: Clipboard },
     { href: '/teacher/tasks', label: 'My Tasks', icon: ClipboardList },
     { href: '/teacher/tests', label: 'Tests', icon: TestTube2 },
+    { href: '/teacher/mock-exams', label: 'Mock Exams', icon: ClipboardEdit },
     { href: '/teacher/quizzes', label: 'Quizzes', icon: Award },
     { href: '/teacher/results', label: 'Results & Analytics', icon: BarChart3 },
     { href: '/teacher/report-card', label: 'Report Card', icon: Award },
@@ -98,6 +100,7 @@ const navItems = {
     { href: '/student/skills-growth', label: 'Skills Growth', icon: Award },
     { href: '/student/announcements', label: 'Announcements', icon: Megaphone },
     { href: '/student/entrance-exams', label: 'Entrance Exams', icon: FileCheck },
+    { href: '/student/mock-exams', label: 'Mock Exams', icon: ClipboardEdit },
     { href: '/student/id-card', label: 'My ID Card', icon: QrCode },
     { href: '/student/profile', label: 'Profile', icon: Settings },
   ],
