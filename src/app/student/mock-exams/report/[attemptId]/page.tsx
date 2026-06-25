@@ -95,7 +95,7 @@ export default function StudentMockExamReportPage() {
         .select('*')
         .eq('student_id', profile?.id)
         .eq('exam_id', attemptData.exam_id)
-        .eq('completed_at', 'not.is', null)
+        .not('completed_at', 'is', null)
         .order('created_at', { ascending: true });
       setAllAttempts(allAtts || []);
 
