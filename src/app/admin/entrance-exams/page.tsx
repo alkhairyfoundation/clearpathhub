@@ -297,8 +297,8 @@ async function handleCreateExam() {
             correct_answer: q.correct_answer ?? 0,
             points: q.points ?? 1,
             question_type: mappedType,
-            subject: q.subject || null,
-            difficulty_level: q.difficulty_level || null,
+            subject: q.subject || 'General',
+            difficulty_level: q.difficulty_level || 'MEDIUM',
             topic: q.topic || null,
             subtopic: q.subtopic || null,
             explanation: q.explanation || null,
@@ -384,8 +384,8 @@ async function handleCreateExam() {
             correct_answer: q.correct_answer ?? 0,
             points: q.points ?? 1,
             question_type: mappedType,
-            subject: q.subject || null,
-            difficulty_level: q.difficulty_level || null,
+            subject: q.subject || 'General',
+            difficulty_level: q.difficulty_level || 'MEDIUM',
             topic: q.topic || null,
             subtopic: q.subtopic || null,
             explanation: q.explanation || null,
@@ -868,6 +868,157 @@ function viewAnalyticsDetails(record: any) {
           d.text('This report is system-generated and does not require a signature.', pw / 2, ph - 2.5, { align: 'center' });
         };
 
+        // ── Helper: draw radar chart ──
+        const drawRadarChart = (d: typeof doc, bySubj: Record<string, any>, cx: number, cy: number, radius: number) => {
+          const items = Object.entries(bySubj).filter(([_, v]: any) => v.total > 0);
+          const n = items.length;
+          if (n < 3) return;
+          const angleStep = (2 * Math.PI) / n;
+          for (let level = 1; level <= 5; level++) {
+            const r = (level / 5) * radius;
+            d.setDrawColor(210, 210, 210);
+            d.setLineWidth(0.2);
+            d.ellipse(cx, cy, r, r);
+          }
+          const pts: number[][] = [];
+          items.forEach(([subject, v]: any, i: number) => {
+            const angle = -Math.PI / 2 + i * angleStep;
+            const pct = v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0;
+            const endX = cx + radius * Math.cos(angle);
+            const endY = cy + radius * Math.sin(angle);
+            d.setDrawColor(200, 200, 215);
+            d.setLineWidth(0.2);
+            d.line(cx, cy, endX, endY);
+            const valR = (pct / 100) * radius;
+            const px = cx + valR * Math.cos(angle);
+            const py = cy + valR * Math.sin(angle);
+            pts.push([px, py]);
+            const labelR = radius + 10;
+            const lx = cx + labelR * Math.cos(angle);
+            const ly = cy + labelR * Math.sin(angle);
+            d.setFontSize(4.5);
+            d.setTextColor(80, 80, 80);
+            d.setFont('helvetica', 'bold');
+            d.text(subject.substring(0, 10), lx, ly, { align: 'center' });
+          });
+          if (pts.length > 2) {
+            d.setFillColor(30, 58, 95, 0.12);
+            d.setDrawColor(30, 58, 95);
+            d.setLineWidth(0.6);
+            d.lines(pts, cx, cy, [1, 1], 'DF');
+          }
+        };
+
+        // ── Helper: compute pathway recommendations ──
+        const computePathwayRecommendations = (bySubj: Record<string, any>): { label: string; score: number; color: string; }[] => {
+          const entries = Object.entries(bySubj).map(([n, v]: any) => ({ n, pct: v.total > 0 ? (v.correct / v.total) * 100 : 0 }));
+          const getPct = (namePart: string) => { const found = entries.find(e => e.n.toLowerCase().includes(namePart)); return found ? found.pct : 0; };
+          const mathPct = getPct('math');
+          const englishPct = getPct('english');
+          const sciencePct = (getPct('basic science') + getPct('basic technology') + getPct('science')) / (entries.some(e => e.n.toLowerCase().includes('basic science')) ? 2 : 0);
+          const results: { label: string; score: number; color: string; }[] = [];
+          if (mathPct > 0 && sciencePct > 0) results.push({ label: 'Science (Sciences)', score: Math.round((mathPct * 0.5 + sciencePct * 0.5)), color: '#1a5276' });
+          if (mathPct > 0 && englishPct > 0) results.push({ label: 'Commercial (Business)', score: Math.round((mathPct * 0.5 + englishPct * 0.5)), color: '#922b21' });
+          if (englishPct > 0) { const artsScore = englishPct * 0.7 + Math.random() * 0; results.push({ label: 'Arts (Humanities)', score: Math.round(englishPct > 0 ? Math.min(100, englishPct * 1.1) : 0), color: '#1e8449' }); }
+          return results.sort((a, b) => b.score - a.score);
+        };
+
+        // ── Helper: draw insights ──
+        const drawInsights = (d: typeof doc, bySubj: Record<string, any>, byDiff: Record<string, any>, byTop: Record<string, any>, x: number, y: number, w: number, maxY: number): number => {
+          const subjItems = Object.entries(bySubj).map(([name, v]: any) => ({ name, pct: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0 })).filter(s => s.pct > 0);
+          if (subjItems.length === 0 && Object.keys(byDiff).length === 0) return y;
+          d.setDrawColor(200, 200, 200); d.setLineWidth(0.3);
+          d.line(x, y, x + w, y); y += 3;
+          d.setFontSize(8); d.setTextColor(30, 58, 95); d.setFont('helvetica', 'bold');
+          d.text('Performance Insights', x, y); y += 5;
+          if (subjItems.length > 0) {
+            const sorted = [...subjItems].sort((a: any, b: any) => b.pct - a.pct);
+            d.setFontSize(6.5); d.setTextColor(22, 163, 74); d.setFont('helvetica', 'bold');
+            d.text('Strengths', x, y); y += 3.5;
+            d.setFont('helvetica', 'normal'); d.setTextColor(60, 60, 60);
+            sorted.slice(0, 2).forEach((s: any) => { d.text(`${s.name}: ${s.pct}%`, x + 3, y + 0.5); y += 4; });
+            y += 1;
+            const weak = sorted.filter((s: any) => s.pct < 40);
+            if (weak.length > 0) {
+              if (y + 10 > maxY) { d.addPage(); y = 45; drawSchoolHeader(d); }
+              d.setFontSize(6.5); d.setTextColor(220, 38, 38); d.setFont('helvetica', 'bold');
+              d.text('Needs Improvement', x, y); y += 3.5;
+              d.setFont('helvetica', 'normal'); d.setTextColor(60, 60, 60);
+              weak.forEach((s: any) => { d.text(`${s.name}: ${s.pct}%`, x + 3, y + 0.5); y += 4; });
+              y += 1;
+            }
+          }
+          const diffWeak = Object.entries(byDiff).filter(([_, v]: any) => v.total > 0 && (v.correct / v.total) < 0.4);
+          if (diffWeak.length > 0) {
+            if (y + 10 > maxY) { d.addPage(); y = 45; drawSchoolHeader(d); }
+            d.setFontSize(6.5); d.setTextColor(245, 158, 11); d.setFont('helvetica', 'bold');
+            d.text('Difficulty Challenges', x, y); y += 3.5;
+            d.setFont('helvetica', 'normal'); d.setTextColor(60, 60, 60);
+            diffWeak.slice(0, 3).forEach(([diff, v]: any) => { const pct = Math.round((v.correct / v.total) * 100); d.text(`${diff}: ${pct}% correct`, x + 3, y + 0.5); y += 4; });
+            y += 1;
+          }
+          const topWeak = Object.entries(byTop).filter(([_, v]: any) => v.total > 0 && (v.correct / v.total) < 0.4);
+          if (topWeak.length > 0) {
+            if (y + 8 > maxY) { d.addPage(); y = 45; drawSchoolHeader(d); }
+            d.setFontSize(6.5); d.setTextColor(124, 58, 237); d.setFont('helvetica', 'bold');
+            d.text('Topics to Focus On', x, y); y += 3.5;
+            d.setFont('helvetica', 'normal'); d.setTextColor(60, 60, 60);
+            topWeak.slice(0, 3).forEach(([topic, v]: any) => { const pct = Math.round((v.correct / v.total) * 100); d.text(`${topic}: ${pct}%`, x + 3, y + 0.5); y += 4; });
+            y += 2;
+          }
+          // ── Pathway Recommendations ──
+          const pathwayRecs = computePathwayRecommendations(bySubj);
+          if (pathwayRecs.length > 0) {
+            if (y + 16 > maxY) { d.addPage(); y = 45; drawSchoolHeader(d); }
+            d.setDrawColor(200, 200, 200); d.setLineWidth(0.3);
+            d.line(x, y, x + w, y); y += 3;
+            d.setFontSize(8); d.setTextColor(30, 58, 95); d.setFont('helvetica', 'bold');
+            d.text('Recommended Academic Pathways', x, y); y += 5;
+            d.setFont('helvetica', 'normal'); d.setTextColor(60, 60, 60);
+            pathwayRecs.forEach((pr: any, i: number) => {
+              d.setFontSize(7);
+              const barW = Math.max((pr.score / 100) * (w - 30), 1);
+              d.text(`${i + 1}. ${pr.label}`, x + 2, y + 2);
+              d.setTextColor(238, 238, 238); d.setFillColor(238, 238, 238);
+              d.rect(x + 68, y - 2, w - 84, 3.5, 'F');
+              d.setFillColor(pr.color);
+              d.rect(x + 68, y - 2, barW, 3.5, 'F');
+              d.setFontSize(5.5); d.setTextColor(80, 80, 80);
+              d.text(`${pr.score}%`, x + 68 + Math.max(barW, 10) + 1, y + 1.5);
+              y += 6;
+            });
+            y += 2;
+          }
+          return y;
+        };
+
+        // ── Helper: draw subject bar chart ──
+        const drawBarChart = (d: typeof doc, bySubj: Record<string, any>, x: number, y: number, w: number, maxY: number): number => {
+          const items = Object.entries(bySubj).map(([name, v]: any) => ({ name, pct: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0 })).sort((a: any, b: any) => b.pct - a.pct);
+          if (items.length === 0) return y;
+          const barH = 4.5, gap = 2.5, labelW = 36, pctW = 12, barMaxW = w - labelW - pctW;
+          const chartH = items.length * (barH + gap) + 11;
+          if (y + chartH > maxY) { d.addPage(); y = 45; drawSchoolHeader(d); }
+          d.setDrawColor(200, 200, 200); d.setLineWidth(0.3);
+          d.line(x, y, x + w, y); y += 3;
+          d.setFontSize(8); d.setTextColor(30, 58, 95); d.setFont('helvetica', 'bold');
+          d.text('Subject Performance Overview', x, y); y += 5.5;
+          items.forEach((item: any, i: number) => {
+            const by = y + i * (barH + gap);
+            d.setFontSize(6.5); d.setTextColor(60, 60, 60); d.setFont('helvetica', 'normal');
+            d.text(item.name.substring(0, 14), x, by + barH - 0.5);
+            d.setFillColor(238, 238, 238);
+            d.rect(x + labelW, by, barMaxW, barH, 'F');
+            const barW = Math.max((item.pct / 100) * barMaxW, 1);
+            const bc: [number, number, number] = item.pct >= 70 ? [22, 163, 74] : item.pct >= 40 ? [245, 158, 11] : [220, 38, 38];
+            d.setFillColor(...bc);
+            d.rect(x + labelW, by, barW, barH, 'F');
+            d.setTextColor(80, 80, 80); d.setFontSize(6);
+            d.text(`${item.pct}%`, x + labelW + barMaxW + 1.5, by + barH - 0.5);
+          });
+          return y + items.length * (barH + gap) + 3;
+        };
+
         // ═══════════════════════════════════════════
         // PAGE 1
         // ═══════════════════════════════════════════
@@ -875,6 +1026,8 @@ function viewAnalyticsDetails(record: any) {
 
         // ── Student Information ──
         let y = 50;
+        doc.setFillColor(...goldColor);
+        doc.rect(14, y - 5, pw - 28, 1, 'F');
         doc.setFillColor(...primaryColor);
         doc.rect(14, y - 4, pw - 28, 7, 'F');
         doc.setTextColor(255, 255, 255);
@@ -904,6 +1057,8 @@ function viewAnalyticsDetails(record: any) {
 
         // ── Score Summary ──
         y += studentInfo.length * 5.5 + 7;
+        doc.setFillColor(...goldColor);
+        doc.rect(14, y - 5, pw - 28, 1, 'F');
         doc.setFillColor(...primaryColor);
         doc.rect(14, y - 4, pw - 28, 7, 'F');
         doc.setTextColor(255, 255, 255);
@@ -914,10 +1069,16 @@ function viewAnalyticsDetails(record: any) {
         y += 11;
 
         const scoreX = pw - 40;
-        doc.setDrawColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
-        doc.setFillColor(passed ? 240 : 254, passed ? 253 : 242, passed ? 244 : 242);
+        const gaugeColor: [number, number, number] = passed ? [22, 163, 74] : [220, 38, 38];
+        doc.setDrawColor(...goldColor);
+        doc.setFillColor(gaugeColor[0], gaugeColor[1], gaugeColor[2]);
+        doc.circle(scoreX, y + 12, 15, 'F');
+        doc.setFillColor(255, 255, 255);
+        doc.circle(scoreX, y + 12, 12, 'F');
+        doc.setDrawColor(...gaugeColor);
+        doc.setFillColor(...gaugeColor);
         doc.circle(scoreX, y + 12, 12, 'FD');
-        doc.setTextColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
+        doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.text(`${score}%`, scoreX, y + 15, { align: 'center' });
@@ -964,6 +1125,8 @@ function viewAnalyticsDetails(record: any) {
         if (subjectEntries.length > 0) {
           y += resultsInfo.length * 5 + 7;
           if (y > 240) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+          doc.setFillColor(...goldColor);
+          doc.rect(14, y - 5, pw - 28, 1, 'F');
           doc.setFillColor(...primaryColor);
           doc.rect(14, y - 4, pw - 28, 7, 'F');
           doc.setTextColor(255, 255, 255);
@@ -987,36 +1150,28 @@ function viewAnalyticsDetails(record: any) {
             tableLineWidth: 0,
           });
           y = (doc as any).lastAutoTable.finalY + 5;
-          // ── Subject Bar Chart ──
-          const subjItems = Object.entries(bySubject).map(([name, d]: [string, any]) => ({ name, pct: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).sort((a: any, b: any) => b.pct - a.pct);
-          if (subjItems.length > 0) {
-            if (y + subjItems.length * 8 + 15 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
-            const barH = 4, gap = 2, lw = 36, pw2 = 14, bmw = pw - 36 - lw - pw2;
-            doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
-            doc.line(18, y, 18 + pw - 36, y); y += 3;
+
+          // ── Radar Chart ──
+          const subjKeys = Object.keys(bySubject).filter(k => bySubject[k].total > 0);
+          if (subjKeys.length >= 3) {
+            if (y + 170 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
             doc.setFontSize(8); doc.setTextColor(30, 58, 95); doc.setFont('helvetica', 'bold');
-            doc.text('Subject Performance Overview', 18, y); y += 5;
-            subjItems.forEach((item: any, i: number) => {
-              const by = y + i * (barH + gap);
-              doc.setFontSize(6.5); doc.setTextColor(60, 60, 60); doc.setFont('helvetica', 'normal');
-              doc.text(item.name.substring(0, 14), 18, by + barH - 0.5);
-              doc.setFillColor(238, 238, 238);
-              doc.roundedRect(18 + lw, by, bmw, barH, 0.8, 0.8, 'F');
-              const bw = Math.max((item.pct / 100) * bmw, 1);
-              const bc: [number, number, number] = item.pct >= 70 ? [22, 163, 74] : item.pct >= 40 ? [245, 158, 11] : [220, 38, 38];
-              doc.setFillColor(...bc);
-              doc.roundedRect(18 + lw, by, bw, barH, 0.8, 0.8, 'F');
-              doc.setTextColor(80, 80, 80); doc.setFontSize(6);
-              doc.text(`${item.pct}%`, 18 + lw + bmw + 1.5, by + barH - 0.5);
-            });
-            y += subjItems.length * (barH + gap) + 3;
+            doc.text('Subject Radar', 18, y);
+            y += 2;
+            drawRadarChart(doc, bySubject, pw / 2 - 14, y + 75, 65);
+            y += 165;
           }
+
+          // ── Subject Bar Chart ──
+          y = drawBarChart(doc, bySubject, 18, y, pw - 36, 280) + 3;
         }
 
         // ── Difficulty-wise Performance ──
         const difficultyEntries = Object.entries(byDifficulty);
         if (difficultyEntries.length > 0) {
           if (y > 240) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
+          doc.setFillColor(...goldColor);
+          doc.rect(14, y - 5, pw - 28, 1, 'F');
           doc.setFillColor(...primaryColor);
           doc.rect(14, y - 4, pw - 28, 7, 'F');
           doc.setTextColor(255, 255, 255);
@@ -1039,40 +1194,9 @@ function viewAnalyticsDetails(record: any) {
             tableLineWidth: 0,
           });
           y = (doc as any).lastAutoTable.finalY + 5;
+
           // ── Performance Insights ──
-          const subjSorted = Object.entries(bySubject).map(([n, d]: [string, any]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter((s: any) => s.p > 0).sort((a: any, b: any) => b.p - a.p);
-          const diffWeak = Object.entries(byDifficulty).filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
-          const topWeak = Object.entries(byTopic).filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
-          if (subjSorted.length > 0 || diffWeak.length > 0 || topWeak.length > 0) {
-            if (y + 30 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
-            doc.setDrawColor(200, 200, 200); doc.setLineWidth(0.3);
-            doc.line(14, y, 14 + pw - 28, y); y += 3;
-            doc.setFontSize(8); doc.setTextColor(30, 58, 95); doc.setFont('helvetica', 'bold');
-            doc.text('Performance Insights', 18, y); y += 5;
-            doc.setFontSize(6.5); doc.setTextColor(22, 163, 74); doc.setFont('helvetica', 'bold');
-            doc.text('Strengths', 18, y); y += 3.5;
-            doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
-            const best = subjSorted.slice(0, 2);
-            best.forEach((s: any) => { doc.text(`${s.n}: ${s.p}%`, 21, y + 0.5); y += 4; });
-            y += 1;
-            const weakSubj = subjSorted.filter((s: any) => s.p < 40);
-            if (weakSubj.length > 0 || diffWeak.length > 0) {
-              if (y + 10 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
-              doc.setFontSize(6.5); doc.setTextColor(220, 38, 38); doc.setFont('helvetica', 'bold');
-              doc.text('Needs Improvement', 18, y); y += 3.5;
-              doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
-              weakSubj.forEach((s: any) => { doc.text(`${s.n}: ${s.p}%`, 21, y + 0.5); y += 4; });
-              diffWeak.slice(0, 2).forEach(([d, dd]: [string, any]) => { const p = Math.round((dd.correct / dd.total) * 100); doc.text(`${d}: ${p}%`, 21, y + 0.5); y += 4; });
-            }
-            if (topWeak.length > 0) {
-              if (y + 10 > 280) { doc.addPage(); y = 45; drawSchoolHeader(doc); }
-              doc.setFontSize(6.5); doc.setTextColor(124, 58, 237); doc.setFont('helvetica', 'bold');
-              doc.text('Topics to Focus On', 18, y); y += 3.5;
-              doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60);
-              topWeak.slice(0, 3).forEach(([t, td]: [string, any]) => { const p = Math.round((td.correct / td.total) * 100); doc.text(`${t}: ${p}%`, 21, y + 0.5); y += 4; });
-            }
-            y += 2;
-          }
+          y = drawInsights(doc, bySubject, byDifficulty, byTopic, 18, y, pw - 36, 280) + 3;
         }
 
         // ═══════════════════════════════════════════

@@ -99,8 +99,8 @@ export default function StudentEntranceReportPage() {
           const bd: Record<string, DifficultyBreakdown> = {};
           const bt: Record<string, TopicBreakdown> = {};
           answers.forEach((a: any) => {
-            const s = a.subject || 'UNSPECIFIED';
-            const d = a.difficulty_level || 'UNSPECIFIED';
+            const s = a.subject || 'General';
+            const d = a.difficulty_level || 'Not Specified';
             const t = a.topic || 'General';
             if (!bs[s]) bs[s] = { correct: 0, total: 0 };
             bs[s].total++; if (a.is_correct) bs[s].correct++;

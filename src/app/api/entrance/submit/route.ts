@@ -52,8 +52,8 @@ export async function POST(request: Request) {
       const byTopic: Record<string, { correct: number; total: number }> = {};
 
       const questionsDetail = answersData.map((a: any) => {
-        const subj = a.subject || 'UNSPECIFIED';
-        const diff = a.difficulty_level || 'UNSPECIFIED';
+        const subj = a.subject || 'General';
+        const diff = a.difficulty_level || 'Not Specified';
         const topic = a.topic || 'General';
 
         if (!bySubject[subj]) bySubject[subj] = { correct: 0, total: 0 };
