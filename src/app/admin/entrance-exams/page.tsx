@@ -8,8 +8,9 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { 
   ArrowLeft, Plus, Edit, Trash2, X, FileText, Clock, Users, Check, 
   Loader2, Search, QrCode, Eye, Hash, Download, Award, AlertCircle, 
-  GraduationCap, ChevronDown, CheckCircle, XCircle, Filter
+  GraduationCap, ChevronDown, CheckCircle, XCircle, Filter, BarChart3
 } from 'lucide-react';
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -93,6 +94,8 @@ const [showAnalyticsFilterModal, setShowAnalyticsFilterModal] = useState(false);
     const [selectedAnalytics, setSelectedAnalytics] = useState<any>(null);
     const [showAnalyticsDetailModal, setShowAnalyticsDetailModal] = useState(false);
     const [downloadingReport, setDownloadingReport] = useState<string | null>(null);
+    const [analyticsTab, setAnalyticsTab] = useState('overview');
+    const [analyticsAppData, setAnalyticsAppData] = useState<any>(null);
  const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [warning, setWarning] = useState('');
@@ -782,9 +785,17 @@ async function handleCreateExam() {
         + 'with mastery levels, topic breakdowns, and recommendations.');
    }
    
-function viewAnalyticsDetails(record: any) {
+async function viewAnalyticsDetails(record: any) {
       setSelectedAnalytics(record);
       setShowAnalyticsDetailModal(true);
+      setAnalyticsTab('overview');
+      setAnalyticsAppData(null);
+      const { data: app } = await supabase
+        .from('entrance_applications')
+        .select('*, exam:entrance_exams!exam_id(*)')
+        .eq('id', record.application_id)
+        .maybeSingle();
+      setAnalyticsAppData(app || null);
     }
     
     async function downloadAnalyticsReport(id: string) {
@@ -1748,120 +1759,308 @@ function viewAnalyticsDetails(record: any) {
            </div>
          )}
          
-         {/* Analytics Details Modal */}
-          {showAnalyticsDetailModal && selectedAnalytics && (
-            (() => {
-              const tp = selectedAnalytics.topic_performance || {};
-              const bySubject = tp.by_subject || {};
-              const byDifficulty = tp.by_difficulty || {};
-              const byTopic = tp.by_topic || {};
-              const questions = tp.questions || [];
-              const subjectEntries = Object.entries(bySubject);
-              const difficultyEntries = Object.entries(byDifficulty);
-              const topicEntries = Object.entries(byTopic);
-              const totalQ = tp.total_questions || questions.length || 0;
-              const correctQ = tp.correct_count || questions.filter((q: any) => q.is_correct).length || 0;
-              return (
-             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-               <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                 <div className="p-5 border-b flex justify-between items-center sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="text-lg font-bold">Analytics Details</h3><button onClick={() => setShowAnalyticsDetailModal(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={20} /></button></div>
-                 <div className="p-5 space-y-5">
-                   {/* Student Info */}
-                   <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
-                     <div><p className="font-bold text-lg">{selectedAnalytics.student_name}</p><p className="text-sm text-slate-500">Mastery: {selectedAnalytics.mastery_level}</p></div>
-                     <div className={`text-2xl font-bold ${(selectedAnalytics.score || 0) >= 70 ? 'text-green-600' : 'text-red-600'}`}>{selectedAnalytics.score}%</div>
-                   </div>
+          {/* Analytics Details Modal */}
+           {showAnalyticsDetailModal && selectedAnalytics && (
+             (() => {
+               const tp = selectedAnalytics.topic_performance || {};
+               let bySubject: Record<string, any> = tp.by_subject || {};
+               let byDifficulty: Record<string, any> = tp.by_difficulty || {};
+               let byTopic: Record<string, any> = tp.by_topic || {};
+               let questions: any[] = tp.questions || [];
 
-                   {/* Subject Bar Chart */}
-                   {subjectEntries.length > 0 && (
-                     <div className="bg-white border rounded-xl p-4">
-                       <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Subject Performance Overview</p>
-                       <div className="space-y-2">
-                         {subjectEntries.map(([subj, d]: [string, any]) => {
-                           const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
-                           const barColor = pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500';
-                           return (
-                             <div key={subj} className="flex items-center gap-3">
-                               <span className="w-24 text-xs text-slate-700 text-right truncate shrink-0">{subj}</span>
-                               <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                                 <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
-                               </div>
-                               <span className={`w-10 text-xs font-bold text-right ${pct >= 70 ? 'text-green-600' : pct >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{pct}%</span>
-                             </div>
-                           );
-                         })}
-                       </div>
-                     </div>
-                   )}
+               // Fallback: recompute from raw answers if analytics breakdowns are empty
+                if ((Object.keys(bySubject).length === 0) && analyticsAppData?.answers) {
+                  const answers = typeof analyticsAppData.answers === 'string' ? JSON.parse(analyticsAppData.answers) : analyticsAppData.answers;
+                 if (Array.isArray(answers)) {
+                   questions = questions.length === 0 ? answers : questions;
+                   const bs: Record<string, any> = {}; const bd: Record<string, any> = {}; const bt: Record<string, any> = {};
+                   answers.forEach((a: any) => {
+                     const s = a.subject || 'General'; const d = a.difficulty_level || 'Not Specified'; const t = a.topic || 'General';
+                     if (!bs[s]) bs[s] = { correct: 0, total: 0 }; bs[s].total++; if (a.is_correct) bs[s].correct++;
+                     if (!bd[d]) bd[d] = { correct: 0, total: 0 }; bd[d].total++; if (a.is_correct) bd[d].correct++;
+                     if (!bt[t]) bt[t] = { correct: 0, total: 0 }; bt[t].total++; if (a.is_correct) bt[t].correct++;
+                   });
+                   bySubject = bs; byDifficulty = bd; byTopic = bt;
+                 }
+               }
 
-                   {/* Performance Insights */}
-                   {(() => {
-                     const sorted = subjectEntries.map(([n, d]: [string, any]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter((s: any) => s.p > 0).sort((a: any, b: any) => b.p - a.p);
-                     const weakSubj = sorted.filter((s: any) => s.p < 40);
-                     const weakDiff = difficultyEntries.filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
-                     const weakTop = topicEntries.filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
-                     if (sorted.length === 0 && weakDiff.length === 0 && weakTop.length === 0) return null;
-                     return (
-                       <div className="bg-white border rounded-xl p-4">
-                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Performance Insights</p>
-                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                           {sorted.length >= 2 && (
-                             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                               <p className="text-xs font-bold text-green-700 uppercase mb-1">Strengths</p>
-                               {sorted.slice(0, 2).map(s => <p key={s.n} className="text-sm text-green-800">{s.n}: {s.p}%</p>)}
-                             </div>
-                           )}
-                           {(weakSubj.length > 0 || weakDiff.length > 0) && (
-                             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                               <p className="text-xs font-bold text-red-700 uppercase mb-1">Needs Improvement</p>
-                               {weakSubj.map(s => <p key={s.n} className="text-sm text-red-800">{s.n}: {s.p}%</p>)}
-                               {weakDiff.slice(0, 2).map(([d, dd]: [string, any]) => <p key={d} className="text-sm text-red-800">{d}: {Math.round((dd.correct / dd.total) * 100)}%</p>)}
-                             </div>
-                           )}
-                           {weakTop.length > 0 && (
-                             <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                               <p className="text-xs font-bold text-purple-700 uppercase mb-1">Topics to Focus On</p>
-                               {weakTop.slice(0, 3).map(([t, td]: [string, any]) => <p key={t} className="text-sm text-purple-800">{t}: {Math.round((td.correct / td.total) * 100)}%</p>)}
-                             </div>
-                           )}
-                         </div>
-                       </div>
-                     );
-                   })()}
+               const subjectEntries = Object.entries(bySubject);
+               const difficultyEntries = Object.entries(byDifficulty);
+               const topicEntries = Object.entries(byTopic);
+               const totalQ = tp.total_questions || questions.length || 0;
+               const correctQ = tp.correct_count || questions.filter((q: any) => q.is_correct).length || 0;
+               const wrongQ = totalQ - correctQ;
+               const score = selectedAnalytics.score || 0;
+                const application = analyticsAppData;
+               const exam = application?.exam;
+               const passingScore = exam?.passing_score || 50;
+               const passed = score >= passingScore;
+               const schoolName = 'ClearPath Edu Hub';
+               const accuracy = totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0;
 
-                   {/* Per-Question Analysis */}
-                   {questions.length > 0 && (
-                     <div className="bg-white border rounded-xl p-4">
-                       <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Per-Question Analysis</p>
-                       <div className="overflow-x-auto max-h-64 overflow-y-auto">
-                         <table className="w-full text-xs">
-                           <thead><tr className="bg-slate-100"><th className="p-2 text-center">#</th><th className="p-2 text-left">Q</th><th className="p-2 text-center">Pts</th><th className="p-2 text-center">Result</th></tr></thead>
-                           <tbody className="divide-y divide-slate-100">
-                             {questions.map((q: any, i: number) => (
-                               <tr key={i} className={q.is_correct ? '' : 'bg-red-50'}>
-                                 <td className="p-2 text-center text-slate-400">{i + 1}</td>
-                                 <td className="p-2 max-w-[200px] truncate" title={q.question}>{q.question}</td>
-                                 <td className="p-2 text-center">
-                                   <span className="inline-flex items-center gap-0.5">
-                                     {Array.from({ length: q.points || 1 }).map((_, di) => (
-                                       <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200'}`} />
-                                     ))}
-                                     <span className="ml-1 text-slate-400">{(q.points_earned || 0)}/{(q.points || 1)}</span>
-                                   </span>
-                                 </td>
-                                 <td className="p-2 text-center">{q.is_correct ? <Check size={14} className="text-green-500 inline" /> : <X size={14} className="text-red-500 inline" />}</td>
-                               </tr>
-                             ))}
-                           </tbody>
-                         </table>
-                       </div>
-                     </div>
-                   )}
-                 </div>
-                 <div className="p-5 border-t flex justify-end gap-2 sticky bottom-0 bg-white"><button onClick={() => setShowAnalyticsDetailModal(false)} className="btn-outline">Close</button><button onClick={() => downloadAnalyticsReport(selectedAnalytics.id)} className="btn-primary">Download PDF</button></div>
-               </div>
-             </div>
-              );
+               const radarData = subjectEntries.filter(([_, d]) => d.total > 0).map(([subject, d]) => ({ subject, score: Math.round((d.correct / d.total) * 100), fullMark: 100 }));
+
+               function getGradeColor(pct: number): string { if (pct >= 80) return 'text-green-600'; if (pct >= 60) return 'text-blue-600'; if (pct >= 40) return 'text-amber-600'; return 'text-red-600'; }
+               function getBarColor(pct: number): string { if (pct >= 80) return 'bg-green-500'; if (pct >= 60) return 'bg-blue-500'; if (pct >= 40) return 'bg-amber-500'; return 'bg-red-500'; }
+
+               function computePathways(): { label: string; score: number; color: string }[] {
+                 const entries = Object.entries(bySubject).map(([n, v]) => ({ n, pct: v.total > 0 ? (v.correct / v.total) * 100 : 0 }));
+                 const getPct = (namePart: string) => { const found = entries.find(e => e.n.toLowerCase().includes(namePart)); return found ? found.pct : 0; };
+                 const mp = getPct('math'); const ep = getPct('english');
+                 const sp = (getPct('basic science') + getPct('basic technology') + getPct('science')) / (entries.some(e => e.n.toLowerCase().includes('basic science')) ? 2 : 0);
+                 const r: { label: string; score: number; color: string }[] = [];
+                 if (mp > 0 && sp > 0) r.push({ label: 'Science (Sciences)', score: Math.round((mp * 0.5 + sp * 0.5)), color: '#1a5276' });
+                 if (mp > 0 && ep > 0) r.push({ label: 'Commercial (Business)', score: Math.round((mp * 0.5 + ep * 0.5)), color: '#922b21' });
+                 if (ep > 0) r.push({ label: 'Arts (Humanities)', score: Math.round(Math.min(100, ep * 1.1)), color: '#1e8449' });
+                 return r.sort((a, b) => b.score - a.score);
+               }
+
+               function buildRecsText(): string {
+                 const ws = Object.entries(bySubject).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.5).map(([s]) => s);
+                 const wd = Object.entries(byDifficulty).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.4).map(([d]) => d);
+                 const wt = Object.entries(byTopic).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.4).map(([t]) => t);
+                 const parts: string[] = [];
+                 if (selectedAnalytics.mastery_level === 'MASTERED') parts.push('OUTSTANDING: Exceptional understanding. Consider advanced placement or mentorship.');
+                 else if (selectedAnalytics.mastery_level === 'PROFICIENT') parts.push('STRONG: Solid comprehension. Continue with extension activities.');
+                 else if (selectedAnalytics.mastery_level === 'EXCELLENT') parts.push('GOOD: Performs well overall. Strengthen weaker areas with targeted practice.');
+                 else if (selectedAnalytics.mastery_level === 'GOOD') parts.push('BASIC: Foundational knowledge present. Enroll in remedial support.');
+                 else parts.push('SIGNIFICANT SUPPORT NEEDED: Intensive intervention required.');
+                 if (ws.length > 0) parts.push(`Weak Subjects: ${ws.join(', ')}. Focused study recommended.`);
+                 if (wd.length > 0) parts.push(`Difficulty Challenges: ${wd.join(', ')}.`);
+                 if (wt.length > 0) parts.push(`Topics to review: ${wt.join(', ')}.`);
+                 parts.push(`Accuracy: ${accuracy}% (${correctQ}/${totalQ} correct).`);
+                 return parts.join(' ');
+               }
+
+               const tabs = [
+                 { key: 'overview', label: 'Overview' },
+                 { key: 'subjects', label: 'Subjects' },
+                 { key: 'difficulty', label: 'Difficulty & Topics' },
+                 { key: 'questions', label: 'Questions' },
+                 { key: 'recommendations', label: 'Recommendations' },
+               ];
+               const pathwayRecs = computePathways();
+
+               function downloadDOC() {
+                 const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                 const subjRows = subjectEntries.map(([s, d]) => {
+                   const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+                   return `<tr><td>${s}</td><td>${d.correct}</td><td>${d.total}</td><td>${pct}%</td><td>${pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>`;
+                 }).join('');
+                 const diffRows = difficultyEntries.map(([d, v]) => {
+                   const pct = v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0;
+                   return `<tr><td>${d}</td><td>${v.correct}</td><td>${v.total}</td><td>${pct}%</td><td>${pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>`;
+                 }).join('');
+                 const pathwayRows = pathwayRecs.map(p => `<tr><td>${p.label}</td><td>${p.score}%</td></tr>`).join('');
+                 const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Entrance Exam Report</title>
+<style>body{font-family:'Calibri','Arial',sans-serif;font-size:11pt;color:#333}
+h1{color:#1e3a5f;border-bottom:2px solid #b3922f;padding-bottom:6px}
+h2{color:#1e3a5f;margin-top:20px}
+table{width:100%;border-collapse:collapse;margin:10px 0}
+th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:left;font-size:10pt}
+td{padding:4px 8px;border:1px solid #ddd;font-size:10pt}
+tr:nth-child(even){background:#f8f9fa}
+.score-box{text-align:center;font-size:24pt;font-weight:bold;padding:12px;border-radius:8px}
+.passed{color:#16a34a}.failed{color:#dc2626}
+.recs{background:#fef3e7;border:1px solid #fed7aa;padding:12px;border-radius:6px;margin:12px 0}
+.footer{text-align:center;font-size:8pt;color:#999;margin-top:30px;border-top:1px solid #ddd;padding-top:10px}
+.insight{padding:8px 12px;border-radius:6px;margin:6px 0}
+.strength{background:#f0fdf4;border-left:4px solid #16a34a}
+.weakness{background:#fef2f2;border-left:4px solid #dc2626}
+.topic-focus{background:#faf5ff;border-left:4px solid #7c3aed}</style></head><body>
+<h1>Entrance Exam Analysis Report</h1><p style="color:#666;">${schoolName} — Generated: ${dateStr}</p>
+<h2>Student Information</h2>
+<table><tr><th>Field</th><th>Value</th></tr>
+<tr><td>Name</td><td>${selectedAnalytics.student_name || 'N/A'}</td></tr>
+<tr><td>Email</td><td>${application?.email || 'N/A'}</td></tr>
+<tr><td>Applied Class</td><td>${application?.applied_class || 'N/A'}</td></tr>
+<tr><td>Score</td><td>${score}%</td></tr>
+<tr><td>Mastery</td><td>${selectedAnalytics.mastery_level || 'N/A'}</td></tr>
+<tr><td>Status</td><td>${passed ? 'PASSED' : 'FAILED'}</td></tr>
+</table>
+<div class="score-box ${passed ? 'passed' : 'failed'}">${score}% — ${passed ? 'PASSED' : 'FAILED'}</div>
+${subjRows ? `<h2>Subject Performance</h2><table><tr><th>Subject</th><th>Correct</th><th>Total</th><th>Score</th><th>Assessment</th></tr>${subjRows}</table>` : ''}
+${diffRows ? `<h2>Difficulty Breakdown</h2><table><tr><th>Level</th><th>Correct</th><th>Total</th><th>Score</th><th>Verdict</th></tr>${diffRows}</table>` : ''}
+${pathwayRows ? `<h2>Recommended Pathways</h2><table><tr><th>Pathway</th><th>Match Score</th></tr>${pathwayRows}</table>` : ''}
+<h2>Performance Insights</h2>
+${(() => { const sorted = subjectEntries.map(([n, d]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter(s => s.p > 0).sort((a, b) => b.p - a.p); const weak = sorted.filter(s => s.p < 40); const wd2 = difficultyEntries.filter(([_, v]) => v.total > 0 && (v.correct / v.total) < 0.4); const wt2 = topicEntries.filter(([_, v]) => v.total > 0 && (v.correct / v.total) < 0.4); let h = ''; if (sorted.length >= 2) h += '<div class="insight strength"><b>Strengths:</b> ' + sorted.slice(0,2).map(s => s.n + ' (' + s.p + '%)').join(', ') + '</div>'; if (weak.length) h += '<div class="insight weakness"><b>Needs Improvement:</b> ' + weak.map(s => s.n + ' (' + s.p + '%)').join(', ') + '</div>'; if (wd2.length) h += '<div class="insight weakness"><b>Difficulty Challenges:</b> ' + wd2.slice(0,3).map(([d, v]) => d + ' (' + Math.round((v.correct / v.total) * 100) + '%)').join(', ') + '</div>'; if (wt2.length) h += '<div class="insight topic-focus"><b>Topics to Focus On:</b> ' + wt2.slice(0,3).map(([t, v]) => t + ' (' + Math.round((v.correct / v.total) * 100) + '%)').join(', ') + '</div>'; return h; })()}
+<div class="recs"><b>Recommendations:</b><br>${buildRecsText().split('. ').filter(s => s.trim()).map(s => '• ' + s + '.').join('<br>')}</div>
+<div class="footer">${schoolName} — Official Document — Generated: ${dateStr}<br>This report is system-generated.</div></body></html>`;
+                 const blob = new Blob([html], { type: 'application/msword' });
+                 const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                 a.href = url; a.download = `Entrance_Report_${selectedAnalytics.student_name || 'Student'}_${new Date().toISOString().split('T')[0]}.doc`;
+                 a.click(); URL.revokeObjectURL(url);
+               }
+
+               return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+                  <div className="p-5 border-b flex justify-between items-center shrink-0 bg-white z-10 rounded-t-2xl">
+                    <h3 className="text-lg font-bold">Analytics Details</h3>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setAnalyticsTab('overview')} className="btn-outline text-xs py-1 px-3">Preview</button>
+                      <button onClick={() => { downloadDOC(); }} className="btn-outline text-xs py-1 px-3 flex items-center gap-1"><FileText size={14} /> DOC</button>
+                      <button onClick={() => downloadAnalyticsReport(selectedAnalytics.id)} disabled={downloadingReport === selectedAnalytics.id} className="btn-primary text-xs py-1 px-3 flex items-center gap-1">
+                        {downloadingReport === selectedAnalytics.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} PDF
+                      </button>
+                      <button onClick={() => setShowAnalyticsDetailModal(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+                    </div>
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="flex border-b shrink-0 px-5 bg-white">
+                    {tabs.map(tab => (
+                      <button key={tab.key} onClick={() => setAnalyticsTab(tab.key)} className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${analyticsTab === tab.key ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>{tab.label}</button>
+                    ))}
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                    {/* ═══ TAB: Overview ═══ */}
+                    {analyticsTab === 'overview' && (
+                      <>
+                        <div className="bg-slate-50 rounded-xl p-5 flex items-center justify-between">
+                          <div><p className="font-bold text-xl text-slate-800">{selectedAnalytics.student_name}</p><p className="text-sm text-slate-500">Email: {application?.email || 'N/A'} | Applied: {application?.applied_class || 'N/A'}</p></div>
+                          <div className="text-center"><div className={`text-3xl font-bold ${passed ? 'text-green-600' : 'text-red-600'}`}>{score}%</div><p className={`text-xs font-semibold ${passed ? 'text-green-600' : 'text-red-600'}`}>{passed ? 'PASSED' : 'FAILED'}</p></div>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 uppercase">Total Q</p><p className="text-xl font-bold text-slate-800">{totalQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 uppercase">Correct</p><p className="text-xl font-bold text-green-600">{correctQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 uppercase">Wrong</p><p className="text-xl font-bold text-red-600">{wrongQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 uppercase">Accuracy</p><p className={`text-xl font-bold ${accuracy >= 70 ? 'text-green-600' : accuracy >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{accuracy}%</p></div>
+                        </div>
+                        <div className="bg-white border rounded-xl p-4"><p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Exam Info</p>
+                          <div className="grid grid-cols-2 gap-2 text-sm"><div><span className="text-slate-500">Exam:</span> <span className="font-medium">{exam?.title || 'N/A'}</span></div><div><span className="text-slate-500">Level:</span> <span className="font-medium">{exam?.level || 'N/A'}</span></div><div><span className="text-slate-500">Mastery:</span> <span className="font-medium">{selectedAnalytics.mastery_level || 'N/A'}</span></div><div><span className="text-slate-500">Passing:</span> <span className="font-medium">{passingScore}%</span></div></div>
+                        </div>
+                        <div className="bg-white border rounded-xl p-4"><p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Performance Insights</p>
+                          {(() => {
+                            const sorted = subjectEntries.map(([n, d]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter(s => s.p > 0).sort((a, b) => b.p - a.p);
+                            const weak = sorted.filter(s => s.p < 40);
+                            const wd2 = difficultyEntries.filter(([_, v]) => v.total > 0 && (v.correct / v.total) < 0.4);
+                            const wt2 = topicEntries.filter(([_, v]) => v.total > 0 && (v.correct / v.total) < 0.4);
+                            if (sorted.length === 0 && wd2.length === 0) return <p className="text-sm text-slate-400">No data available for insights.</p>;
+                            return <div className="space-y-2">{sorted.length >= 2 && <div className="bg-green-50 border border-green-200 rounded-lg p-3"><p className="text-xs font-bold text-green-700">Strengths</p><p className="text-sm text-green-800">{sorted.slice(0,2).map(s => `${s.n} (${s.p}%)`).join(', ')}</p></div>}{weak.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-xs font-bold text-red-700">Needs Improvement</p><p className="text-sm text-red-800">{weak.map(s => `${s.n} (${s.p}%)`).join(', ')}</p></div>}{wd2.length > 0 && <div className="bg-amber-50 border border-amber-200 rounded-lg p-3"><p className="text-xs font-bold text-amber-700">Difficulty Challenges</p><p className="text-sm text-amber-800">{wd2.slice(0,3).map(([d, v]) => `${d} (${Math.round((v.correct/v.total)*100)}%)`).join(', ')}</p></div>}{wt2.length > 0 && <div className="bg-purple-50 border border-purple-200 rounded-lg p-3"><p className="text-xs font-bold text-purple-700">Topics to Focus On</p><p className="text-sm text-purple-800">{wt2.slice(0,3).map(([t, v]) => `${t} (${Math.round((v.correct/v.total)*100)}%)`).join(', ')}</p></div>}</div>;
+                          })()}
+                        </div>
+                      </>
+                    )}
+
+                    {/* ═══ TAB: Subjects ═══ */}
+                    {analyticsTab === 'subjects' && (
+                      <>
+                        {subjectEntries.length > 0 ? (
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            <div className="bg-white border rounded-xl p-4">
+                              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Subject Performance</p>
+                              <div className="space-y-3">
+                                {subjectEntries.map(([subj, d]) => {
+                                  const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+                                  return <div key={subj}><div className="flex items-center justify-between text-sm mb-1"><span className="font-medium text-slate-700">{subj}</span><span className={`font-bold ${getGradeColor(pct)}`}>{pct}%</span></div><div className="w-full bg-slate-100 rounded-full h-2.5"><div className={`h-2.5 rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div><p className="text-xs text-slate-400 mt-0.5">{d.correct}/{d.total} correct</p></div>;
+                                })}
+                              </div>
+                            </div>
+                            <div className="bg-white border rounded-xl p-4">
+                              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Subject Radar</p>
+                              {radarData.length >= 3 ? <ResponsiveContainer width="100%" height={280}><RadarChart data={radarData}><PolarGrid stroke="#e2e8f0" /><PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} /><Radar name="Score" dataKey="score" stroke="#1e3a5f" fill="#1e3a5f" fillOpacity={0.2} /><Tooltip formatter={(value: number) => [`${value}%`, 'Score']} /></RadarChart></ResponsiveContainer> : <p className="text-slate-400 text-sm py-8 text-center">Need 3+ subjects for radar chart</p>}
+                            </div>
+                          </div>
+                        ) : <p className="text-slate-400 text-sm py-8 text-center">No subject data available</p>}
+                        {subjectEntries.length > 0 && (
+                          <div className="bg-white border rounded-xl p-4">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Subject Breakdown Table</p>
+                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Subject</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Assessment</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">{subjectEntries.map(([subj, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={subj}><td className="p-3 font-medium">{subj}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>; })}</tbody></table></div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* ═══ TAB: Difficulty & Topics ═══ */}
+                    {analyticsTab === 'difficulty' && (
+                      <>
+                        {difficultyEntries.length > 0 && (
+                          <div className="bg-white border rounded-xl p-4">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Difficulty Breakdown</p>
+                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Difficulty</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Verdict</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">{difficultyEntries.map(([diff, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={diff}><td className="p-3 font-medium">{diff}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>; })}</tbody></table></div>
+                          </div>
+                        )}
+                        {topicEntries.length > 0 && (
+                          <div className="bg-white border rounded-xl p-4">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Topic Performance</p>
+                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Topic</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Status</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">{topicEntries.map(([top, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={top}><td className="p-3 font-medium">{top}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Strong' : pct >= 40 ? 'Moderate' : 'Weak'}</td></tr>; })}</tbody></table></div>
+                          </div>
+                        )}
+                        {difficultyEntries.length === 0 && topicEntries.length === 0 && <p className="text-slate-400 text-sm py-8 text-center">No difficulty/topic data available</p>}
+                      </>
+                    )}
+
+                    {/* ═══ TAB: Questions ═══ */}
+                    {analyticsTab === 'questions' && (
+                      <>
+                        {questions.length > 0 ? (
+                          <div className="bg-white border rounded-xl overflow-hidden">
+                            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                              <table className="w-full text-xs">
+                                <thead><tr className="bg-slate-100 sticky top-0"><th className="p-2 text-center">#</th><th className="p-2 text-left">Subject</th><th className="p-2 text-left">Question</th><th className="p-2 text-center">Diff</th><th className="p-2 text-center">Pts</th><th className="p-2 text-center">Result</th></tr></thead>
+                                <tbody className="divide-y divide-slate-100">
+                                  {questions.map((q: any, i: number) => (
+                                    <tr key={i} className={q.is_correct ? '' : 'bg-red-50'}>
+                                      <td className="p-2 text-center text-slate-400">{i + 1}</td>
+                                      <td className="p-2 text-slate-600">{q.subject || '—'}</td>
+                                      <td className="p-2 max-w-[250px]" title={q.question}><span className="truncate block">{q.question?.length > 60 ? q.question.substring(0, 57) + '...' : q.question}</span></td>
+                                      <td className="p-2 text-center text-slate-500">{q.difficulty_level || '—'}</td>
+                                      <td className="p-2 text-center"><span className="inline-flex items-center gap-0.5">{Array.from({ length: q.points || 1 }).map((_, di) => <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200'}`} />)}<span className="ml-1 text-slate-400">{(q.points_earned || 0)}/{(q.points || 1)}</span></span></td>
+                                      <td className="p-2 text-center">{q.is_correct ? <Check size={14} className="text-green-500 inline" /> : <X size={14} className="text-red-500 inline" />}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        ) : <p className="text-slate-400 text-sm py-8 text-center">No question data available</p>}
+                      </>
+                    )}
+
+                    {/* ═══ TAB: Recommendations ═══ */}
+                    {analyticsTab === 'recommendations' && (
+                      <>
+                        <div className="bg-slate-50 border rounded-xl p-5">
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Recommendations for Improvement</p>
+                          <p className="text-sm text-slate-700 leading-relaxed">{buildRecsText()}</p>
+                        </div>
+                        {pathwayRecs.length > 0 && (
+                          <div className="bg-white border rounded-xl p-4">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Recommended Academic Pathways</p>
+                            <div className="space-y-3">
+                              {pathwayRecs.map((pr, i) => (
+                                <div key={i}>
+                                  <div className="flex items-center justify-between text-sm mb-1"><span className="font-medium text-slate-700">{i + 1}. {pr.label}</span><span className="font-bold" style={{ color: pr.color }}>{pr.score}%</span></div>
+                                  <div className="w-full bg-slate-100 rounded-full h-3"><div className="h-3 rounded-full transition-all" style={{ width: `${pr.score}%`, backgroundColor: pr.color }} /></div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {Object.entries(bySubject).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.5).length > 0 && (
+                          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                            <p className="text-xs font-bold text-red-700 uppercase mb-2">Weak Areas Need Attention</p>
+                            <div className="flex flex-wrap gap-2">
+                              {Object.entries(bySubject).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.5).map(([s, d]) => <span key={s} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm font-medium">{s} ({Math.round((d.correct / d.total) * 100)}%)</span>)}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="p-5 border-t flex justify-end gap-2 shrink-0 bg-white">
+                    <button onClick={() => setShowAnalyticsDetailModal(false)} className="btn-outline">Close</button>
+                  </div>
+                </div>
+              </div>
+             );
             })()
           )}
       </div>
