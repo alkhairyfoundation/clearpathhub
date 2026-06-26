@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
           if (date_from) { conditions.push(`ta.completed_at >= $${params.length + 1}`); params.push(date_from); }
           if (date_to) { conditions.push(`ta.completed_at < $${params.length + 1}`); params.push(date_to); }
           if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
-          query += ' ORDER BY ta.created_at DESC';
+          query += ' ORDER BY ta.completed_at DESC';
           if (limitCount) query += ` LIMIT ${parseInt(limitCount)}`;
           const result = await pool.query(query, params);
           return NextResponse.json({ attempts: result.rows });

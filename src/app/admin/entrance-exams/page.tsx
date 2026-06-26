@@ -812,14 +812,31 @@ function viewAnalyticsDetails(record: any) {
         const passed = score >= passingScore;
         const tp = record.topic_performance || {};
         let questionsData = tp.questions || [];
-        const bySubject = tp.by_subject || {};
-        const byDifficulty = tp.by_difficulty || {};
-        const byTopic = tp.by_topic || {};
+        let bySubject = tp.by_subject || {};
+        let byDifficulty = tp.by_difficulty || {};
+        let byTopic = tp.by_topic || {};
 
-        // Fallback: if analytics questions are empty, try raw answers from application
-        if (questionsData.length === 0 && application?.answers) {
+        // Fallback: if analytics breakdowns are empty, recompute from raw answers
+        if ((Object.keys(bySubject).length === 0) && application?.answers) {
           const answers = typeof application.answers === 'string' ? JSON.parse(application.answers) : application.answers;
-          if (Array.isArray(answers)) questionsData = answers;
+          if (Array.isArray(answers)) {
+            questionsData = questionsData.length === 0 ? answers : questionsData;
+            const bs: Record<string, any> = {};
+            const bd: Record<string, any> = {};
+            const bt: Record<string, any> = {};
+            answers.forEach((a: any) => {
+              const s = a.subject || 'General';
+              const d = a.difficulty_level || 'Not Specified';
+              const t = a.topic || 'General';
+              if (!bs[s]) bs[s] = { correct: 0, total: 0 };
+              bs[s].total++; if (a.is_correct) bs[s].correct++;
+              if (!bd[d]) bd[d] = { correct: 0, total: 0 };
+              bd[d].total++; if (a.is_correct) bd[d].correct++;
+              if (!bt[t]) bt[t] = { correct: 0, total: 0 };
+              bt[t].total++; if (a.is_correct) bt[t].correct++;
+            });
+            bySubject = bs; byDifficulty = bd; byTopic = bt;
+          }
         }
 
         const totalQ = tp.total_questions || questionsData.length || exam?.total_questions || 0;
@@ -1185,8 +1202,8 @@ function viewAnalyticsDetails(record: any) {
             head: [['Difficulty Level', 'Correct', 'Total', 'Score', 'Verdict']],
             body: difficultyEntries.map(([diff, d]: [string, any]) => {
               const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
-              const color = pct >= 70 ? 'text-green-600' : pct >= 40 ? 'text-amber-600' : 'text-red-600';
-              return [diff, `${d.correct}`, `${d.total}`, `${pct}%`, color];
+              const verdict = pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak';
+              return [diff, `${d.correct}`, `${d.total}`, `${pct}%`, verdict];
             }),
             theme: 'striped',
             headStyles: { fillColor: [...primaryColor] as [number, number, number] },
@@ -1725,7 +1742,8 @@ function viewAnalyticsDetails(record: any) {
                     <div key={i} className="flex gap-2"><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} /><input type="text" value={opt} onChange={e => {const os = [...questionData.options]; os[i] = e.target.value; setQuestionData({...questionData, options: os});}} className="input flex-1" placeholder={`Option ${String.fromCharCode(65 + i)}`} /></div>
                   ))}
                 </div>
-               <div className="p-5 border-t flex justify-end gap-2 bg-white sticky bottom-0"><button onClick={() => setShowQuestionBankModal(false)}>Cancel</button><button onClick={() => addQuestionToBank(questionData)} className="btn-primary">Save</button></div>
+                {questionBankError && <p className="px-5 text-sm text-red-600 font-medium">{questionBankError}</p>}
+                <div className="p-5 border-t flex justify-end gap-2 bg-white sticky bottom-0"><button onClick={() => setShowQuestionBankModal(false)}>Cancel</button><button onClick={() => { if (!questionData.subject) { setQuestionBankError('Please select a subject'); return; } if (!questionData.topic.trim()) { setQuestionBankError('Please enter a topic'); return; } setQuestionBankError(''); addQuestionToBank(questionData); }} className="btn-primary">Save</button></div>
              </div>
            </div>
          )}

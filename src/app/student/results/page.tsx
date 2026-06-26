@@ -41,9 +41,9 @@ export default function StudentResultsPage() {
   }
 
   const allScores = [
-    ...results.map(r => ({ score: r.score, type: 'exam', label: r.subject?.name || 'Exam', date: r.created_at, id: r.id, grade: r.grade })),
-    ...testAttempts.map(a => ({ score: a.score, type: 'test', label: a.test?.title || 'Test', date: a.completed_at || a.started_at, id: a.id, grade: '' })),
-    ...quizAttempts.map(a => ({ score: a.score, type: 'quiz', label: a.quiz?.title || 'Quiz', date: a.completed_at || a.started_at, id: a.id, grade: '' })),
+    ...results.map(r => ({ score: r.score, type: 'exam', label: r.subject?.name || 'Exam', date: r.created_at, id: r.id, grade: r.grade, topic_performance: null })),
+    ...testAttempts.map(a => ({ score: a.score, type: 'test', label: a.test?.title || 'Test', date: a.completed_at || a.started_at, id: a.id, grade: '', topic_performance: null })),
+    ...quizAttempts.map(a => ({ score: a.score, type: 'quiz', label: a.quiz?.title || 'Quiz', date: a.completed_at || a.started_at, id: a.id, grade: '', topic_performance: a.topic_performance })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const scores = allScores.map(s => s.score);
@@ -201,12 +201,43 @@ export default function StudentResultsPage() {
       if (allScores.length > 0) {
         if (y > 230) { doc.addPage(); y = 45; drawHeader(doc); }
         autoTable(doc, {
-          startY: y, head: [['Assessment', 'Type', 'Score', 'Date']],
-          body: allScores.slice(0, 30).map(r => [r.label, r.type, `${r.score}%`, new Date(r.date).toLocaleDateString()]),
+          startY: y, head: [['Assessment', 'Type', 'Score', 'Date', 'Subject Breakdown']],
+          body: allScores.slice(0, 30).map(r => {
+            const tp = r.topic_performance;
+            const breakdown = tp?.by_subject ? Object.entries(tp.by_subject).map(([s, d]: any) => `${s}:${d.total > 0 ? Math.round((d.correct/d.total)*100) : 0}%`).join(', ') : '';
+            return [r.label, r.type, `${r.score}%`, new Date(r.date).toLocaleDateString(), breakdown || '—'];
+          }),
           theme: 'striped', headStyles: { fillColor: [...primaryColor] as [number, number, number] },
+          columnStyles: { 4: { cellWidth: 45, fontSize: 6.5 } },
           margin: { left: 14, right: 14 }, tableLineWidth: 0,
         });
         y = (doc as any).lastAutoTable.finalY + 5;
+      }
+
+      // Quiz Subject Breakdown Section
+      const quizWithBreakdown = quizAttempts.filter(a => a.topic_performance?.by_subject);
+      if (quizWithBreakdown.length > 0) {
+        if (y + 40 > 250) { doc.addPage(); y = 45; drawHeader(doc); }
+        doc.setFillColor(30, 58, 95); doc.rect(14, y - 4, pw - 28, 7, 'F');
+        doc.setTextColor(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+        doc.text('QUIZ SUBJECT PERFORMANCE', 18, y + 0.5); y += 9;
+        quizWithBreakdown.forEach(qa => {
+          if (y + 20 > 275) { doc.addPage(); y = 45; drawHeader(doc); }
+          const tp = qa.topic_performance;
+          doc.setFontSize(7); doc.setTextColor(80, 80, 80); doc.setFont('helvetica', 'bold');
+          doc.text(qa.quiz?.title || 'Quiz', 18, y); y += 4;
+          const subjRows = Object.entries(tp.by_subject).map(([s, d]: any) => {
+            const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+            return [s, `${d.correct}/${d.total}`, `${pct}%`];
+          });
+          autoTable(doc, {
+            startY: y, head: [['Subject', 'Correct/Total', 'Score']],
+            body: subjRows, theme: 'striped',
+            headStyles: { fillColor: [30, 58, 95] as [number, number, number], fontSize: 7 },
+            bodyStyles: { fontSize: 6.5 }, margin: { left: 18, right: 14 }, tableLineWidth: 0,
+          });
+          y = (doc as any).lastAutoTable.finalY + 4;
+        });
       }
 
       drawFooter(doc);
@@ -343,9 +374,11 @@ export default function StudentResultsPage() {
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : allScores.length === 0 ? <div className="p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No results yet</p></div> : (
             <table className="w-full">
-              <thead className="bg-gray-50"><tr><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Assessment</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Type</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Score</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Grade</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Date</th></tr></thead>
+              <thead className="bg-gray-50"><tr><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Assessment</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Type</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Score</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Grade</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Date</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Details</th></tr></thead>
               <tbody>{allScores.map((r) => {
                 const grade = results.find(res => res.id === r.id)?.grade || (r.score >= 90 ? 'A+' : r.score >= 80 ? 'A' : r.score >= 70 ? 'B' : r.score >= 60 ? 'C' : r.score >= 50 ? 'D' : 'F');
+                const tp = r.topic_performance;
+                const subjKeys = tp?.by_subject ? Object.keys(tp.by_subject) : [];
                 return (
                 <tr key={`${r.type}-${r.id}`} className="border-t hover:bg-gray-50">
                   <td className="py-4 px-6 font-medium text-slate-800">{r.label}</td>
@@ -353,6 +386,17 @@ export default function StudentResultsPage() {
                   <td className="py-4 px-6"><span className={`font-bold ${r.score >= 70 ? 'text-green-600' : r.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{r.score}</span></td>
                   <td className="py-4 px-6"><span className={`px-2 py-1 rounded text-xs font-medium ${getGradeColor(grade)}`}>{grade}</span></td>
                   <td className="py-4 px-6 text-slate-500">{new Date(r.date).toLocaleDateString()}</td>
+                  <td className="py-4 px-6">
+                    {subjKeys.length > 0 ? (
+                      <div className="text-xs text-slate-600 space-y-0.5">
+                        {subjKeys.map(sk => {
+                          const sd = tp.by_subject[sk];
+                          const sp = sd.total > 0 ? Math.round((sd.correct / sd.total) * 100) : 0;
+                          return <div key={sk} className="flex items-center gap-1"><span className="font-medium w-16 truncate">{sk}:</span><span className={`font-bold ${sp >= 70 ? 'text-green-600' : sp >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{sp}%</span></div>;
+                        })}
+                      </div>
+                    ) : <span className="text-slate-300">—</span>}
+                  </td>
                 </tr>
               )})}</tbody>
             </table>

@@ -112,8 +112,20 @@ export default function StudentTakeQuizPage() {
     if (!quiz || !profile) return;
     setSubmitting(true);
     let correct = 0;
+    const bySubject: Record<string, { correct: number; total: number }> = {};
+    const byDifficulty: Record<string, { correct: number; total: number }> = {};
+    const byTopic: Record<string, { correct: number; total: number }> = {};
     questions.forEach((q, i) => {
       if (gradeQuestion(q, answers[i])) correct++;
+      const subj = q.subject || 'General';
+      const diff = q.difficulty_level || 'Not Specified';
+      const top = q.topic || 'General';
+      if (!bySubject[subj]) bySubject[subj] = { correct: 0, total: 0 };
+      bySubject[subj].total++; if (gradeQuestion(q, answers[i])) bySubject[subj].correct++;
+      if (!byDifficulty[diff]) byDifficulty[diff] = { correct: 0, total: 0 };
+      byDifficulty[diff].total++; if (gradeQuestion(q, answers[i])) byDifficulty[diff].correct++;
+      if (!byTopic[top]) byTopic[top] = { correct: 0, total: 0 };
+      byTopic[top].total++; if (gradeQuestion(q, answers[i])) byTopic[top].correct++;
     });
     const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
     const passed = finalScore >= (quiz.passing_score || 50);
@@ -129,6 +141,13 @@ export default function StudentTakeQuizPage() {
         time_taken: (quiz.time_limit || 30) * 60 - timeLeft,
         started_at: startedAt.toISOString(),
         completed_at: new Date().toISOString(),
+        topic_performance: {
+          by_subject: bySubject,
+          by_difficulty: byDifficulty,
+          by_topic: byTopic,
+          total_questions: questions.length,
+          correct_count: correct,
+        },
       });
       if (attemptError) throw new Error(attemptError.message);
       setScore(finalScore);
