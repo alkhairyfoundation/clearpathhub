@@ -8,14 +8,11 @@ ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS topic TEXT;
 
 -- 2. Backfill: derive subject from quiz → session → subject relationship
 UPDATE quiz_questions qq
-SET subject = sub.subject_name
-FROM (
-  SELECT s.id AS session_id, subj.name AS subject_name
-  FROM sessions s
-  JOIN subjects subj ON s.subject_id = subj.id
-) sub
-JOIN quizzes q ON qq.quiz_id = q.id
-WHERE q.session_id = sub.session_id
+SET subject = subj.name
+FROM quizzes q
+JOIN sessions s ON q.session_id = s.id
+JOIN subjects subj ON s.subject_id = subj.id
+WHERE qq.quiz_id = q.id
   AND (qq.subject IS NULL OR qq.subject = '');
 
 -- 3. Backfill topics for quiz_questions using same logic as question_bank
