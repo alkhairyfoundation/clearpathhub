@@ -15,7 +15,64 @@ UPDATE entrance_questions SET difficulty_level = 'MEDIUM' WHERE difficulty_level
 -- 3. Fix NULL topics
 UPDATE entrance_questions SET topic = 'General' WHERE topic IS NULL OR topic = '';
 
--- 4. Recompute student_analytics for all existing completed exams
+-- 4. Fix stored answers in entrance_applications — update subject/difficulty/topic
+--    from the now-corrected entrance_questions records.
+--    The answers JSONB is matched by question_index ⟷ entrance_questions.order_index
+DO $$
+DECLARE
+  app RECORD;
+  ans JSONB;
+  arr JSONB;
+  eq_subj TEXT;
+  eq_diff TEXT;
+  eq_topic TEXT;
+  idx INT;
+  changed BOOLEAN;
+BEGIN
+  FOR app IN
+    SELECT id, exam_id, answers
+    FROM entrance_applications
+    WHERE answers IS NOT NULL AND jsonb_typeof(answers) = 'array'
+  LOOP
+    arr := app.answers;
+    changed := false;
+
+    FOR idx IN 0..jsonb_array_length(arr)-1 LOOP
+      ans := arr->idx;
+
+      IF (ans->>'subject' IS NULL OR ans->>'subject' = '' OR ans->>'subject' = 'General')
+         OR (ans->>'difficulty_level' IS NULL OR ans->>'difficulty_level' = '')
+         OR (ans->>'topic' IS NULL OR ans->>'topic' = '' OR ans->>'topic' = 'General')
+      THEN
+        SELECT subject, difficulty_level, topic
+          INTO eq_subj, eq_diff, eq_topic
+          FROM entrance_questions
+         WHERE exam_id = app.exam_id AND order_index = idx
+         LIMIT 1;
+
+        IF FOUND THEN
+          IF eq_subj IS NOT NULL AND eq_subj != '' AND eq_subj != 'General' THEN
+            ans := jsonb_set(ans, '{subject}', to_jsonb(eq_subj));
+          END IF;
+          IF eq_diff IS NOT NULL AND eq_diff != '' THEN
+            ans := jsonb_set(ans, '{difficulty_level}', to_jsonb(eq_diff));
+          END IF;
+          IF eq_topic IS NOT NULL AND eq_topic != '' AND eq_topic != 'General' THEN
+            ans := jsonb_set(ans, '{topic}', to_jsonb(eq_topic));
+          END IF;
+          arr := jsonb_set(arr, ARRAY[idx::text], ans);
+          changed := true;
+        END IF;
+      END IF;
+    END LOOP;
+
+    IF changed THEN
+      UPDATE entrance_applications SET answers = arr WHERE id = app.id;
+    END IF;
+  END LOOP;
+END $$;
+
+-- 5. Recompute student_analytics for all existing completed exams
 DO $$
 DECLARE
   app_record RECORD;

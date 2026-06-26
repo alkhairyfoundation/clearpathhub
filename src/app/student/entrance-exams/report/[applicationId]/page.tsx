@@ -327,7 +327,7 @@ export default function StudentEntranceReportPage() {
   function drawEntranceRadarChart(doc: any, bySubj: Record<string, SubjectBreakdown>, cx: number, cy: number, radius: number): void {
     const items = Object.entries(bySubj).filter(([_, d]) => d.total > 0);
     const n = items.length;
-    if (n < 3) return;
+    if (n < 2) return;
     const angleStep = (2 * Math.PI) / n;
     for (let level = 1; level <= 5; level++) {
       const r = (level / 5) * radius;
