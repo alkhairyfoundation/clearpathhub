@@ -105,7 +105,10 @@ BEGIN
 
       score_val := app_record.exam_score;
 
-      -- UPSERT student_analytics
+      -- Delete existing analytics for this application to avoid duplicates
+      DELETE FROM student_analytics WHERE application_id = app_record.id;
+
+      -- Insert fresh analytics
       INSERT INTO student_analytics (
         application_id, student_email, subject, score, mastery_level,
         topic_performance, time_taken_seconds
@@ -121,11 +124,7 @@ BEGIN
           'time_taken_minutes', 0
         ),
         0
-      )
-      ON CONFLICT (application_id) DO UPDATE SET
-        topic_performance = EXCLUDED.topic_performance,
-        score = EXCLUDED.score,
-        mastery_level = EXCLUDED.mastery_level;
+      );
     END IF;
   END LOOP;
 END $$;
