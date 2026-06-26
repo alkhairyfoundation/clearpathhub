@@ -195,4 +195,8 @@ SELECT 'entrance_questions fixed (null diff)', COUNT(*) FROM entrance_questions 
 UNION ALL
 SELECT 'entrance_questions fixed (null topic)', COUNT(*) FROM entrance_questions WHERE topic IS NULL OR topic = ''
 UNION ALL
-SELECT 'student_analytics recomputed', COUNT(*) FROM student_analytics WHERE application_id IN (SELECT id FROM entrance_applications WHERE answers IS NOT NULL AND completed_at IS NOT NULL);
+SELECT 'student_analytics recomputed', COUNT(*) FROM student_analytics WHERE application_id IN (SELECT id FROM entrance_applications WHERE answers IS NOT NULL AND completed_at IS NOT NULL)
+UNION ALL
+SELECT 'answers with null subject still', COUNT(*) FROM entrance_applications WHERE answers IS NOT NULL AND answers::text LIKE '%"subject":null%'
+UNION ALL
+SELECT 'answers with null difficulty still', COUNT(*) FROM entrance_applications WHERE answers IS NOT NULL AND answers::text LIKE '%"difficulty_level":null%';
