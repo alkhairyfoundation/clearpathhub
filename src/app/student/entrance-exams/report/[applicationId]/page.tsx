@@ -236,82 +236,149 @@ export default function StudentEntranceReportPage() {
     const schoolName = schoolSettings?.school_name || 'ClearPath Edu Hub';
     const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const pathwayRecs = computePathwayRecommendations();
-    const subjRows = Object.entries(bySubject).map(([s, d]) => {
+    const subjEntries = Object.entries(bySubject);
+    const diffEntries = Object.entries(byDifficulty);
+    const topEntries = Object.entries(byTopic);
+    const accuracy = totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0;
+    const subjRows = subjEntries.map(([s, d]) => {
       const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
-      return `<tr><td>${s}</td><td>${d.correct}</td><td>${d.total}</td><td>${pct}%</td><td>${pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>`;
+      const grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : pct >= 50 ? 'D' : 'F';
+      const assessment = pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak';
+      const barColor = pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626';
+      return `<tr><td>${s}</td><td>${d.correct}</td><td>${d.total}</td><td>${pct}%</td><td>${grade}</td><td><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${barColor}"></div></div></td><td>${assessment}</td></tr>`;
     }).join('');
-
-    const pathwayRows = pathwayRecs.map(p => `<tr><td>${p.label}</td><td>${p.score}%</td></tr>`).join('');
+    const diffRows = diffEntries.map(([d, v]) => {
+      const pct = v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0;
+      return `<tr><td>${d}</td><td>${v.correct}</td><td>${v.total}</td><td>${pct}%</td><td>${pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>`;
+    }).join('');
+    const topRows = topEntries.map(([t, v]) => {
+      const pct = v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0;
+      const status = pct >= 80 ? 'Mastered' : pct >= 60 ? 'Good' : pct >= 40 ? 'Developing' : 'Needs Work';
+      return `<tr><td>${t}</td><td>${v.correct}</td><td>${v.total}</td><td>${pct}%</td><td>${status}</td></tr>`;
+    }).join('');
+    const sortedSubj = [...subjEntries].map(([n, d]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter(s => s.p > 0).sort((a, b) => b.p - a.p);
+    const barItems = sortedSubj.map(item => {
+      const barColor = item.p >= 70 ? '#16a34a' : item.p >= 40 ? '#d97706' : '#dc2626';
+      return `<div class="bar-row"><span class="bar-label">${item.n}</span><div class="bar-bg" style="flex:1"><div class="bar-fill" style="width:${item.p}%;background:${barColor}"></div></div><span style="width:40px;text-align:right;font-weight:bold;font-size:9pt;color:${item.p >= 80 ? '#16a34a' : item.p >= 60 ? '#2563eb' : item.p >= 40 ? '#d97706' : '#dc2626'}">${item.p}%</span></div>`;
+    }).join('');
+    const questionRows = questionsData.map((q, i) => {
+      const qShort = q.question ? (q.question.length > 60 ? q.question.substring(0, 57) + '...' : q.question) : '';
+      const pointsStr = Array.from({ length: q.points || 1 }).map((_, di) => di < (q.points_earned || 0) ? '●' : '○').join('');
+      return `<tr class="${q.is_correct ? '' : 'wrong-row'}"><td class="center">${i + 1}</td><td>${q.subject || '—'}</td><td>${qShort}</td><td class="center">${q.difficulty_level || '—'}</td><td>${formatCorrectAnswer(q)}</td><td class="${q.is_correct ? 'correct' : 'wrong'}">${formatAnswer(q)}</td><td class="center">${q.is_correct ? '✓' : '✗'}</td><td class="center">${pointsStr} (${q.points_earned || 0}/${q.points || 1})</td></tr>`;
+    }).join('');
+    const weakSubj = sortedSubj.filter(s => s.p < 40);
+    const weakDiff = diffEntries.filter(([_, v]) => v.total > 0 && (v.correct / v.total) < 0.4);
+    const weakTop = topEntries.filter(([_, v]) => v.total > 0 && (v.correct / v.total) < 0.4);
+    const sortedTop3 = sortedSubj.slice(0, 3);
+    const pathwayBars = pathwayRecs.map(p => `<div class="bar-row"><span class="bar-label" style="width:180px">${p.label}</span><div class="bar-bg" style="flex:1"><div class="bar-fill" style="width:${p.score}%;background:${p.color}"></div></div><span style="width:40px;text-align:right;font-weight:bold;font-size:9pt">${p.score}%</span></div>`).join('');
 
     const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Entrance Exam Report</title>
 <style>
-  body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #333; }
-  h1 { color: #1e3a5f; border-bottom: 2px solid #b3922f; padding-bottom: 6px; }
-  h2 { color: #1e3a5f; margin-top: 20px; }
-  table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-  th { background: #1e3a5f; color: #fff; padding: 6px 8px; text-align: left; font-size: 10pt; }
-  td { padding: 4px 8px; border: 1px solid #ddd; font-size: 10pt; }
-  tr:nth-child(even) { background: #f8f9fa; }
-  .score-box { text-align: center; font-size: 24pt; font-weight: bold; padding: 12px; border-radius: 8px; }
-  .passed { color: #16a34a; } .failed { color: #dc2626; }
-  .recs { background: #fef3e7; border: 1px solid #fed7aa; padding: 12px; border-radius: 6px; margin: 12px 0; }
-  .footer { text-align: center; font-size: 8pt; color: #999; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
-  .insight { padding: 8px 12px; border-radius: 6px; margin: 6px 0; }
-  .strength { background: #f0fdf4; border-left: 4px solid #16a34a; }
-  .weakness { background: #fef2f2; border-left: 4px solid #dc2626; }
-  .topic-focus { background: #faf5ff; border-left: 4px solid #7c3aed; }
+  body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #333; margin:0; padding:0; }
+  .header { background:#1e3a5f; color:#fff; padding:18px 30px 14px; text-align:center; }
+  .header h1 { margin:0; font-size:22pt; font-weight:bold; color:#fff; border:none; }
+  .header .gold-bar { height:3px; background:#b3922f; margin:8px 0 4px; }
+  .header .sub { font-size:9pt; color:#ccc; }
+  .section { padding:14px 30px; }
+  .section-title { color:#1e3a5f; font-size:13pt; font-weight:bold; border-bottom:2px solid #b3922f; padding-bottom:4px; margin-top:18px; margin-bottom:8px; }
+  table { width:100%; border-collapse:collapse; margin:6px 0; }
+  th { background:#1e3a5f; color:#fff; padding:5px 7px; text-align:left; font-size:9pt; }
+  td { padding:4px 7px; border:1px solid #ddd; font-size:9pt; }
+  tr:nth-child(even) { background:#f8f9fa; }
+  .center { text-align:center; }
+  .correct { color:#16a34a; font-weight:bold; }
+  .wrong { color:#dc2626; font-weight:bold; }
+  .wrong-row { background:#fef2f2; }
+  .bar-row { display:flex; align-items:center; gap:8px; margin:4px 0; }
+  .bar-label { width:100px; font-size:9pt; color:#555; text-align:right; white-space:nowrap; overflow:hidden; }
+  .bar-bg { background:#eee; border-radius:4px; height:14px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; }
+  .gauge-wrap { text-align:center; margin:10px 0; }
+  .gauge { display:inline-flex; align-items:center; justify-content:center; width:60px; height:60px; border-radius:50%; font-size:16pt; font-weight:bold; color:#fff; }
+  .recs { background:#fef3e7; border:1px solid #fed7aa; padding:12px 16px; border-radius:6px; margin:10px 0; }
+  .footer { text-align:center; font-size:8pt; color:#999; margin-top:25px; border-top:1px solid #ddd; padding:10px 30px 20px; }
+  .insight { padding:6px 12px; border-radius:4px; margin:4px 0; font-size:9pt; }
+  .strength { background:#f0fdf4; border-left:4px solid #16a34a; }
+  .weakness { background:#fef2f2; border-left:4px solid #dc2626; }
+  .topic-focus { background:#faf5ff; border-left:4px solid #7c3aed; }
+  .score-bar-bg { background:#f0f2f5; height:8px; border-radius:4px; margin:6px 0; }
+  .score-bar-fill { height:8px; border-radius:4px; }
 </style></head><body>
-  <h1>Entrance Exam Analysis Report</h1>
-  <p style="color:#666;">${schoolName} — Generated: ${dateStr}</p>
-
-  <h2>Student Information</h2>
-  <table><tr><th>Field</th><th>Value</th></tr>
-    <tr><td>Name</td><td>${application.first_name || ''} ${application.last_name || ''}</td></tr>
-    <tr><td>Email</td><td>${application.email || 'N/A'}</td></tr>
-    <tr><td>Applied Class</td><td>${application.applied_class || 'N/A'}</td></tr>
-    <tr><td>Exam</td><td>${exam?.title || 'N/A'}</td></tr>
-  </table>
-
-  <h2>Exam Results</h2>
-  <div class="score-box ${passed ? 'passed' : 'failed'}">${score}% — ${passed ? 'PASSED' : 'FAILED'}</div>
-  <table><tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Total Questions</td><td>${totalQ}</td></tr>
-    <tr><td>Correct Answers</td><td>${correctQ}</td></tr>
-    <tr><td>Wrong Answers</td><td>${wrongQ}</td></tr>
-    <tr><td>Accuracy</td><td>${accuracy}%</td></tr>
-    <tr><td>Passing Score</td><td>${passingScore}%</td></tr>
-    <tr><td>Score Obtained</td><td>${score}%</td></tr>
-    <tr><td>Mastery Level</td><td>${analytics?.mastery_level || 'N/A'}</td></tr>
-    <tr><td>Status</td><td>${passed ? 'PASSED' : 'FAILED'}</td></tr>
-  </table>
-
-  ${Object.keys(bySubject).length > 0 ? `<h2>Subject Performance</h2>
-  <table><tr><th>Subject</th><th>Correct</th><th>Total</th><th>Score</th><th>Assessment</th></tr>${subjRows}</table>` : ''}
-
-  ${pathwayRecs.length > 0 ? `<h2>Recommended Academic Pathways</h2>
-  <table><tr><th>Pathway</th><th>Match Score</th></tr>${pathwayRows}</table>` : ''}
-
-  <h2>Performance Insights</h2>
-  ${(() => {
-    const sorted = Object.entries(bySubject).map(([n, d]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter(s => s.p > 0).sort((a, b) => b.p - a.p);
-    const weak = sorted.filter(s => s.p < 40);
-    const weakDiff = Object.entries(byDifficulty).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.4);
-    const weakTop = Object.entries(byTopic).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.4);
-    let html2 = '';
-    if (sorted.length >= 2) html2 += '<div class="insight strength"><b>Strengths:</b> ' + sorted.slice(0,2).map(s => s.n + ' (' + s.p + '%)').join(', ') + '</div>';
-    if (weak.length > 0) html2 += '<div class="insight weakness"><b>Needs Improvement:</b> ' + weak.map(s => s.n + ' (' + s.p + '%)').join(', ') + '</div>';
-    if (weakDiff.length > 0) html2 += '<div class="insight weakness"><b>Difficulty Challenges:</b> ' + weakDiff.slice(0,3).map(([d, v]) => d + ' (' + Math.round((v.correct / v.total) * 100) + '%)').join(', ') + '</div>';
-    if (weakTop.length > 0) html2 += '<div class="insight topic-focus"><b>Topics to Focus On:</b> ' + weakTop.slice(0,3).map(([t, v]) => t + ' (' + Math.round((v.correct / v.total) * 100) + '%)').join(', ') + '</div>';
-    return html2;
-  })()}
-
-  <div class="recs">
-    <b>Recommendations for Improvement:</b><br>
-    ${buildRecommendationsText().split('. ').filter(s => s.trim()).map(s => '• ' + s + '.').join('<br>')}
+  <div class="header">
+    <h1>${schoolName}</h1>
+    <div class="gold-bar"></div>
+    <div class="sub">ENTRANCE EXAM ANALYSIS REPORT — Generated: ${dateStr}</div>
   </div>
 
-  <div class="footer">${schoolName} — Official Document — Generated: ${dateStr}<br>This report is system-generated and does not require a signature.</div>
+  <div class="section">
+    <div class="section-title">Student Information</div>
+    <table><tr><th style="width:140px">Field</th><th>Value</th></tr>
+      <tr><td>Full Name</td><td>${application.first_name || ''} ${application.last_name || ''}</td></tr>
+      <tr><td>Email</td><td>${application.email || 'N/A'}</td></tr>
+      <tr><td>Phone</td><td>${application.phone || 'N/A'}</td></tr>
+      <tr><td>Applied Class</td><td>${application.applied_class || 'N/A'}</td></tr>
+      <tr><td>Admitted Class</td><td>${application.admitted_class || 'Pending'}</td></tr>
+      <tr><td>Exam Title</td><td>${exam?.title || 'N/A'}</td></tr>
+      <tr><td>Academic Year</td><td>${exam?.academic_year || 'N/A'}</td></tr>
+      <tr><td>Exam Level</td><td>${exam?.level || 'N/A'}</td></tr>
+    </table>
+
+    <div class="section-title">Exam Results</div>
+    <div class="gauge-wrap">
+      <div class="gauge" style="background:${passed ? '#16a34a' : '#dc2626'}">${score}%</div>
+      <div style="font-weight:bold;font-size:12pt;color:${passed ? '#16a34a' : '#dc2626'};margin-top:4px">${passed ? 'PASSED' : 'FAILED'}</div>
+    </div>
+    <table><tr><th>Metric</th><th>Value</th></tr>
+      <tr><td>Total Questions</td><td>${totalQ}</td></tr>
+      <tr><td>Correct Answers</td><td>${correctQ}</td></tr>
+      <tr><td>Wrong Answers</td><td>${wrongQ}</td></tr>
+      <tr><td>Accuracy</td><td>${accuracy}%</td></tr>
+      <tr><td>Passing Score</td><td>${passingScore}%</td></tr>
+      <tr><td>Score Obtained</td><td>${score}%</td></tr>
+      <tr><td>Mastery Level</td><td>${analytics?.mastery_level || 'N/A'}</td></tr>
+      <tr><td>Completed At</td><td>${application.completed_at ? new Date(application.completed_at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }) : 'N/A'}</td></tr>
+      <tr><td>Status</td><td style="color:${passed ? '#16a34a' : '#dc2626'};font-weight:bold">${passed ? 'PASSED' : 'FAILED'}</td></tr>
+    </table>
+
+    ${subjEntries.length > 0 ? `<div class="section-title">Subject Performance</div>
+    <table><tr><th>Subject</th><th style="width:60px">Correct</th><th style="width:50px">Total</th><th style="width:55px">Score</th><th style="width:35px">Grade</th><th>Bar</th><th style="width:80px">Assessment</th></tr>${subjRows}</table>
+    <p style="font-size:9pt;font-weight:bold;color:#1e3a5f;margin-top:10px">Subject Performance Overview</p>
+    ${barItems}` : ''}
+
+    ${diffEntries.length > 0 ? `<div class="section-title">Difficulty Breakdown</div>
+    <table><tr><th>Difficulty Level</th><th>Correct</th><th>Total</th><th>Score</th><th>Verdict</th></tr>${diffRows}</table>` : ''}
+
+    ${topEntries.length > 0 ? `<div class="section-title">Topic Performance</div>
+    <table><tr><th>Topic</th><th>Correct</th><th>Total</th><th>Score</th><th>Status</th></tr>${topRows}</table>` : ''}
+
+    <div class="section-title">Performance Insights</div>
+    ${sortedTop3.length >= 2 ? `<div class="insight strength"><b>Strengths:</b> ${sortedTop3.slice(0,2).map(s => s.n + ' (' + s.p + '%)').join(', ')}</div>` : ''}
+    ${weakSubj.length > 0 ? `<div class="insight weakness"><b>Needs Improvement:</b> ${weakSubj.map(s => s.n + ' (' + s.p + '%)').join(', ')}</div>` : ''}
+    ${weakDiff.length > 0 ? `<div class="insight weakness"><b>Difficulty Challenges:</b> ${weakDiff.slice(0,3).map(([d, v]) => d + ' (' + Math.round((v.correct / v.total) * 100) + '%)').join(', ')}</div>` : ''}
+    ${weakTop.length > 0 ? `<div class="insight topic-focus"><b>Topics to Focus On:</b> ${weakTop.slice(0,4).map(([t, v]) => t + ' (' + Math.round((v.correct / v.total) * 100) + '%)').join(', ')}</div>` : ''}
+
+    ${questionsData.length > 0 ? `<div class="section-title">Per-Question Analysis</div>
+    <table><tr><th style="width:25px">#</th><th style="width:65px">Subject</th><th>Question</th><th style="width:45px">Diff</th><th style="width:90px">Correct Answer</th><th style="width:90px">Given Answer</th><th style="width:35px">Result</th><th style="width:55px">Points</th></tr>${questionRows}</table>` : ''}
+
+    ${pathwayRecs.length > 0 ? `<div class="section-title">Recommended Academic Pathways</div>
+    ${pathwayBars}` : ''}
+
+    <div style="margin:8px 0">
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:${score}%;background:${passed ? '#16a34a' : '#dc2626'}"></div></div>
+      <div style="text-align:center;font-size:8pt;color:#666">Overall Score: ${score}% | ${correctQ} of ${totalQ} correct</div>
+    </div>
+
+    <div class="section-title">Recommendations for Improvement</div>
+    <div class="recs">
+      ${buildRecommendationsText().split('. ').filter(s => s.trim()).map(s => '• ' + s + '.').join('<br>')}
+    </div>
+  </div>
+
+  <div class="footer">
+    ${schoolName} — Official Document — Generated: ${dateStr}<br>
+    This report is system-generated and does not require a signature.
+  </div>
 </body></html>`;
 
     const blob = new Blob([html], { type: 'application/msword' });
@@ -344,10 +411,10 @@ export default function StudentEntranceReportPage() {
       doc.setDrawColor(200, 200, 215);
       doc.setLineWidth(0.2);
       doc.line(cx, cy, endX, endY);
-      const valR = (pct / 100) * radius;
-      const px = cx + valR * Math.cos(angle);
-      const py = cy + valR * Math.sin(angle);
-      pts.push([px, py]);
+            const valR = (pct / 100) * radius;
+            const px = valR * Math.cos(angle);
+            const py = valR * Math.sin(angle);
+            pts.push([px, py]);
       const labelR = radius + 10;
       const lx = cx + labelR * Math.cos(angle);
       const ly = cy + labelR * Math.sin(angle);
@@ -356,7 +423,7 @@ export default function StudentEntranceReportPage() {
       doc.setFont('helvetica', 'bold');
       doc.text(subject.substring(0, 10), lx, ly, { align: 'center' });
     });
-    if (pts.length > 2) {
+    if (pts.length >= 2) {
       doc.setFillColor(30, 58, 95, 0.12);
       doc.setDrawColor(30, 58, 95);
       doc.setLineWidth(0.6);

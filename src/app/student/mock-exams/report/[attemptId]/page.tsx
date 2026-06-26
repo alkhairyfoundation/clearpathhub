@@ -271,8 +271,8 @@ export default function StudentMockExamReportPage() {
       doc.setLineWidth(0.2);
       doc.line(cx, cy, endX, endY);
       const valR = (pct / 100) * radius;
-      const px = cx + valR * Math.cos(angle);
-      const py = cy + valR * Math.sin(angle);
+      const px = valR * Math.cos(angle);
+      const py = valR * Math.sin(angle);
       pts.push([px, py]);
       const labelR = radius + 10;
       const lx = cx + labelR * Math.cos(angle);
@@ -282,7 +282,7 @@ export default function StudentMockExamReportPage() {
       doc.setFont('helvetica', 'bold');
       doc.text(subject.substring(0, 10), lx, ly, { align: 'center' });
     });
-    if (pts.length > 2) {
+    if (pts.length >= 2) {
       doc.setFillColor(30, 58, 95, 0.12);
       doc.setDrawColor(30, 58, 95);
       doc.setLineWidth(0.6);
