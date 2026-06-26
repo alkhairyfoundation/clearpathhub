@@ -219,6 +219,110 @@ export default function StudentEntranceReportPage() {
     return parts.join(' ');
   }
 
+  function computePathwayRecommendations(): { label: string; score: number; color: string; }[] {
+    const entries = Object.entries(bySubject).map(([n, v]) => ({ n, pct: v.total > 0 ? (v.correct / v.total) * 100 : 0 }));
+    const getPct = (namePart: string) => { const found = entries.find(e => e.n.toLowerCase().includes(namePart)); return found ? found.pct : 0; };
+    const mathPct = getPct('math');
+    const englishPct = getPct('english');
+    const sciencePct = (getPct('basic science') + getPct('basic technology') + getPct('science')) / (entries.some(e => e.n.toLowerCase().includes('basic science')) ? 2 : 0);
+    const results: { label: string; score: number; color: string; }[] = [];
+    if (mathPct > 0 && sciencePct > 0) results.push({ label: 'Science (Sciences)', score: Math.round((mathPct * 0.5 + sciencePct * 0.5)), color: '#1a5276' });
+    if (mathPct > 0 && englishPct > 0) results.push({ label: 'Commercial (Business)', score: Math.round((mathPct * 0.5 + englishPct * 0.5)), color: '#922b21' });
+    if (englishPct > 0) results.push({ label: 'Arts (Humanities)', score: Math.round(Math.min(100, englishPct * 1.1)), color: '#1e8449' });
+    return results.sort((a, b) => b.score - a.score);
+  }
+
+  function downloadDOC() {
+    const schoolName = schoolSettings?.school_name || 'ClearPath Edu Hub';
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const pathwayRecs = computePathwayRecommendations();
+    const subjRows = Object.entries(bySubject).map(([s, d]) => {
+      const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+      return `<tr><td>${s}</td><td>${d.correct}</td><td>${d.total}</td><td>${pct}%</td><td>${pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>`;
+    }).join('');
+
+    const pathwayRows = pathwayRecs.map(p => `<tr><td>${p.label}</td><td>${p.score}%</td></tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Entrance Exam Report</title>
+<style>
+  body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #333; }
+  h1 { color: #1e3a5f; border-bottom: 2px solid #b3922f; padding-bottom: 6px; }
+  h2 { color: #1e3a5f; margin-top: 20px; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  th { background: #1e3a5f; color: #fff; padding: 6px 8px; text-align: left; font-size: 10pt; }
+  td { padding: 4px 8px; border: 1px solid #ddd; font-size: 10pt; }
+  tr:nth-child(even) { background: #f8f9fa; }
+  .score-box { text-align: center; font-size: 24pt; font-weight: bold; padding: 12px; border-radius: 8px; }
+  .passed { color: #16a34a; } .failed { color: #dc2626; }
+  .recs { background: #fef3e7; border: 1px solid #fed7aa; padding: 12px; border-radius: 6px; margin: 12px 0; }
+  .footer { text-align: center; font-size: 8pt; color: #999; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; }
+  .insight { padding: 8px 12px; border-radius: 6px; margin: 6px 0; }
+  .strength { background: #f0fdf4; border-left: 4px solid #16a34a; }
+  .weakness { background: #fef2f2; border-left: 4px solid #dc2626; }
+  .topic-focus { background: #faf5ff; border-left: 4px solid #7c3aed; }
+</style></head><body>
+  <h1>Entrance Exam Analysis Report</h1>
+  <p style="color:#666;">${schoolName} — Generated: ${dateStr}</p>
+
+  <h2>Student Information</h2>
+  <table><tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Name</td><td>${application.first_name || ''} ${application.last_name || ''}</td></tr>
+    <tr><td>Email</td><td>${application.email || 'N/A'}</td></tr>
+    <tr><td>Applied Class</td><td>${application.applied_class || 'N/A'}</td></tr>
+    <tr><td>Exam</td><td>${exam?.title || 'N/A'}</td></tr>
+  </table>
+
+  <h2>Exam Results</h2>
+  <div class="score-box ${passed ? 'passed' : 'failed'}">${score}% — ${passed ? 'PASSED' : 'FAILED'}</div>
+  <table><tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Total Questions</td><td>${totalQ}</td></tr>
+    <tr><td>Correct Answers</td><td>${correctQ}</td></tr>
+    <tr><td>Wrong Answers</td><td>${wrongQ}</td></tr>
+    <tr><td>Accuracy</td><td>${accuracy}%</td></tr>
+    <tr><td>Passing Score</td><td>${passingScore}%</td></tr>
+    <tr><td>Score Obtained</td><td>${score}%</td></tr>
+    <tr><td>Mastery Level</td><td>${analytics?.mastery_level || 'N/A'}</td></tr>
+    <tr><td>Status</td><td>${passed ? 'PASSED' : 'FAILED'}</td></tr>
+  </table>
+
+  ${Object.keys(bySubject).length > 0 ? `<h2>Subject Performance</h2>
+  <table><tr><th>Subject</th><th>Correct</th><th>Total</th><th>Score</th><th>Assessment</th></tr>${subjRows}</table>` : ''}
+
+  ${pathwayRecs.length > 0 ? `<h2>Recommended Academic Pathways</h2>
+  <table><tr><th>Pathway</th><th>Match Score</th></tr>${pathwayRows}</table>` : ''}
+
+  <h2>Performance Insights</h2>
+  ${(() => {
+    const sorted = Object.entries(bySubject).map(([n, d]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter(s => s.p > 0).sort((a, b) => b.p - a.p);
+    const weak = sorted.filter(s => s.p < 40);
+    const weakDiff = Object.entries(byDifficulty).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.4);
+    const weakTop = Object.entries(byTopic).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.4);
+    let html2 = '';
+    if (sorted.length >= 2) html2 += '<div class="insight strength"><b>Strengths:</b> ' + sorted.slice(0,2).map(s => s.n + ' (' + s.p + '%)').join(', ') + '</div>';
+    if (weak.length > 0) html2 += '<div class="insight weakness"><b>Needs Improvement:</b> ' + weak.map(s => s.n + ' (' + s.p + '%)').join(', ') + '</div>';
+    if (weakDiff.length > 0) html2 += '<div class="insight weakness"><b>Difficulty Challenges:</b> ' + weakDiff.slice(0,3).map(([d, v]) => d + ' (' + Math.round((v.correct / v.total) * 100) + '%)').join(', ') + '</div>';
+    if (weakTop.length > 0) html2 += '<div class="insight topic-focus"><b>Topics to Focus On:</b> ' + weakTop.slice(0,3).map(([t, v]) => t + ' (' + Math.round((v.correct / v.total) * 100) + '%)').join(', ') + '</div>';
+    return html2;
+  })()}
+
+  <div class="recs">
+    <b>Recommendations for Improvement:</b><br>
+    ${buildRecommendationsText().split('. ').filter(s => s.trim()).map(s => '• ' + s + '.').join('<br>')}
+  </div>
+
+  <div class="footer">${schoolName} — Official Document — Generated: ${dateStr}<br>This report is system-generated and does not require a signature.</div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Entrance_Exam_Report_${application.first_name || 'Student'}_${new Date().toISOString().split('T')[0]}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   // ── Entrance PDF Enhancements ──
   function drawEntranceRadarChart(doc: any, bySubj: Record<string, SubjectBreakdown>, cx: number, cy: number, radius: number): void {
     const items = Object.entries(bySubj).filter(([_, d]) => d.total > 0);
@@ -398,6 +502,8 @@ export default function StudentEntranceReportPage() {
       drawHeader(doc);
 
       let y = 50;
+      doc.setFillColor(...goldColor);
+      doc.rect(14, y - 5, pw - 28, 1, 'F');
       doc.setFillColor(...primaryColor);
       doc.rect(14, y - 4, pw - 28, 7, 'F');
       doc.setTextColor(255, 255, 255);
@@ -426,6 +532,8 @@ export default function StudentEntranceReportPage() {
       });
 
       y += studentInfo.length * 5.5 + 7;
+      doc.setFillColor(...goldColor);
+      doc.rect(14, y - 5, pw - 28, 1, 'F');
       doc.setFillColor(...primaryColor);
       doc.rect(14, y - 4, pw - 28, 7, 'F');
       doc.setTextColor(255, 255, 255);
@@ -435,10 +543,16 @@ export default function StudentEntranceReportPage() {
 
       y += 11;
       const scoreX = pw - 40;
-      doc.setDrawColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
-      doc.setFillColor(passed ? 240 : 254, passed ? 253 : 242, passed ? 244 : 242);
-      doc.ellipse(scoreX, y + 12, 12, 12, 'FD');
-      doc.setTextColor(passed ? 22 : 220, passed ? 163 : 38, passed ? 74 : 38);
+      const gaugeColor: [number, number, number] = passed ? [22, 163, 74] : [220, 38, 38];
+      doc.setDrawColor(...goldColor);
+      doc.setFillColor(gaugeColor[0], gaugeColor[1], gaugeColor[2]);
+      doc.circle(scoreX, y + 12, 15, 'F');
+      doc.setFillColor(255, 255, 255);
+      doc.circle(scoreX, y + 12, 12, 'F');
+      doc.setDrawColor(...gaugeColor);
+      doc.setFillColor(...gaugeColor);
+      doc.circle(scoreX, y + 12, 12, 'FD');
+      doc.setTextColor(255, 255, 255);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.text(`${score}%`, scoreX, y + 15, { align: 'center' });
@@ -477,6 +591,8 @@ export default function StudentEntranceReportPage() {
       if (subjectEntries.length > 0) {
         y += resultsInfo.length * 5 + 7;
         if (y > 240) { doc.addPage(); y = 45; drawHeader(doc); }
+        doc.setFillColor(...goldColor);
+        doc.rect(14, y - 5, pw - 28, 1, 'F');
         doc.setFillColor(...primaryColor);
         doc.rect(14, y - 4, pw - 28, 7, 'F');
         doc.setTextColor(255, 255, 255);
@@ -516,6 +632,8 @@ export default function StudentEntranceReportPage() {
       const difficultyEntries = Object.entries(byDifficulty);
       if (difficultyEntries.length > 0) {
         if (y > 240) { doc.addPage(); y = 45; drawHeader(doc); }
+        doc.setFillColor(...goldColor);
+        doc.rect(14, y - 5, pw - 28, 1, 'F');
         doc.setFillColor(...primaryColor);
         doc.rect(14, y - 4, pw - 28, 7, 'F');
         doc.setTextColor(255, 255, 255);
@@ -585,6 +703,9 @@ export default function StudentEntranceReportPage() {
       if (topicEntries.length > 0) {
         if (y > 240) { doc.addPage(); y = 45; drawHeader(doc); }
         doc.setFillColor(...primaryColor);
+        doc.setFillColor(...goldColor);
+        doc.rect(14, y - 5, pw - 28, 1, 'F');
+        doc.setFillColor(...primaryColor);
         doc.rect(14, y - 4, pw - 28, 7, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
@@ -601,6 +722,46 @@ export default function StudentEntranceReportPage() {
           margin: { left: 14, right: 14 }, tableLineWidth: 0,
         });
         y = (doc as any).lastAutoTable.finalY + 5;
+      }
+
+      // ── Pathway Recommendations ──
+      const pathwayRecs = computePathwayRecommendations();
+      if (pathwayRecs.length > 0) {
+        if (y + 20 > 270) { doc.addPage(); y = 45; drawHeader(doc); }
+        doc.setFillColor(...goldColor);
+        doc.rect(14, y - 5, pw - 28, 1, 'F');
+        doc.setFillColor(...primaryColor);
+        doc.rect(14, y - 4, pw - 28, 7, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('RECOMMENDED PATHWAYS', 18, y + 0.5);
+        y += 11;
+        doc.setFontSize(7);
+        doc.setTextColor(60, 60, 60);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Pathway', 18, y);
+        doc.text('Match', pw - 75, y);
+        doc.text('Fit', pw - 40, y);
+        y += 1;
+        pathwayRecs.forEach((pr, i) => {
+          if (y + 7 > 280) { doc.addPage(); y = 45; drawHeader(doc); }
+          const barW = Math.max((pr.score / 100) * 80, 1);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(60, 60, 60);
+          doc.text(`${i + 1}. ${pr.label}`, 18, y + 3);
+          doc.setTextColor(238, 238, 238);
+          doc.setFillColor(238, 238, 238);
+          doc.rect(pw - 88, y, 80, 4, 'F');
+          doc.setFillColor(pr.color);
+          doc.rect(pw - 88, y, barW, 4, 'F');
+          doc.setTextColor(80, 80, 80);
+          doc.setFontSize(6);
+          doc.text(`${pr.score}%`, pw - 88 + barW + 2, y + 3);
+          y += 7;
+        });
+        y += 3;
       }
 
       if (y < 250) {
@@ -668,12 +829,26 @@ export default function StudentEntranceReportPage() {
   const difficultyEntries = Object.entries(byDifficulty);
   const topicEntries = Object.entries(byTopic);
   const accuracy = totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0;
+  const pathwayRecs = computePathwayRecommendations();
+  const sortedInsights = [...subjectEntries].map(([n, d]: [string, any]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter(s => s.p > 0).sort((a, b) => b.p - a.p);
+  const weakSubj = sortedInsights.filter(s => s.p < 40);
+  const weakDiff = [...difficultyEntries].filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
+  const weakTop = [...topicEntries].filter(([_, d]: [string, any]) => d.total > 0 && (d.correct / d.total) < 0.4);
+
+  const [activeTab, setActiveTab] = useState('overview');
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'subjects', label: 'Subjects', icon: BookOpen },
+    { id: 'difficulty', label: 'Difficulty & Topics', icon: Award },
+    { id: 'questions', label: 'Questions', icon: FileText },
+    { id: 'recommendations', label: 'Recommendations', icon: AlertCircle },
+  ];
 
   return (
     <DashboardLayout title="Exam Analysis Report" subtitle={`${application.first_name} ${application.last_name}`}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-4">
             <Link href="/student/entrance-exams" className="p-2 hover:bg-slate-100 rounded-lg">
               <ArrowLeft size={20} className="text-slate-600" />
@@ -683,13 +858,32 @@ export default function StudentEntranceReportPage() {
               <p className="text-slate-500 text-sm">{application.first_name} {application.last_name}</p>
             </div>
           </div>
-          <button onClick={downloadPDF} disabled={downloading} className="btn-primary flex items-center gap-2">
-            {downloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-            Download PDF
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={downloadDOC} className="btn-outline flex items-center gap-2 text-sm">
+              <Download size={14} /> DOC
+            </button>
+            <button onClick={downloadPDF} disabled={downloading} className="btn-primary flex items-center gap-2 text-sm">
+              {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              PDF
+            </button>
+          </div>
         </div>
 
-        {/* Score Overview */}
+        {/* Tab Navigation */}
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg overflow-x-auto">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}>
+                <Icon size={16} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Score Overview - Always visible */}
         <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -706,6 +900,8 @@ export default function StudentEntranceReportPage() {
           </div>
         </div>
 
+        {activeTab === 'overview' && (
+        <>
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="card"><p className="text-xs text-slate-500">Total Questions</p><p className="text-2xl font-bold">{totalQ}</p></div>
@@ -742,7 +938,11 @@ export default function StudentEntranceReportPage() {
             </div>
           )}
         </div>
+        </>
+        )}
 
+        {activeTab === 'subjects' && (
+        <>
         {/* Subject Radar Chart */}
         {radarData.length >= 3 && (
           <div className="card">
@@ -811,7 +1011,11 @@ export default function StudentEntranceReportPage() {
             })()}
           </div>
         )}
+        </>
+        )}
 
+        {activeTab === 'difficulty' && (
+        <>
         {/* Difficulty Breakdown */}
         {difficultyEntries.length > 0 && (
           <div className="card">
@@ -877,7 +1081,11 @@ export default function StudentEntranceReportPage() {
             </div>
           );
         })()}
+        </>
+        )}
 
+        {activeTab === 'questions' && (
+        <>
         {/* Per-Question Analysis */}
         {questionsData.length > 0 && (
           <div className="card">
@@ -910,7 +1118,11 @@ export default function StudentEntranceReportPage() {
             </div>
           </div>
         )}
+        </>
+        )}
 
+        {activeTab === 'recommendations' && (
+        <>
         {/* Topic Performance */}
         {topicEntries.length > 0 && (
           <div className="card">
@@ -938,7 +1150,25 @@ export default function StudentEntranceReportPage() {
           </div>
         )}
 
-        {/* Recommendations */}
+        {/* Pathway Recommendations */}
+        {pathwayRecs.length > 0 && (
+          <div className="card">
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><GraduationCap size={16} /> Recommended Academic Pathways</h3>
+            <div className="space-y-3">
+              {pathwayRecs.map((pr, i) => (
+                <div key={pr.label} className="flex items-center gap-3">
+                  <span className="w-48 text-sm text-slate-700 font-medium truncate shrink-0">{i + 1}. {pr.label}</span>
+                  <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${pr.score}%`, backgroundColor: pr.color }} />
+                  </div>
+                  <span className="w-10 text-xs font-bold text-right text-slate-600">{pr.score}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recommendations for Improvement */}
         <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
           <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><AlertCircle size={16} className="text-orange-600" /> Recommendations for Improvement</h3>
           <div className="text-sm text-slate-700 space-y-2">
@@ -956,6 +1186,8 @@ export default function StudentEntranceReportPage() {
               {analytics.mastery_level}
             </p>
           </div>
+        )}
+        </>
         )}
       </div>
     </DashboardLayout>
