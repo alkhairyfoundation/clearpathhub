@@ -9,6 +9,7 @@ export const revalidate = 0;
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#2563eb',
 };
 
 export const metadata: Metadata = {
@@ -22,13 +23,25 @@ export const metadata: Metadata = {
     {
       rel: 'icon',
       type: 'image/png',
+      sizes: '96x96',
+      url: '/icons/icon-96x96.png'
+    },
+    {
+      rel: 'icon',
+      type: 'image/png',
       sizes: '192x192',
       url: '/icons/icon-192x192.png'
     },
     {
+      rel: 'icon',
+      type: 'image/png',
+      sizes: '512x512',
+      url: '/icons/icon-512x512.png'
+    },
+    {
       rel: 'apple-touch-icon',
       sizes: '180x180',
-      url: '/icons/icon-192x192.png'
+      url: '/icons/icon-180x180.png'
     }
   ],
 };
