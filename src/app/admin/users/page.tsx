@@ -11,6 +11,7 @@ import {
   DollarSign, X, Loader2, AlertCircle, Check, UserPlus, Link2, Eye, Upload
 } from 'lucide-react';
 import BulkStudentUpload from '@/components/BulkStudentUpload';
+import BulkStaffUpload from '@/components/BulkStaffUpload';
 import type { Profile, UserRole, Student } from '@/types';
 
 const roleConfig: Record<UserRole, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
@@ -58,6 +59,7 @@ function AdminUsersPageContent() {
   const [userExtraInfo, setUserExtraInfo] = useState<Record<string, any>>({});
   const [resetPasswordMode, setResetPasswordMode] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [showBulkStaffModal, setShowBulkStaffModal] = useState(false);
 
 const [classes, setClasses] = useState<ClassOption[]>([]);
 const [allClasses, setAllClasses] = useState<ClassOption[]>([]);
@@ -454,7 +456,10 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
             <UserPlus size={16} /> Add Student
           </button>
           <button onClick={() => setShowBulkModal(true)} className="btn-outline flex items-center gap-2">
-            <Upload size={16} /> Bulk Import
+            <Upload size={16} /> Bulk Import Students
+          </button>
+          <button onClick={() => setShowBulkStaffModal(true)} className="btn-outline flex items-center gap-2">
+            <Upload size={16} /> Bulk Import Staff
           </button>
           <button onClick={() => openCreateModal('parent')} className="btn-outline flex items-center gap-2">
             <UserPlus size={16} /> Add Parent
@@ -1086,6 +1091,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
 
       {/* Bulk Import Modal */}
       <BulkStudentUpload isOpen={showBulkModal} onClose={() => { setShowBulkModal(false); fetchUsers(); }} role="admin" onSuccess={(count) => setSuccess(`${count} students imported successfully`)} />
+      <BulkStaffUpload isOpen={showBulkStaffModal} onClose={() => { setShowBulkStaffModal(false); fetchUsers(); }} onSuccess={(count) => setSuccess(`${count} staff imported successfully`)} />
 
       {/* Credentials Modal */}
       {showCredentialsModal && (
