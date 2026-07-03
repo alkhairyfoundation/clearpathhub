@@ -53,12 +53,18 @@ export default function AdminClassesPage() {
     
     setError(''); setSaving(true);
     try {
+      const record = {
+        name: formData.name,
+        level: formData.level,
+        department_id: formData.department_id && formData.department_id.trim() !== '' ? formData.department_id : null,
+        class_teacher_id: formData.class_teacher_id && formData.class_teacher_id.trim() !== '' ? formData.class_teacher_id : null,
+      };
       if (editing) {
-        const { error: err } = await supabase.from('classes').update(formData).eq('id', editing.id);
+        const { error: err } = await supabase.from('classes').update(record).eq('id', editing.id);
         if (err) throw new Error(err.message);
         setSuccess('Class updated successfully');
       } else {
-        const { error: err } = await supabase.from('classes').insert(formData);
+        const { error: err } = await supabase.from('classes').insert(record);
         if (err) throw new Error(err.message);
         setSuccess('Class created successfully');
       }
