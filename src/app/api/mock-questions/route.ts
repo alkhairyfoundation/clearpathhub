@@ -9,12 +9,19 @@ export async function POST(request: Request) {
 
     switch (action) {
       case 'list_questions': {
-        const { exam_id, subject } = params;
+        const { exam_id, subject, grade_level, exam_type } = params;
         let query = adminClient.from('mock_questions').select('*');
         if (exam_id) query = query.eq('exam_id', exam_id);
         if (subject) query = query.eq('subject', subject);
+        if (grade_level) query = query.eq('grade_level', grade_level);
+        if (exam_type) {
+          let examGradeLevel = null;
+          if (exam_type === 'JSS3_BECE') examGradeLevel = 'JSS3';
+          else if (exam_type === 'SS3_WAEC') examGradeLevel = 'SS3';
+          if (examGradeLevel) query = query.eq('grade_level', examGradeLevel);
+        }
         const { data, error } = await query.order('created_at', { ascending: true });
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        if (error) return NextResponse.json({ success: false, error: error.message }, { 500 });
         return NextResponse.json({ success: true, questions: data });
       }
 

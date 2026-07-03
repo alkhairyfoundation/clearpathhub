@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // If role is student, create student record in both databases
+      // If role is student, create student record in both databases
     if (role === 'student') {
       const admissionPrefix = 'STD';
       const { count } = await adminClient
@@ -77,12 +77,14 @@ export async function POST(request: Request) {
 
       const admissionNumber = `${admissionPrefix}${new Date().getFullYear()}${String((count || 0) + 1).padStart(4, '0')}`;
 
+      const classId = class_id && class_id.trim() !== '' ? class_id : null;
+
       const { error: studentError } = await adminClient
         .from('students')
         .insert({
           profile_id: userId,
           admission_number: admissionNumber,
-          class_id: class_id || null,
+          class_id: classId,
         });
 
       if (studentError) {
@@ -94,7 +96,7 @@ export async function POST(request: Request) {
         await neonQuery(
           `INSERT INTO students (profile_id, admission_number, class_id)
            VALUES ($1, $2, $3)`,
-          [userId, admissionNumber, class_id || null]
+          [userId, admissionNumber, classId]
         );
       } catch (neonStudentError) {
         console.error('Error creating student record in Neon:', neonStudentError);

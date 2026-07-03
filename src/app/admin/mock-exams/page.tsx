@@ -35,6 +35,7 @@ export default function AdminMockExamsPage() {
 
   const [formData, setFormData] = useState({
     title: '', description: '', exam_type: 'JSS3_BECE' as 'JSS3_BECE' | 'SS3_WAEC',
+    class_level: 'JSS3' as 'JSS3' | 'SS3',
     academic_year: new Date().getFullYear().toString(), exam_date: '',
     duration_minutes: 120, passing_score: 50, total_questions: 60,
     shuffle_questions: true, require_fullscreen: false, prevent_tab_switch: false,
@@ -589,19 +590,39 @@ export default function AdminMockExamsPage() {
                   {/* Mastery Distribution */}
                   <div className="card">
                     <h3 className="font-bold text-slate-800 mb-4">Mastery Distribution</h3>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie data={masteryChartData.filter(d => d.value > 0)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                          {masteryChartData.filter(d => d.value > 0).map((entry, index) => {
-                            const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e'];
-                            return <Cell key={index} fill={colors[index % colors.length]} />;
-                          })}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+    <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie data={masteryChartData.filter(d => d.value > 0)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                              {masteryChartData.filter(d => d.value > 0).map((entry, index) => {
+                                const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e'];
+                                return <Cell key={index} fill={colors[index % colors.length]} />;
+                              })}
+                            </Pie>
+                            <Tooltip />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                  {/* Pathway Distribution */}
+                  {analytics.filter((a: any) => a.recommended_pathway).length > 0 && (
+                    <div className="card">
+                      <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Lightbulb size={16} /> Pathway Recommendations Distribution</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {['SCIENCE', 'COMMERCIAL', 'ARTS'].map(pathway => {
+                          const count = analytics.filter((a: any) => a.recommended_pathway === pathway).length;
+                          const total = analytics.filter((a: any) => a.recommended_pathway).length;
+                          return (
+                            <div key={pathway} className={`rounded-xl p-4 text-center ${pathway === 'SCIENCE' ? 'bg-green-50 border border-green-200' : pathway === 'COMMERCIAL' ? 'bg-blue-50 border border-blue-200' : 'bg-purple-50 border border-purple-200'}`}>
+                              <p className="text-2xl font-bold">{count}</p>
+                              <p className="text-sm font-medium">{pathway} Track</p>
+                              <p className="text-xs text-slate-500">{total > 0 ? Math.round((count / total) * 100) : 0}% of students</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Student Performance Comparison */}
                   <div className="card">

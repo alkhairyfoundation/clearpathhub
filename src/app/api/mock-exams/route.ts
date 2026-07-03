@@ -38,17 +38,24 @@ export async function POST(request: Request) {
 
     switch (action) {
       case 'create_exam': {
-        const { title, description, exam_type, academic_year, exam_date, duration_minutes, passing_score, total_questions, shuffle_questions, require_fullscreen, prevent_tab_switch, max_tab_switches, max_attempts, created_by } = params;
+        const { title, description, exam_type, class_level, academic_year, exam_date, duration_minutes, passing_score, total_questions, shuffle_questions, require_fullscreen, prevent_tab_switch, max_tab_switches, max_attempts, created_by } = params;
         if (!title || !exam_type || !academic_year) {
           return NextResponse.json({ success: false, error: 'Title, exam_type, and academic_year are required' }, { status: 400 });
         }
+        let classLevelValue = null;
+        if (exam_type === 'JSS3_BECE') {
+          classLevelValue = 'JSS3';
+        } else if (exam_type === 'SS3_WAEC') {
+          classLevelValue = 'SS3';
+        }
+        
         const { data, error } = await adminClient.from('mock_exams').insert({
           title, description, exam_type, academic_year, exam_date: exam_date || null,
           duration_minutes: duration_minutes || 120, passing_score: passing_score || 50,
           total_questions: total_questions || 60, shuffle_questions: shuffle_questions ?? true,
           require_fullscreen: require_fullscreen ?? false, prevent_tab_switch: prevent_tab_switch ?? false,
           max_tab_switches: max_tab_switches || 3, max_attempts: max_attempts || 0,
-          is_published: true, created_by,
+          is_published: true, created_by, class_level: classLevelValue,
         }).select().single();
         if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         return NextResponse.json({ success: true, exam: data }, { status: 201 });
@@ -72,12 +79,16 @@ export async function POST(request: Request) {
       }
 
       case 'list_exams': {
-        const { exam_type, is_published } = params;
+        const { exam_type, is_published, class_level } = params;
         let query = adminClient.from('mock_exams').select('*');
         if (exam_type) query = query.eq('exam_type', exam_type);
         if (is_published !== undefined) query = query.eq('is_published', is_published);
+        if (class_level) {
+          const examType = class_level === 'JSS3' ? 'JSS3_BECE' : 'SS3_WAEC';
+          query = query.eq('exam_type', examType);
+        }
         const { data, error } = await query.order('created_at', { ascending: false });
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        if (error) return NextResponse.json({ success: false, error: error.message }, { 500 });
         return NextResponse.json({ success: true, exams: data });
       }
 
