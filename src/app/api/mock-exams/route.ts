@@ -88,7 +88,7 @@ export async function POST(request: Request) {
           query = query.eq('exam_type', examType);
         }
         const { data, error } = await query.order('created_at', { ascending: false });
-        if (error) return NextResponse.json({ success: false, error: error.message }, { 500 });
+        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         return NextResponse.json({ success: true, exams: data });
       }
 

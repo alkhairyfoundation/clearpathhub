@@ -21,7 +21,7 @@ export async function POST(request: Request) {
           if (examGradeLevel) query = query.eq('grade_level', examGradeLevel);
         }
         const { data, error } = await query.order('created_at', { ascending: true });
-        if (error) return NextResponse.json({ success: false, error: error.message }, { 500 });
+        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         return NextResponse.json({ success: true, questions: data });
       }
 
