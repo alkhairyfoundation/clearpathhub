@@ -228,6 +228,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
     if (user.role === 'student') {
       supabase.from('students').select('*').eq('profile_id', user.id).maybeSingle().then(({ data }) => {
         if (data) {
+          setFormData(prev => ({ ...prev, class_id: data.class_id || '' }));
           setStudentData({
             date_of_birth: data.date_of_birth || '',
             gender: data.gender || '',
