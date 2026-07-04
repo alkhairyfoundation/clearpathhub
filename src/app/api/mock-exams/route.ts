@@ -62,11 +62,83 @@ export async function POST(request: Request) {
       }
 
       case 'update_exam': {
-        const { id, ...updates } = params;
+        const { id, title, description, exam_date, duration_minutes, passing_score, total_questions, shuffle_questions, require_fullscreen, prevent_tab_switch, max_tab_switches, max_attempts, is_published } = params;
         if (!id) return NextResponse.json({ success: false, error: 'Exam ID required' }, { status: 400 });
-        const { data, error } = await adminClient.from('mock_exams').update(updates).eq('id', id).select().single();
+        const { data, error } = await adminClient.from('mock_exams').update({
+          title, description, exam_date: exam_date || null,
+          duration_minutes, passing_score, total_questions,
+          shuffle_questions, require_fullscreen, prevent_tab_switch,
+          max_tab_switches, max_attempts, is_published,
+        }).eq('id', id).select().single();
         if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         return NextResponse.json({ success: true, exam: data });
+      }
+
+      case 'populate_from_bank': {
+        const { id: examId } = params;
+        if (!examId) return NextResponse.json({ success: false, error: 'Exam ID required' }, { status: 400 });
+
+        const { data: exam, error: examError } = await adminClient.from('mock_exams').select('*').eq('id', examId).single();
+        if (examError || !exam) return NextResponse.json({ success: false, error: 'Exam not found' }, { status: 404 });
+
+        const targetLevel = exam.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3';
+        const targetSubjects = targetLevel === 'JSS3'
+          ? ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BASIC TECHNOLOGY']
+          : ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'];
+
+        const { data: bankQuestions, error: bankError } = await adminClient
+          .from('question_bank')
+          .select('*')
+          .eq('status', 'published')
+          .eq('level', targetLevel)
+          .in('subject', targetSubjects);
+
+        if (bankError) return NextResponse.json({ success: false, error: bankError.message }, { status: 500 });
+        if (!bankQuestions || bankQuestions.length === 0) {
+          return NextResponse.json({ success: true, count: 0, message: 'No questions found in bank for this class level' });
+        }
+
+        const totalQs = exam.total_questions || 60;
+        const qsPerSubject = Math.max(1, Math.floor(totalQs / targetSubjects.length));
+
+        let selected: any[] = [];
+        for (const subject of targetSubjects) {
+          const subjectQs = bankQuestions.filter(q => q.subject === subject);
+          if (subjectQs.length === 0) continue;
+          const veryHard = subjectQs.filter(q => q.difficulty_level === 'VERY_HARD');
+          const hard = subjectQs.filter(q => q.difficulty_level === 'HARD');
+          const medium = subjectQs.filter(q => q.difficulty_level === 'MEDIUM');
+          const easy = subjectQs.filter(q => q.difficulty_level === 'EASY');
+          const chosen = [
+            ...veryHard.sort(() => Math.random() - 0.5).slice(0, Math.round(qsPerSubject * 0.3)),
+            ...hard.sort(() => Math.random() - 0.5).slice(0, Math.round(qsPerSubject * 0.3)),
+            ...medium.sort(() => Math.random() - 0.5).slice(0, Math.round(qsPerSubject * 0.25)),
+            ...easy.sort(() => Math.random() - 0.5).slice(0, Math.round(qsPerSubject * 0.15)),
+          ];
+          if (chosen.length < qsPerSubject) {
+            const remaining = subjectQs.filter(q => !chosen.find(s => s.id === q.id)).sort(() => Math.random() - 0.5).slice(0, qsPerSubject - chosen.length);
+            selected = [...selected, ...chosen, ...remaining];
+          } else {
+            selected = [...selected, ...chosen];
+          }
+        }
+
+        selected = selected.sort(() => Math.random() - 0.5).slice(0, totalQs);
+
+        const toInsert = selected.map((q: any) => ({
+          exam_id: examId, question: q.question, question_image: q.question_image || null,
+          options: q.options || [''], correct_answer: q.correct_answer ?? 0, points: q.points || 1,
+          question_type: q.question_type === 'TRUE_FALSE' ? 'true_false' : q.question_type === 'FILL_IN_THE_GAP' || q.question_type === 'FILL_BLANK' ? 'fill_blank' : 'multiple_choice',
+          subject: q.subject || 'General', difficulty_level: q.difficulty_level || 'MEDIUM',
+          topic: q.topic || null, subtopic: q.subtopic || null, explanation: q.explanation || null,
+          skill_tag: q.skill_tag || null, bloom_level: q.bloom_level || null,
+          curriculum: q.curriculum || null, grade_level: targetLevel,
+        }));
+
+        const { data: inserted, error: insertError } = await adminClient.from('mock_questions').insert(toInsert).select();
+        if (insertError) return NextResponse.json({ success: false, error: insertError.message }, { status: 500 });
+
+        return NextResponse.json({ success: true, count: inserted?.length || 0 });
       }
 
       case 'delete_exam': {

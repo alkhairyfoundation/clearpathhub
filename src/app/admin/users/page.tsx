@@ -153,7 +153,10 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
     if (selectedRole === 'all' || selectedRole === 'student') {
       const { data: classList } = await supabase.from('classes').select('id, name, level').order('name');
       if (classList) setAllClasses(classList);
-      const { data: studentRecords } = await supabase.from('students').select('profile_id, class_id');
+      const { data: studentRecords, error: studentError } = await supabase.from('students').select('profile_id, class_id');
+      if (studentError) {
+        console.error('Error fetching student records:', studentError);
+      }
       if (studentRecords) {
         const map: Record<string, string> = {};
         studentRecords.forEach(s => { if (s.class_id) map[s.profile_id] = s.class_id; });

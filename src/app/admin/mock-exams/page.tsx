@@ -9,7 +9,7 @@ import {
   Plus, Edit, Trash2, X, FileText, Clock, Users, Check,
   Loader2, Search, Eye, Download, Award, AlertCircle,
   GraduationCap, ChevronDown, BarChart3, Brain, TrendingUp,
-  Lightbulb, BookOpen, RotateCcw, Filter
+  Lightbulb, BookOpen, RotateCcw, Filter, Database
 } from 'lucide-react';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -22,17 +22,22 @@ export default function AdminMockExamsPage() {
   const router = useRouter();
   const [exams, setExams] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
+  const [bankQuestions, setBankQuestions] = useState<any[]>([]);
   const [attempts, setAttempts] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showExamModal, setShowExamModal] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [showEditExamModal, setShowEditExamModal] = useState(false);
+  const [showBankSelectModal, setShowBankSelectModal] = useState(false);
   const [selectedExam, setSelectedExam] = useState<any>(null);
+  const [editingExam, setEditingExam] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'exams' | 'questions' | 'students' | 'analytics'>('exams');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Exam form state
   const [formData, setFormData] = useState({
     title: '', description: '', exam_type: 'JSS3_BECE' as 'JSS3_BECE' | 'SS3_WAEC',
     class_level: 'JSS3' as 'JSS3' | 'SS3',
@@ -42,6 +47,23 @@ export default function AdminMockExamsPage() {
     max_tab_switches: 3, max_attempts: 0,
   });
 
+  // Question bank state (Questions tab)
+  const [bankFilter, setBankFilter] = useState({
+    level: '' as '' | 'JSS3' | 'SS3',
+    subject: '', difficulty: '', questionType: '', search: '',
+  });
+  const [bankQuestionData, setBankQuestionData] = useState({
+    question: '', options: ['', '', '', ''], correct_answer: 0, points: 1,
+    question_type: 'multiple_choice', subject: 'MATHEMATICS',
+    difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: '',
+    curriculum: 'Both', level: 'JSS3',
+  });
+  const [editingBankQuestion, setEditingBankQuestion] = useState<any>(null);
+  const [showBankQuestionModal, setShowBankQuestionModal] = useState(false);
+  const [selectedBankIds, setSelectedBankIds] = useState<Set<string>>(new Set());
+  const [assignTargetExam, setAssignTargetExam] = useState('');
+
+  // Existing question form (per-exam manual add)
   const [questionData, setQuestionData] = useState({
     question: '', options: ['', '', '', ''], correct_answer: 0, points: 1,
     question_type: 'multiple_choice', subject: 'MATHEMATICS',
@@ -50,6 +72,7 @@ export default function AdminMockExamsPage() {
   });
 
   const SUBJECTS = ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BASIC TECHNOLOGY'];
+  const SS3_SUBJECTS = ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'];
   const DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD', 'VERY_HARD'];
   const QUESTION_TYPES = [
     { value: 'multiple_choice', label: 'Multiple Choice' },
@@ -57,7 +80,6 @@ export default function AdminMockExamsPage() {
     { value: 'fill_blank', label: 'Fill in the Blank' },
   ];
 
-  // Student analytics view
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentDetail, setStudentDetail] = useState<any>(null);
 
@@ -67,15 +89,40 @@ export default function AdminMockExamsPage() {
   }, [profile]);
 
   useEffect(() => {
-    if (activeTab === 'questions' && selectedExam) fetchQuestions();
+    if (activeTab === 'questions') fetchBankQuestions();
     if (activeTab === 'analytics') fetchAnalytics();
-  }, [activeTab, selectedExam]);
+  }, [activeTab]);
 
   async function fetchData() {
     setLoading(true);
     const { data: examsData } = await supabase.from('mock_exams').select('*').order('created_at', { ascending: false });
     if (examsData) setExams(examsData);
     setLoading(false);
+  }
+
+  async function fetchBankQuestions() {
+    let query = supabase.from('question_bank').select('*');
+    if (bankFilter.level) query = query.eq('level', bankFilter.level);
+    if (bankFilter.subject) query = query.eq('subject', bankFilter.subject);
+    if (bankFilter.difficulty) query = query.eq('difficulty_level', bankFilter.difficulty);
+    if (bankFilter.questionType) query = query.eq('question_type', bankFilter.questionType);
+    if (bankFilter.search) query = query.ilike('question', `%${bankFilter.search}%`);
+    query = query.order('created_at', { ascending: false });
+    const { data } = await query;
+    if (data) {
+      // Fetch assignment info for each question
+      const { data: mockQs } = await supabase.from('mock_questions').select('id, exam_id, question');
+      const examAssignments: Record<string, Set<string>> = {};
+      if (mockQs) {
+        for (const q of data) {
+          const matched = mockQs.filter(mq => mq.question === q.question);
+          if (matched.length > 0) {
+            examAssignments[q.id] = new Set(matched.map(m => m.exam_id));
+          }
+        }
+      }
+      setBankQuestions(data.map(q => ({ ...q, _examAssignments: examAssignments[q.id] || new Set() })));
+    }
   }
 
   async function fetchQuestions() {
@@ -90,6 +137,8 @@ export default function AdminMockExamsPage() {
     const { data: atts } = await supabase.from('mock_attempts').select('*, student:profiles!student_id(first_name, last_name, email, id)').not('completed_at', 'is', null);
     if (atts) setAttempts(atts);
   }
+
+  // ── Exam CRUD ──
 
   async function handleCreateExam() {
     if (!formData.title.trim() || !formData.exam_type) {
@@ -117,7 +166,57 @@ export default function AdminMockExamsPage() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       setSuccess('Exam created successfully');
+
+      // Auto-populate from question bank
+      const examId = data.exam.id;
+      const popRes = await fetch('/api/mock-exams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'populate_from_bank', id: examId }),
+      });
+      const popData = await popRes.json();
+      if (popData.success && popData.count > 0) {
+        setSuccess(`Exam created and auto-populated with ${popData.count} questions from bank`);
+      } else if (popData.success && popData.count === 0) {
+        setSuccess('Exam created. No questions found in bank for auto-population — add questions manually.');
+      }
+
       setShowExamModal(false);
+      fetchData();
+    } catch (err: any) { setError(err.message); }
+    finally { setSaving(false); }
+  }
+
+  async function handleUpdateExam() {
+    if (!editingExam || !formData.title.trim()) {
+      setError('Title is required');
+      return;
+    }
+    setError(''); setSaving(true);
+    try {
+      const res = await fetch('/api/mock-exams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_exam', id: editingExam.id,
+          title: formData.title, description: formData.description,
+          exam_date: formData.exam_date || null,
+          duration_minutes: formData.duration_minutes,
+          passing_score: formData.passing_score,
+          total_questions: formData.total_questions,
+          shuffle_questions: formData.shuffle_questions,
+          require_fullscreen: formData.require_fullscreen,
+          prevent_tab_switch: formData.prevent_tab_switch,
+          max_tab_switches: formData.max_tab_switches,
+          max_attempts: formData.max_attempts,
+          is_published: true,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setSuccess('Exam updated');
+      setShowEditExamModal(false);
+      setEditingExam(null);
       fetchData();
     } catch (err: any) { setError(err.message); }
     finally { setSaving(false); }
@@ -137,6 +236,130 @@ export default function AdminMockExamsPage() {
       fetchData();
     } catch (err: any) { setError(err.message); }
   }
+
+  async function handlePopulateFromBank(examId: string) {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/mock-exams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'populate_from_bank', id: examId }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setSuccess(`Populated with ${data.count} questions from bank`);
+      fetchData();
+    } catch (err: any) { setError(err.message); }
+    finally { setSaving(false); }
+  }
+
+  async function handleAddFromBank() {
+    if (!selectedExam || selectedBankIds.size === 0) {
+      setError('Select an exam and at least one question');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch('/api/mock-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'add_from_bank',
+          exam_id: selectedExam.id,
+          question_ids: Array.from(selectedBankIds),
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setSuccess(`Added ${data.count} question(s) from bank`);
+      setShowBankSelectModal(false);
+      setSelectedBankIds(new Set());
+      fetchQuestions();
+    } catch (err: any) { setError(err.message); }
+    finally { setSaving(false); }
+  }
+
+  // ── Question Bank CRUD ──
+
+  async function handleSaveBankQuestion() {
+    if (!bankQuestionData.question.trim() || !bankQuestionData.subject || !bankQuestionData.topic) {
+      setError('Question text, subject, and topic are required');
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        question: bankQuestionData.question,
+        options: bankQuestionData.options,
+        correct_answer: bankQuestionData.correct_answer,
+        points: bankQuestionData.points,
+        question_type: bankQuestionData.question_type === 'multiple_choice' ? 'MCQ' : bankQuestionData.question_type === 'true_false' ? 'TRUE_FALSE' : 'FILL_IN_THE_GAP',
+        subject: bankQuestionData.subject,
+        difficulty_level: bankQuestionData.difficulty_level,
+        topic: bankQuestionData.topic,
+        subtopic: bankQuestionData.subtopic || null,
+        explanation: bankQuestionData.explanation || null,
+        curriculum: bankQuestionData.curriculum || null,
+        level: bankQuestionData.level,
+        status: 'published',
+        created_by: profile?.id,
+      };
+
+      if (editingBankQuestion) {
+        const { error } = await supabase.from('question_bank').update(payload).eq('id', editingBankQuestion.id);
+        if (error) throw new Error(error.message);
+        setSuccess('Question updated in bank');
+      } else {
+        const { error } = await supabase.from('question_bank').insert(payload);
+        if (error) throw new Error(error.message);
+        setSuccess('Question added to bank');
+      }
+
+      setShowBankQuestionModal(false);
+      setEditingBankQuestion(null);
+      resetBankQuestionForm();
+      fetchBankQuestions();
+    } catch (err: any) { setError(err.message); }
+    finally { setSaving(false); }
+  }
+
+  async function handleDeleteBankQuestion(qId: string) {
+    if (!confirm('Delete this question permanently?')) return;
+    const { error } = await supabase.from('question_bank').delete().eq('id', qId);
+    if (error) { setError(error.message); return; }
+    setSuccess('Question deleted from bank');
+    fetchBankQuestions();
+  }
+
+  function openEditBankQuestion(q: any) {
+    setEditingBankQuestion(q);
+    setBankQuestionData({
+      question: q.question,
+      options: q.options || ['', '', '', ''],
+      correct_answer: q.correct_answer ?? 0,
+      points: q.points || 1,
+      question_type: q.question_type === 'TRUE_FALSE' ? 'true_false' : q.question_type === 'FILL_IN_THE_GAP' || q.question_type === 'FILL_BLANK' ? 'fill_blank' : 'multiple_choice',
+      subject: q.subject || 'MATHEMATICS',
+      difficulty_level: q.difficulty_level || 'MEDIUM',
+      topic: q.topic || '',
+      subtopic: q.subtopic || '',
+      explanation: q.explanation || '',
+      curriculum: q.curriculum || 'Both',
+      level: q.level || 'JSS3',
+    });
+    setShowBankQuestionModal(true);
+  }
+
+  function resetBankQuestionForm() {
+    setBankQuestionData({
+      question: '', options: ['', '', '', ''], correct_answer: 0, points: 1,
+      question_type: 'multiple_choice', subject: 'MATHEMATICS',
+      difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: '',
+      curriculum: 'Both', level: 'JSS3',
+    });
+  }
+
+  // ── Per-exam manual question ──
 
   async function handleAddQuestion() {
     if (!selectedExam || !questionData.question.trim()) {
@@ -185,6 +408,37 @@ export default function AdminMockExamsPage() {
     setQuestionData({ ...questionData, options: opts, correct_answer: correct, question_type: type });
   }
 
+  function resetBankQuestionDefaults(type: string) {
+    let opts = ['', '', '', ''];
+    let correct = 0;
+    if (type === 'true_false' || type === 'TRUE_FALSE') { opts = ['True', 'False']; correct = 0; }
+    else if (type === 'fill_blank' || type === 'FILL_IN_THE_GAP') { opts = []; correct = 0; }
+    setBankQuestionData({ ...bankQuestionData, options: opts, correct_answer: correct, question_type: type });
+  }
+
+  function openEditExam(exam: any) {
+    setEditingExam(exam);
+    setFormData({
+      title: exam.title, description: exam.description || '',
+      exam_type: exam.exam_type, class_level: exam.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3',
+      academic_year: exam.academic_year, exam_date: exam.exam_date || '',
+      duration_minutes: exam.duration_minutes, passing_score: exam.passing_score,
+      total_questions: exam.total_questions, shuffle_questions: exam.shuffle_questions,
+      require_fullscreen: exam.require_fullscreen, prevent_tab_switch: exam.prevent_tab_switch,
+      max_tab_switches: exam.max_tab_switches, max_attempts: exam.max_attempts,
+    });
+    setShowEditExamModal(true);
+  }
+
+  function openAddFromBank(exam: any) {
+    setSelectedExam(exam);
+    setSelectedBankIds(new Set());
+    setAssignTargetExam(exam.id);
+    setShowBankSelectModal(true);
+    fetchBankQuestions();
+  }
+
+  // Analytics helpers
   const allAttemptsAnalytics = Object.values(
     attempts.reduce((acc: any, a: any) => {
       const sid = a.student_id;
@@ -215,6 +469,8 @@ export default function AdminMockExamsPage() {
     return 'text-red-600';
   }
 
+  const availableSubjects = (level: string) => level === 'SS3' ? SS3_SUBJECTS : SUBJECTS;
+
   return (
     <DashboardLayout title="Mock Exams" subtitle="BECE & WAEC Preparation Management">
       <div className="space-y-6">
@@ -229,23 +485,22 @@ export default function AdminMockExamsPage() {
               }`}
             >
               {tab === 'exams' && <><FileText size={14} className="inline mr-1" /> Exams</>}
-              {tab === 'questions' && <><BookOpen size={14} className="inline mr-1" /> Questions</>}
+              {tab === 'questions' && <><Database size={14} className="inline mr-1" /> Questions</>}
               {tab === 'students' && <><Users size={14} className="inline mr-1" /> Students</>}
               {tab === 'analytics' && <><BarChart3 size={14} className="inline mr-1" /> Analytics</>}
             </button>
           ))}
         </div>
 
-        {/* Notifications */}
         {error && <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2"><AlertCircle size={16} /> {error} <button onClick={() => setError('')} className="ml-auto"><X size={16} /></button></div>}
         {success && <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded-lg flex items-center gap-2"><Check size={16} /> {success} <button onClick={() => setSuccess('')} className="ml-auto"><X size={16} /></button></div>}
 
-        {/* === EXAMS TAB === */}
+        {/* ═══════════════ EXAMS TAB ═══════════════ */}
         {activeTab === 'exams' && (
           <>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-900">Mock Exams</h2>
-              <button onClick={() => setShowExamModal(true)} className="btn-primary flex items-center gap-2">
+              <button onClick={() => { resetBankQuestionForm(); setShowExamModal(true); }} className="btn-primary flex items-center gap-2">
                 <Plus size={16} /> Create Exam
               </button>
             </div>
@@ -269,6 +524,9 @@ export default function AdminMockExamsPage() {
                         </span>
                       </div>
                       <div className="flex gap-1">
+                        <button onClick={() => openEditExam(exam)} className="p-1.5 hover:bg-slate-100 rounded-lg" title="Edit Exam">
+                          <Edit size={16} className="text-slate-500" />
+                        </button>
                         <button onClick={() => { setSelectedExam(exam); setActiveTab('questions'); }} className="p-1.5 hover:bg-slate-100 rounded-lg" title="Manage Questions">
                           <BookOpen size={16} className="text-slate-500" />
                         </button>
@@ -284,11 +542,14 @@ export default function AdminMockExamsPage() {
                       <span className="flex items-center gap-1"><RotateCcw size={14} /> {exam.max_attempts === 0 ? 'Unlimited' : `${exam.max_attempts} max`}</span>
                     </div>
                     {exam.description && <p className="text-xs text-slate-400 mb-2">{exam.description}</p>}
-                    <div className="flex items-center justify-between pt-3 border-t text-xs text-slate-400">
-                      <span>{exam.academic_year}</span>
-                      <span className={`px-2 py-0.5 rounded-full ${exam.is_published ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                        {exam.is_published ? 'Published' : 'Draft'}
-                      </span>
+                    <div className="flex items-center gap-2 pt-3 border-t text-xs">
+                      <button onClick={() => handlePopulateFromBank(exam.id)} className="text-primary-600 hover:underline flex items-center gap-1">
+                        <Database size={12} /> Populate from Bank
+                      </button>
+                      <button onClick={() => openAddFromBank(exam)} className="text-amber-600 hover:underline flex items-center gap-1">
+                        <Plus size={12} /> Add from Bank
+                      </button>
+                      <span className="ml-auto text-slate-400">{exam.academic_year}</span>
                     </div>
                   </div>
                 ))}
@@ -359,6 +620,7 @@ export default function AdminMockExamsPage() {
                         Prevent Tab Switching
                       </label>
                     </div>
+                    <p className="text-xs text-slate-500 bg-blue-50 p-2 rounded">Questions will auto-populate from the question bank based on the selected exam type.</p>
                     <button onClick={handleCreateExam} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
                       {saving && <Loader2 size={16} className="animate-spin" />}
                       Create Exam
@@ -367,154 +629,61 @@ export default function AdminMockExamsPage() {
                 </div>
               </div>
             )}
-          </>
-        )}
 
-        {/* === QUESTIONS TAB === */}
-        {activeTab === 'questions' && (
-          <>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <h2 className="text-lg font-bold text-slate-900">Questions</h2>
-                <select
-                  className="input-field text-sm"
-                  value={selectedExam?.id || ''}
-                  onChange={e => {
-                    const exam = exams.find(ex => ex.id === e.target.value);
-                    setSelectedExam(exam || null);
-                    if (exam) fetchQuestions();
-                  }}
-                >
-                  <option value="">Select an exam</option>
-                  {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
-                </select>
-              </div>
-              {selectedExam && (
-                <button onClick={() => setShowQuestionModal(true)} className="btn-primary flex items-center gap-2">
-                  <Plus size={16} /> Add Question
-                </button>
-              )}
-            </div>
-
-            {selectedExam && (
-              <div className="flex gap-2 text-sm text-slate-500 mb-2">
-                <span className="font-medium text-slate-700">{selectedExam.title}</span>
-                <span>—</span>
-                <span>{questions.length} questions</span>
-              </div>
-            )}
-
-            {!selectedExam && (
-              <div className="card text-center py-16">
-                <BookOpen size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-500">Select an exam to manage questions.</p>
-              </div>
-            )}
-
-            {selectedExam && questions.length === 0 && (
-              <div className="card text-center py-8">
-                <p className="text-slate-500">No questions yet. Add questions manually or run the seed script.</p>
-              </div>
-            )}
-
-            {selectedExam && questions.length > 0 && (
-              <div className="card overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="bg-slate-100"><th className="p-2 text-left font-semibold text-xs">#</th><th className="p-2 text-left font-semibold text-xs">Question</th><th className="p-2 text-center font-semibold text-xs">Subject</th><th className="p-2 text-center font-semibold text-xs">Difficulty</th><th className="p-2 text-center font-semibold text-xs">Topic</th><th className="p-2 text-center font-semibold text-xs">Action</th></tr></thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {questions.map((q, i) => (
-                      <tr key={q.id}>
-                        <td className="p-2 text-center text-slate-400">{i + 1}</td>
-                        <td className="p-2 max-w-[300px] truncate">{q.question}</td>
-                        <td className="p-2 text-center">{q.subject}</td>
-                        <td className="p-2 text-center"><span className={`text-xs px-1.5 py-0.5 rounded-full ${q.difficulty_level === 'EASY' ? 'bg-green-100 text-green-700' : q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 text-blue-700' : q.difficulty_level === 'HARD' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{q.difficulty_level}</span></td>
-                        <td className="p-2 text-center text-xs">{q.topic}</td>
-                        <td className="p-2 text-center">
-                          <button onClick={() => handleDeleteQuestion(q.id)} className="text-red-500 hover:text-red-700"><Trash2 size={14} /></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Add Question Modal */}
-            {showQuestionModal && selectedExam && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowQuestionModal(false)}>
-                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+            {/* Edit Exam Modal */}
+            {showEditExamModal && editingExam && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditExamModal(false)}>
+                <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold">Add Question — {selectedExam.title}</h3>
-                    <button onClick={() => setShowQuestionModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                    <h3 className="text-lg font-bold">Edit Exam</h3>
+                    <button onClick={() => setShowEditExamModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Question Type</label>
-                      <select className="input-field w-full" value={questionData.question_type} onChange={e => resetQuestionDefaults(e.target.value)}>
-                        {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                      </select>
+                      <label className="block text-sm font-medium mb-1">Title</label>
+                      <input className="input-field w-full" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Question Text</label>
-                      <textarea className="input-field w-full" value={questionData.question} onChange={e => setQuestionData({ ...questionData, question: e.target.value })} rows={3} />
+                      <label className="block text-sm font-medium mb-1">Description</label>
+                      <textarea className="input-field w-full" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={2} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">Subject</label>
-                        <select className="input-field w-full" value={questionData.subject} onChange={e => setQuestionData({ ...questionData, subject: e.target.value })}>
-                          {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
+                        <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+                        <input type="number" className="input-field w-full" value={formData.duration_minutes} onChange={e => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) || 60 })} />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">Difficulty</label>
-                        <select className="input-field w-full" value={questionData.difficulty_level} onChange={e => setQuestionData({ ...questionData, difficulty_level: e.target.value })}>
-                          {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
+                        <label className="block text-sm font-medium mb-1">Passing Score (%)</label>
+                        <input type="number" className="input-field w-full" value={formData.passing_score} onChange={e => setFormData({ ...formData, passing_score: parseInt(e.target.value) || 50 })} />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-1">Topic</label>
-                        <input className="input-field w-full" value={questionData.topic} onChange={e => setQuestionData({ ...questionData, topic: e.target.value })} />
+                        <label className="block text-sm font-medium mb-1">Total Questions</label>
+                        <input type="number" className="input-field w-full" value={formData.total_questions} onChange={e => setFormData({ ...formData, total_questions: parseInt(e.target.value) || 60 })} />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-1">Sub-topic</label>
-                        <input className="input-field w-full" value={questionData.subtopic} onChange={e => setQuestionData({ ...questionData, subtopic: e.target.value })} />
+                        <label className="block text-sm font-medium mb-1">Max Attempts (0=unlimited)</label>
+                        <input type="number" className="input-field w-full" value={formData.max_attempts} onChange={e => setFormData({ ...formData, max_attempts: parseInt(e.target.value) || 0 })} />
                       </div>
                     </div>
-                    {questionData.question_type !== 'fill_blank' && questionData.options.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Options</label>
-                        {questionData.options.map((opt, oi) => (
-                          <div key={oi} className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold w-6 text-slate-500">{String.fromCharCode(65 + oi)}.</span>
-                            <input className="input-field flex-1" value={opt} onChange={e => {
-                              const opts = [...questionData.options];
-                              opts[oi] = e.target.value;
-                              setQuestionData({ ...questionData, options: opts });
-                            }} />
-                            <input type="radio" name="correct" checked={questionData.correct_answer === oi} onChange={() => setQuestionData({ ...questionData, correct_answer: oi })} />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Explanation (optional)</label>
-                      <textarea className="input-field w-full" value={questionData.explanation} onChange={e => setQuestionData({ ...questionData, explanation: e.target.value })} rows={2} />
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={formData.shuffle_questions} onChange={e => setFormData({ ...formData, shuffle_questions: e.target.checked })} />
+                        Shuffle Questions
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={formData.require_fullscreen} onChange={e => setFormData({ ...formData, require_fullscreen: e.target.checked })} />
+                        Require Fullscreen
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={formData.prevent_tab_switch} onChange={e => setFormData({ ...formData, prevent_tab_switch: e.target.checked })} />
+                        Prevent Tab Switching
+                      </label>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Points</label>
-                        <input type="number" className="input-field w-full" value={questionData.points} onChange={e => setQuestionData({ ...questionData, points: parseInt(e.target.value) || 1 })} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Skill Tag</label>
-                        <input className="input-field w-full" value={questionData.skill_tag} onChange={e => setQuestionData({ ...questionData, skill_tag: e.target.value })} />
-                      </div>
-                    </div>
-                    <button onClick={handleAddQuestion} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
+                    <button onClick={handleUpdateExam} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
                       {saving && <Loader2 size={16} className="animate-spin" />}
-                      Add Question
+                      Update Exam
                     </button>
                   </div>
                 </div>
@@ -523,7 +692,247 @@ export default function AdminMockExamsPage() {
           </>
         )}
 
-        {/* === STUDENTS TAB === */}
+        {/* ═══════════════ QUESTIONS TAB ═══════════════ */}
+        {activeTab === 'questions' && (
+          <>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">Mock Question Bank</h2>
+              <button onClick={() => { setEditingBankQuestion(null); resetBankQuestionForm(); setShowBankQuestionModal(true); }} className="btn-primary flex items-center gap-2">
+                <Plus size={16} /> Add Question
+              </button>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3 items-end">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Class</label>
+                <select className="input-field text-sm" value={bankFilter.level} onChange={e => { setBankFilter({ ...bankFilter, level: e.target.value as any }); }}>
+                  <option value="">All Classes</option>
+                  <option value="JSS3">JSS3</option>
+                  <option value="SS3">SS3</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
+                <select className="input-field text-sm" value={bankFilter.subject} onChange={e => setBankFilter({ ...bankFilter, subject: e.target.value })}>
+                  <option value="">All Subjects</option>
+                  {bankFilter.level === 'SS3' ? SS3_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>) : SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Difficulty</label>
+                <select className="input-field text-sm" value={bankFilter.difficulty} onChange={e => setBankFilter({ ...bankFilter, difficulty: e.target.value })}>
+                  <option value="">All</option>
+                  {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Type</label>
+                <select className="input-field text-sm" value={bankFilter.questionType} onChange={e => setBankFilter({ ...bankFilter, questionType: e.target.value })}>
+                  <option value="">All</option>
+                  {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs font-medium text-slate-500 mb-1">Search</label>
+                <input className="input-field w-full text-sm" placeholder="Search questions..." value={bankFilter.search} onChange={e => setBankFilter({ ...bankFilter, search: e.target.value })} />
+              </div>
+              <button onClick={fetchBankQuestions} className="btn-outline text-sm flex items-center gap-1">
+                <Filter size={14} /> Filter
+              </button>
+            </div>
+
+            {/* Assign to Exam bar (visible when bank questions exist) */}
+            {bankQuestions.length > 0 && (
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <span className="text-sm font-medium text-amber-800">Assign to Exam:</span>
+                <select className="input-field text-sm flex-1 max-w-xs" value={assignTargetExam} onChange={e => setAssignTargetExam(e.target.value)}>
+                  <option value="">Select exam...</option>
+                  {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
+                </select>
+                <button
+                  onClick={async () => {
+                    if (!assignTargetExam || selectedBankIds.size === 0) { setError('Select an exam and questions'); return; }
+                    setSaving(true);
+                    try {
+                      const res = await fetch('/api/mock-questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'add_from_bank', exam_id: assignTargetExam, question_ids: Array.from(selectedBankIds) }),
+                      });
+                      const data = await res.json();
+                      if (!data.success) throw new Error(data.error);
+                      setSuccess(`Added ${data.count} question(s) to exam`);
+                      setSelectedBankIds(new Set());
+                      fetchBankQuestions();
+                      fetchData();
+                    } catch (err: any) { setError(err.message); }
+                    finally { setSaving(false); }
+                  }}
+                  disabled={saving || !assignTargetExam || selectedBankIds.size === 0}
+                  className="btn-primary text-sm"
+                >
+                  Assign {selectedBankIds.size > 0 ? `(${selectedBankIds.size})` : ''}
+                </button>
+                {selectedBankIds.size > 0 && (
+                  <button onClick={() => setSelectedBankIds(new Set())} className="text-xs text-slate-500 hover:underline">Clear</button>
+                )}
+              </div>
+            )}
+
+            {/* Questions list */}
+            {bankQuestions.length === 0 ? (
+              <div className="card text-center py-16">
+                <Database size={48} className="mx-auto text-slate-300 mb-4" />
+                <p className="text-slate-500">No questions in the mock question bank. Add questions or adjust filters.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {bankQuestions.map(q => (
+                  <div key={q.id} className={`card border-l-4 ${selectedBankIds.has(q.id) ? 'border-primary-500 bg-primary-50/30' : 'border-transparent'}`}>
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedBankIds.has(q.id)}
+                        onChange={() => {
+                          const next = new Set(selectedBankIds);
+                          if (next.has(q.id)) next.delete(q.id); else next.add(q.id);
+                          setSelectedBankIds(next);
+                        }}
+                        className="mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium text-slate-900">{q.question}</p>
+                          <div className="flex gap-1 shrink-0">
+                            <button onClick={() => openEditBankQuestion(q)} className="p-1 hover:bg-slate-100 rounded"><Edit size={14} className="text-slate-400" /></button>
+                            <button onClick={() => handleDeleteBankQuestion(q.id)} className="p-1 hover:bg-red-100 rounded"><Trash2 size={14} className="text-red-400" /></button>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                          <span className="px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 font-medium">{q.subject}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{q.level}</span>
+                          <span className={`px-2 py-0.5 rounded-full font-medium ${
+                            q.difficulty_level === 'EASY' ? 'bg-green-100 text-green-700' :
+                            q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 text-blue-700' :
+                            q.difficulty_level === 'HARD' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                          }`}>{q.difficulty_level}</span>
+                          <span className="text-slate-400">{q.topic}{q.subtopic ? ` / ${q.subtopic}` : ''}</span>
+                        </div>
+                        {q.options && q.options.length > 0 && q.question_type !== 'FILL_IN_THE_GAP' && q.question_type !== 'fill_blank' && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {q.options.map((opt: string, oi: number) => (
+                              <span key={oi} className={`text-xs px-2 py-0.5 rounded ${q.correct_answer === oi ? 'bg-green-100 text-green-700 font-medium' : 'bg-slate-50 text-slate-500'}`}>
+                                {String.fromCharCode(65 + oi)}. {opt}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {/* Show exam assignments */}
+                        {q._examAssignments && q._examAssignments.size > 0 && (
+                          <div className="flex flex-wrap items-center gap-1 mt-2">
+                            <span className="text-[10px] text-slate-400">Assigned to:</span>
+                            {exams.filter(ex => q._examAssignments.has(ex.id)).map(ex => (
+                              <span key={ex.id} className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 border border-purple-200">
+                                {ex.title}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Bank Question Modal (Add/Edit) */}
+            {showBankQuestionModal && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowBankQuestionModal(false)}>
+                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold">{editingBankQuestion ? 'Edit' : 'Add'} Question to Bank</h3>
+                    <button onClick={() => setShowBankQuestionModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Question Type</label>
+                      <select className="input-field w-full" value={bankQuestionData.question_type} onChange={e => resetBankQuestionDefaults(e.target.value)}>
+                        {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Question Text</label>
+                      <textarea className="input-field w-full" value={bankQuestionData.question} onChange={e => setBankQuestionData({ ...bankQuestionData, question: e.target.value })} rows={3} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Class Level</label>
+                        <select className="input-field w-full" value={bankQuestionData.level} onChange={e => {
+                          const level = e.target.value;
+                          const subs = level === 'SS3' ? SS3_SUBJECTS : SUBJECTS;
+                          const sub = subs.includes(bankQuestionData.subject) ? bankQuestionData.subject : subs[0];
+                          setBankQuestionData({ ...bankQuestionData, level, subject: sub });
+                        }}>
+                          <option value="JSS3">JSS3</option>
+                          <option value="SS3">SS3</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Subject</label>
+                        <select className="input-field w-full" value={bankQuestionData.subject} onChange={e => setBankQuestionData({ ...bankQuestionData, subject: e.target.value })}>
+                          {availableSubjects(bankQuestionData.level).map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Difficulty</label>
+                        <select className="input-field w-full" value={bankQuestionData.difficulty_level} onChange={e => setBankQuestionData({ ...bankQuestionData, difficulty_level: e.target.value })}>
+                          {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Topic</label>
+                        <input className="input-field w-full" value={bankQuestionData.topic} onChange={e => setBankQuestionData({ ...bankQuestionData, topic: e.target.value })} placeholder="e.g. Algebra, Grammar" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Sub-topic (optional)</label>
+                      <input className="input-field w-full" value={bankQuestionData.subtopic} onChange={e => setBankQuestionData({ ...bankQuestionData, subtopic: e.target.value })} />
+                    </div>
+                    {(bankQuestionData.question_type === 'multiple_choice' || bankQuestionData.question_type === 'MCQ') && bankQuestionData.options.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Options</label>
+                        {bankQuestionData.options.map((opt, oi) => (
+                          <div key={oi} className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-bold w-6 text-slate-500">{String.fromCharCode(65 + oi)}.</span>
+                            <input className="input-field flex-1" value={opt} onChange={e => {
+                              const opts = [...bankQuestionData.options];
+                              opts[oi] = e.target.value;
+                              setBankQuestionData({ ...bankQuestionData, options: opts });
+                            }} />
+                            <input type="radio" name="bank_correct" checked={bankQuestionData.correct_answer === oi} onChange={() => setBankQuestionData({ ...bankQuestionData, correct_answer: oi })} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Explanation (optional)</label>
+                      <textarea className="input-field w-full" value={bankQuestionData.explanation} onChange={e => setBankQuestionData({ ...bankQuestionData, explanation: e.target.value })} rows={2} />
+                    </div>
+                    <button onClick={handleSaveBankQuestion} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
+                      {saving && <Loader2 size={16} className="animate-spin" />}
+                      {editingBankQuestion ? 'Update Question' : 'Add Question to Bank'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ═══════════════ STUDENTS TAB ═══════════════ */}
         {activeTab === 'students' && (
           <>
             <h2 className="text-lg font-bold text-slate-900">Students Performance</h2>
@@ -566,7 +975,7 @@ export default function AdminMockExamsPage() {
           </>
         )}
 
-        {/* === ANALYTICS TAB === */}
+        {/* ═══════════════ ANALYTICS TAB ═══════════════ */}
         {activeTab === 'analytics' && (
           <>
             <h2 className="text-lg font-bold text-slate-900">Overall Analytics</h2>
@@ -578,7 +987,6 @@ export default function AdminMockExamsPage() {
               </div>
             ) : (
               <>
-                {/* Summary cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div className="card"><p className="text-xs text-slate-500">Total Students</p><p className="text-2xl font-bold">{allAttemptsAnalytics.length}</p></div>
                   <div className="card"><p className="text-xs text-slate-500">Total Attempts</p><p className="text-2xl font-bold">{attempts.length}</p></div>
@@ -587,24 +995,22 @@ export default function AdminMockExamsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Mastery Distribution */}
                   <div className="card">
                     <h3 className="font-bold text-slate-800 mb-4">Mastery Distribution</h3>
-    <ResponsiveContainer width="100%" height={250}>
-                          <PieChart>
-                            <Pie data={masteryChartData.filter(d => d.value > 0)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                              {masteryChartData.filter(d => d.value > 0).map((entry, index) => {
-                                const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e'];
-                                return <Cell key={index} fill={colors[index % colors.length]} />;
-                              })}
-                            </Pie>
-                            <Tooltip />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie data={masteryChartData.filter(d => d.value > 0)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                          {masteryChartData.filter(d => d.value > 0).map((entry, index) => {
+                            const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#22c55e'];
+                            return <Cell key={index} fill={colors[index % colors.length]} />;
+                          })}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
 
-                  {/* Pathway Distribution */}
                   {analytics.filter((a: any) => a.recommended_pathway).length > 0 && (
                     <div className="card">
                       <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Lightbulb size={16} /> Pathway Recommendations Distribution</h3>
@@ -624,12 +1030,11 @@ export default function AdminMockExamsPage() {
                     </div>
                   )}
 
-                  {/* Student Performance Comparison */}
                   <div className="card">
                     <h3 className="font-bold text-slate-800 mb-4">Student Average Scores</h3>
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={allAttemptsAnalytics.slice(0, 10).map((s: any) => ({
-                        name: s.student?.first_name ? `${s.student.first_name} ${s.student.last_name?.charAt(0)}.` : 'Unknown',
+                        name: s.student?.first_name ? `${s.student.first_name} ${s.student.lastName?.charAt(0)}.` : 'Unknown',
                         score: s.avgScore,
                       }))}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -646,27 +1051,6 @@ export default function AdminMockExamsPage() {
                   </div>
                 </div>
 
-                {/* Pathway Distribution */}
-                {analytics.filter((a: any) => a.recommended_pathway).length > 0 && (
-                  <div className="card">
-                    <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Lightbulb size={16} /> Pathway Recommendations Distribution</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {['SCIENCE', 'COMMERCIAL', 'ARTS'].map(pathway => {
-                        const count = analytics.filter((a: any) => a.recommended_pathway === pathway).length;
-                        const total = analytics.filter((a: any) => a.recommended_pathway).length;
-                        return (
-                          <div key={pathway} className={`rounded-xl p-4 text-center ${pathway === 'SCIENCE' ? 'bg-green-50 border border-green-200' : pathway === 'COMMERCIAL' ? 'bg-blue-50 border border-blue-200' : 'bg-purple-50 border border-purple-200'}`}>
-                            <p className="text-2xl font-bold">{count}</p>
-                            <p className="text-sm font-medium">{pathway} Track</p>
-                            <p className="text-xs text-slate-500">{total > 0 ? Math.round((count / total) * 100) : 0}% of students</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Weakest Subjects Analysis */}
                 {(() => {
                   const subjectCounts: Record<string, { correct: number; total: number }> = {};
                   attempts.forEach((a: any) => {

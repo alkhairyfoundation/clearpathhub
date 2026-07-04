@@ -149,12 +149,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (class_id !== undefined || date_of_birth !== undefined || gender !== undefined || address !== undefined ||
         guardian_name !== undefined || guardian_phone !== undefined || guardian_email !== undefined ||
         blood_group !== undefined || emergency_contact !== undefined) {
-      const { data: studentRecord } = await supabase
+      const { data: existingStudent } = await supabase
         .from('students')
         .select('id')
         .eq('profile_id', params.id)
         .maybeSingle();
-      if (studentRecord) {
+      if (existingStudent) {
         const studentUpdates: Record<string, any> = {};
         if (class_id !== undefined) studentUpdates.class_id = class_id || null;
         if (date_of_birth !== undefined) studentUpdates.date_of_birth = date_of_birth || null;
@@ -165,7 +165,37 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         if (guardian_email !== undefined) studentUpdates.guardian_email = guardian_email || null;
         if (blood_group !== undefined) studentUpdates.blood_group = blood_group || null;
         if (emergency_contact !== undefined) studentUpdates.emergency_contact = emergency_contact || null;
-        await supabase.from('students').update(studentUpdates).eq('id', studentRecord.id);
+        const { error: updateErr } = await supabase.from('students').update(studentUpdates).eq('id', existingStudent.id);
+        if (updateErr) {
+          return NextResponse.json({ success: false, error: `Failed to update student record: ${updateErr.message}` }, { status: 500 });
+        }
+      } else {
+        // Student record doesn't exist — create one (fixes ghost students with no class)
+        const { count } = await supabase.from('students').select('*', { count: 'exact', head: true });
+        const admissionNumber = `STD${new Date().getFullYear()}${String((count || 0) + 1).padStart(4, '0')}`;
+        const { error: insertErr } = await supabase.from('students').insert({
+          profile_id: params.id,
+          admission_number: admissionNumber,
+          class_id: class_id || null,
+          date_of_birth: date_of_birth || null,
+          gender: gender || null,
+          address: address || null,
+          guardian_name: guardian_name || null,
+          guardian_phone: guardian_phone || null,
+          guardian_email: guardian_email || null,
+          blood_group: blood_group || null,
+          emergency_contact: emergency_contact || null,
+        });
+        if (insertErr) {
+          return NextResponse.json({ success: false, error: `Failed to create student record: ${insertErr.message}` }, { status: 500 });
+        }
+        // Also sync to Neon (best-effort)
+        try {
+          await neonQuery(
+            `INSERT INTO students (profile_id, admission_number, class_id) VALUES ($1, $2, $3)`,
+            [params.id, admissionNumber, class_id || null]
+          );
+        } catch { /* best-effort */ }
       }
     }
 

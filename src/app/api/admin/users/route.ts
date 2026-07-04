@@ -88,10 +88,10 @@ export async function POST(request: Request) {
         });
 
       if (studentError) {
-        console.error('Error creating student record in Supabase:', studentError);
+        return NextResponse.json({ success: false, error: `Failed to create student record: ${studentError.message}` }, { status: 500 });
       }
 
-      // Create student record in Neon Postgres
+      // Create student record in Neon Postgres (best-effort)
       try {
         await neonQuery(
           `INSERT INTO students (profile_id, admission_number, class_id)

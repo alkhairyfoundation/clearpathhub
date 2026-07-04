@@ -88,6 +88,56 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
       }
 
+      case 'add_from_bank': {
+        const { exam_id, question_ids } = params;
+        if (!exam_id || !question_ids || !Array.isArray(question_ids) || question_ids.length === 0) {
+          return NextResponse.json({ success: false, error: 'exam_id and question_ids array required' }, { status: 400 });
+        }
+
+        const { data: bankQuestions, error: bankError } = await adminClient
+          .from('question_bank')
+          .select('*')
+          .in('id', question_ids);
+
+        if (bankError) return NextResponse.json({ success: false, error: bankError.message }, { status: 500 });
+        if (!bankQuestions || bankQuestions.length === 0) {
+          return NextResponse.json({ success: false, error: 'No questions found in bank' }, { status: 404 });
+        }
+
+        const { data: exam } = await adminClient.from('mock_exams').select('exam_type').eq('id', exam_id).single();
+        const targetLevel = exam?.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3';
+
+        const toInsert = bankQuestions.map((q: any) => ({
+          exam_id, question: q.question, question_image: q.question_image || null,
+          options: q.options || [''], correct_answer: q.correct_answer ?? 0, points: q.points || 1,
+          question_type: q.question_type === 'TRUE_FALSE' ? 'true_false' : q.question_type === 'FILL_IN_THE_GAP' || q.question_type === 'FILL_BLANK' ? 'fill_blank' : 'multiple_choice',
+          subject: q.subject || 'General', difficulty_level: q.difficulty_level || 'MEDIUM',
+          topic: q.topic || null, subtopic: q.subtopic || null, explanation: q.explanation || null,
+          skill_tag: q.skill_tag || null, bloom_level: q.bloom_level || null,
+          curriculum: q.curriculum || null, grade_level: targetLevel,
+        }));
+
+        const { data: inserted, error: insertError } = await adminClient.from('mock_questions').insert(toInsert).select();
+        if (insertError) return NextResponse.json({ success: false, error: insertError.message }, { status: 500 });
+
+        return NextResponse.json({ success: true, count: inserted?.length || 0, questions: inserted });
+      }
+
+      case 'list_bank_for_class': {
+        const { level, subject, difficulty, question_type, search } = params;
+        let query = adminClient.from('question_bank').select('*');
+        if (level) query = query.eq('level', level);
+        if (subject) query = query.eq('subject', subject);
+        if (difficulty) query = query.eq('difficulty_level', difficulty);
+        if (question_type) query = query.eq('question_type', question_type);
+        if (search) query = query.ilike('question', `%${search}%`);
+        query = query.order('created_at', { ascending: false });
+
+        const { data, error } = await query;
+        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        return NextResponse.json({ success: true, questions: data });
+      }
+
       default:
         return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });
     }
