@@ -81,6 +81,14 @@ export async function POST(request: Request) {
         const { data: exam, error: examError } = await adminClient.from('mock_exams').select('*').eq('id', examId).single();
         if (examError || !exam) return NextResponse.json({ success: false, error: 'Exam not found' }, { status: 404 });
 
+        // Check remaining capacity
+        const { count: currentCount } = await adminClient.from('mock_questions').select('*', { count: 'exact', head: true }).eq('exam_id', examId);
+        const totalQs = exam.total_questions || 60;
+        const remainingCapacity = Math.max(0, totalQs - (currentCount || 0));
+        if (remainingCapacity <= 0) {
+          return NextResponse.json({ success: false, error: 'Exam has reached its total_questions capacity. No more questions can be added.' }, { status: 400 });
+        }
+
         const targetLevel = exam.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3';
         const targetSubjects = targetLevel === 'JSS3'
           ? ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BASIC TECHNOLOGY']
@@ -98,8 +106,7 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: true, count: 0, message: 'No questions found in bank for this class level' });
         }
 
-        const totalQs = exam.total_questions || 60;
-        const qsPerSubject = Math.max(1, Math.floor(totalQs / targetSubjects.length));
+        const qsPerSubject = Math.max(1, Math.floor(remainingCapacity / targetSubjects.length));
 
         let selected: any[] = [];
         for (const subject of targetSubjects) {
@@ -123,7 +130,7 @@ export async function POST(request: Request) {
           }
         }
 
-        selected = selected.sort(() => Math.random() - 0.5).slice(0, totalQs);
+        selected = selected.sort(() => Math.random() - 0.5).slice(0, remainingCapacity);
 
         const toInsert = selected.map((q: any) => ({
           exam_id: examId, question: q.question, question_image: q.question_image || null,

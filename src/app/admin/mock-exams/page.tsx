@@ -62,6 +62,7 @@ export default function AdminMockExamsPage() {
   const [showBankQuestionModal, setShowBankQuestionModal] = useState(false);
   const [selectedBankIds, setSelectedBankIds] = useState<Set<string>>(new Set());
   const [assignTargetExam, setAssignTargetExam] = useState('');
+  const [assignCapacity, setAssignCapacity] = useState<{ remaining: number; total: number; current: number } | null>(null);
 
   // Existing question form (per-exam manual add)
   const [questionData, setQuestionData] = useState({
@@ -83,6 +84,14 @@ export default function AdminMockExamsPage() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentDetail, setStudentDetail] = useState<any>(null);
 
+  async function getExamCapacity(eId: string): Promise<{ remaining: number; total: number; current: number }> {
+    const { data: exam } = await supabase.from('mock_exams').select('total_questions').eq('id', eId).single();
+    const total = exam?.total_questions || 0;
+    const { count } = await supabase.from('mock_questions').select('*', { count: 'exact', head: true }).eq('exam_id', eId);
+    const current = count || 0;
+    return { remaining: Math.max(0, total - current), total, current };
+  }
+
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchData();
@@ -92,6 +101,14 @@ export default function AdminMockExamsPage() {
     if (activeTab === 'questions') fetchBankQuestions();
     if (activeTab === 'analytics') fetchAnalytics();
   }, [activeTab]);
+
+  useEffect(() => {
+    if (assignTargetExam) {
+      getExamCapacity(assignTargetExam).then(setAssignCapacity);
+    } else {
+      setAssignCapacity(null);
+    }
+  }, [assignTargetExam]);
 
   async function fetchData() {
     setLoading(true);
@@ -258,6 +275,11 @@ export default function AdminMockExamsPage() {
       setError('Select an exam and at least one question');
       return;
     }
+    const cap = await getExamCapacity(selectedExam.id);
+    if (cap.remaining < selectedBankIds.size) {
+      setError(`Cannot add ${selectedBankIds.size} question(s). Only ${cap.remaining} slot(s) remaining (${cap.current}/${cap.total}).`);
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch('/api/mock-questions', {
@@ -364,6 +386,11 @@ export default function AdminMockExamsPage() {
   async function handleAddQuestion() {
     if (!selectedExam || !questionData.question.trim()) {
       setError('Question text is required');
+      return;
+    }
+    const cap = await getExamCapacity(selectedExam.id);
+    if (cap.remaining < 1) {
+      setError(`Exam capacity reached (${cap.current}/${cap.total}). No more questions can be added.`);
       return;
     }
     setSaving(true);
@@ -750,9 +777,19 @@ export default function AdminMockExamsPage() {
                   <option value="">Select exam...</option>
                   {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
                 </select>
+                {assignCapacity && (
+                  <span className="text-xs text-slate-500 whitespace-nowrap">
+                    {assignCapacity.current}/{assignCapacity.total} used ({assignCapacity.remaining} free)
+                  </span>
+                )}
                 <button
                   onClick={async () => {
                     if (!assignTargetExam || selectedBankIds.size === 0) { setError('Select an exam and questions'); return; }
+                    const cap = await getExamCapacity(assignTargetExam);
+                    if (cap.remaining < selectedBankIds.size) {
+                      setError(`Cannot add ${selectedBankIds.size} question(s). Only ${cap.remaining} slot(s) remaining (${cap.current}/${cap.total}).`);
+                      return;
+                    }
                     setSaving(true);
                     try {
                       const res = await fetch('/api/mock-questions', {

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
-const source = join(root, 'cap.png');
+const source = join(root, 'logo.jpg');
 const outputDir = join(root, 'public', 'icons');
 
 const sizes = [48, 72, 96, 128, 144, 152, 167, 180, 192, 512];

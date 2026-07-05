@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
 
+async function getRemainingCapacity(adminClient: any, examId: string) {
+  const { data: exam } = await adminClient.from('mock_exams').select('total_questions').eq('id', examId).single();
+  if (!exam) throw new Error('Exam not found');
+  const { count } = await adminClient.from('mock_questions').select('*', { count: 'exact', head: true }).eq('exam_id', examId);
+  return Math.max(0, (exam.total_questions || 0) - (count || 0));
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -30,6 +37,10 @@ export async function POST(request: Request) {
         if (!exam_id || !question || !options || correct_answer === undefined) {
           return NextResponse.json({ success: false, error: 'exam_id, question, options, and correct_answer are required' }, { status: 400 });
         }
+        const remaining = await getRemainingCapacity(adminClient, exam_id);
+        if (remaining < 1) {
+          return NextResponse.json({ success: false, error: 'Exam has reached its total_questions capacity. No more questions can be added.' }, { status: 400 });
+        }
         const { data, error } = await adminClient.from('mock_questions').insert({
           exam_id, question, question_image: question_image || null,
           options, correct_answer, points: points || 1,
@@ -48,6 +59,10 @@ export async function POST(request: Request) {
         const { exam_id, questions } = params;
         if (!exam_id || !questions || !Array.isArray(questions) || questions.length === 0) {
           return NextResponse.json({ success: false, error: 'exam_id and questions array required' }, { status: 400 });
+        }
+        const remaining = await getRemainingCapacity(adminClient, exam_id);
+        if (remaining < questions.length) {
+          return NextResponse.json({ success: false, error: `Cannot add ${questions.length} question(s). Only ${remaining} slot(s) remaining out of the exam's total_questions capacity.` }, { status: 400 });
         }
         const toInsert = questions.map((q: any) => ({
           exam_id,
@@ -92,6 +107,11 @@ export async function POST(request: Request) {
         const { exam_id, question_ids } = params;
         if (!exam_id || !question_ids || !Array.isArray(question_ids) || question_ids.length === 0) {
           return NextResponse.json({ success: false, error: 'exam_id and question_ids array required' }, { status: 400 });
+        }
+
+        const remaining = await getRemainingCapacity(adminClient, exam_id);
+        if (remaining < question_ids.length) {
+          return NextResponse.json({ success: false, error: `Cannot add ${question_ids.length} question(s). Only ${remaining} slot(s) remaining out of the exam's total_questions capacity.` }, { status: 400 });
         }
 
         const { data: bankQuestions, error: bankError } = await adminClient
