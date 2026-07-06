@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
 
+const SUBJECT_WEIGHTS: Record<string, Record<string, number>> = {
+  JSS3_BECE: { MATHEMATICS: 0.30, ENGLISH: 0.25, 'BASIC SCIENCE': 0.25, 'BASIC TECHNOLOGY': 0.20 },
+  SS3_WAEC: { MATHEMATICS: 0.25, ENGLISH: 0.20, PHYSICS: 0.20, CHEMISTRY: 0.15, BIOLOGY: 0.10, GEOGRAPHY: 0.10 },
+};
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -106,24 +111,40 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: true, count: 0, message: 'No questions found in bank for this class level' });
         }
 
-        const qsPerSubject = Math.max(1, Math.floor(remainingCapacity / targetSubjects.length));
+        const weights = SUBJECT_WEIGHTS[exam.exam_type] || {};
+        let allocated = 0;
+        const qsPerSubject: Record<string, number> = {};
+        for (const subject of targetSubjects) {
+          const weight = weights[subject] || (1 / targetSubjects.length);
+          qsPerSubject[subject] = Math.floor(remainingCapacity * weight);
+          allocated += qsPerSubject[subject];
+        }
+        let remainder = remainingCapacity - allocated;
+        const sorted = [...targetSubjects].sort((a, b) => (weights[b] || 0) - (weights[a] || 0));
+        let rIdx = 0;
+        while (remainder > 0) {
+          qsPerSubject[sorted[rIdx % sorted.length]]++;
+          remainder--;
+          rIdx++;
+        }
 
         let selected: any[] = [];
         for (const subject of targetSubjects) {
           const subjectQs = bankQuestions.filter(q => q.subject === subject);
-          if (subjectQs.length === 0) continue;
+          const need = qsPerSubject[subject] || 0;
+          if (subjectQs.length === 0 || need <= 0) continue;
           const veryHard = subjectQs.filter(q => q.difficulty_level === 'VERY_HARD');
           const hard = subjectQs.filter(q => q.difficulty_level === 'HARD');
           const medium = subjectQs.filter(q => q.difficulty_level === 'MEDIUM');
           const easy = subjectQs.filter(q => q.difficulty_level === 'EASY');
           const chosen = [
-            ...veryHard.sort(() => Math.random() - 0.5).slice(0, Math.round(qsPerSubject * 0.3)),
-            ...hard.sort(() => Math.random() - 0.5).slice(0, Math.round(qsPerSubject * 0.3)),
-            ...medium.sort(() => Math.random() - 0.5).slice(0, Math.round(qsPerSubject * 0.25)),
-            ...easy.sort(() => Math.random() - 0.5).slice(0, Math.round(qsPerSubject * 0.15)),
+            ...veryHard.sort(() => Math.random() - 0.5).slice(0, Math.round(need * 0.3)),
+            ...hard.sort(() => Math.random() - 0.5).slice(0, Math.round(need * 0.3)),
+            ...medium.sort(() => Math.random() - 0.5).slice(0, Math.round(need * 0.25)),
+            ...easy.sort(() => Math.random() - 0.5).slice(0, Math.round(need * 0.15)),
           ];
-          if (chosen.length < qsPerSubject) {
-            const remaining = subjectQs.filter(q => !chosen.find(s => s.id === q.id)).sort(() => Math.random() - 0.5).slice(0, qsPerSubject - chosen.length);
+          if (chosen.length < need) {
+            const remaining = subjectQs.filter(q => !chosen.find(s => s.id === q.id)).sort(() => Math.random() - 0.5).slice(0, need - chosen.length);
             selected = [...selected, ...chosen, ...remaining];
           } else {
             selected = [...selected, ...chosen];

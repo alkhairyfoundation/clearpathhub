@@ -63,6 +63,13 @@ export default function AdminMockExamsPage() {
   const [selectedBankIds, setSelectedBankIds] = useState<Set<string>>(new Set());
   const [assignTargetExam, setAssignTargetExam] = useState('');
   const [assignCapacity, setAssignCapacity] = useState<{ remaining: number; total: number; current: number } | null>(null);
+  const [showEditMockQModal, setShowEditMockQModal] = useState(false);
+  const [editingMockQ, setEditingMockQ] = useState<any>(null);
+  const [mockQForm, setMockQForm] = useState({
+    question: '', options: ['', '', '', ''], correct_answer: 0,
+    subject: 'MATHEMATICS', difficulty_level: 'MEDIUM',
+    topic: '', explanation: '',
+  });
 
   // Existing question form (per-exam manual add)
   const [questionData, setQuestionData] = useState({
@@ -98,7 +105,10 @@ export default function AdminMockExamsPage() {
   }, [profile]);
 
   useEffect(() => {
-    if (activeTab === 'questions') fetchBankQuestions();
+    if (activeTab === 'questions') {
+      fetchBankQuestions();
+      if (selectedExam) fetchQuestions();
+    }
     if (activeTab === 'analytics') fetchAnalytics();
   }, [activeTab]);
 
@@ -427,6 +437,49 @@ export default function AdminMockExamsPage() {
     if (data.success) { fetchQuestions(); setSuccess('Question removed'); }
   }
 
+  async function handleEditMockQ(q: any) {
+    setEditingMockQ(q);
+    setMockQForm({
+      question: q.question,
+      options: q.options || ['', '', '', ''],
+      correct_answer: q.correct_answer ?? 0,
+      subject: q.subject || 'MATHEMATICS',
+      difficulty_level: q.difficulty_level || 'MEDIUM',
+      topic: q.topic || '',
+      explanation: q.explanation || '',
+    });
+    setShowEditMockQModal(true);
+  }
+
+  async function handleSaveMockQ() {
+    if (!editingMockQ || !mockQForm.question.trim()) {
+      setError('Question text is required');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch('/api/mock-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_question', id: editingMockQ.id,
+          question: mockQForm.question, options: mockQForm.options,
+          correct_answer: mockQForm.correct_answer,
+          subject: mockQForm.subject,
+          difficulty_level: mockQForm.difficulty_level,
+          topic: mockQForm.topic, explanation: mockQForm.explanation,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      setSuccess('Question updated');
+      setShowEditMockQModal(false);
+      setEditingMockQ(null);
+      fetchQuestions();
+    } catch (err: any) { setError(err.message); }
+    finally { setSaving(false); }
+  }
+
   function resetQuestionDefaults(type: string) {
     let opts = ['', '', '', ''];
     let correct = 0;
@@ -462,6 +515,7 @@ export default function AdminMockExamsPage() {
     setSelectedBankIds(new Set());
     setAssignTargetExam(exam.id);
     setShowBankSelectModal(true);
+    setBankFilter(prev => ({ ...prev, level: exam.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3' }));
     fetchBankQuestions();
   }
 
@@ -716,6 +770,74 @@ export default function AdminMockExamsPage() {
                 </div>
               </div>
             )}
+
+            {/* Add from Bank Modal */}
+            {showBankSelectModal && selectedExam && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowBankSelectModal(false)}>
+                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold">Add Questions from Bank — {selectedExam.title}</h3>
+                    <button onClick={() => setShowBankSelectModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                  </div>
+                  {bankQuestions.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Database size={40} className="mx-auto text-slate-300 mb-3" />
+                      <p className="text-slate-500">No questions found in the question bank for {selectedExam.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3'}.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 mb-3 text-sm text-slate-500">
+                        <span>{bankQuestions.length} questions available</span>
+                        {assignCapacity && (
+                          <span className="ml-auto">Capacity: {assignCapacity.current}/{assignCapacity.total} used ({assignCapacity.remaining} free)</span>
+                        )}
+                      </div>
+                      <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {bankQuestions.map(q => (
+                          <div key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border ${selectedBankIds.has(q.id) ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
+                            <input
+                              type="checkbox"
+                              checked={selectedBankIds.has(q.id)}
+                              onChange={() => {
+                                const next = new Set(selectedBankIds);
+                                if (next.has(q.id)) next.delete(q.id); else next.add(q.id);
+                                setSelectedBankIds(next);
+                              }}
+                              className="mt-1"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-900">{q.question}</p>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">{q.subject}</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  q.difficulty_level === 'EASY' ? 'bg-green-100 text-green-700' :
+                                  q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 text-blue-700' :
+                                  q.difficulty_level === 'HARD' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                                }`}>{q.difficulty_level}</span>
+                                <span className="text-xs text-slate-400">{q.topic}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t">
+                        <button onClick={() => { setSelectedBankIds(new Set()); setShowBankSelectModal(false); }} className="btn-outline text-sm">
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleAddFromBank}
+                          disabled={saving || selectedBankIds.size === 0}
+                          className="btn-primary text-sm flex items-center gap-2"
+                        >
+                          {saving && <Loader2 size={14} className="animate-spin" />}
+                          Add {selectedBankIds.size > 0 ? `(${selectedBankIds.size})` : ''} Selected
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -728,6 +850,52 @@ export default function AdminMockExamsPage() {
                 <Plus size={16} /> Add Question
               </button>
             </div>
+
+            {/* Per-Exam Questions */}
+            {selectedExam && (
+              <div className="card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <BookOpen size={16} /> Questions in: {selectedExam.title}
+                  </h3>
+                  <button onClick={() => { setSelectedExam(null); setQuestions([]); }} className="text-xs text-slate-500 hover:underline">
+                    Clear
+                  </button>
+                </div>
+                {questions.length === 0 ? (
+                  <p className="text-sm text-slate-400 py-4 text-center">No questions added yet. Use the bank below or click "Populate from Bank" on the exam card.</p>
+                ) : (
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {questions.map((q, qi) => (
+                      <div key={q.id} className="flex items-start gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200">
+                        <span className="text-xs font-bold text-slate-400 mt-1 w-6 shrink-0">{qi + 1}.</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900">{q.question}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">{q.subject}</span>
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${
+                              q.difficulty_level === 'EASY' ? 'bg-green-100 text-green-700' :
+                              q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 text-blue-700' :
+                              q.difficulty_level === 'HARD' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                            }`}>{q.difficulty_level}</span>
+                            <span className="text-xs text-slate-400">{q.topic}</span>
+                            <span className="text-xs text-slate-400">{q.points} pt(s)</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <button onClick={() => handleEditMockQ(q)} className="p-1 hover:bg-slate-200 rounded" title="Edit">
+                            <Edit size={14} className="text-slate-500" />
+                          </button>
+                          <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-100 rounded" title="Remove from exam">
+                            <Trash2 size={14} className="text-red-500" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Filters */}
             <div className="flex flex-wrap gap-3 items-end">
@@ -961,6 +1129,64 @@ export default function AdminMockExamsPage() {
                     <button onClick={handleSaveBankQuestion} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
                       {saving && <Loader2 size={16} className="animate-spin" />}
                       {editingBankQuestion ? 'Update Question' : 'Add Question to Bank'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Edit Mock Question Modal */}
+            {showEditMockQModal && editingMockQ && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditMockQModal(false)}>
+                <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold">Edit Exam Question</h3>
+                    <button onClick={() => setShowEditMockQModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Question</label>
+                      <textarea className="input-field w-full" value={mockQForm.question} onChange={e => setMockQForm({ ...mockQForm, question: e.target.value })} rows={3} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Subject</label>
+                        <select className="input-field w-full" value={mockQForm.subject} onChange={e => setMockQForm({ ...mockQForm, subject: e.target.value })}>
+                          {availableSubjects(selectedExam?.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3').map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Difficulty</label>
+                        <select className="input-field w-full" value={mockQForm.difficulty_level} onChange={e => setMockQForm({ ...mockQForm, difficulty_level: e.target.value })}>
+                          {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Options</label>
+                      {mockQForm.options.map((opt, oi) => (
+                        <div key={oi} className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-bold w-6 text-slate-500">{String.fromCharCode(65 + oi)}.</span>
+                          <input className="input-field flex-1" value={opt} onChange={e => {
+                            const opts = [...mockQForm.options];
+                            opts[oi] = e.target.value;
+                            setMockQForm({ ...mockQForm, options: opts });
+                          }} />
+                          <input type="radio" name="mq_correct" checked={mockQForm.correct_answer === oi} onChange={() => setMockQForm({ ...mockQForm, correct_answer: oi })} />
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Topic</label>
+                      <input className="input-field w-full" value={mockQForm.topic} onChange={e => setMockQForm({ ...mockQForm, topic: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Explanation</label>
+                      <textarea className="input-field w-full" value={mockQForm.explanation} onChange={e => setMockQForm({ ...mockQForm, explanation: e.target.value })} rows={2} />
+                    </div>
+                    <button onClick={handleSaveMockQ} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
+                      {saving && <Loader2 size={16} className="animate-spin" />}
+                      Save Changes
                     </button>
                   </div>
                 </div>
