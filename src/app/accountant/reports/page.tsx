@@ -64,15 +64,15 @@ export default function AccountantReportsPage() {
     doc.text('Summary', 14, 45);
     doc.setFontSize(11);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Total Income: NGN ${stats.totalIncome.toLocaleString()}`, 14, 55);
-    doc.text(`Total Pending: NGN ${stats.totalPending.toLocaleString()}`, 14, 62);
-    doc.text(`Total Overdue: NGN ${stats.totalOverdue.toLocaleString()}`, 14, 69);
+    doc.text(`Total Income: ₦${stats.totalIncome.toLocaleString()}`, 14, 55);
+    doc.text(`Total Pending: ₦${stats.totalPending.toLocaleString()}`, 14, 62);
+    doc.text(`Total Overdue: ₦${stats.totalOverdue.toLocaleString()}`, 14, 69);
     doc.text(`Transactions: ${stats.transactionCount}`, 14, 76);
 
     (doc as any).autoTable({
       startY: 88,
       head: [['Description', 'Student', 'Amount', 'Date']],
-      body: transactions.slice(0, 50).map(t => [t.description || 'Payment', t.student ? `${t.student.first_name} ${t.student.last_name}` : 'N/A', `NGN ${(t.amount || 0).toLocaleString()}`, new Date(t.created_at).toLocaleDateString()]),
+      body: transactions.slice(0, 50).map(t => [t.description || 'Payment', t.student ? `${t.student.first_name} ${t.student.last_name}` : 'N/A', `₦${(t.amount || 0).toLocaleString()}`, new Date(t.created_at).toLocaleDateString()]),
       theme: 'striped',
       headStyles: { fillColor: [30, 58, 95] },
     });

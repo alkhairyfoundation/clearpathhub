@@ -81,7 +81,7 @@ export default function AccountantDashboard() {
     URL.revokeObjectURL(url);
   }
 
-  const formatCurrency = (amount: number) => `NGN${amount.toLocaleString()}`;
+  const formatCurrency = (amount: number) => `₦${amount.toLocaleString()}`;
 
   if (loading) {
     return (

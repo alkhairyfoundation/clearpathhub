@@ -38,7 +38,7 @@ export default function AccountantReceiptsPage() {
         <h2>Receipt</h2>
         <p><strong>Receipt #:</strong> ${receipt.id.slice(0, 8)}</p>
         <p><strong>Student:</strong> ${receipt.student?.first_name} ${receipt.student?.last_name}</p>
-        <p><strong>Amount:</strong> NGN${receipt.amount?.toLocaleString()}</p>
+        <p><strong>Amount:</strong> ₦{receipt.amount?.toLocaleString()}</p>
         <p><strong>Date:</strong> ${new Date(receipt.created_at).toLocaleDateString()}</p>
         <p><strong>Description:</strong> ${receipt.description || 'N/A'}</p>
       </div>
@@ -79,7 +79,7 @@ export default function AccountantReceiptsPage() {
                     <tr key={r.id} className="hover:bg-slate-50">
                       <td className="py-3 px-4 font-mono text-sm">{r.id.slice(0, 8)}</td>
                       <td className="py-3 px-4 font-medium text-slate-900">{r.student?.first_name} {r.student?.last_name}</td>
-                      <td className="py-3 px-4 font-semibold">NGN{r.amount?.toLocaleString()}</td>
+                      <td className="py-3 px-4 font-semibold">₦{r.amount?.toLocaleString()}</td>
                       <td className="py-3 px-4 text-sm text-slate-600 hidden sm:table-cell">{r.description || '-'}</td>
                       <td className="py-3 px-4 text-sm text-slate-500">{new Date(r.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-right"><button onClick={() => handlePrint(r)} className="btn-outline text-sm py-1 px-3 flex items-center gap-1 ml-auto"><Printer size={14} />Print</button></td>
