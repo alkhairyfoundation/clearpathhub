@@ -377,6 +377,12 @@ export interface Receipt {
   amount_paid: number;
   payment_method?: string;
   reference_number?: string;
+  verified_status?: 'pending' | 'verified' | 'rejected';
+  uploaded_by?: string;
+  notes?: string;
+  payment_type?: 'full' | 'partial' | 'installment';
+  balance_remaining?: number;
+  storage_path?: string;
   created_at: string;
 }
 
@@ -1473,6 +1479,57 @@ export interface GrowthMapConfig {
   connections: { from: string; to: string }[];
   is_active: boolean;
   created_at: string;
+}
+
+// ============================================================================
+// FINANCE ENHANCEMENT TYPES
+// ============================================================================
+
+export interface FeeStructure {
+  id: string;
+  academic_session_id?: string;
+  term_id?: string;
+  class_id?: string;
+  title: string;
+  total_amount: number;
+  due_date: string;
+  status: 'draft' | 'published';
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  class?: Class;
+  term?: Term;
+  academic_session?: AcademicSession;
+  items?: FeeStructureItem[];
+}
+
+export interface FeeStructureItem {
+  id: string;
+  fee_structure_id: string;
+  item_name: string;
+  amount: number;
+  description?: string;
+  created_at: string;
+}
+
+export interface PaymentUpload {
+  id: string;
+  invoice_id?: string;
+  fee_structure_id?: string;
+  student_id: string;
+  parent_id: string;
+  amount: number;
+  receipt_url: string;
+  storage_path?: string;
+  notes?: string;
+  status: 'pending' | 'verified' | 'rejected';
+  verified_by?: string;
+  verified_at?: string;
+  rejection_reason?: string;
+  created_at: string;
+  student?: Profile;
+  parent?: Profile;
+  invoice?: Invoice;
 }
 
 // XP MULTIPLIERS

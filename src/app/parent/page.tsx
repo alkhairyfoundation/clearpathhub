@@ -50,14 +50,15 @@ useEffect(() => {
             supabase.from('homework_submissions').select('id, marks, submitted_at, homework:homework!homework_id(title, subject:subjects!subject_id(name))').in('student_id', childIds).order('submitted_at', { ascending: false }),
             supabase.from('behavioral_reports').select('id, rating, behavior, created_at').in('student_id', childIds).order('created_at', { ascending: false }),
             apiCall('list_exam_logs', { student_ids: childIds }),
-            supabase.from('invoices').select('id, amount, status').in('student_id', childIds).eq('status', 'pending'),
+            supabase.from('invoices').select('id, amount, status').in('student_id', childIds),
           ]);
 
           if (resultsData.data?.length) {
             const avg = Math.round(resultsData.data.reduce((sum: number, r: any) => sum + r.score, 0) / resultsData.data.length);
             setStats(prev => ({ ...prev, avgPerformance: avg }));
           }
-          setStats(prev => ({ ...prev, totalQuizzes: quizData.data?.length || 0, totalTests: testData.attempts?.length || 0, totalHomework: homeworkData.data?.length || 0, behaviorReports: behaviorData.data?.length || 0, securityEvents: examLogsData.logs?.length || 0, pendingFees: invoiceData.data?.length || 0 }));
+          const pendingAmount = (invoiceData.data || []).filter((i: any) => i.status === 'pending').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+          setStats(prev => ({ ...prev, totalQuizzes: quizData.data?.length || 0, totalTests: testData.attempts?.length || 0, totalHomework: homeworkData.data?.length || 0, behaviorReports: behaviorData.data?.length || 0, securityEvents: examLogsData.logs?.length || 0, pendingFees: pendingAmount }));
 
           const activity: any[] = [];
           (resultsData.data || []).slice(0, 5).forEach((r: any) => activity.push({ type: 'result', label: `${r.subject?.name || 'Subject'} - ${r.score}%`, time: r.created_at, icon: 'score', href: '/parent/progress' }));
@@ -115,7 +116,7 @@ useEffect(() => {
             {[
               { title: 'My Children', value: stats.totalChildren, icon: <Users size={24} />, href: '/parent/children', bg: 'bg-primary-100', color: 'text-primary-600' },
               { title: 'Avg Performance', value: `${stats.avgPerformance}%`, icon: <TrendingUp size={24} />, href: '/parent/progress', bg: 'bg-emerald-100', color: 'text-emerald-600' },
-              { title: 'Pending Fees', value: stats.pendingFees, icon: <DollarSign size={24} />, href: '/parent/payments', bg: 'bg-amber-100', color: 'text-amber-600' },
+              { title: 'Pending Fees', value: `₦${stats.pendingFees.toLocaleString()}`, icon: <DollarSign size={24} />, href: '/parent/payments', bg: 'bg-amber-100', color: 'text-amber-600' },
               { title: 'Announcements', value: stats.unreadAnnouncements, icon: <Bell size={24} />, href: '/parent/announcements', bg: 'bg-purple-100', color: 'text-purple-600' },
             ].map((card, i) => (
               <Link key={i} href={card.href} className="card hover:shadow-md cursor-pointer">

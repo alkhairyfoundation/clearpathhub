@@ -64,6 +64,7 @@ export const STORAGE_BUCKETS = {
   HOMEWORK: 'homework',
   ID_CARDS: 'id-cards',
   LESSONS: 'lessons',
+  RECEIPTS: 'receipts',
 } as const;
 
 export async function uploadFile(

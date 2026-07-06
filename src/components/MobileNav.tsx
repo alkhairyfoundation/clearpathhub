@@ -8,7 +8,7 @@ import {
   Calendar, BarChart3, Settings, QrCode, Megaphone, FileText, 
   Shield, DollarSign, ClipboardList, Award, Activity, ScanLine,
   Building2, Upload, TestTube2, FileCheck, DoorOpen, Clipboard, ChevronDown, LogOut, Brain,
-  Target
+  Target, TrendingDown
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import type { UserRole } from '@/types';
@@ -94,7 +94,9 @@ const navItems = {
     { href: '/accountant', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/accountant/invoices', label: 'Invoices', icon: FileText },
     { href: '/accountant/payments', label: 'Payments', icon: DollarSign },
-    { href: '/accountant/expenses', label: 'Expenses', icon: Activity },
+    { href: '/accountant/expenses', label: 'Expenses', icon: TrendingDown },
+    { href: '/accountant/fee-structures', label: 'Fee Structures', icon: BookOpen },
+    { href: '/accountant/payment-uploads', label: 'Payment Uploads', icon: Upload },
     { href: '/accountant/reports', label: 'Reports', icon: BarChart3 },
     { href: '/accountant/staff-attendance', label: 'Staff Attendance', icon: ScanLine },
     { href: '/accountant/settings', label: 'Settings', icon: Settings },

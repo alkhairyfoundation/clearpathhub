@@ -6,15 +6,16 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
-import { DollarSign, FileText, TrendingUp, TrendingDown, Download, ArrowRight, ChevronRight, Calendar, Users, Printer, BarChart3 } from 'lucide-react';
+import { DollarSign, FileText, TrendingUp, TrendingDown, Download, ArrowRight, ChevronRight, Calendar, Users, Printer, BarChart3, CheckCircle, AlertCircle, Clock, Upload } from 'lucide-react';
 
 export default function AccountantDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState('');
-  const [stats, setStats] = useState({ income: 0, expense: 0, balance: 0, pending: 0, totalInvoices: 0 });
+  const [stats, setStats] = useState({ income: 0, expense: 0, balance: 0, pending: 0, totalInvoices: 0, collected: 0, overdue: 0, pendingUploads: 0 });
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [pendingInvoices, setPendingInvoices] = useState<any[]>([]);
+  const [collectionRate, setCollectionRate] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,9 +26,10 @@ export default function AccountantDashboard() {
 
   async function fetchData() {
     setLoading(true);
-    const [transactionsRes, invoicesRes] = await Promise.all([
+    const [transactionsRes, invoicesRes, pendingUploadsRes] = await Promise.all([
       supabase.from('transactions').select('*, student:profiles(first_name, last_name)').order('created_at', { ascending: false }).limit(10),
       supabase.from('invoices').select('*, student:profiles(first_name, last_name), class:classes(name)').eq('status', 'pending').order('due_date', { ascending: true }).limit(5),
+      supabase.from('payment_uploads').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ]);
 
     if (transactionsRes.data) {
@@ -46,8 +48,24 @@ export default function AccountantDashboard() {
       setStats(prev => ({ ...prev, pending: invoicesRes.data.length }));
     }
 
-    const { count: totalInvoicesCount } = await supabase.from('invoices').select('id', { count: 'exact', head: true });
-    setStats(prev => ({ ...prev, totalInvoices: totalInvoicesCount || 0 }));
+    const [allInvoices, allPaidInvoices] = await Promise.all([
+      supabase.from('invoices').select('amount'),
+      supabase.from('invoices').select('amount').eq('status', 'paid'),
+    ]);
+
+    const totalInvoices = allInvoices.data?.reduce((s: number, i: any) => s + (i.amount || 0), 0) || 0;
+    const totalCollected = allPaidInvoices.data?.reduce((s: number, i: any) => s + (i.amount || 0), 0) || 0;
+    const totalOverdue = invoicesRes.data?.filter((i: any) => new Date(i.due_date) < new Date()).reduce((s: number, i: any) => s + (i.amount || 0), 0) || 0;
+    const rate = totalInvoices > 0 ? Math.round((totalCollected / totalInvoices) * 100) : 0;
+
+    setStats(prev => ({
+      ...prev,
+      totalInvoices: allInvoices.data?.length || 0,
+      collected: totalCollected,
+      overdue: totalOverdue,
+      pendingUploads: pendingUploadsRes.count || 0,
+    }));
+    setCollectionRate(rate);
 
     setLoading(false);
   }
@@ -90,12 +108,23 @@ export default function AccountantDashboard() {
           </div>
         </div>
 
+        {stats.pendingUploads > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+            <Upload size={20} className="text-amber-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-amber-800 text-sm">{stats.pendingUploads} payment upload{stats.pendingUploads > 1 ? 's' : ''} awaiting verification</p>
+              <p className="text-xs text-amber-600 mt-0.5">Parents have submitted receipts that need your review</p>
+            </div>
+            <Link href="/accountant/payment-uploads" className="text-sm bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 font-medium">Review</Link>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { title: 'Total Income', value: formatCurrency(stats.income), icon: <TrendingUp size={24} />, href: '/accountant/transactions', bg: 'bg-green-100', color: 'text-green-600' },
-            { title: 'Total Expenses', value: formatCurrency(stats.expense), icon: <TrendingDown size={24} />, href: '/accountant/transactions', bg: 'bg-red-100', color: 'text-red-600' },
-            { title: 'Balance', value: formatCurrency(stats.balance), icon: <DollarSign size={24} />, href: '/accountant/reports', bg: 'bg-blue-100', color: 'text-blue-600' },
-            { title: 'Pending Invoices', value: stats.pending.toString(), icon: <FileText size={24} />, href: '/accountant/invoices', bg: 'bg-amber-100', color: 'text-amber-600' },
+            { title: 'Total Collected', value: formatCurrency(stats.collected), icon: <CheckCircle size={24} />, href: '/accountant/payments', bg: 'bg-green-100', color: 'text-green-600' },
+            { title: 'Total Expenses', value: formatCurrency(stats.expense), icon: <TrendingDown size={24} />, href: '/accountant/expenses', bg: 'bg-red-100', color: 'text-red-600' },
+            { title: 'Net Balance', value: formatCurrency(stats.balance), icon: <DollarSign size={24} />, href: '/accountant/reports', bg: 'bg-blue-100', color: 'text-blue-600' },
+            { title: 'Overdue Invoices', value: formatCurrency(stats.overdue), icon: <AlertCircle size={24} />, href: '/accountant/payments', bg: 'bg-red-100', color: 'text-red-600' },
           ].map((card, i) => (
             <Link key={i} href={card.href} className="card hover:shadow-md cursor-pointer">
               <div className="flex items-center justify-between mb-3">
@@ -105,6 +134,22 @@ export default function AccountantDashboard() {
               <h3 className="text-sm font-medium text-slate-500">{card.title}</h3>
               <p className="text-xl font-bold text-slate-900 mt-1">{card.value}</p>
             </Link>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { title: 'Total Income (All)', value: formatCurrency(stats.income), icon: <TrendingUp size={20} />, bg: 'bg-emerald-100', color: 'text-emerald-600' },
+            { title: 'Pending Invoices', value: formatCurrency(stats.pending > 0 ? (pendingInvoices.reduce((s, i) => s + i.amount, 0)) : 0), icon: <Clock size={20} />, bg: 'bg-amber-100', color: 'text-amber-600' },
+            { title: 'Collection Rate', value: `${collectionRate}%`, icon: <BarChart3 size={20} />, bg: 'bg-blue-100', color: 'text-blue-600' },
+            { title: 'Total Invoices', value: stats.totalInvoices.toString(), icon: <FileText size={20} />, bg: 'bg-purple-100', color: 'text-purple-600' },
+          ].map((card, i) => (
+            <div key={i} className="card">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center ${card.color}`}>{card.icon}</div>
+                <div><p className="text-xs text-slate-500">{card.title}</p><p className="text-lg font-bold text-slate-900">{card.value}</p></div>
+              </div>
+            </div>
           ))}
         </div>
 
