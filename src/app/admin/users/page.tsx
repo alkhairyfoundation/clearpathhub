@@ -79,6 +79,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
     guardian_email: '',
     blood_group: '',
     emergency_contact: '',
+    admission_number: '',
   });
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -187,7 +188,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
     setStudentData({
       date_of_birth: '', gender: '', address: '',
       guardian_name: '', guardian_phone: '', guardian_email: '',
-      blood_group: '', emergency_contact: '',
+      blood_group: '', emergency_contact: '', admission_number: '',
     });
     setTeacherSubjectIds([]);
     if (selectedRole === 'student' || selectedRole === 'teacher') {
@@ -241,6 +242,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
             guardian_email: data.guardian_email || '',
             blood_group: data.blood_group || '',
             emergency_contact: data.emergency_contact || '',
+            admission_number: data.admission_number || '',
           });
         }
       });
@@ -248,7 +250,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       setStudentData({
         date_of_birth: '', gender: '', address: '',
         guardian_name: '', guardian_phone: '', guardian_email: '',
-        blood_group: '', emergency_contact: '',
+        blood_group: '', emergency_contact: '', admission_number: '',
       });
     }
     setShowModal(true);
@@ -283,6 +285,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
           body.guardian_email = studentData.guardian_email || null;
           body.blood_group = studentData.blood_group || null;
           body.emergency_contact = studentData.emergency_contact || null;
+          body.admission_number = studentData.admission_number || null;
         }
 
         const res = await fetch(`/api/admin/users/${editingUser.id}`, {
@@ -816,6 +819,10 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                     <div className="mt-4">
                       <label className="label">Emergency Contact</label>
                       <input type="text" value={studentData.emergency_contact} onChange={(e) => setStudentData({ ...studentData, emergency_contact: e.target.value })} className="input" placeholder="Name and phone number" />
+                    </div>
+                    <div className="mt-4">
+                      <label className="label">Admission Number</label>
+                      <input type="text" value={studentData.admission_number} onChange={(e) => setStudentData({ ...studentData, admission_number: e.target.value })} className="input" placeholder="Auto-generated if empty" />
                     </div>
                   </div>
                 </>

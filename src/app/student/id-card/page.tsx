@@ -13,7 +13,9 @@ export default function StudentIDCardPage() {
   const { profile } = useAuth();
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
+  const [idCard, setIdCard] = useState<any>(null);
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
+  const [backRules, setBackRules] = useState('');
   const [qrFrontUrl, setQrFrontUrl] = useState('');
   const [qrBackUrl, setQrBackUrl] = useState('');
   const [exporting, setExporting] = useState<'png' | 'pdf' | null>(null);
@@ -27,16 +29,23 @@ export default function StudentIDCardPage() {
   }, [profile]);
 
   async function fetchData() {
-    const { data } = await supabase.from('students').select('*, profile:profiles(*), class:classes(*)').eq('profile_id', profile?.id).maybeSingle();
-    if (data) {
-      setStudent(data);
-      const qr = await generateAttendanceQR(data.admission_number);
-      const qrBack = await generateBackQR(data.admission_number);
+    const { data: studentData } = await supabase.from('students').select('*, profile:profiles(*), class:classes(*)').eq('profile_id', profile?.id).maybeSingle();
+    if (studentData) {
+      setStudent(studentData);
+      const qr = await generateAttendanceQR(studentData.admission_number);
+      const qrBack = await generateBackQR(studentData.admission_number);
       setQrFrontUrl(qr);
       setQrBackUrl(qrBack);
     }
+    const { data: idCardData } = await supabase.from('id_cards').select('*').eq('student_id', profile?.id).maybeSingle();
+    if (idCardData) setIdCard(idCardData);
     const { data: settings } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
-    if (settings) setSchoolSettings(settings);
+    if (settings) {
+      setSchoolSettings(settings);
+      if (settings.id_card_config?.backRules) {
+        setBackRules(settings.id_card_config.backRules);
+      }
+    }
   }
 
   async function generateAttendanceQR(admissionNumber: string): Promise<string> {
@@ -44,7 +53,6 @@ export default function StudentIDCardPage() {
       type: 'STUDENT_ATTENDANCE',
       admissionNumber,
       school: schoolSettings?.school_name || 'School',
-      timestamp: Date.now(),
     });
     try { return await QRCode.toDataURL(qrData, { width: 180, margin: 2, color: { dark: '#000000', light: '#ffffff' } }); }
     catch { return ''; }
@@ -72,6 +80,10 @@ export default function StudentIDCardPage() {
     const photoHtml = avatarUrl
       ? `<img src="${avatarUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;" />`
       : `<div style="width:80px;height:80px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;color:#94a3b8;">${initials}</div>`;
+    const issueDate = idCard?.issued_at ? formatDate(idCard.issued_at) : '';
+    const rulesHtml = backRules
+      ? `<div style="margin-top:8px;font-size:11px;color:#475569;white-space:pre-wrap;text-align:left;">${backRules}</div>`
+      : '<p style="font-size:11px;color:#94a3b8;text-align:center;">This ID card is non-transferable.</p>';
     printWindow.document.write(`
       <html><head><title>ID Card</title>
       <style>
@@ -86,27 +98,23 @@ export default function StudentIDCardPage() {
         <div class="card-header">
           <p style="margin:0;font-size:11px;opacity:0.9;">${schoolSettings?.school_name || 'School'}</p>
           <h3 style="margin:4px 0;font-size:18px;">STUDENT ID CARD</h3>
-          <p style="margin:0;font-size:10px;opacity:0.8;">${schoolSettings?.academic_year || ''}</p>
         </div>
         <div class="card-body">
           <div style="margin-bottom:12px;">${photoHtml}</div>
           <h2 style="margin:0;font-size:20px;">${student.profile?.first_name} ${student.profile?.last_name}</h2>
-          <p style="margin:4px 0;font-size:14px;color:#64748b;">${student.class?.name || ''}</p>
-          <p style="margin:4px 0 12px;font-size:12px;color:#94a3b8;font-family:monospace;">Adm No: ${student.admission_number}</p>
-          <img src="${qrFrontUrl}" style="width:110px;height:110px;" />
+          <p style="margin:4px 0 8px;font-size:12px;color:#94a3b8;font-family:monospace;">Adm No: ${student.admission_number}</p>
+          ${student.date_of_birth ? `<p style="margin:2px 0;font-size:12px;color:#64748b;">DOB: ${formatDate(student.date_of_birth)}</p>` : ''}
+          ${issueDate ? `<p style="margin:2px 0;font-size:11px;color:#94a3b8;">Issued: ${issueDate}</p>` : ''}
+          <img src="${qrFrontUrl}" style="width:110px;height:110px;margin-top:8px;" />
           <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;">Scan to mark attendance</p>
         </div>
       </div>
       <div class="card back-card">
         <div class="card-header">
-          <h3 style="margin:0;font-size:18px;">INFORMATION</h3>
+          <h3 style="margin:0;font-size:18px;">ID CARD RULES</h3>
         </div>
         <div class="card-body" style="text-align:left;">
-          ${student.date_of_birth ? `<p style="font-size:13px;"><strong>DOB:</strong> ${formatDate(student.date_of_birth)}</p>` : ''}
-          ${student.blood_group ? `<p style="font-size:13px;"><strong>Blood Group:</strong> ${student.blood_group}</p>` : ''}
-          ${student.address ? `<p style="font-size:13px;"><strong>Address:</strong> ${student.address}</p>` : ''}
-          ${student.emergency_contact ? `<p style="font-size:13px;"><strong>Emergency:</strong> ${student.emergency_contact}</p>` : ''}
-          ${student.guardian_name ? `<p style="font-size:13px;"><strong>Guardian:</strong> ${student.guardian_name}</p>` : ''}
+          ${rulesHtml}
           <hr/>
           <div style="text-align:center;">
             <img src="${qrBackUrl}" style="width:80px;height:80px;" />
@@ -114,7 +122,6 @@ export default function StudentIDCardPage() {
           </div>
         </div>
       </div>
-      <p style="text-align:center;font-size:10px;color:#94a3b8;margin-top:20px;">This ID card is the property of the school.</p>
     </body></html>`);
     printWindow.document.close();
     printWindow.print();
@@ -153,15 +160,13 @@ export default function StudentIDCardPage() {
       ctx.fillRect(0, 0, CARD_W, CARD_H);
 
       ctx.fillStyle = primary;
-      ctx.fillRect(0, 0, CARD_W, 80);
+      ctx.fillRect(0, 0, CARD_W, 70);
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 14px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(schoolSettings?.school_name || 'School', CARD_W / 2, 28);
+      ctx.fillText(schoolSettings?.school_name || 'School', CARD_W / 2, 25);
       ctx.font = 'bold 20px Arial';
-      ctx.fillText('STUDENT ID CARD', CARD_W / 2, 55);
-      ctx.font = '10px Arial';
-      ctx.fillText(schoolSettings?.academic_year || '', CARD_W / 2, 72);
+      ctx.fillText('STUDENT ID CARD', CARD_W / 2, 52);
 
       if (avatarUrl) {
         const img = document.createElement('img');
@@ -170,41 +175,50 @@ export default function StudentIDCardPage() {
         await new Promise(resolve => { img.onload = () => resolve(true); img.onerror = () => resolve(false); });
         ctx.save();
         ctx.beginPath();
-        ctx.arc(CARD_W / 2, 145, 36, 0, Math.PI * 2);
+        ctx.arc(CARD_W / 2, 130, 36, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(img, CARD_W / 2 - 36, 109, 72, 72);
+        ctx.drawImage(img, CARD_W / 2 - 36, 94, 72, 72);
         ctx.restore();
       } else {
         ctx.fillStyle = '#e2e8f0';
         ctx.beginPath();
-        ctx.arc(CARD_W / 2, 145, 36, 0, Math.PI * 2);
+        ctx.arc(CARD_W / 2, 130, 36, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#94a3b8';
         ctx.font = 'bold 28px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(initials, CARD_W / 2, 153);
+        ctx.fillText(initials, CARD_W / 2, 138);
       }
 
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 22px Arial';
-      ctx.fillText(`${student.profile?.first_name} ${student.profile?.last_name}`, CARD_W / 2, 240);
-      ctx.fillStyle = '#64748b';
-      ctx.font = '16px Arial';
-      ctx.fillText(student.class?.name || '', CARD_W / 2, 268);
+      ctx.fillText(`${student.profile?.first_name} ${student.profile?.last_name}`, CARD_W / 2, 215);
       ctx.font = '13px Arial';
       ctx.fillStyle = '#94a3b8';
-      ctx.fillText(`Adm No: ${student.admission_number}`, CARD_W / 2, 290);
+      ctx.fillText(`Adm No: ${student.admission_number}`, CARD_W / 2, 240);
+
+      if (student.date_of_birth) {
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(`DOB: ${formatDate(student.date_of_birth)}`, CARD_W / 2, 262);
+      }
+
+      if (idCard?.issued_at) {
+        ctx.font = '11px Arial';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(`Issued: ${formatDate(idCard.issued_at)}`, CARD_W / 2, 280);
+      }
 
       if (qrFrontUrl) {
         const qrImg = document.createElement('img');
         qrImg.src = qrFrontUrl;
         await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
-        ctx.drawImage(qrImg, CARD_W / 2 - 55, 315, 110, 110);
+        ctx.drawImage(qrImg, CARD_W / 2 - 55, 300, 110, 110);
       }
 
       ctx.fillStyle = '#94a3b8';
       ctx.font = '10px Arial';
-      ctx.fillText('Scan to mark attendance', CARD_W / 2, 445);
+      ctx.fillText('Scan to mark attendance', CARD_W / 2, 430);
 
       if (type === 'png') {
         const link = document.createElement('a');
@@ -238,7 +252,6 @@ export default function StudentIDCardPage() {
             <div className="bg-blue-600 text-white p-4 text-center">
               <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
               <h3 className="text-lg font-bold">STUDENT ID CARD</h3>
-              <p className="text-xs opacity-80">{schoolSettings?.academic_year || ''}</p>
             </div>
 
             <div className="p-4">
@@ -254,8 +267,13 @@ export default function StudentIDCardPage() {
 
               <div className="text-center mb-4">
                 <h4 className="text-lg font-bold text-slate-900">{profile?.first_name} {profile?.last_name}</h4>
-                <p className="text-sm text-slate-600">{student?.class?.name}</p>
                 <p className="text-xs text-slate-500 mt-1 font-mono">Adm No: {student?.admission_number}</p>
+                {student?.date_of_birth && (
+                  <p className="text-sm text-slate-600 mt-1">DOB: {formatDate(student.date_of_birth)}</p>
+                )}
+                {idCard?.issued_at && (
+                  <p className="text-xs text-slate-400 mt-1">Issued: {formatDate(idCard.issued_at)}</p>
+                )}
               </div>
 
               <div className="flex justify-center mb-2">
@@ -291,34 +309,12 @@ export default function StudentIDCardPage() {
           <div className="flex justify-center">
             <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
               <div className="bg-slate-600 text-white p-4 text-center">
-                <h3 className="text-lg font-bold">INFORMATION</h3>
+                <h3 className="text-lg font-bold">ID CARD RULES</h3>
               </div>
-              <div className="p-4 space-y-3">
-                {student.date_of_birth && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Date of Birth:</span>
-                    <span className="font-medium">{formatDate(student.date_of_birth)}</span>
-                  </div>
-                )}
-                {student.blood_group && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Blood Group:</span>
-                    <span className="font-medium">{student.blood_group}</span>
-                  </div>
-                )}
-                {student.address && (
-                  <div className="text-sm">
-                    <span className="text-slate-500">Address:</span>
-                    <p className="font-medium">{student.address}</p>
-                  </div>
-                )}
-                {student.emergency_contact && (
-                  <div className="text-sm">
-                    <span className="text-slate-500">Emergency Contact:</span>
-                    <p className="font-medium">{student.emergency_contact}</p>
-                    {student.guardian_name && <p className="text-xs text-slate-400">({student.guardian_name})</p>}
-                  </div>
-                )}
+              <div className="p-4">
+                <div className="text-sm text-slate-700 whitespace-pre-wrap min-h-[80px]">
+                  {backRules || 'This ID card is non-transferable.'}
+                </div>
               </div>
               <div className="p-4 text-center border-t border-slate-100">
                 {qrBackUrl ? (

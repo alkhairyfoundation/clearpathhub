@@ -62,7 +62,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
     const body = await request.json();
     const { first_name, last_name, role, phone, password, subject_ids, class_id,
-      date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact } = body;
+      date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact, admission_number } = body;
 
     const updates: Record<string, any> = {};
     if (first_name !== undefined) updates.first_name = first_name;
@@ -148,7 +148,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     // Update student record
     if (class_id !== undefined || date_of_birth !== undefined || gender !== undefined || address !== undefined ||
         guardian_name !== undefined || guardian_phone !== undefined || guardian_email !== undefined ||
-        blood_group !== undefined || emergency_contact !== undefined) {
+        blood_group !== undefined || emergency_contact !== undefined || admission_number !== undefined) {
       const { data: existingStudent } = await supabase
         .from('students')
         .select('id')
@@ -165,6 +165,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         if (guardian_email !== undefined) studentUpdates.guardian_email = guardian_email || null;
         if (blood_group !== undefined) studentUpdates.blood_group = blood_group || null;
         if (emergency_contact !== undefined) studentUpdates.emergency_contact = emergency_contact || null;
+        if (admission_number !== undefined) studentUpdates.admission_number = admission_number || null;
         const { error: updateErr } = await supabase.from('students').update(studentUpdates).eq('id', existingStudent.id);
         if (updateErr) {
           return NextResponse.json({ success: false, error: `Failed to update student record: ${updateErr.message}` }, { status: 500 });
@@ -175,7 +176,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         const admissionNumber = `STD${new Date().getFullYear()}${String((count || 0) + 1).padStart(4, '0')}`;
         const { error: insertErr } = await supabase.from('students').insert({
           profile_id: params.id,
-          admission_number: admissionNumber,
+          admission_number: admission_number || admissionNumber,
           class_id: class_id || null,
           date_of_birth: date_of_birth || null,
           gender: gender || null,

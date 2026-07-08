@@ -17,6 +17,7 @@ interface CardConfig {
   showEmergencyContact: boolean;
   frontMessage: string;
   backMessage: string;
+  backRules: string;
   cardTheme: string;
   primaryColor: string;
 }
@@ -29,6 +30,7 @@ const defaultConfig: CardConfig = {
   showEmergencyContact: true,
   frontMessage: '',
   backMessage: 'This ID card is the property of the school. If found, please return to the school office.',
+  backRules: 'This ID card is non-transferable.\nReport lost or stolen cards immediately.\nStudents must carry their ID at all times.\nThis card remains valid until further notice.',
   cardTheme: 'blue',
   primaryColor: '#1e40af',
 };
@@ -43,6 +45,7 @@ export default function AdminIDCardsPage() {
   const [showCardModal, setShowCardModal] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedIdCard, setSelectedIdCard] = useState<any>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [qrBackUrl, setQrBackUrl] = useState('');
   const [classes, setClasses] = useState<any[]>([]);
@@ -135,6 +138,9 @@ export default function AdminIDCardsPage() {
     const qrBack = await generateBackQR(student.admission_number);
     setQrCodeUrl(qr);
     setQrBackUrl(qrBack);
+    const { data: idCardData } = await supabase.from('id_cards').select('*').eq('student_id', student.profile_id).maybeSingle();
+    if (idCardData) setSelectedIdCard(idCardData);
+    else setSelectedIdCard(null);
     setShowCardModal(true);
     setGenerating(false);
   }
@@ -152,12 +158,16 @@ export default function AdminIDCardsPage() {
 
   const theme = getCardTheme();
 
-  const renderCardFront = (student: any, qr: string) => (
+  function formatDate(dateStr: string) {
+    try { return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
+    catch { return dateStr || ''; }
+  }
+
+  const renderCardFront = (student: any, qr: string, idCard: any) => (
     <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg" ref={cardRef}>
       <div className={`${theme.header} text-white p-4 text-center`}>
         <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
         <h3 className="text-lg font-bold">STUDENT ID CARD</h3>
-        <p className="text-xs opacity-80">{schoolSettings?.academic_year || '2024-2025'}</p>
       </div>
       
       <div className="p-4">
@@ -173,8 +183,13 @@ export default function AdminIDCardsPage() {
 
         <div className="text-center mb-4">
           <h4 className="text-xl font-bold text-slate-900">{student.profile?.first_name} {student.profile?.last_name}</h4>
-          <p className="text-sm text-slate-600">{student.class?.name}</p>
           <p className="text-xs text-slate-500 mt-1 font-mono">Adm No: {student.admission_number}</p>
+          {student.date_of_birth && (
+            <p className="text-sm text-slate-600 mt-1">DOB: {formatDate(student.date_of_birth)}</p>
+          )}
+          {idCard?.issued_at && (
+            <p className="text-xs text-slate-400 mt-1">Issued: {formatDate(idCard.issued_at)}</p>
+          )}
         </div>
 
         <div className="flex justify-center mb-4">
@@ -185,12 +200,7 @@ export default function AdminIDCardsPage() {
 
         <div className="text-center text-xs text-slate-500">
           <p>Scan to mark attendance</p>
-          {student.profile?.phone && <p className="mt-1">{student.profile.phone}</p>}
         </div>
-      </div>
-
-      <div className="absolute bottom-0 w-full p-2 bg-slate-50 text-center text-[10px] text-slate-400 border-t">
-        {cardConfig.frontMessage || 'Valid for the current academic session'}
       </div>
     </div>
   );
@@ -198,35 +208,13 @@ export default function AdminIDCardsPage() {
   const renderCardBack = (student: any, qr: string) => (
     <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
       <div className={`${theme.header} text-white p-4 text-center`}>
-        <h3 className="text-lg font-bold">INFORMATION</h3>
+        <h3 className="text-lg font-bold">ID CARD RULES</h3>
       </div>
 
-      <div className="p-4 space-y-3">
-        {cardConfig.showDOB && student.date_of_birth && (
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Date of Birth:</span>
-            <span className="font-medium">{new Date(student.date_of_birth).toLocaleDateString()}</span>
-          </div>
-        )}
-        {cardConfig.showBloodGroup && student.blood_group && (
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Blood Group:</span>
-            <span className="font-medium">{student.blood_group}</span>
-          </div>
-        )}
-        {cardConfig.showAddress && student.address && (
-          <div className="text-sm">
-            <span className="text-slate-500">Address:</span>
-            <p className="font-medium">{student.address}</p>
-          </div>
-        )}
-        {cardConfig.showEmergencyContact && student.emergency_contact && (
-          <div className="text-sm">
-            <span className="text-slate-500">Emergency Contact:</span>
-            <p className="font-medium">{student.emergency_contact}</p>
-            {student.guardian_name && <p className="text-xs text-slate-400">({student.guardian_name})</p>}
-          </div>
-        )}
+      <div className="p-4">
+        <div className="text-sm text-slate-700 whitespace-pre-wrap min-h-[120px]">
+          {cardConfig.backRules || 'This ID card is non-transferable.'}
+        </div>
       </div>
 
       <div className="p-4 text-center border-t border-slate-100">
@@ -239,7 +227,7 @@ export default function AdminIDCardsPage() {
       </div>
 
       <div className="p-3 bg-slate-50 text-center text-xs text-slate-500 border-t">
-        {cardConfig.backMessage || 'This ID card is the property of the school. If found, please return to the school office.'}
+        {cardConfig.backMessage || 'This ID card is the property of the school.'}
       </div>
     </div>
   );
@@ -264,13 +252,13 @@ export default function AdminIDCardsPage() {
       frontCtx.fillStyle = '#ffffff';
       frontCtx.fillRect(0, 0, frontCanvas.width, frontCanvas.height);
       frontCtx.fillStyle = cardConfig.primaryColor;
-      frontCtx.fillRect(0, 0, frontCanvas.width, 120);
+      frontCtx.fillRect(0, 0, frontCanvas.width, 105);
       frontCtx.fillStyle = '#ffffff';
       frontCtx.font = 'bold 48px Arial';
       frontCtx.textAlign = 'center';
-      frontCtx.fillText(schoolSettings?.school_name || 'School', frontCanvas.width/2, 40);
+      frontCtx.fillText(schoolSettings?.school_name || 'School', frontCanvas.width/2, 35);
       frontCtx.font = 'bold 36px Arial';
-      frontCtx.fillText('STUDENT ID CARD', frontCanvas.width/2, 80);
+      frontCtx.fillText('STUDENT ID CARD', frontCanvas.width/2, 75);
       
       if (selectedStudent.profile?.avatar_url) {
         const img = document.createElement('img');
@@ -279,24 +267,36 @@ export default function AdminIDCardsPage() {
         await new Promise(resolve => { img.onload = () => resolve(true); img.onerror = () => resolve(false); });
         frontCtx.save();
         frontCtx.beginPath();
-        frontCtx.arc(frontCanvas.width/2, 240, 80, 0, Math.PI * 2);
+        frontCtx.arc(frontCanvas.width/2, 210, 75, 0, Math.PI * 2);
         frontCtx.clip();
-        frontCtx.drawImage(img, frontCanvas.width/2 - 80, 160, 160, 160);
+        frontCtx.drawImage(img, frontCanvas.width/2 - 75, 135, 150, 150);
         frontCtx.restore();
       }
       
       frontCtx.fillStyle = '#000000';
       frontCtx.font = 'bold 32px Arial';
-      frontCtx.fillText(`${selectedStudent.profile?.first_name} ${selectedStudent.profile?.last_name}`, frontCanvas.width/2, 400);
-      frontCtx.font = '24px Arial';
-      frontCtx.fillText(selectedStudent.class?.name || '', frontCanvas.width/2, 440);
+      frontCtx.fillText(`${selectedStudent.profile?.first_name} ${selectedStudent.profile?.last_name}`, frontCanvas.width/2, 360);
       frontCtx.font = '20px Arial';
-      frontCtx.fillText(`Adm No: ${selectedStudent.admission_number}`, frontCanvas.width/2, 480);
+      frontCtx.fillText(`Adm No: ${selectedStudent.admission_number}`, frontCanvas.width/2, 395);
+
+      if (selectedStudent.date_of_birth) {
+        frontCtx.font = '18px Arial';
+        frontCtx.fillStyle = '#64748b';
+        const dob = new Date(selectedStudent.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        frontCtx.fillText(`DOB: ${dob}`, frontCanvas.width/2, 425);
+      }
+
+      if (selectedIdCard?.issued_at) {
+        frontCtx.font = '16px Arial';
+        frontCtx.fillStyle = '#94a3b8';
+        const issued = new Date(selectedIdCard.issued_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        frontCtx.fillText(`Issued: ${issued}`, frontCanvas.width/2, 450);
+      }
 
 const qrImg = document.createElement('img');
         qrImg.src = qrCodeUrl;
         await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
-      frontCtx.drawImage(qrImg, frontCanvas.width/2 - 100, 520, 200, 200);
+      frontCtx.drawImage(qrImg, frontCanvas.width/2 - 100, 475, 200, 200);
     }
 
     if (downloadFormat === 'back' || downloadFormat === 'both') {
@@ -307,46 +307,33 @@ const qrImg = document.createElement('img');
       backCtx.fillStyle = '#ffffff';
       backCtx.font = 'bold 36px Arial';
       backCtx.textAlign = 'center';
-      backCtx.fillText('INFORMATION', backCanvas.width/2, 50);
+      backCtx.fillText('ID CARD RULES', backCanvas.width/2, 50);
 
-      backCtx.fillStyle = '#000000';
-      backCtx.font = '20px Arial';
+      backCtx.fillStyle = '#475569';
+      backCtx.font = '18px Arial';
+      backCtx.textAlign = 'left';
+      const rules = cardConfig.backRules || 'This ID card is non-transferable.';
+      const lines = rules.split('\n');
       let yPos = 140;
-      if (selectedStudent.date_of_birth) {
-        backCtx.fillText(`DOB: ${new Date(selectedStudent.date_of_birth).toLocaleDateString()}`, 40, yPos);
-        yPos += 30;
-      }
-      if (selectedStudent.blood_group) {
-        backCtx.fillText(`Blood Group: ${selectedStudent.blood_group}`, 40, yPos);
-        yPos += 30;
-      }
-      if (selectedStudent.guardian_phone) {
-        backCtx.fillText(`Emergency: ${selectedStudent.guardian_phone}`, 40, yPos);
+      for (const rule of lines) {
+        if (rule.trim()) {
+          backCtx.fillText(`\u2022 ${rule.trim()}`, 40, yPos);
+          yPos += 28;
+        }
       }
 
       if (qrBackUrl) {
         const qrImg = document.createElement('img');
         qrImg.src = qrBackUrl;
         await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
-        backCtx.drawImage(qrImg, backCanvas.width/2 - 60, 350, 120, 120);
+        backCtx.drawImage(qrImg, backCanvas.width/2 - 60, 340, 120, 120);
       }
 
       backCtx.font = '16px Arial';
       backCtx.fillStyle = '#666666';
-      const msg = cardConfig.backMessage || 'This ID card is the property of the school';
-      const words = msg.split(' ');
-      let line = '';
-      yPos = 500;
-      for (const word of words) {
-        if (line.length + word.length > 40) {
-          backCtx.fillText(line, 40, yPos);
-          line = word + ' ';
-          yPos += 20;
-        } else {
-          line += word + ' ';
-        }
-      }
-      backCtx.fillText(line, 40, yPos);
+      backCtx.textAlign = 'center';
+      const msg = cardConfig.backMessage || 'Property of school';
+      backCtx.fillText(msg, backCanvas.width/2, 510);
     }
 
     const link = document.createElement('a');
@@ -392,11 +379,16 @@ const qrImg = document.createElement('img');
       
       doc.setTextColor(30, 58, 95);
       doc.setFontSize(10);
-      doc.text(`${selectedStudent.profile?.first_name} ${selectedStudent.profile?.last_name}`, pageWidth/4, marginY + 35, { align: 'center' });
-      doc.setFontSize(8);
+      doc.text(`${selectedStudent.profile?.first_name} ${selectedStudent.profile?.last_name}`, pageWidth/4, marginY + 32, { align: 'center' });
+      doc.setFontSize(7);
       doc.setTextColor(100, 100, 100);
-      doc.text(selectedStudent.class?.name || '', pageWidth/4, marginY + 42, { align: 'center' });
-      doc.text(`Adm No: ${selectedStudent.admission_number}`, pageWidth/4, marginY + 48, { align: 'center' });
+      doc.text(`Adm No: ${selectedStudent.admission_number}`, pageWidth/4, marginY + 40, { align: 'center' });
+
+      if (selectedStudent.date_of_birth) {
+        doc.setFontSize(7);
+        const dob = new Date(selectedStudent.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        doc.text(`DOB: ${dob}`, pageWidth/4, marginY + 48, { align: 'center' });
+      }
 
       if (qrCodeUrl) {
         doc.addImage(qrCodeUrl, 'PNG', marginX + 25, marginY + 55, 35, 35);
@@ -415,32 +407,17 @@ const qrImg = document.createElement('img');
       
       doc.setTextColor(30, 58, 95);
       doc.setFontSize(10);
-      doc.text('INFORMATION', backX + cardWidth/2, marginY + 20, { align: 'center' });
+      doc.text('ID CARD RULES', backX + cardWidth/2, marginY + 18, { align: 'center' });
 
-      doc.setFontSize(7);
+      doc.setFontSize(6);
       doc.setTextColor(80, 80, 80);
-      let infoY = marginY + 30;
-      
-      if (selectedStudent.date_of_birth) {
-        doc.text(`DOB: ${new Date(selectedStudent.date_of_birth).toLocaleDateString()}`, backX + 5, infoY);
-        infoY += 8;
-      }
-      if (selectedStudent.blood_group) {
-        doc.text(`Blood Group: ${selectedStudent.blood_group}`, backX + 5, infoY);
-        infoY += 8;
-      }
-      if (selectedStudent.guardian_phone) {
-        doc.text(`Emergency: ${selectedStudent.guardian_phone}`, backX + 5, infoY);
-      }
+      const rules = cardConfig.backRules || 'This ID card is non-transferable.';
+      const splitRules = doc.splitTextToSize(rules, cardWidth - 10);
+      doc.text(splitRules, backX + 5, marginY + 28);
 
       if (qrBackUrl) {
-        doc.addImage(qrBackUrl, 'PNG', backX + 25, marginY + 70, 30, 30);
+        doc.addImage(qrBackUrl, 'PNG', backX + 25, marginY + 80, 30, 30);
       }
-
-      doc.setFontSize(5);
-      const backMsg = cardConfig.backMessage || 'Property of school';
-      const splitMsg = doc.splitTextToSize(backMsg, cardWidth - 10);
-      doc.text(splitMsg, backX + 5, marginY + 120);
     }
 
     const prefix = selectedStudent.admission_number;
@@ -559,7 +536,7 @@ const qrImg = document.createElement('img');
               
               <div className="p-6">
                 <div className="flex flex-wrap justify-center gap-8 mb-6">
-                  {renderCardFront(selectedStudent, qrCodeUrl)}
+                  {renderCardFront(selectedStudent, qrCodeUrl, selectedIdCard)}
                   {renderCardBack(selectedStudent, qrBackUrl)}
                 </div>
 
@@ -594,7 +571,7 @@ const qrImg = document.createElement('img');
                           </style>
                           </head><body>
                             <div class="card-container">
-                              <div>${renderCardFront(selectedStudent, qrCodeUrl).props.children}</div>
+                              <div>${renderCardFront(selectedStudent, qrCodeUrl, selectedIdCard).props.children}</div>
                               <div>${renderCardBack(selectedStudent, qrBackUrl).props.children}</div>
                             </div>
                           </body></html>
@@ -639,38 +616,19 @@ const qrImg = document.createElement('img');
                   <input type="color" value={cardConfig.primaryColor} onChange={(e) => setCardConfig({...cardConfig, primaryColor: e.target.value})} className="input h-10 p-1" />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="font-medium text-slate-700">Show on Card:</label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={cardConfig.showPhoto} onChange={(e) => setCardConfig({...cardConfig, showPhoto: e.target.checked})} className="w-4 h-4" />
-                    <span className="text-sm">Student Photo</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={cardConfig.showDOB} onChange={(e) => setCardConfig({...cardConfig, showDOB: e.target.checked})} className="w-4 h-4" />
-                    <span className="text-sm">Date of Birth</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={cardConfig.showBloodGroup} onChange={(e) => setCardConfig({...cardConfig, showBloodGroup: e.target.checked})} className="w-4 h-4" />
-                    <span className="text-sm">Blood Group</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={cardConfig.showAddress} onChange={(e) => setCardConfig({...cardConfig, showAddress: e.target.checked})} className="w-4 h-4" />
-                    <span className="text-sm">Address</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={cardConfig.showEmergencyContact} onChange={(e) => setCardConfig({...cardConfig, showEmergencyContact: e.target.checked})} className="w-4 h-4" />
-                    <span className="text-sm">Emergency Contact</span>
-                  </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={cardConfig.showPhoto} onChange={(e) => setCardConfig({...cardConfig, showPhoto: e.target.checked})} className="w-4 h-4" />
+                  <span className="text-sm">Student Photo</span>
+                </label>
+
+                <div>
+                  <label className="label">ID Card Rules (Back of Card)</label>
+                  <textarea value={cardConfig.backRules} onChange={(e) => setCardConfig({...cardConfig, backRules: e.target.value})} className="input" rows={5} placeholder="Enter ID card rules, one per line" />
                 </div>
 
                 <div>
-                  <label className="label">Front Message</label>
-                  <input type="text" value={cardConfig.frontMessage} onChange={(e) => setCardConfig({...cardConfig, frontMessage: e.target.value})} className="input" placeholder="Message for front of card" />
-                </div>
-
-                <div>
-                  <label className="label">Back Message</label>
-                  <textarea value={cardConfig.backMessage} onChange={(e) => setCardConfig({...cardConfig, backMessage: e.target.value})} className="input" rows={3} placeholder="Message for back of card" />
+                  <label className="label">Back Footer Message</label>
+                  <textarea value={cardConfig.backMessage} onChange={(e) => setCardConfig({...cardConfig, backMessage: e.target.value})} className="input" rows={2} placeholder="Footer message for back of card" />
                 </div>
               </div>
 
