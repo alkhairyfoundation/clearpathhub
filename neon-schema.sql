@@ -920,3 +920,24 @@ DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_question_bank_subject ON question_ban
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_mastery_tracking_student_id ON mastery_tracking(student_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_messages_recipient_id ON messages(recipient_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+
+-- ============================================================================
+-- PART 14: CCR (ClearPath Child Review) Questionnaire System
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS ccr_responses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  academic_session_id UUID REFERENCES academic_sessions(id) ON DELETE SET NULL,
+  term_id UUID REFERENCES terms(id) ON DELETE SET NULL,
+  respondent_type TEXT NOT NULL CHECK (respondent_type IN ('student', 'father', 'mother', 'teacher', 'subject_teacher')),
+  data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  is_submitted BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(student_id, academic_session_id, term_id, respondent_type)
+);
+
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_ccr_responses_student_id ON ccr_responses(student_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_ccr_responses_respondent_type ON ccr_responses(respondent_type); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_ccr_responses_is_submitted ON ccr_responses(is_submitted); EXCEPTION WHEN undefined_column THEN NULL; END $$;

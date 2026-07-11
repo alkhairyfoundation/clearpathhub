@@ -1843,6 +1843,41 @@ export interface Database {
           updated_at?: string;
         };
       };
+      ccr_responses: {
+        Row: {
+          id: string;
+          student_id: string;
+          academic_session_id: string | null;
+          term_id: string | null;
+          respondent_type: 'student' | 'father' | 'mother' | 'teacher' | 'subject_teacher';
+          data: Json;
+          is_submitted: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          academic_session_id?: string | null;
+          term_id?: string | null;
+          respondent_type: 'student' | 'father' | 'mother' | 'teacher' | 'subject_teacher';
+          data?: Json;
+          is_submitted?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          academic_session_id?: string | null;
+          term_id?: string | null;
+          respondent_type?: 'student' | 'father' | 'mother' | 'teacher' | 'subject_teacher';
+          data?: Json;
+          is_submitted?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {};
     Functions: {

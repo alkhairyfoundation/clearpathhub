@@ -1532,6 +1532,52 @@ export interface PaymentUpload {
   invoice?: Invoice;
 }
 
+// CCR (ClearPath Child Review)
+export type CcrRespondentType = 'student' | 'father' | 'mother' | 'teacher' | 'subject_teacher';
+
+export interface CcrResponse {
+  id: string;
+  student_id: string;
+  academic_session_id?: string | null;
+  term_id?: string | null;
+  respondent_type: CcrRespondentType;
+  data: Record<string, any>;
+  is_submitted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CcrQuestion {
+  id: string;
+  text: string;
+  type: 'scale_1_5' | 'single_choice' | 'multi_choice' | 'open_text';
+  domain: string;
+  domainLabel: string;
+  options?: string[];
+  maxSelect?: number;
+  maxLength?: number;
+  required?: boolean;
+  notes?: string;
+}
+
+export interface CcrDomain {
+  key: string;
+  label: string;
+  questionIds: string[];
+}
+
+export interface SgiScore {
+  foundation: number;
+  performance: number;
+  environment: number;
+  aspiration: number;
+  overall: number;
+  domainScores: Record<string, { student: number; adult: number; combined: number }>;
+  redFlags: string[];
+  observationGaps: string[];
+  prescriptions: string[];
+}
+
 // XP MULTIPLIERS
 export const XP_MULTIPLIERS = {
   first_practice_of_day: 2.0,
