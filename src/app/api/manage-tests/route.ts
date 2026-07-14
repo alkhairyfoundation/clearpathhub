@@ -35,16 +35,13 @@ export async function POST(req: NextRequest) {
 
         case 'create_test': {
           const { title, description, subject_id, class_id, duration_minutes, passing_score, total_marks, shuffle_questions, created_by } = body;
-          console.log('create_test subject_id:', JSON.stringify(subject_id), 'type:', typeof subject_id);
           if (!subject_id) {
-            return NextResponse.json({ error: 'Subject is required (subject_id was empty)' }, { status: 400 });
+            return NextResponse.json({ error: 'Subject is required' }, { status: 400 });
           }
           const subExists = await pool.query('SELECT id FROM subjects WHERE id = $1', [subject_id]);
           if (subExists.rows.length === 0) {
-            console.error('CREATE: subject_id not found in subjects table:', subject_id);
-            const allSubs = await pool.query('SELECT id, code FROM subjects');
-            console.error('Available subjects:', allSubs.rows.map(s => s.id + ':' + s.code).join(', '));
-            return NextResponse.json({ error: `Subject "${subject_id}" not found in database` }, { status: 400 });
+            console.error('create_test: subject_id not found:', subject_id);
+            return NextResponse.json({ error: `Subject not found` }, { status: 400 });
           }
           const result = await pool.query(
             `INSERT INTO tests (title, description, subject_id, class_id, duration_minutes, passing_score, total_marks, shuffle_questions, created_by, is_published)
@@ -59,10 +56,8 @@ export async function POST(req: NextRequest) {
           if (subject_id && subject_id !== '') {
             const subExists = await pool.query('SELECT id FROM subjects WHERE id = $1', [subject_id]);
             if (subExists.rows.length === 0) {
-              console.error('UPDATE: subject_id not found in subjects table:', subject_id, 'type:', typeof subject_id);
-              const allSubs = await pool.query('SELECT id, code FROM subjects');
-              console.error('Available subjects:', allSubs.rows.map(s => s.id + ':' + s.code).join(', '));
-              return NextResponse.json({ error: `Subject "${subject_id}" not found in database` }, { status: 400 });
+              console.error('update_test: subject_id not found:', subject_id);
+              return NextResponse.json({ error: `Subject not found` }, { status: 400 });
             }
           }
           const sets: string[] = [];
