@@ -74,7 +74,7 @@ export default function TeacherTestsPage() {
     setLoading(true);
     const [testsRes, subjectsRes, classesRes] = await Promise.all([
       api('list_tests', { created_by: profile?.id }),
-      supabase.from('subjects').select('id, name').eq('teacher_id', profile?.id).order('name'),
+      supabase.from('subjects').select('id, name').or(`teacher_id.eq.${profile?.id},teacher_id.is.null`).order('name'),
       supabase.from('classes').select('id, name').order('level'),
     ]);
     if (testsRes.tests) setTests(testsRes.tests);
