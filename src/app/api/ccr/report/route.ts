@@ -19,6 +19,10 @@ export async function GET(request: NextRequest) {
     if (!studentId) {
       return NextResponse.json({ success: false, error: 'student_id is required' }, { status: 400 });
     }
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(studentId)) {
+      return NextResponse.json({ success: false, error: 'Invalid student_id format' }, { status: 400 });
+    }
 
     const adminClient = createSupabaseAdminClient();
     let query = adminClient.from('ccr_responses').select('*').eq('student_id', studentId).eq('is_submitted', true);

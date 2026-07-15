@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
     if (!student_id || !respondent_type || !responses) {
       return NextResponse.json({ success: false, error: 'student_id, respondent_type, and responses are required' }, { status: 400 });
     }
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(student_id)) {
+      return NextResponse.json({ success: false, error: 'Invalid student_id format' }, { status: 400 });
+    }
 
     if (!['student', 'father', 'mother', 'teacher', 'subject_teacher'].includes(respondent_type)) {
       return NextResponse.json({ success: false, error: 'Invalid respondent_type' }, { status: 400 });

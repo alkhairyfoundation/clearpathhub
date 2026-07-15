@@ -10,7 +10,7 @@ import type { SgiScore } from '@/types';
 import { generateCcrPdf } from '@/lib/ccr-pdf';
 
 export default function StudentCcrReport() {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const router = useRouter();
   const [report, setReport] = useState<any>(null);
   const [sgi, setSgi] = useState<SgiScore | null>(null);
@@ -18,9 +18,11 @@ export default function StudentCcrReport() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (authLoading) return;
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
+    if (!profile.id) return;
     fetchReport();
-  }, [profile]);
+  }, [profile, authLoading]);
 
   async function fetchReport() {
     try {

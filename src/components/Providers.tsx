@@ -1,6 +1,7 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
+import { ThemeProvider } from 'next-themes';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -19,10 +20,12 @@ function AuthHandler({ children }: { children: React.ReactNode }) {
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
-      <AuthProvider>
-        <AuthHandler>{children}</AuthHandler>
-      </AuthProvider>
-    </SessionProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <SessionProvider>
+        <AuthProvider>
+          <AuthHandler>{children}</AuthHandler>
+        </AuthProvider>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }

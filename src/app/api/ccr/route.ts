@@ -14,6 +14,11 @@ export async function GET(request: NextRequest) {
     const studentId = url.searchParams.get('student_id');
     const respondentType = url.searchParams.get('respondent_type');
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (studentId && !uuidRegex.test(studentId)) {
+      return NextResponse.json({ success: false, error: 'Invalid student_id format' }, { status: 400 });
+    }
+
     const adminClient = createSupabaseAdminClient();
     let query = adminClient.from('ccr_responses').select('*');
 
