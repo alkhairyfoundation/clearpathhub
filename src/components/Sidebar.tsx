@@ -93,6 +93,7 @@ const navItems = {
     { href: '/student/sessions', label: 'Video Lessons', icon: BookOpen },
     { href: '/student/lessons', label: 'Lessons', icon: FileText },
     { href: '/student/homework', label: 'Homework', icon: Clipboard },
+    { href: '/student/tests', label: 'Tests', icon: TestTube2 },
     { href: '/student/quizzes', label: 'Quizzes', icon: Award },
     { href: '/student/results', label: 'Results', icon: BarChart3 },
     { href: '/student/attendance', label: 'Attendance', icon: UserCheck },
