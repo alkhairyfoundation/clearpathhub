@@ -287,16 +287,40 @@ export default function TeacherTestsPage() {
       const attempts = attemptsRes.attempts || [];
       setAnalysisAttempts(attempts);
 
-      const analysis = questions.map((q: any) => {
+      const gradeQ = (q: any, answer: any): boolean => {
+        if (answer === undefined || answer === null) return false;
+        switch (q.question_type) {
+          case 'multiple_choice':
+          case 'true_false':
+            return answer === q.correct_answer;
+          case 'fill_blank': {
+            const correct = q.options?.[q.correct_answer];
+            if (!correct) return false;
+            return answer.toString().toLowerCase().trim() === correct.toString().toLowerCase().trim();
+          }
+          case 'multiple_selection': {
+            const a = Array.isArray(answer) ? [...answer].sort() : [];
+            const c = Array.isArray(q.correct_answer) ? [...q.correct_answer].sort() : [];
+            return JSON.stringify(a) === JSON.stringify(c);
+          }
+          case 'short_answer':
+            return false;
+          default:
+            return answer === q.correct_answer;
+        }
+      };
+
+      const analysis = questions.map((q: any, i: number) => {
         let correct = 0, total = 0;
         const studentResults: any[] = [];
         attempts.forEach((a: any) => {
           const answers = typeof a.answers === 'string' ? JSON.parse(a.answers) : (a.answers || {});
-          const studentAnswer = answers[q.id];
+          const studentAnswer = answers[i];
           if (studentAnswer !== undefined) {
             total++;
-            if (Number(studentAnswer) === q.correct_answer) correct++;
-            studentResults.push({ student: a.student, answer: studentAnswer, correct: Number(studentAnswer) === q.correct_answer });
+            const isCorrect = gradeQ(q, studentAnswer);
+            if (isCorrect) correct++;
+            studentResults.push({ student: a.student, answer: studentAnswer, correct: isCorrect });
           }
         });
         return { ...q, correct, total, percentage: total > 0 ? Math.round((correct / total) * 100) : 0, studentResults };

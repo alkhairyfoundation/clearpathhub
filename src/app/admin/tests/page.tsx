@@ -275,17 +275,41 @@ export default function AdminTestsPage() {
       const attempts = attemptsRes.attempts || [];
       setAnalysisAttempts(attempts);
 
+      const gradeQ = (q: any, answer: any): boolean => {
+        if (answer === undefined || answer === null) return false;
+        switch (q.question_type) {
+          case 'multiple_choice':
+          case 'true_false':
+            return answer === q.correct_answer;
+          case 'fill_blank': {
+            const correct = q.options?.[q.correct_answer];
+            if (!correct) return false;
+            return answer.toString().toLowerCase().trim() === correct.toString().toLowerCase().trim();
+          }
+          case 'multiple_selection': {
+            const a = Array.isArray(answer) ? [...answer].sort() : [];
+            const c = Array.isArray(q.correct_answer) ? [...q.correct_answer].sort() : [];
+            return JSON.stringify(a) === JSON.stringify(c);
+          }
+          case 'short_answer':
+            return false;
+          default:
+            return answer === q.correct_answer;
+        }
+      };
+
       // Per-question analysis
-      const analysis = questions.map((q: any) => {
+      const analysis = questions.map((q: any, i: number) => {
         let correct = 0, total = 0;
         const studentResults: any[] = [];
         attempts.forEach((a: any) => {
           const answers = typeof a.answers === 'string' ? JSON.parse(a.answers) : (a.answers || {});
-          const studentAnswer = answers[q.id];
+          const studentAnswer = answers[i];
           if (studentAnswer !== undefined) {
             total++;
-            if (Number(studentAnswer) === q.correct_answer) correct++;
-            studentResults.push({ student: a.student, answer: studentAnswer, correct: Number(studentAnswer) === q.correct_answer });
+            const isCorrect = gradeQ(q, studentAnswer);
+            if (isCorrect) correct++;
+            studentResults.push({ student: a.student, answer: studentAnswer, correct: isCorrect });
           }
         });
         return { ...q, correct, total, percentage: total > 0 ? Math.round((correct / total) * 100) : 0, studentResults };
@@ -620,6 +644,7 @@ export default function AdminTestsPage() {
                               <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Passed</th>
                               <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Date</th>
                               <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Time</th>
+                              <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Report</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -629,7 +654,15 @@ export default function AdminTestsPage() {
                                 <td className={`py-2 px-3 text-center font-semibold ${a.score >= (analysisTest.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{a.score}%</td>
                                 <td className="py-2 px-3 text-center">{a.passed ? <Check size={16} className="text-green-500 inline" /> : <X size={16} className="text-red-500 inline" />}</td>
                                 <td className="py-2 px-3 text-center text-slate-500 hidden md:table-cell">{new Date(a.created_at).toLocaleDateString()}</td>
-                                <td className="py-2 px-3 text-center text-slate-500 hidden md:table-cell">{a.time_taken ? `${a.time_taken}m` : '—'}</td>
+                                <td className="py-2 px-3 text-center text-slate-500 hidden md:table-cell">{a.time_taken ? `${Math.floor(a.time_taken / 60)}m ${a.time_taken % 60}s` : '—'}</td>
+                                <td className="py-2 px-3 text-center">
+                                  <button
+                                    onClick={() => window.open(`/student/tests/report/${a.id}`, '_blank')}
+                                    className="text-primary-600 hover:text-primary-700 text-xs font-semibold underline"
+                                  >
+                                    View
+                                  </button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
