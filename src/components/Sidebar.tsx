@@ -114,6 +114,7 @@ const navItems = {
   parent: [
     { href: '/parent', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/parent/children', label: 'My Children', icon: Users },
+    { href: '/parent/tests', label: 'Test Reports', icon: FileText },
     { href: '/parent/ccr', label: 'Child Review', icon: ClipboardList },
     { href: '/parent/ccr/report', label: 'CCR Reports', icon: BarChart3 },
     { href: '/parent/progress', label: 'Analytics', icon: BarChart3 },

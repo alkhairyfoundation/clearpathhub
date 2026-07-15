@@ -74,9 +74,14 @@ export default function StudentTestsPage() {
                   {attempt ? (
                     <div className="flex items-center justify-between pt-3 border-t">
                       <span className="text-sm font-bold">{attempt.score}%</span>
-                      <Link href={`/student/tests/${test.id}`} className="btn-outline text-sm py-1.5 px-3 flex items-center gap-1">
-                        Retry <ArrowRight size={14} />
-                      </Link>
+                      <div className="flex gap-2">
+                        <Link href={`/student/tests/report/${attempt.id}`} className="btn-ghost text-sm py-1.5 px-3 flex items-center gap-1">
+                          Report
+                        </Link>
+                        <Link href={`/student/tests/${test.id}`} className="btn-outline text-sm py-1.5 px-3 flex items-center gap-1">
+                          Retry <ArrowRight size={14} />
+                        </Link>
+                      </div>
                     </div>
                   ) : (
                     <Link href={`/student/tests/${test.id}`} className="btn-primary w-full flex items-center justify-center gap-2 text-sm">

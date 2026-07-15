@@ -622,6 +622,7 @@ export default function TeacherTestsPage() {
                                 <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Score</th>
                                 <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Passed</th>
                                 <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Date</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Report</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -631,6 +632,14 @@ export default function TeacherTestsPage() {
                                   <td className={`py-2 px-3 text-center font-semibold ${a.score >= (analysisTest.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{a.score}%</td>
                                   <td className="py-2 px-3 text-center">{a.passed ? <Check size={16} className="text-green-500 inline" /> : <X size={16} className="text-red-500 inline" />}</td>
                                   <td className="py-2 px-3 text-center text-slate-500 hidden md:table-cell">{new Date(a.created_at).toLocaleDateString()}</td>
+                                  <td className="py-2 px-3 text-center">
+                                    <button
+                                      onClick={() => window.open(`/student/tests/report/${a.id}`, '_blank')}
+                                      className="text-primary-600 hover:text-primary-700 text-xs font-semibold underline"
+                                    >
+                                      View
+                                    </button>
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
