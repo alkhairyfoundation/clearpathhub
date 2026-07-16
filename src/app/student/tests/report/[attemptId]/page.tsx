@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -13,6 +14,7 @@ import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell
 } from 'recharts';
+import { formatDate, formatDateTime } from '@/lib/date-utils';
 
 const COLORS = ['#b3922f', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
@@ -22,6 +24,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [schoolSettings, setSchoolSettings] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -32,10 +35,14 @@ export default function TestReportPage({ params }: { params: { attemptId: string
 
   async function fetchReport() {
     try {
-      const res = await fetch(`/api/tests/report/${params.attemptId}`);
+      const [res, settingsRes] = await Promise.all([
+        fetch(`/api/tests/report/${params.attemptId}`),
+        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+      ]);
       const result = await res.json();
       if (!result.success) throw new Error(result.error);
       setData(result.data);
+      setSchoolSettings(settingsRes.data);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -90,15 +97,22 @@ export default function TestReportPage({ params }: { params: { attemptId: string
       let y = 15;
       let page = 1;
 
+      const schoolName = schoolSettings?.school_name || 'ClearPath Edu Hub';
       const pdfHeader = () => {
-        doc.setFontSize(18);
-        doc.setTextColor(179, 146, 47);
-        doc.text('Test Report', 15, y);
-        y += 8;
+        doc.setFillColor(30, 58, 95);
+        doc.rect(0, 0, pageW, 38, 'F');
+        doc.setFillColor(179, 146, 47);
+        doc.rect(0, 36, pageW, 2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text(schoolName, pageW / 2, 15, { align: 'center' });
         doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 15, y);
-        y += 6;
+        doc.setFont('helvetica', 'normal');
+        doc.text('Test Report', pageW / 2, 23, { align: 'center' });
+        doc.setFontSize(7);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageW / 2, 31, { align: 'center' });
+        y = 52;
       };
       const checkPage = () => {
         if (y > 265) { doc.addPage(); page++; y = 15; pdfHeader(); }
@@ -238,6 +252,16 @@ export default function TestReportPage({ params }: { params: { attemptId: string
         doc.setTextColor(0, 0, 0);
         data.insights.weakTopics.forEach((t: string) => { checkPage(); doc.text(`  • ${t}`, 15, y); y += 5; });
       }
+
+      // Footer
+      const pageH = doc.internal.pageSize.getHeight();
+      doc.setFillColor(30, 58, 95);
+      doc.rect(0, pageH - 12, pageW, 12, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'normal');
+      doc.text(schoolName + ' — Official Document', pageW / 2, pageH - 6, { align: 'center' });
+      doc.text('This report is system-generated and does not require a signature.', pageW / 2, pageH - 2.5, { align: 'center' });
 
       doc.save(`Test_Report_${data.test.subject_code || 'test'}_${profile?.id?.substring(0, 8)}.pdf`);
     } catch (pdfErr: any) {
@@ -607,7 +631,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
                         {evt.event_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                       </p>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        {new Date(evt.created_at).toLocaleString()}
+                        {formatDateTime(evt.created_at)}
                         {evt.event_data?.count ? ` · Count: ${evt.event_data.count}` : ''}
                         {evt.event_data?.key ? ` · Key: ${evt.event_data.key}` : ''}
                       </p>

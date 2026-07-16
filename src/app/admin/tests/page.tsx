@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Plus, Edit, Trash2, X, FileText, BarChart3, Check, Loader2, Search, Users, Clock, Eye, Send, Download, Hash, Copy, HelpCircle } from 'lucide-react';
+import { formatDate } from '@/lib/date-utils';
 
 export default function AdminTestsPage() {
   const { profile } = useAuth();
@@ -402,7 +403,7 @@ export default function AdminTestsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${test.is_published ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{test.is_published ? 'Published' : 'Draft'}</span>
-                  {test.exam_date && <span className="text-xs text-slate-500 flex items-center gap-1"><Clock size={12} />{new Date(test.exam_date).toLocaleDateString()}</span>}
+                  {test.exam_date && <span className="text-xs text-slate-500 flex items-center gap-1"><Clock size={12} />{formatDate(test.exam_date)}</span>}
                   <button onClick={() => togglePublish(test)} className="p-1.5 hover:bg-green-50 rounded-lg text-green-600" title={test.is_published ? 'Unpublish' : 'Publish'}><Send size={15} /></button>
                   <button onClick={() => { setSelectedTest(test); openQuestionModal(test); }} className="p-1.5 hover:bg-amber-50 rounded-lg" title="Manage Questions"><HelpCircle size={15} className="text-amber-600" /></button>
                   <button onClick={() => openAnalysis(test)} className="p-1.5 hover:bg-purple-50 rounded-lg" title="View Analysis"><BarChart3 size={15} className="text-purple-600" /></button>
@@ -421,7 +422,7 @@ export default function AdminTestsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Student</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Test</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Score</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Date</th></tr></thead>
-              <tbody className="divide-y divide-slate-100">{attempts.slice(0, 10).map(a => (<tr key={a.id} className="hover:bg-slate-50"><td className="py-3 px-4 font-medium text-slate-900">{a.student?.first_name} {a.student?.last_name}</td><td className="py-3 px-4 text-sm text-slate-600 hidden sm:table-cell">{a.test?.title}</td><td className="py-3 px-4"><span className={`font-semibold ${a.score >= 50 ? 'text-green-600' : 'text-red-600'}`}>{a.score}%</span></td><td className="py-3 px-4 text-sm text-slate-500 hidden md:table-cell">{new Date(a.created_at).toLocaleDateString()}</td></tr>))}</tbody>
+              <tbody className="divide-y divide-slate-100">{attempts.slice(0, 10).map(a => (<tr key={a.id} className="hover:bg-slate-50"><td className="py-3 px-4 font-medium text-slate-900">{a.student?.first_name} {a.student?.last_name}</td><td className="py-3 px-4 text-sm text-slate-600 hidden sm:table-cell">{a.test?.title}</td><td className="py-3 px-4"><span className={`font-semibold ${a.score >= 50 ? 'text-green-600' : 'text-red-600'}`}>{a.score}%</span></td><td className="py-3 px-4 text-sm text-slate-500 hidden md:table-cell">{formatDate(a.created_at)}</td></tr>))}</tbody>
             </table>
           </div>
         </div>
@@ -673,7 +674,7 @@ export default function AdminTestsPage() {
                                 <td className="py-2 px-3 font-medium text-slate-900">{a.student?.first_name} {a.student?.last_name}</td>
                                 <td className={`py-2 px-3 text-center font-semibold ${a.score >= (analysisTest.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{a.score}%</td>
                                 <td className="py-2 px-3 text-center">{a.passed ? <Check size={16} className="text-green-500 inline" /> : <X size={16} className="text-red-500 inline" />}</td>
-                                <td className="py-2 px-3 text-center text-slate-500 hidden md:table-cell">{new Date(a.created_at).toLocaleDateString()}</td>
+                                <td className="py-2 px-3 text-center text-slate-500 hidden md:table-cell">{formatDate(a.created_at)}</td>
                                 <td className="py-2 px-3 text-center text-slate-500 hidden md:table-cell">{a.time_taken ? `${Math.floor(a.time_taken / 60)}m ${a.time_taken % 60}s` : '—'}</td>
                                 <td className="py-2 px-3 text-center">
                                   <button

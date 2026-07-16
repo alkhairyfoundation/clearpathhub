@@ -6,9 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { supabase } from '@/lib/supabase';
-import { BarChart3, Loader2, AlertCircle, TrendingUp, CheckCircle, ArrowLeft } from 'lucide-react';
+import { BarChart3, Loader2, AlertCircle, TrendingUp, CheckCircle, ArrowLeft, Download } from 'lucide-react';
 import Link from 'next/link';
 import type { SgiScore } from '@/types';
+import { generateCcrPdf } from '@/lib/ccr-pdf';
 
 function ParentCcrReportContent() {
   const { profile } = useAuth();
@@ -18,6 +19,7 @@ function ParentCcrReportContent() {
   const [report, setReport] = useState<any>(null);
   const [sgi, setSgi] = useState<SgiScore | null>(null);
   const [child, setChild] = useState<any>(null);
+  const [schoolSettings, setSchoolSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -36,11 +38,15 @@ function ParentCcrReportContent() {
         .single();
       if (c) setChild(c);
 
-      const res = await fetch(`/api/ccr/report?student_id=${childId}`);
+      const [res, settingsRes] = await Promise.all([
+        fetch(`/api/ccr/report?student_id=${childId}`),
+        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+      ]);
       const result = await res.json();
       if (!result.success) throw new Error(result.error);
       setReport(result.data);
       setSgi(result.data.sgi);
+      setSchoolSettings(settingsRes.data);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -88,9 +94,28 @@ function ParentCcrReportContent() {
   return (
     <DashboardLayout
       title={`CCR Report: ${child?.profile?.first_name || ''} ${child?.profile?.last_name || ''}`}
-      subtitle={`Student Growth Index: ${sgi.overall}/100`}><Link href="/parent/ccr" className="text-sm text-primary-600 hover:underline flex items-center gap-1 mb-4">
-        <ArrowLeft className="w-4 h-4" /> Back
-      </Link>
+      subtitle={`Student Growth Index: ${sgi.overall}/100`}><div className="flex items-center justify-between mb-4">
+        <Link href="/parent/ccr" className="text-sm text-primary-600 hover:underline flex items-center gap-1">
+          <ArrowLeft className="w-4 h-4" /> Back
+        </Link>
+        <button
+          onClick={async () => {
+            const pdf = await generateCcrPdf({
+              studentName: `${child?.profile?.first_name || ''} ${child?.profile?.last_name || ''}`,
+              studentId: childId || '',
+              className: child?.class?.name || '',
+              admissionNumber: '',
+              sgi,
+              timestamp: new Date().toLocaleDateString(),
+              schoolName: schoolSettings?.school_name,
+            });
+            pdf.save(`CCR_Report_${childId?.substring(0, 8)}.pdf`);
+          }}
+          className="btn-outline flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" /> Download PDF Report
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">

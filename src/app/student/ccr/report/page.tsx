@@ -14,6 +14,7 @@ export default function StudentCcrReport() {
   const router = useRouter();
   const [report, setReport] = useState<any>(null);
   const [sgi, setSgi] = useState<SgiScore | null>(null);
+  const [schoolSettings, setSchoolSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -26,11 +27,15 @@ export default function StudentCcrReport() {
 
   async function fetchReport() {
     try {
-      const res = await fetch(`/api/ccr/report?student_id=${profile?.id}`);
+      const [res, settingsRes] = await Promise.all([
+        fetch(`/api/ccr/report?student_id=${profile?.id}`),
+        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+      ]);
       const result = await res.json();
       if (!result.success) throw new Error(result.error);
       setReport(result.data);
       setSgi(result.data.sgi);
+      setSchoolSettings(settingsRes.data);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -76,6 +81,7 @@ export default function StudentCcrReport() {
               admissionNumber: report?.student?.admission_number || '',
               sgi,
               timestamp: new Date().toLocaleDateString(),
+              schoolName: schoolSettings?.school_name,
             });
             pdf.save(`CCR_Report_${profile?.id?.substring(0, 8)}.pdf`);
           }}

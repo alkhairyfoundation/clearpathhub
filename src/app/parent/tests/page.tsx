@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import { Loader2, FileText, Check, X, ExternalLink, ChevronRight } from 'lucide-react';
+import { formatDate } from '@/lib/date-utils';
 
 export default function ParentTestsPage() {
   const { profile } = useAuth();
@@ -105,7 +106,7 @@ export default function ParentTestsPage() {
                             <td className="py-3 px-4 text-center">
                               {a.passed ? <Check size={16} className="text-green-500 inline" /> : <X size={16} className="text-red-500 inline" />}
                             </td>
-                            <td className="py-3 px-4 text-center text-slate-500 dark:text-slate-400">{new Date(a.created_at).toLocaleDateString()}</td>
+                            <td className="py-3 px-4 text-center text-slate-500 dark:text-slate-400">{formatDate(a.created_at)}</td>
                             <td className="py-3 px-4 text-center">
                               <Link
                                 href={`/student/tests/report/${a.id}`}

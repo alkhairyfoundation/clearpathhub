@@ -15,6 +15,7 @@ function WeeklyReportContent() {
   const childId = searchParams.get('child');
   const [child, setChild] = useState<any>(null);
   const [report, setReport] = useState<any>(null);
+  const [schoolSettings, setSchoolSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -44,6 +45,9 @@ function WeeklyReportContent() {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'list_attempts', student_id: selectedChild.profile_id, date_from: weekStart.toISOString(), date_to: weekEnd.toISOString() })
           }).then(r => r.json());
+          const { data: settingsData } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
+          setSchoolSettings(settingsData);
+
           const [attendanceRes, resultsRes, homeworkRes, behaviorRes, quizRes] = await Promise.all([
             supabase.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', weekStart.toISOString().split('T')[0]).lt('date', weekEnd.toISOString().split('T')[0]),
             supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
@@ -80,38 +84,63 @@ function WeeklyReportContent() {
 
   async function downloadPDF() {
     if (!report || !child) return;
+    const schoolName = schoolSettings?.school_name || 'ClearPath Edu Hub';
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     doc.setFillColor(30, 58, 95);
-    doc.rect(0, 0, pageWidth, 35, 'F');
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setFillColor(179, 146, 47);
+    doc.rect(0, 38, pageWidth, 2, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
-    doc.text('Weekly Progress Report', pageWidth / 2, 15, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`${child.profile?.first_name} ${child.profile?.last_name} - ${child.class?.name}`, pageWidth / 2, 25, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.text(schoolName, pageWidth / 2, 15, { align: 'center' });
     doc.setFontSize(10);
-    doc.text(`Week: ${report.weekStart} to ${report.weekEnd}`, pageWidth / 2, 32, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('Weekly Progress Report', pageWidth / 2, 23, { align: 'center' });
+    doc.setFontSize(7);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 31, { align: 'center' });
 
-    doc.setTextColor(30, 58, 95);
-    doc.setFontSize(14);
-    doc.text('Summary', 14, 45);
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Student: ${child.profile?.first_name} ${child.profile?.last_name} - ${child.class?.name}`, 14, 50);
+    doc.text(`Week: ${report.weekStart} to ${report.weekEnd}`, 14, 57);
+
+    doc.setFillColor(30, 58, 95);
+    doc.rect(14, 64, pageWidth - 28, 7, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SUMMARY', 18, 69);
+
     doc.setFontSize(11);
     doc.setTextColor(100, 100, 100);
-    doc.text(`Attendance: ${report.attendance.rate}% (${report.attendance.present}/${report.attendance.total} days)`, 14, 55);
-    doc.text(`Average Score: ${report.avgScore}%`, 14, 62);
-    doc.text(`Homework Submitted: ${report.homework.length}`, 14, 69);
-    doc.text(`Positive Notes: ${report.positiveNotes}`, 14, 76);
-    doc.text(`Concerns: ${report.concerns}`, 14, 83);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Attendance: ${report.attendance.rate}% (${report.attendance.present}/${report.attendance.total} days)`, 14, 78);
+    doc.text(`Average Score: ${report.avgScore}%`, 14, 85);
+    doc.text(`Homework Submitted: ${report.homework.length}`, 14, 92);
+    doc.text(`Positive Notes: ${report.positiveNotes}`, 14, 99);
+    doc.text(`Concerns: ${report.concerns}`, 14, 106);
 
     if (report.results.length > 0) {
       (doc as any).autoTable({
-        startY: 95,
+        startY: 114,
         head: [['Subject', 'Score', 'Date']],
         body: report.results.map((r: any) => [r.subject?.name || 'N/A', `${r.score}%`, new Date(r.created_at).toLocaleDateString()]),
         theme: 'striped',
         headStyles: { fillColor: [30, 58, 95] },
+        margin: { left: 14, right: 14 },
       });
     }
+
+    const ph = doc.internal.pageSize.getHeight();
+    doc.setFillColor(30, 58, 95);
+    doc.rect(0, ph - 12, pageWidth, 12, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text(schoolName + ' — Official Document', pageWidth / 2, ph - 6, { align: 'center' });
+    doc.text('This report is system-generated and does not require a signature.', pageWidth / 2, ph - 2.5, { align: 'center' });
 
     doc.save(`weekly-report-${child.profile?.first_name}-${report.weekStart}.pdf`);
   }
