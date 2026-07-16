@@ -57,6 +57,15 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
 
     const test = testResult.rows[0];
 
+    const existingAttempt = await pool.query(
+      'SELECT id FROM test_attempts WHERE test_id = $1 AND student_id = $2 AND completed_at IS NOT NULL LIMIT 1',
+      [testId, student_id]
+    );
+    if (existingAttempt.rows.length > 0) {
+      await pool.end();
+      return NextResponse.json({ error: 'You have already taken this test. Retakes are not allowed.', attempt: existingAttempt.rows[0] }, { status: 409 });
+    }
+
     const questionsResult = await pool.query(
       'SELECT * FROM test_questions WHERE test_id = $1 ORDER BY order_index',
       [testId]

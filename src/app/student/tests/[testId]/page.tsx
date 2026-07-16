@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Clock, AlertTriangle, Check, X, ChevronRight, ChevronLeft, Flag, Eye, EyeOff, Loader2, ImageIcon } from 'lucide-react';
+import { Clock, AlertTriangle, Check, X, ChevronRight, ChevronLeft, Flag, Eye, EyeOff, Loader2, ImageIcon } from 'lucide-react';
 import Calculator from '@/components/Calculator';
 
 function gradeQuestion(question: any, answer: any): boolean {
@@ -60,6 +60,17 @@ export default function StudentTakeTestPage() {
   }, [profile, testId]);
 
   const submittingRef = useRef(false);
+
+  useEffect(() => {
+    if (!started) return;
+    window.history.pushState(null, '', window.location.href);
+    function handlePopState() {
+      window.history.pushState(null, '', window.location.href);
+      setSecurityEvents(events => [...events, { type: 'back_navigation', time: new Date().toISOString() }]);
+    }
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [started]);
 
   useEffect(() => {
     if (!started || timeLeft <= 0 || submitted || submittingRef.current) return;
@@ -120,6 +131,23 @@ export default function StudentTakeTestPage() {
 
   useEffect(() => {
     if (!started || submitted) return;
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = '';
+      if (!submittingRef.current) {
+        submittingRef.current = true;
+        navigator.sendBeacon(
+          `/api/student-tests/${testId}/submit`,
+          JSON.stringify({ student_id: profile?.id, answers, tab_switches: tabSwitches, fullscreen_exits: fullscreenExits, time_taken: (test?.duration_minutes || 30) * 60 - timeLeft, started_at: new Date(Date.now() - ((test?.duration_minutes || 30) * 60 - timeLeft) * 1000).toISOString(), security_events: [...securityEvents, { type: 'page_reload', time: new Date().toISOString() }] })
+        );
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [started, submitted, test, answers, tabSwitches, fullscreenExits, timeLeft, securityEvents, testId, profile]);
+
+  useEffect(() => {
+    if (!started || submitted) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'F11') {
         e.preventDefault();
@@ -155,9 +183,19 @@ export default function StudentTakeTestPage() {
 
   async function fetchTest() {
     try {
-      const res = await fetch(`/api/student-tests/${testId}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Test not found');
+      const [testRes, attemptRes] = await Promise.all([
+        fetch(`/api/student-tests/${testId}`),
+        fetch(`/api/student-tests/${testId}/attempt?student_id=${profile?.id}`),
+      ]);
+      const data = await testRes.json();
+      if (!testRes.ok) throw new Error(data.error || 'Test not found');
+
+      const attemptData = await attemptRes.json();
+      if (attemptData.attempt) {
+        router.replace(`/student/tests/report/${attemptData.attempt.id}`);
+        return;
+      }
+
       if (data.test) {
         setTest(data.test);
         setTimeLeft((data.test.duration_minutes || 30) * 60);
@@ -336,8 +374,7 @@ export default function StudentTakeTestPage() {
   return (
     <>
     <div className="space-y-4 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between">
-        <button onClick={() => { if (confirm('Leave test? Progress will be lost.')) router.push('/student'); }} className="flex items-center gap-2 text-slate-600 hover:text-slate-800"><ArrowLeft size={18} />Exit</button>
+      <div className="flex items-center justify-end">
         <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono font-bold ${timeLeft < 60 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-800'}`}><Clock size={16} />{formatTime(timeLeft)}</div>
       </div>
 
