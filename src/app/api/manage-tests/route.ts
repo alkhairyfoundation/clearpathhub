@@ -101,17 +101,17 @@ export async function POST(req: NextRequest) {
         }
 
         case 'create_question': {
-          const { test_id, question, question_type, options, correct_answer, points, order_index } = body;
+          const { test_id, question, question_type, options, correct_answer, points, order_index, subject, topic, subtopic, difficulty_level } = body;
           const result = await pool.query(
-            `INSERT INTO test_questions (test_id, question, question_type, options, correct_answer, points, order_index)
-             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-            [test_id, question, question_type || 'multiple_choice', options || null, correct_answer, points || 1, order_index || 0]
+            `INSERT INTO test_questions (test_id, question, question_type, options, correct_answer, points, order_index, subject, topic, subtopic, difficulty_level)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+            [test_id, question, question_type || 'multiple_choice', options || null, correct_answer, points || 1, order_index || 0, subject || null, topic || null, subtopic || null, difficulty_level || null]
           );
           return NextResponse.json({ question: result.rows[0] }, { status: 201 });
         }
 
         case 'update_question': {
-          const { id, question, question_type, options, correct_answer, points, order_index } = body;
+          const { id, question, question_type, options, correct_answer, points, order_index, subject, topic, subtopic, difficulty_level } = body;
           const sets: string[] = [];
           const params: any[] = [];
           let idx = 1;
@@ -121,6 +121,10 @@ export async function POST(req: NextRequest) {
           if (correct_answer !== undefined) { sets.push(`correct_answer = $${idx++}`); params.push(correct_answer); }
           if (points !== undefined) { sets.push(`points = $${idx++}`); params.push(points); }
           if (order_index !== undefined) { sets.push(`order_index = $${idx++}`); params.push(order_index); }
+          if (subject !== undefined) { sets.push(`subject = $${idx++}`); params.push(subject); }
+          if (topic !== undefined) { sets.push(`topic = $${idx++}`); params.push(topic); }
+          if (subtopic !== undefined) { sets.push(`subtopic = $${idx++}`); params.push(subtopic); }
+          if (difficulty_level !== undefined) { sets.push(`difficulty_level = $${idx++}`); params.push(difficulty_level); }
           params.push(id);
           const result = await pool.query(`UPDATE test_questions SET ${sets.join(', ')} WHERE id = $${idx} RETURNING *`, params);
           return NextResponse.json({ question: result.rows[0] });
@@ -140,15 +144,15 @@ export async function POST(req: NextRequest) {
           const existing = await pool.query('SELECT COALESCE(MAX(order_index), 0) as max_order FROM test_questions WHERE test_id = $1', [test_id]);
           let startOrder = existing.rows[0].max_order + 1;
           const values = questions.map((_: any, i: number) => {
-            const offset = i * 6;
-            return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`;
+            const offset = i * 10;
+            return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10})`;
           }).join(', ');
           const params: any[] = [];
           questions.forEach((q: any) => {
-            params.push(test_id, q.question, q.question_type || 'multiple_choice', q.options ? JSON.stringify(q.options) : null, q.correct_answer, startOrder++);
+            params.push(test_id, q.question, q.question_type || 'multiple_choice', q.options ? JSON.stringify(q.options) : null, q.correct_answer, startOrder++, q.subject || null, q.topic || null, q.subtopic || null, q.difficulty_level || null);
           });
           await pool.query(
-            `INSERT INTO test_questions (test_id, question, question_type, options, correct_answer, order_index) VALUES ${values}`,
+            `INSERT INTO test_questions (test_id, question, question_type, options, correct_answer, order_index, subject, topic, subtopic, difficulty_level) VALUES ${values}`,
             params
           );
           const result = await pool.query('SELECT * FROM test_questions WHERE test_id = $1 ORDER BY order_index', [test_id]);

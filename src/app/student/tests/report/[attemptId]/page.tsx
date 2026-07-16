@@ -81,107 +81,169 @@ export default function TestReportPage({ params }: { params: { attemptId: string
   }
 
   async function handleDownloadPdf() {
-    const { default: jsPDF } = await import('jspdf');
-    await import('jspdf-autotable');
-    if (!data) return;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageW = 210;
-    let y = 15;
+    try {
+      const { jsPDF } = await import('jspdf');
+      await import('jspdf-autotable');
+      if (!data) return;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageW = 210;
+      let y = 15;
+      let page = 1;
 
-    function header() {
-      doc.setFontSize(18);
-      doc.setTextColor(179, 146, 47);
-      doc.text('Test Report', 15, y);
-      y += 8;
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Generated: ${new Date().toLocaleDateString()}`, 15, y);
-      y += 6;
-    }
-    function footer(page: number) {
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Page ${page}`, pageW / 2, 290, { align: 'center' });
-    }
+      const pdfHeader = () => {
+        doc.setFontSize(18);
+        doc.setTextColor(179, 146, 47);
+        doc.text('Test Report', 15, y);
+        y += 8;
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 15, y);
+        y += 6;
+      };
+      const checkPage = () => {
+        if (y > 265) { doc.addPage(); page++; y = 15; pdfHeader(); }
+      };
 
-    header();
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    const studentDisplay = data.student?.name || `${profile?.first_name} ${profile?.last_name}`;
-    doc.text(`Student: ${studentDisplay}`, 15, y); y += 6;
-    doc.text(`Test: ${data.test.title}`, 15, y); y += 6;
-    doc.text(`Class: ${data.test.class_name} | Subject: ${data.test.subject_name}`, 15, y); y += 6;
-    doc.text(`Score: ${data.attempt.score}% - ${data.attempt.passed ? 'Passed' : 'Failed'}`, 15, y); y += 6;
-    if (data.attempt.time_taken) {
-      const mins = Math.floor(data.attempt.time_taken / 60);
-      const secs = data.attempt.time_taken % 60;
-      doc.text(`Time Taken: ${mins}m ${secs}s`, 15, y); y += 6;
-    }
-    y += 4;
+      pdfHeader();
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      const studentDisplay = data.student?.name || `${profile?.first_name} ${profile?.last_name}`;
+      doc.text(`Student: ${studentDisplay}`, 15, y); y += 6;
+      doc.text(`Test: ${data.test.title}`, 15, y); y += 6;
+      doc.text(`Class: ${data.test.class_name} | Subject: ${data.test.subject_name}`, 15, y); y += 6;
+      doc.text(`Score: ${data.attempt.score}% - ${data.attempt.passed ? 'Passed' : 'Failed'}`, 15, y); y += 6;
+      if (data.attempt.time_taken) {
+        const mins = Math.floor(data.attempt.time_taken / 60);
+        const secs = data.attempt.time_taken % 60;
+        doc.text(`Time Taken: ${mins}m ${secs}s`, 15, y); y += 6;
+      }
+      y += 4;
 
-    doc.setFontSize(13);
-    doc.setTextColor(179, 146, 47);
-    doc.text('Subject Performance', 15, y); y += 8;
-    doc.setFontSize(9);
-    doc.setTextColor(0, 0, 0);
-    const subjRows = data.subjectPerformance.map((s: any) => [s.name, `${s.correct}/${s.total}`, `${s.percentage}%`]);
-    (doc as any).autoTable({
-      startY: y, head: [['Subject', 'Correct/Total', 'Score']],
-      body: subjRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
-      styles: { fontSize: 9 },
-    });
-    y = (doc as any).lastAutoTable.finalY + 8;
-
-    doc.setFontSize(13);
-    doc.setTextColor(179, 146, 47);
-    doc.text('Per-Question Analysis', 15, y); y += 8;
-    const qRows = data.questions.map((q: any) => [
-      `Q${q.index}`, q.subject.substring(0, 15), q.is_correct ? '✓' : '✗',
-      `${q.points_earned}/${q.points}`
-    ]);
-    (doc as any).autoTable({
-      startY: y, head: [['#', 'Subject', 'Result', 'Points']],
-      body: qRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
-      styles: { fontSize: 8 },
-      columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 40 }, 2: { cellWidth: 15 }, 3: { cellWidth: 20 } },
-    });
-    y = (doc as any).lastAutoTable.finalY + 8;
-
-    if (data.difficultyBreakdown.length > 0) {
-      if (y > 240) { doc.addPage(); y = 15; }
+      // Subject Performance table
       doc.setFontSize(13);
       doc.setTextColor(179, 146, 47);
-      doc.text('Difficulty Breakdown', 15, y); y += 8;
-      const diffRows = data.difficultyBreakdown.map((d: any) => [d.level, `${d.correct}/${d.total}`, `${d.percentage}%`]);
+      doc.text('Subject Performance', 15, y); y += 8;
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      const subjRows = data.subjectPerformance.map((s: any) => [s.name, `${s.correct}/${s.total}`, `${s.percentage}%`]);
       (doc as any).autoTable({
-        startY: y, head: [['Level', 'Correct/Total', 'Score']],
-        body: diffRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
+        startY: y, head: [['Subject', 'Correct/Total', 'Score']],
+        body: subjRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
         styles: { fontSize: 9 },
       });
       y = (doc as any).lastAutoTable.finalY + 8;
-    }
 
-    if (data.insights.strengths.length > 0) {
-      if (y > 250) { doc.addPage(); y = 15; }
+      // Topic Breakdown per Subject
+      if (data.subjectTopicBreakdown && data.subjectTopicBreakdown.length > 0) {
+        checkPage();
+        doc.setFontSize(13);
+        doc.setTextColor(179, 146, 47);
+        doc.text('Topic Breakdown by Subject', 15, y); y += 8;
+        for (const st of data.subjectTopicBreakdown) {
+          checkPage();
+          doc.setFontSize(10);
+          doc.setTextColor(50, 50, 50);
+          doc.text(`Subject: ${st.subject}`, 15, y); y += 6;
+          doc.setFontSize(9);
+          doc.setTextColor(0, 0, 0);
+          const topicRows = st.topics.map((t: any) => [t.name, `${t.correct}/${t.total}`, `${t.percentage}%`]);
+          (doc as any).autoTable({
+            startY: y, head: [['Topic', 'Correct/Total', 'Score']],
+            body: topicRows, theme: 'grid', headStyles: { fillColor: [100, 100, 100] },
+            styles: { fontSize: 8 },
+          });
+          y = (doc as any).lastAutoTable.finalY + 6;
+        }
+        y += 4;
+      }
+
+      // Per-Question Analysis
+      checkPage();
       doc.setFontSize(13);
       doc.setTextColor(179, 146, 47);
-      doc.text('Strengths', 15, y); y += 7;
-      doc.setFontSize(10);
-      doc.setTextColor(0, 128, 0);
-      data.insights.strengths.forEach((s: string) => { doc.text(`  ✓ ${s}`, 15, y); y += 5; });
-      y += 3;
-    }
-    if (data.insights.needsImprovement.length > 0) {
-      if (y > 250) { doc.addPage(); y = 15; }
+      doc.text('Per-Question Analysis', 15, y); y += 8;
+      const qRows = data.questions.map((q: any) => [
+        `Q${q.index}`, q.subject.substring(0, 12), q.topic.substring(0, 12), q.is_correct ? '✓' : '✗',
+        `${q.points_earned}/${q.points}`
+      ]);
+      (doc as any).autoTable({
+        startY: y, head: [['#', 'Subject', 'Topic', 'Result', 'Points']],
+        body: qRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
+        styles: { fontSize: 7 },
+        columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: 30 }, 2: { cellWidth: 30 }, 3: { cellWidth: 12 }, 4: { cellWidth: 15 } },
+      });
+      y = (doc as any).lastAutoTable.finalY + 8;
+
+      // Difficulty Breakdown
+      if (data.difficultyBreakdown.length > 0) {
+        checkPage();
+        doc.setFontSize(13);
+        doc.setTextColor(179, 146, 47);
+        doc.text('Difficulty Breakdown', 15, y); y += 8;
+        const diffRows = data.difficultyBreakdown.map((d: any) => [d.level, `${d.correct}/${d.total}`, `${d.percentage}%`]);
+        (doc as any).autoTable({
+          startY: y, head: [['Level', 'Correct/Total', 'Score']],
+          body: diffRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
+          styles: { fontSize: 9 },
+        });
+        y = (doc as any).lastAutoTable.finalY + 8;
+      }
+
+      // Weak Topics
+      if (data.topicPerformance && data.topicPerformance.length > 0) {
+        checkPage();
+        doc.setFontSize(13);
+        doc.setTextColor(179, 146, 47);
+        doc.text('All Topics Performance', 15, y); y += 8;
+        const topRows = data.topicPerformance.map((t: any) => [t.name, `${t.correct}/${t.total}`, `${t.percentage}%`]);
+        (doc as any).autoTable({
+          startY: y, head: [['Topic', 'Correct/Total', 'Score']],
+          body: topRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
+          styles: { fontSize: 9 },
+        });
+        y = (doc as any).lastAutoTable.finalY + 8;
+      }
+
+      // Insights
+      checkPage();
       doc.setFontSize(13);
       doc.setTextColor(179, 146, 47);
-      doc.text('Needs Improvement', 15, y); y += 7;
-      doc.setFontSize(10);
-      doc.setTextColor(200, 0, 0);
-      data.insights.needsImprovement.forEach((s: string) => { doc.text(`  ✗ ${s}`, 15, y); y += 5; });
-    }
+      doc.text('Performance Insights', 15, y); y += 8;
 
-    doc.save(`Test_Report_${data.test.subject_code || 'test'}_${profile?.id?.substring(0, 8)}.pdf`);
+      doc.setFontSize(10);
+      if (data.insights.strengths.length > 0) {
+        doc.setTextColor(0, 128, 0);
+        doc.text('Strengths:', 15, y); y += 5;
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
+        data.insights.strengths.forEach((s: string) => { checkPage(); doc.text(`  ✓ ${s}`, 15, y); y += 5; });
+        y += 3;
+      }
+      if (data.insights.needsImprovement.length > 0) {
+        checkPage();
+        doc.setFontSize(10);
+        doc.setTextColor(200, 0, 0);
+        doc.text('Needs Improvement:', 15, y); y += 5;
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
+        data.insights.needsImprovement.forEach((s: string) => { checkPage(); doc.text(`  ✗ ${s}`, 15, y); y += 5; });
+        y += 3;
+      }
+      if (data.insights.weakTopics.length > 0) {
+        checkPage();
+        doc.setFontSize(10);
+        doc.setTextColor(180, 120, 0);
+        doc.text('Topics to Focus On:', 15, y); y += 5;
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
+        data.insights.weakTopics.forEach((t: string) => { checkPage(); doc.text(`  • ${t}`, 15, y); y += 5; });
+      }
+
+      doc.save(`Test_Report_${data.test.subject_code || 'test'}_${profile?.id?.substring(0, 8)}.pdf`);
+    } catch (pdfErr: any) {
+      console.error('PDF generation error:', pdfErr);
+      alert('Failed to generate PDF: ' + pdfErr.message);
+    }
   }
 
   if (loading) {
@@ -202,7 +264,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
 
   if (!data) return null;
 
-  const { attempt, test, questions, subjectPerformance, difficultyBreakdown, topicPerformance, insights } = data;
+  const { attempt, test, questions, subjectPerformance, difficultyBreakdown, topicPerformance, subjectTopicBreakdown, insights } = data;
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'subjects', label: 'Subjects' },
@@ -210,6 +272,9 @@ export default function TestReportPage({ params }: { params: { attemptId: string
     { id: 'questions', label: 'Questions' },
     { id: 'insights', label: 'Insights' },
   ];
+  if (subjectTopicBreakdown && subjectTopicBreakdown.length > 0) {
+    tabs.splice(2, 0, { id: 'topic-breakdown', label: 'Topics by Subject' });
+  }
 
   return (
     <DashboardLayout title={test.title} subtitle={`Report • ${test.subject_name} • ${test.class_name}`}>
@@ -431,6 +496,36 @@ export default function TestReportPage({ params }: { params: { attemptId: string
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'topic-breakdown' && subjectTopicBreakdown && (
+          <div className="space-y-6">
+            {subjectTopicBreakdown.map((st: any) => (
+              <div key={st.subject} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-1">{st.subject}</h3>
+                <p className="text-xs text-slate-500 mb-4">Topic-level breakdown</p>
+                <div className="space-y-3">
+                  {st.topics.map((t: any) => (
+                    <div key={t.name}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-slate-700 dark:text-slate-300">{t.name}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{t.correct}/{t.total} ({t.percentage}%)</span>
+                      </div>
+                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                        <div
+                          className={`h-2.5 rounded-full ${t.percentage >= 70 ? 'bg-green-500' : t.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                          style={{ width: `${t.percentage}%` }}
+                        />
+                      </div>
+                      {t.percentage < 50 && (
+                        <p className="text-xs text-red-500 mt-0.5">Needs revision — focus on this topic</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

@@ -37,7 +37,7 @@ export default function AdminTestsPage() {
   const [testQuestions, setTestQuestions] = useState<any[]>([]);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
-  const [questionForm, setQuestionForm] = useState({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
+  const [questionForm, setQuestionForm] = useState({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: '' });
   const [savingQuestion, setSavingQuestion] = useState(false);
 
   // Question bank selection
@@ -139,7 +139,7 @@ export default function AdminTestsPage() {
   async function openQuestionModal(test: any) {
     setSelectedTest(test);
     setEditingQuestion(null);
-    setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
+    setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: '' });
     const res = await api('list_questions', { test_id: test.id });
     setTestQuestions(res.questions || []);
     setShowQuestionModal(true);
@@ -156,7 +156,7 @@ export default function AdminTestsPage() {
     if (!selectedTest || !questionForm.question.trim()) return;
     setSavingQuestion(true);
     try {
-      const payload = { test_id: selectedTest.id, question: questionForm.question, options: questionForm.options, correct_answer: questionForm.correct_answer, points: questionForm.points || 1, question_type: questionForm.question_type, order_index: testQuestions.length };
+      const payload = { test_id: selectedTest.id, question: questionForm.question, options: questionForm.options, correct_answer: questionForm.correct_answer, points: questionForm.points || 1, question_type: questionForm.question_type, order_index: testQuestions.length, subject: questionForm.subject || selectedTest.subject?.name || null, topic: questionForm.topic || null, subtopic: questionForm.subtopic || null, difficulty_level: questionForm.difficulty_level || null };
       if (editingQuestion) {
         await api('update_question', { id: editingQuestion.id, ...payload });
       } else {
@@ -164,7 +164,7 @@ export default function AdminTestsPage() {
       }
       const res = await api('list_questions', { test_id: selectedTest.id });
       if (res.questions) setTestQuestions(res.questions);
-      setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
+      setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: '' });
       setEditingQuestion(null);
     } catch (err: any) {
       setError(err.message || 'Failed to save question');
@@ -175,7 +175,7 @@ export default function AdminTestsPage() {
 
   function editTestQuestion(q: any) {
     setEditingQuestion(q);
-    setQuestionForm({ question: q.question, options: q.options || ['', '', '', ''], correct_answer: q.correct_answer, points: q.points, question_type: q.question_type, subject: q.subject || '' });
+    setQuestionForm({ question: q.question, options: q.options || ['', '', '', ''], correct_answer: q.correct_answer, points: q.points, question_type: q.question_type, subject: q.subject || '', topic: q.topic || '', subtopic: q.subtopic || '', difficulty_level: q.difficulty_level || '' });
   }
 
   async function handleDeleteQuestion(id: string) {
@@ -221,6 +221,7 @@ export default function AdminTestsPage() {
         const questions = selected.map((q: any) => ({
           test_id: selectedTest.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
           points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', order_index: testQuestions.length,
+          subject: q.subject || null, topic: q.topic || null, subtopic: q.subtopic || null, difficulty_level: q.difficulty_level || null,
         }));
         const res = await api('bulk_insert_questions', { test_id: selectedTest.id, questions });
         if (res.questions) setTestQuestions(res.questions);
@@ -248,6 +249,7 @@ export default function AdminTestsPage() {
         const questions = shuffled.map((q: any) => ({
           test_id: test.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
           points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', order_index: 0,
+          subject: q.subject || null, topic: q.topic || null, subtopic: q.subtopic || null, difficulty_level: q.difficulty_level || null,
         }));
         const res = await api('bulk_insert_questions', { test_id: test.id, questions });
         if (res.questions) setTestQuestions(res.questions);
@@ -489,7 +491,7 @@ export default function AdminTestsPage() {
               <div className="border-t pt-4">
                 <h4 className="text-sm font-semibold text-slate-700 mb-3">{editingQuestion ? 'Edit Question' : 'Add Question'}</h4>
                 <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-5 gap-3">
                     <div>
                       <label className="label text-xs">Type</label>
                       <select value={questionForm.question_type} onChange={(e) => resetQuestionForm(e.target.value)} className="input text-sm">
@@ -503,8 +505,22 @@ export default function AdminTestsPage() {
                       <input type="number" value={questionForm.points} onChange={(e) => setQuestionForm({ ...questionForm, points: parseInt(e.target.value) || 1 })} className="input text-sm" min={1} />
                     </div>
                     <div>
-                      <label className="label text-xs">Subject (optional)</label>
-                      <input type="text" value={questionForm.subject} onChange={(e) => setQuestionForm({ ...questionForm, subject: e.target.value })} className="input text-sm" placeholder="e.g. Mathematics" />
+                      <label className="label text-xs">Subject</label>
+                      <input type="text" value={questionForm.subject} onChange={(e) => setQuestionForm({ ...questionForm, subject: e.target.value })} className="input text-sm" placeholder="Auto" />
+                    </div>
+                    <div>
+                      <label className="label text-xs">Topic</label>
+                      <input type="text" value={questionForm.topic} onChange={(e) => setQuestionForm({ ...questionForm, topic: e.target.value })} className="input text-sm" placeholder="e.g. Algebra" />
+                    </div>
+                    <div>
+                      <label className="label text-xs">Difficulty</label>
+                      <select value={questionForm.difficulty_level} onChange={(e) => setQuestionForm({ ...questionForm, difficulty_level: e.target.value })} className="input text-sm">
+                        <option value="">Auto</option>
+                        <option value="EASY">Easy</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="HARD">Hard</option>
+                        <option value="VERY_HARD">Very Hard</option>
+                      </select>
                     </div>
                   </div>
                   <div>
@@ -524,7 +540,7 @@ export default function AdminTestsPage() {
                     </div>
                   )}
                   <div className="flex gap-2 pt-1">
-                    {editingQuestion && <button onClick={() => { setEditingQuestion(null); setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' }); }} className="btn-ghost text-sm">Cancel Edit</button>}
+                    {editingQuestion && <button onClick={() => { setEditingQuestion(null); setQuestionForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: '' }); }} className="btn-ghost text-sm">Cancel Edit</button>}
                     <button onClick={handleSaveQuestion} disabled={savingQuestion || !questionForm.question.trim()} className="btn-primary text-sm disabled:opacity-50">{savingQuestion ? 'Saving...' : editingQuestion ? 'Update' : 'Add Question'}</button>
                   </div>
                 </div>
@@ -556,7 +572,7 @@ export default function AdminTestsPage() {
                       <input type="checkbox" checked={selectedBankIds.has(q.id)} onChange={() => toggleBankSelect(q.id)} className="w-4 h-4 mt-0.5 text-primary-600 rounded" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-slate-900">{q.question}</p>
-                        <p className="text-xs text-slate-500">{q.subject} • {q.level} • {q.difficulty_level} • {q.question_type.replace('_', ' ')}</p>
+                        <p className="text-xs text-slate-500">{q.subject} • {q.topic || 'No Topic'} • {q.difficulty_level || 'N/A'} • {q.level}</p>
                       </div>
                     </label>
                   ))}
@@ -599,34 +615,38 @@ export default function AdminTestsPage() {
                     <div>
                       <h4 className="text-sm font-semibold text-slate-700 mb-3">Per-Question Breakdown</h4>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">#</th>
-                              <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Question</th>
-                              <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Correct</th>
-                              <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Total</th>
-                              <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">%</th>
-                              <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Bar</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {analysisData.map((q: any, i: number) => (
-                              <tr key={q.id} className="hover:bg-slate-50">
-                                <td className="py-2 px-3 text-slate-400">{i + 1}</td>
-                                <td className="py-2 px-3 font-medium text-slate-900 max-w-xs truncate">{q.question}</td>
-                                <td className="py-2 px-3 text-center font-semibold text-green-600">{q.correct}</td>
-                                <td className="py-2 px-3 text-center text-slate-600">{q.total}</td>
-                                <td className={`py-2 px-3 text-center font-semibold ${q.percentage >= 70 ? 'text-green-600' : q.percentage >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{q.percentage}%</td>
-                                <td className="py-2 px-3">
-                                  <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden mx-auto">
-                                    <div className={`h-full rounded-full ${q.percentage >= 70 ? 'bg-green-500' : q.percentage >= 40 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${Math.min(q.percentage, 100)}%` }}></div>
-                                  </div>
-                                </td>
+                          <table className="w-full text-sm">
+                            <thead className="bg-slate-50 border-b border-slate-200">
+                              <tr>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">#</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Question</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Subject</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Topic</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Correct</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Total</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">%</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Bar</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {analysisData.map((q: any, i: number) => (
+                                <tr key={q.id} className="hover:bg-slate-50">
+                                  <td className="py-2 px-3 text-slate-400">{i + 1}</td>
+                                  <td className="py-2 px-3 font-medium text-slate-900 max-w-xs truncate">{q.question}</td>
+                                  <td className="py-2 px-3 text-xs text-slate-600">{q.subject || 'N/A'}</td>
+                                  <td className="py-2 px-3 text-xs text-slate-600">{q.topic || 'N/A'}</td>
+                                  <td className="py-2 px-3 text-center font-semibold text-green-600">{q.correct}</td>
+                                  <td className="py-2 px-3 text-center text-slate-600">{q.total}</td>
+                                  <td className={`py-2 px-3 text-center font-semibold ${q.percentage >= 70 ? 'text-green-600' : q.percentage >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{q.percentage}%</td>
+                                  <td className="py-2 px-3">
+                                    <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden mx-auto">
+                                      <div className={`h-full rounded-full ${q.percentage >= 70 ? 'bg-green-500' : q.percentage >= 40 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${Math.min(q.percentage, 100)}%` }}></div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                       </div>
                     </div>
                   )}

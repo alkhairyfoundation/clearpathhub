@@ -57,7 +57,7 @@ export default function TeacherTestsPage() {
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [questionForm, setQuestionForm] = useState({
-    question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: ''
+    question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: ''
   });
 
   async function api(action: string, data: any = {}) {
@@ -177,11 +177,15 @@ export default function TeacherTestsPage() {
       points: questionForm.points || 1,
       question_type: questionForm.question_type || 'multiple_choice',
       order_index: questions.length,
+      subject: questionForm.subject || selectedTest.subject_name || null,
+      topic: questionForm.topic || null,
+      subtopic: questionForm.subtopic || null,
+      difficulty_level: questionForm.difficulty_level || null,
     };
     if (questionForm.question_image) payload.question_image = questionForm.question_image;
     const res = await api('create_question', payload);
     if (res.question) {
-      setQuestionForm({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '' });
+      setQuestionForm({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: '' });
       const refreshed = await api('list_questions', { test_id: selectedTest.id });
       if (refreshed.questions) setQuestions(refreshed.questions);
     }
@@ -233,6 +237,7 @@ export default function TeacherTestsPage() {
         const newQuestions = selected.map((q: any) => ({
           test_id: selectedTest.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
           points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', order_index: questions.length,
+          subject: q.subject || null, topic: q.topic || null, subtopic: q.subtopic || null, difficulty_level: q.difficulty_level || null,
         }));
         const res = await api('bulk_insert_questions', { test_id: selectedTest.id, questions: newQuestions });
         if (res.questions) setQuestions(res.questions);
@@ -260,6 +265,7 @@ export default function TeacherTestsPage() {
         const questions = shuffled.map((q: any) => ({
           test_id: selectedTest.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
           points: q.points ?? 1, question_type: q.question_type || 'multiple_choice', order_index: 0,
+          subject: q.subject || null, topic: q.topic || null, subtopic: q.subtopic || null, difficulty_level: q.difficulty_level || null,
         }));
         const res = await api('bulk_insert_questions', { test_id: selectedTest.id, questions });
         if (res.questions) setQuestions(res.questions);
@@ -447,11 +453,31 @@ export default function TeacherTestsPage() {
                     <button onClick={handleAutoPopulate} disabled={saving} className="btn-outline text-sm flex items-center gap-1.5"><Download size={14} />Auto-populate</button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1"><label className="label">Question Type</label></div>
-                  <select value={questionForm.question_type} onChange={e => resetQuestionDefaults(e.target.value)} className="input w-48">
-                    {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                  </select>
+                <div className="grid grid-cols-4 gap-3">
+                  <div>
+                    <label className="label text-xs">Question Type</label>
+                    <select value={questionForm.question_type} onChange={e => resetQuestionDefaults(e.target.value)} className="input text-sm">
+                      {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label text-xs">Subject</label>
+                    <input type="text" value={questionForm.subject} onChange={e => setQuestionForm({...questionForm, subject: e.target.value})} className="input text-sm" placeholder={selectedTest?.subject_name || selectedTest?.subject?.name || 'Auto'} />
+                  </div>
+                  <div>
+                    <label className="label text-xs">Topic</label>
+                    <input type="text" value={questionForm.topic} onChange={e => setQuestionForm({...questionForm, topic: e.target.value})} className="input text-sm" placeholder="e.g. Algebra" />
+                  </div>
+                  <div>
+                    <label className="label text-xs">Difficulty</label>
+                    <select value={questionForm.difficulty_level} onChange={e => setQuestionForm({...questionForm, difficulty_level: e.target.value})} className="input text-sm">
+                      <option value="">Auto</option>
+                      <option value="EASY">Easy</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HARD">Hard</option>
+                      <option value="VERY_HARD">Very Hard</option>
+                    </select>
+                  </div>
                 </div>
                 <div><label className="label">Question</label><textarea value={questionForm.question} onChange={e => setQuestionForm({...questionForm, question: e.target.value})} className="input" rows={3} /></div>
 
@@ -608,6 +634,8 @@ export default function TeacherTestsPage() {
                               <tr>
                                 <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">#</th>
                                 <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Question</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Subject</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Topic</th>
                                 <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Correct</th>
                                 <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Total</th>
                                 <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">%</th>
@@ -619,6 +647,8 @@ export default function TeacherTestsPage() {
                                 <tr key={q.id} className="hover:bg-slate-50">
                                   <td className="py-2 px-3 text-slate-400">{i + 1}</td>
                                   <td className="py-2 px-3 font-medium text-slate-900 max-w-xs truncate">{q.question}</td>
+                                  <td className="py-2 px-3 text-xs text-slate-600">{q.subject || 'N/A'}</td>
+                                  <td className="py-2 px-3 text-xs text-slate-600">{q.topic || 'N/A'}</td>
                                   <td className="py-2 px-3 text-center font-semibold text-green-600">{q.correct}</td>
                                   <td className="py-2 px-3 text-center text-slate-600">{q.total}</td>
                                   <td className={`py-2 px-3 text-center font-semibold ${q.percentage >= 70 ? 'text-green-600' : q.percentage >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{q.percentage}%</td>

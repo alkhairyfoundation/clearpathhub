@@ -51,6 +51,8 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
 
     const attempt = attemptRes.rows[0];
 
+    const testSubjectName = attempt.subject_name || '';
+
     const questionsRes = await pool.query(
       'SELECT * FROM test_questions WHERE test_id = $1 ORDER BY order_index',
       [attempt.test_id]
@@ -62,6 +64,7 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
     const bySubject: Record<string, { correct: number; total: number }> = {};
     const byDifficulty: Record<string, { correct: number; total: number }> = {};
     const byTopic: Record<string, { correct: number; total: number }> = {};
+    const bySubjectTopic: Record<string, Record<string, { correct: number; total: number }>> = {};
 
     let correctCount = 0;
     questions.forEach((q: any, i: number) => {
@@ -69,7 +72,7 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
       const isCorrect = gradeQuestion(q, studentAnswer);
       if (isCorrect) correctCount++;
 
-      const subj = q.subject || 'General';
+      const subj = q.subject || testSubjectName || 'General';
       const diff = q.difficulty_level || 'Not Specified';
       const topic = q.topic || 'General';
 
@@ -85,6 +88,11 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
       byTopic[topic].total++;
       if (isCorrect) byTopic[topic].correct++;
 
+      if (!bySubjectTopic[subj]) bySubjectTopic[subj] = {};
+      if (!bySubjectTopic[subj][topic]) bySubjectTopic[subj][topic] = { correct: 0, total: 0 };
+      bySubjectTopic[subj][topic].total++;
+      if (isCorrect) bySubjectTopic[subj][topic].correct++;
+
       questionDetails.push({
         index: i + 1,
         question: q.question,
@@ -92,6 +100,7 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
         subject: subj,
         difficulty_level: diff,
         topic,
+        subtopic: q.subtopic || null,
         options: q.options,
         correct_answer: q.correct_answer,
         given_answer: studentAnswer,
@@ -125,6 +134,16 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
       total: data.total,
       percentage: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
     })).sort((a, b) => a.percentage - b.percentage);
+
+    const subjectTopicBreakdown = Object.entries(bySubjectTopic).map(([subject, topics]) => ({
+      subject,
+      topics: Object.entries(topics).map(([topicName, data]) => ({
+        name: topicName,
+        correct: data.correct,
+        total: data.total,
+        percentage: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
+      })).sort((a, b) => a.percentage - b.percentage),
+    }));
 
     const strengths = subjectPerformance.filter(s => s.percentage >= 70).map(s => s.name);
     const needsImprovement = subjectPerformance.filter(s => s.percentage < 50).map(s => s.name);
@@ -187,6 +206,7 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
         subjectPerformance,
         difficultyBreakdown,
         topicPerformance,
+        subjectTopicBreakdown,
         insights: {
           strengths,
           needsImprovement,
