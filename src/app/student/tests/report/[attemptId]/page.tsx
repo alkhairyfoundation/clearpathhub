@@ -7,7 +7,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import {
   Loader2, AlertCircle, CheckCircle, XCircle, Clock, Award, BarChart3,
   Brain, Target, TrendingUp, TrendingDown, Minus, Download, Share2,
-  FileText
+  FileText, Shield, AlertTriangle, ArrowLeft, Eye
 } from 'lucide-react';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -82,8 +82,8 @@ export default function TestReportPage({ params }: { params: { attemptId: string
 
   async function handleDownloadPdf() {
     try {
-      const { jsPDF } = await import('jspdf');
-      await import('jspdf-autotable');
+      const { default: jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
       if (!data) return;
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageW = 210;
@@ -126,7 +126,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
       doc.setFontSize(9);
       doc.setTextColor(0, 0, 0);
       const subjRows = data.subjectPerformance.map((s: any) => [s.name, `${s.correct}/${s.total}`, `${s.percentage}%`]);
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: y, head: [['Subject', 'Correct/Total', 'Score']],
         body: subjRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
         styles: { fontSize: 9 },
@@ -147,7 +147,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
           doc.setFontSize(9);
           doc.setTextColor(0, 0, 0);
           const topicRows = st.topics.map((t: any) => [t.name, `${t.correct}/${t.total}`, `${t.percentage}%`]);
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: y, head: [['Topic', 'Correct/Total', 'Score']],
             body: topicRows, theme: 'grid', headStyles: { fillColor: [100, 100, 100] },
             styles: { fontSize: 8 },
@@ -166,7 +166,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
         `Q${q.index}`, q.subject.substring(0, 12), q.topic.substring(0, 12), q.is_correct ? '✓' : '✗',
         `${q.points_earned}/${q.points}`
       ]);
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: y, head: [['#', 'Subject', 'Topic', 'Result', 'Points']],
         body: qRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
         styles: { fontSize: 7 },
@@ -181,7 +181,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
         doc.setTextColor(179, 146, 47);
         doc.text('Difficulty Breakdown', 15, y); y += 8;
         const diffRows = data.difficultyBreakdown.map((d: any) => [d.level, `${d.correct}/${d.total}`, `${d.percentage}%`]);
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: y, head: [['Level', 'Correct/Total', 'Score']],
           body: diffRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
           styles: { fontSize: 9 },
@@ -196,7 +196,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
         doc.setTextColor(179, 146, 47);
         doc.text('All Topics Performance', 15, y); y += 8;
         const topRows = data.topicPerformance.map((t: any) => [t.name, `${t.correct}/${t.total}`, `${t.percentage}%`]);
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: y, head: [['Topic', 'Correct/Total', 'Score']],
           body: topRows, theme: 'grid', headStyles: { fillColor: [179, 146, 47] },
           styles: { fontSize: 9 },
@@ -271,6 +271,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
     { id: 'difficulty', label: 'Difficulty & Topics' },
     { id: 'questions', label: 'Questions' },
     { id: 'insights', label: 'Insights' },
+    { id: 'security', label: 'Security Log' },
   ];
   if (subjectTopicBreakdown && subjectTopicBreakdown.length > 0) {
     tabs.splice(2, 0, { id: 'topic-breakdown', label: 'Topics by Subject' });
@@ -563,6 +564,69 @@ export default function TestReportPage({ params }: { params: { attemptId: string
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'security' && data?.securityEvents && (
+          <div className="card p-6">
+            <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Security Event Log</h3>
+            {data.securityEvents.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Shield size={40} className="mx-auto mb-3 text-emerald-400" />
+                <p className="font-medium">No security events recorded</p>
+                <p className="text-sm">This test was completed without any suspicious activity.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {data.securityEvents.map((evt: any, i: number) => (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${
+                    evt.severity === 'high' ? 'bg-red-50 border border-red-200' :
+                    evt.severity === 'medium' ? 'bg-amber-50 border border-amber-200' :
+                    'bg-slate-50 border border-slate-200'
+                  }`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      evt.severity === 'high' ? 'bg-red-200' :
+                      evt.severity === 'medium' ? 'bg-amber-200' :
+                      'bg-slate-200'
+                    }`}>
+                      {evt.event_type === 'tab_switch' ? <AlertTriangle size={16} /> :
+                       evt.event_type === 'fullscreen_exit' ? <XCircle size={16} /> :
+                       evt.event_type === 'page_reload' ? <AlertCircle size={16} /> :
+                       evt.event_type === 'back_navigation' ? <ArrowLeft size={16} /> :
+                       evt.event_type === 'copy_attempt' ? <FileText size={16} /> :
+                       evt.event_type === 'screenshot' ? <Eye size={16} /> :
+                       evt.event_type === 'keyboard_shortcut' ? <AlertTriangle size={16} /> : <AlertCircle size={16} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium ${
+                        evt.severity === 'high' ? 'text-red-700' :
+                        evt.severity === 'medium' ? 'text-amber-700' :
+                        'text-slate-700'
+                      }`}>
+                        {evt.event_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {new Date(evt.created_at).toLocaleString()}
+                        {evt.event_data?.count ? ` · Count: ${evt.event_data.count}` : ''}
+                        {evt.event_data?.key ? ` · Key: ${evt.event_data.key}` : ''}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                      evt.severity === 'high' ? 'bg-red-200 text-red-700' :
+                      evt.severity === 'medium' ? 'bg-amber-200 text-amber-700' :
+                      'bg-slate-200 text-slate-600'
+                    }`}>
+                      {evt.severity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4 flex items-center gap-4 text-xs text-slate-400">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-100 inline-block"></span> High severity</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-100 inline-block"></span> Medium severity</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-slate-100 inline-block"></span> Low severity</span>
             </div>
           </div>
         )}

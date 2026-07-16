@@ -25,8 +25,8 @@ export default function AdminTestsPage() {
     title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test',
     exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50,
     total_questions: 10,
-    shuffle_questions: false, shuffle_options: false, require_fullscreen: false,
-    prevent_tab_switch: false, max_tab_switches: 3,
+    shuffle_questions: false, shuffle_options: false, require_fullscreen: true,
+    prevent_tab_switch: true, max_tab_switches: 3,
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -100,8 +100,8 @@ export default function AdminTestsPage() {
       setEditingTest(null);
       setFormData({ title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test',
         exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50, total_questions: 10,
-        shuffle_questions: false, shuffle_options: false, require_fullscreen: false,
-        prevent_tab_switch: false, max_tab_switches: 3,
+        shuffle_questions: false, shuffle_options: false, require_fullscreen: true,
+        prevent_tab_switch: true, max_tab_switches: 3,
       });
     }
     setShowTestModal(true);

@@ -171,6 +171,15 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
       if (st) studentAdmission = st.admission_number || '';
     } catch (_) {}
 
+    let securityEvents: any[] = [];
+    try {
+      const logsRes = await pool.query(
+        'SELECT event_type, event_data, severity, created_at FROM exam_activity_logs WHERE attempt_id = $1 ORDER BY created_at ASC',
+        [attemptId]
+      );
+      securityEvents = logsRes.rows;
+    } catch (_) {}
+
     await pool.end();
 
     return NextResponse.json({
@@ -202,6 +211,7 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
           passing_score: attempt.passing_score,
           duration_minutes: attempt.duration_minutes,
         },
+        securityEvents,
         questions: questionDetails,
         subjectPerformance,
         difficultyBreakdown,
