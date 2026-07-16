@@ -56,6 +56,7 @@ export default function TeacherTestsPage() {
   });
 
   const [questions, setQuestions] = useState<any[]>([]);
+  const [editingQuestion, setEditingQuestion] = useState<any>(null);
   const [questionForm, setQuestionForm] = useState({
     question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: ''
   });
@@ -73,8 +74,8 @@ export default function TeacherTestsPage() {
   async function fetchData() {
     setLoading(true);
     const [testsRes, subjectsRes, classesRes] = await Promise.all([
-      api('list_tests', { created_by: profile?.id }),
-      supabase.from('subjects').select('id, name').or(`teacher_id.eq.${profile?.id},teacher_id.is.null`).order('name'),
+      api('list_tests'),
+      supabase.from('subjects').select('id, name').order('name'),
       supabase.from('classes').select('id, name').order('level'),
     ]);
     if (testsRes.tests) setTests(testsRes.tests);
@@ -170,25 +171,29 @@ export default function TeacherTestsPage() {
     if (!selectedTest || !questionForm.question.trim()) return;
     setSaving(true);
     const payload: any = {
-      test_id: selectedTest.id,
       question: questionForm.question,
       options: questionForm.options,
       correct_answer: questionForm.correct_answer,
       points: questionForm.points || 1,
       question_type: questionForm.question_type || 'multiple_choice',
-      order_index: questions.length,
       subject: questionForm.subject || selectedTest.subject_name || null,
       topic: questionForm.topic || null,
       subtopic: questionForm.subtopic || null,
       difficulty_level: questionForm.difficulty_level || null,
     };
-    if (questionForm.question_image) payload.question_image = questionForm.question_image;
-    const res = await api('create_question', payload);
-    if (res.question) {
-      setQuestionForm({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: '' });
-      const refreshed = await api('list_questions', { test_id: selectedTest.id });
-      if (refreshed.questions) setQuestions(refreshed.questions);
+    if (editingQuestion) {
+      payload.id = editingQuestion.id;
+      await api('update_question', payload);
+    } else {
+      payload.test_id = selectedTest.id;
+      payload.order_index = questions.length;
+      if (questionForm.question_image) payload.question_image = questionForm.question_image;
+      await api('create_question', payload);
     }
+    setEditingQuestion(null);
+    setQuestionForm({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: '' });
+    const refreshed = await api('list_questions', { test_id: selectedTest.id });
+    if (refreshed.questions) setQuestions(refreshed.questions);
     setSaving(false);
   }
 
@@ -199,6 +204,22 @@ export default function TeacherTestsPage() {
     } catch (err: any) {
       setError(err.message || 'Failed to delete question');
     }
+  }
+
+  function editTestQuestion(q: any) {
+    setEditingQuestion(q);
+    setQuestionForm({
+      question: q.question,
+      question_image: q.question_image || '',
+      options: q.options || ['', '', '', ''],
+      correct_answer: q.correct_answer,
+      points: q.points,
+      question_type: q.question_type,
+      subject: q.subject || '',
+      topic: q.topic || '',
+      subtopic: q.subtopic || '',
+      difficulty_level: q.difficulty_level || '',
+    });
   }
 
   async function openBankSelect() {
@@ -342,14 +363,14 @@ export default function TeacherTestsPage() {
   const filtered = tests.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <DashboardLayout title="My Tests" subtitle="Create and manage tests for your classes">
+    <DashboardLayout title="Tests & Exams" subtitle="Create and manage tests and questions">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">My Tests</h1>
-              <p className="text-slate-500 mt-1">{tests.length} tests created</p>
+              <h1 className="text-2xl font-bold text-slate-900">Tests & Exams</h1>
+              <p className="text-slate-500 mt-1">{tests.length} tests available</p>
             </div>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Create Test</button>
@@ -541,7 +562,14 @@ export default function TeacherTestsPage() {
                   </div>
                 </div>
 
-                <button onClick={handleAddQuestion} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Adding...' : 'Add Question'}</button>
+                <div className="flex gap-2">
+                  {editingQuestion && (
+                    <button onClick={() => { setEditingQuestion(null); setQuestionForm({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'multiple_choice', subject: '', topic: '', subtopic: '', difficulty_level: '' }); }} className="btn-ghost text-sm">
+                      Cancel Edit
+                    </button>
+                  )}
+                  <button onClick={handleAddQuestion} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving...' : editingQuestion ? 'Update Question' : 'Add Question'}</button>
+                </div>
 
                 {questions.length > 0 && (
                   <div className="mt-4 border-t pt-4">
@@ -553,9 +581,14 @@ export default function TeacherTestsPage() {
                             <span className="font-medium">{i + 1}.</span> {q.question}
                             <span className="text-xs text-slate-400 ml-2">({q.question_type})</span>
                           </div>
-                          <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-50 rounded-lg ml-2 flex-shrink-0">
-                            <Trash2 size={14} className="text-red-500" />
-                          </button>
+                          <div className="flex gap-1 ml-2 flex-shrink-0">
+                            <button onClick={() => editTestQuestion(q)} className="p-1 hover:bg-primary-50 rounded-lg" title="Edit question">
+                              <Edit size={14} className="text-primary-600" />
+                            </button>
+                            <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-50 rounded-lg" title="Delete question">
+                              <Trash2 size={14} className="text-red-500" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
