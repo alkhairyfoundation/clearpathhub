@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -88,12 +88,12 @@ export default function AdminDepartmentsPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Departments</h1>
-              <p className="text-slate-500 mt-1">Manage school departments</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Departments</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage school departments</p>
             </div>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
@@ -101,23 +101,23 @@ export default function AdminDepartmentsPage() {
           </button>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="card animate-pulse">
                 <div className="h-4 bg-slate-200 rounded w-1/2 mb-3"></div>
-                <div className="h-3 bg-slate-100 rounded w-1/3"></div>
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded w-1/3"></div>
               </div>
             ))}
           </div>
         ) : departments.length === 0 ? (
           <div className="card text-center py-16">
             <BookOpen className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No departments yet</p>
-            <p className="text-sm text-slate-400 mt-1 mb-4">Create your first department</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No departments yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 mb-4">Create your first department</p>
             <button onClick={() => openModal()} className="btn-primary">Add Department</button>
           </div>
         ) : (
@@ -125,20 +125,20 @@ export default function AdminDepartmentsPage() {
             {departments.map((dept) => (
               <div key={dept.id} className="card hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <BookOpen className="text-blue-600" size={20} />
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                    <BookOpen className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={20} />
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => openModal(dept)} className="p-1.5 hover:bg-blue-50 rounded-lg">
-                      <Edit className="text-blue-600" size={15} />
+                    <button onClick={() => openModal(dept)} className="p-1.5 hover:bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg">
+                      <Edit className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={15} />
                     </button>
-                    <button onClick={() => handleDelete(dept.id)} disabled={deleting === dept.id} className="p-1.5 hover:bg-red-50 rounded-lg disabled:opacity-50">
-                      {deleting === dept.id ? <Loader2 className="text-red-600 animate-spin" size={15} /> : <Trash2 className="text-red-600" size={15} />}
+                    <button onClick={() => handleDelete(dept.id)} disabled={deleting === dept.id} className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg disabled:opacity-50">
+                      {deleting === dept.id ? <Loader2 className="text-red-600 dark:text-red-400 dark:text-red-400 animate-spin" size={15} /> : <Trash2 className="text-red-600 dark:text-red-400 dark:text-red-400" size={15} />}
                     </button>
                   </div>
                 </div>
-                <h3 className="font-bold text-slate-900">{dept.name}</h3>
-                <p className="text-sm text-slate-500 mt-1">Code: <span className="font-mono font-medium">{dept.code}</span></p>
+                <h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{dept.name}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Code: <span className="font-mono font-medium">{dept.code}</span></p>
               </div>
             ))}
           </div>
@@ -147,16 +147,16 @@ export default function AdminDepartmentsPage() {
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
-                <h3 className="text-lg font-bold text-slate-900">{editingDepartment ? 'Edit' : 'Add'} Department</h3>
-                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X className="text-slate-500" size={20} /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{editingDepartment ? 'Edit' : 'Add'} Department</h3>
+                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X className="text-slate-500 dark:text-slate-400 dark:text-slate-400" size={20} /></button>
               </div>
               <div className="p-5 space-y-4">
-                {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+                {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
                 <div><label className="label">Department Name</label><input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="e.g., Science Department" /></div>
                 <div><label className="label">Department Code</label><input type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="input" placeholder="e.g., SCI" /></div>
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 bg-white sticky bottom-0">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white sticky bottom-0">
                 <button onClick={() => { setShowModal(false); setError(''); }} className="btn-ghost">Cancel</button>
                 <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">
                   {saving && <Loader2 size={16} className="animate-spin" />}

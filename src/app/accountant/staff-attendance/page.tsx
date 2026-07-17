@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -126,35 +126,35 @@ export default function AccountantStaffAttendancePage() {
     <DashboardLayout title="Staff Attendance" subtitle="Scan school QR code to mark your attendance">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Staff Attendance</h1>
-            <p className="text-slate-500">Scan the school QR code to mark your attendance</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Staff Attendance</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Scan the school QR code to mark your attendance</p>
           </div>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 flex items-center gap-2">
+        <div className="bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-lg p-3 text-sm text-amber-700 dark:text-amber-300 dark:text-amber-300 flex items-center gap-2">
           <Clock size={16} /> Attendance after 8:30 AM is automatically marked as <strong>Late</strong>
         </div>
 
         {message && (
-          <div className={`rounded-lg p-3 text-sm flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+          <div className={`rounded-lg p-3 text-sm flex items-center gap-2 ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 text-red-700 dark:text-red-400 dark:text-red-400'}`}>
             {message.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />} {message.text}
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card text-center">
-            <QrCode size={48} className="mx-auto text-primary-600 mb-4" />
-            <h2 className="text-lg font-semibold text-slate-800 mb-2">Scan QR Code</h2>
-            <p className="text-sm text-slate-500 mb-6">Point your camera at the school QR code to mark your attendance</p>
+            <QrCode size={48} className="mx-auto text-primary-600 dark:text-primary-400 dark:text-primary-400 mb-4" />
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Scan QR Code</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-6">Point your camera at the school QR code to mark your attendance</p>
             {todayRecord ? (
-              <div className="p-4 bg-green-50 rounded-lg text-center">
-                <Check size={32} className="mx-auto text-green-600 mb-2" />
-                <p className="font-semibold text-green-700 capitalize">Already marked {todayRecord.status}</p>
-                <p className="text-sm text-green-600">Today at {new Date(todayRecord.marked_at).toLocaleTimeString()}</p>
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-lg text-center">
+                <Check size={32} className="mx-auto text-green-600 dark:text-green-400 dark:text-green-400 mb-2" />
+                <p className="font-semibold text-green-700 dark:text-green-300 dark:text-green-300 capitalize">Already marked {todayRecord.status}</p>
+                <p className="text-sm text-green-600 dark:text-green-400 dark:text-green-400">Today at {new Date(todayRecord.marked_at).toLocaleTimeString()}</p>
               </div>
             ) : !showCamera ? (
               <button onClick={startCamera} className="btn-primary flex items-center gap-2 mx-auto"><Camera size={18} />Open Camera</button>
@@ -164,21 +164,21 @@ export default function AccountantStaffAttendancePage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><Calendar size={18} className="text-slate-400" />Today&apos;s Record</h2>
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><Calendar size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Today&apos;s Record</h2>
             {todayRecord ? (
-              <div className={`p-4 rounded-lg ${todayRecord.status === 'late' ? 'bg-amber-50' : 'bg-green-50'}`}>
+              <div className={`p-4 rounded-lg ${todayRecord.status === 'late' ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20' : 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20'}`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${todayRecord.status === 'late' ? 'bg-amber-100' : 'bg-green-100'}`}>
-                    <Check className={todayRecord.status === 'late' ? 'text-amber-600' : 'text-green-600'} size={24} />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${todayRecord.status === 'late' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30' : 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30'}`}>
+                    <Check className={todayRecord.status === 'late' ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-green-600 dark:text-green-400 dark:text-green-400'} size={24} />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-800 capitalize">Marked {todayRecord.status}</p>
-                    <p className="text-sm text-slate-500">{todayRecord.marked_at ? new Date(todayRecord.marked_at).toLocaleTimeString() : ''}</p>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 capitalize">Marked {todayRecord.status}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{todayRecord.marked_at ? new Date(todayRecord.marked_at).toLocaleTimeString() : ''}</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8 text-slate-500"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>Not yet marked</p></div>
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>Not yet marked</p></div>
             )}
           </div>
         </div>
@@ -186,9 +186,9 @@ export default function AccountantStaffAttendancePage() {
         {showCamera && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900">QR Scanner</h3>
-                <button onClick={stopCamera} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">QR Scanner</h3>
+                <button onClick={stopCamera} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
               </div>
               <div className="relative bg-black">
                 <video ref={videoRef} className="w-full h-64 object-cover" playsInline />
@@ -198,8 +198,8 @@ export default function AccountantStaffAttendancePage() {
                 </div>
                 {scanning && <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Scanning...</div>}
               </div>
-              {cameraError && <div className="p-4 bg-red-50 text-red-600 text-sm text-center">{cameraError}</div>}
-              <div className="p-4 text-center text-sm text-slate-500">Point camera at the school QR code</div>
+              {cameraError && <div className="p-4 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-600 dark:text-red-400 dark:text-red-400 text-sm text-center">{cameraError}</div>}
+              <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Point camera at the school QR code</div>
             </div>
           </div>
         )}

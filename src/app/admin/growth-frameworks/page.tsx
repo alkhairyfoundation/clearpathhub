@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -165,12 +165,12 @@ export default function AdminGrowthFrameworksPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Growth Frameworks</h1>
-              <p className="text-slate-500 mt-1">Set academic and skill expectations per class level and term</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Growth Frameworks</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Set academic and skill expectations per class level and term</p>
             </div>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
@@ -178,41 +178,41 @@ export default function AdminGrowthFrameworksPage() {
           </button>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 size={32} className="animate-spin text-primary-600" />
+            <Loader2 size={32} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" />
           </div>
         ) : frameworks.length === 0 ? (
           <div className="card text-center py-16">
             <BookOpen className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No frameworks yet</p>
-            <p className="text-sm text-slate-400 mt-1 mb-4">Publish a framework to set expectations for a class level and term</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No frameworks yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 mb-4">Publish a framework to set expectations for a class level and term</p>
             <button onClick={() => openModal()} className="btn-primary">Create Framework</button>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Class Level</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Session</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Term</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Published</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Actions</th>
+                <tr className="border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Class Level</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Session</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Term</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Published</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {frameworks.map((fw: any) => (
-                  <tr key={fw.id} className="hover:bg-slate-50">
-                    <td className="py-3 px-4 text-sm font-medium text-slate-900">{fw.class_level}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600">{fw.session?.name || '—'}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600">{fw.term?.name || '—'}</td>
-                    <td className="py-3 px-4 text-sm text-slate-500">{fw.published_at ? new Date(fw.published_at).toLocaleDateString() : 'Draft'}</td>
+                  <tr key={fw.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                    <td className="py-3 px-4 text-sm font-medium text-slate-900 dark:text-white dark:text-white">{fw.class_level}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{fw.session?.name || '—'}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{fw.term?.name || '—'}</td>
+                    <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{fw.published_at ? new Date(fw.published_at).toLocaleDateString() : 'Draft'}</td>
                     <td className="py-3 px-4 text-right">
-                      <button onClick={() => openModal(fw)} className="text-sm text-primary-600 hover:text-primary-700 font-medium">Edit</button>
+                      <button onClick={() => openModal(fw)} className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium">Edit</button>
                     </td>
                   </tr>
                 ))}
@@ -227,7 +227,7 @@ export default function AdminGrowthFrameworksPage() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-5 border-b flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
               <h3 className="text-lg font-bold">{editing ? 'Edit Framework' : 'Create Framework'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
             </div>
             <div className="p-5 space-y-6">
               <div className="grid grid-cols-3 gap-4">
@@ -257,10 +257,10 @@ export default function AdminGrowthFrameworksPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="label mb-0">Academic Competencies</label>
-                  <button onClick={addCompetency} className="text-xs text-primary-600 hover:text-primary-700 font-medium">+ Add Competency</button>
+                  <button onClick={addCompetency} className="text-xs text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium">+ Add Competency</button>
                 </div>
                 {formData.competencies.length === 0 ? (
-                  <p className="text-sm text-slate-400 italic">No competencies added. Students will not see academic expectations.</p>
+                  <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 italic">No competencies added. Students will not see academic expectations.</p>
                 ) : (
                   <div className="space-y-2">
                     {formData.competencies.map((comp, idx) => (
@@ -270,7 +270,7 @@ export default function AdminGrowthFrameworksPage() {
                           {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                         <input type="text" value={comp.competency_text} onChange={(e) => updateCompetency(idx, 'competency_text', e.target.value)} className="input flex-1" placeholder="e.g., Solve quadratic equations" />
-                        <button onClick={() => removeCompetency(idx)} className="p-2 text-red-400 hover:text-red-600"><X size={16} /></button>
+                        <button onClick={() => removeCompetency(idx)} className="p-2 text-red-400 hover:text-red-600 dark:text-red-400 dark:text-red-400"><X size={16} /></button>
                       </div>
                     ))}
                   </div>
@@ -282,8 +282,8 @@ export default function AdminGrowthFrameworksPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
                   {skills.map((s) => (
                     <button key={s.id} onClick={() => toggleSkill(s.id)}
-                      className={`flex items-center gap-2 p-2 rounded-lg border text-sm text-left ${formData.expected_skills.includes(s.id) ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'}`}>
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${formData.expected_skills.includes(s.id) ? 'bg-primary-600 border-primary-600' : 'border-slate-300'}`}>
+                      className={`flex items-center gap-2 p-2 rounded-lg border text-sm text-left ${formData.expected_skills.includes(s.id) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 dark:text-primary-300' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'}`}>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center ${formData.expected_skills.includes(s.id) ? 'bg-primary-600 border-primary-600' : 'border-slate-300 dark:border-slate-600 dark:border-slate-600'}`}>
                         {formData.expected_skills.includes(s.id) && <Check size={12} className="text-white" />}
                       </div>
                       <span>{s.name}</span>

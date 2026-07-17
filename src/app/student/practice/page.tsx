@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -335,7 +335,7 @@ export default function StudentPracticePage() {
 
   if (error) return (
     <DashboardLayout title="Daily Practice" subtitle="Start your daily mastery practice">
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
+      <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-4 text-red-700 dark:text-red-400 dark:text-red-400">{error}</div>
     </DashboardLayout>
   );
 
@@ -343,43 +343,43 @@ export default function StudentPracticePage() {
     <DashboardLayout title="Practice Complete" subtitle="Great effort!">
       <div className="max-w-lg mx-auto space-y-6">
         <div className="card text-center py-12">
-          <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${sessionStats.total > 0 && sessionStats.correct / sessionStats.total >= 0.7 ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+          <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${sessionStats.total > 0 && sessionStats.correct / sessionStats.total >= 0.7 ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30'}`}>
             {sessionStats.total > 0 && sessionStats.correct / sessionStats.total >= 0.7
-              ? <Award size={40} className="text-emerald-600" />
-              : <Zap size={40} className="text-amber-600" />}
+              ? <Award size={40} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" />
+              : <Zap size={40} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" />}
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white mb-2">
             {sessionStats.total > 0 && sessionStats.correct / sessionStats.total >= 0.7 ? 'Well Done!' : 'Keep Practicing!'}
           </h2>
-          <p className="text-slate-500 mb-6">Here's how you performed</p>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-6">Here's how you performed</p>
 
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-slate-50 rounded-xl p-4">
-              <p className="text-2xl font-bold text-slate-900">{sessionStats.correct}/{sessionStats.total}</p>
-              <p className="text-xs text-slate-500 mt-1">Correct</p>
+            <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl p-4">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{sessionStats.correct}/{sessionStats.total}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Correct</p>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4">
-              <p className="text-2xl font-bold text-slate-900">{sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0}%</p>
-              <p className="text-xs text-slate-500 mt-1">Score</p>
+            <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl p-4">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{sessionStats.total > 0 ? Math.round((sessionStats.correct / sessionStats.total) * 100) : 0}%</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Score</p>
             </div>
-            <div className="bg-slate-50 rounded-xl p-4">
-              <p className="text-2xl font-bold text-slate-900">{streak?.current_streak || 0}</p>
-              <p className="text-xs text-slate-500 mt-1">Day Streak</p>
+            <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl p-4">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{streak?.current_streak || 0}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Day Streak</p>
             </div>
           </div>
 
           <div className="flex gap-3 justify-center">
             <button onClick={restartPractice} className="btn-primary flex items-center gap-2"><RotateCcw size={16} /> Practice Again</button>
-            <Link href="/student/practice/history" className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2"><BarChart3 size={16} /> History</Link>
+            <Link href="/student/practice/history" className="px-4 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-2"><BarChart3 size={16} /> History</Link>
           </div>
         </div>
 
         {badges.length > 0 && (
           <div className="card">
-            <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2"><Star size={16} className="text-amber-500" /> Badges Earned</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-3 flex items-center gap-2"><Star size={16} className="text-amber-500 dark:text-amber-400 dark:text-amber-400" /> Badges Earned</h3>
             <div className="flex flex-wrap gap-2">
               {badges.map(b => (
-                <span key={b.id} className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-sm font-medium">
+                <span key={b.id} className="px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 dark:text-amber-300 rounded-lg text-sm font-medium">
                   {b.badge_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                 </span>
               ))}
@@ -394,8 +394,8 @@ export default function StudentPracticePage() {
     <DashboardLayout title="Daily Practice" subtitle="Start your daily mastery practice">
       <div className="card text-center py-16">
         <Brain className="mx-auto text-slate-300 mb-4" size={48} />
-        <p className="font-medium text-slate-500">No questions available</p>
-        <p className="text-sm text-slate-400 mt-1 mb-4">Questions will appear here once added to the bank</p>
+        <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No questions available</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 mb-4">Questions will appear here once added to the bank</p>
         <button onClick={restartPractice} className="btn-primary">Try Again</button>
       </div>
     </DashboardLayout>
@@ -407,46 +407,46 @@ export default function StudentPracticePage() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Progress Bar */}
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-slate-600">Progress</span>
-              <span className="text-sm text-slate-500">{Math.round((currentIdx / questions.length) * 100)}%</span>
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400">Progress</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{Math.round((currentIdx / questions.length) * 100)}%</span>
             </div>
             <div className="w-full bg-slate-200 rounded-full h-2">
               <div className="bg-primary-600 h-2 rounded-full transition-all" style={{ width: `${(currentIdx / questions.length) * 100}%` }} />
             </div>
           </div>
-          <div className="flex items-center gap-1 text-sm text-slate-500"><Clock size={14} /> {Math.floor((Date.now() - startTime) / 1000)}s</div>
+          <div className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400"><Clock size={14} /> {Math.floor((Date.now() - startTime) / 1000)}s</div>
         </div>
 
         {/* Question Card */}
         <div className="card">
           <div className="flex items-center gap-2 mb-4">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${(currentQ.difficulty_level || 'medium') === 'easy' ? 'bg-green-100 text-green-700' : (currentQ.difficulty_level || 'medium') === 'hard' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${(currentQ.difficulty_level || 'medium') === 'easy' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : (currentQ.difficulty_level || 'medium') === 'hard' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300'}`}>
               {currentQ.difficulty_level || 'medium'}
             </span>
-            {currentQ.topic && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">{currentQ.topic}</span>}
+            {currentQ.topic && <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300 rounded text-xs font-medium">{currentQ.topic}</span>}
           </div>
 
-          <h2 className="text-xl font-bold text-slate-900 mb-6">{currentQ.question}</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white mb-6">{currentQ.question}</h2>
 
           <div className="space-y-3">
             {currentQ.options.map((opt: string, i: number) => {
               let btnClass = 'w-full text-left p-4 rounded-xl border-2 transition-all text-sm font-medium ';
               if (!showFeedback) {
-                btnClass += selectedAnswer === i ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700';
+                btnClass += selectedAnswer === i ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 dark:text-primary-300' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 text-slate-700 dark:text-slate-300 dark:text-slate-300';
               } else {
-                if (i === currentQ.correct_answer) btnClass += 'border-emerald-500 bg-emerald-50 text-emerald-700';
-                else if (i === selectedAnswer) btnClass += 'border-red-500 bg-red-50 text-red-700';
-                else btnClass += 'border-slate-200 text-slate-400';
+                if (i === currentQ.correct_answer) btnClass += 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300';
+                else if (i === selectedAnswer) btnClass += 'border-red-500 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-700 dark:text-red-400 dark:text-red-400';
+                else btnClass += 'border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-400 dark:text-slate-500 dark:text-slate-500';
               }
               return (
                 <button key={i} onClick={() => handleAnswer(i)} disabled={showFeedback} className={btnClass}>
                   <div className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold shrink-0">
-                      {showFeedback && i === currentQ.correct_answer ? <CheckCircle size={16} className="text-emerald-600" /> :
-                       showFeedback && i === selectedAnswer ? <XCircle size={16} className="text-red-600" /> :
+                      {showFeedback && i === currentQ.correct_answer ? <CheckCircle size={16} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" /> :
+                       showFeedback && i === selectedAnswer ? <XCircle size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /> :
                        String.fromCharCode(65 + i)}
                     </span>
                     <span>{opt}</span>
@@ -458,17 +458,17 @@ export default function StudentPracticePage() {
 
           {/* Feedback */}
           {showFeedback && (
-            <div className={`mt-6 p-4 rounded-xl ${isCorrect ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'}`}>
+            <div className={`mt-6 p-4 rounded-xl ${isCorrect ? 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40'}`}>
               <div className="flex items-center gap-2 mb-2">
-                {isCorrect ? <CheckCircle size={20} className="text-emerald-600" /> : <XCircle size={20} className="text-red-600" />}
-                <span className={`font-bold ${isCorrect ? 'text-emerald-700' : 'text-red-700'}`}>{isCorrect ? 'Correct!' : 'Incorrect'}</span>
+                {isCorrect ? <CheckCircle size={20} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" /> : <XCircle size={20} className="text-red-600 dark:text-red-400 dark:text-red-400" />}
+                <span className={`font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-300 dark:text-emerald-300' : 'text-red-700 dark:text-red-400 dark:text-red-400'}`}>{isCorrect ? 'Correct!' : 'Incorrect'}</span>
               </div>
-              {currentQ.explanation && <p className="text-sm text-slate-600">{currentQ.explanation}</p>}
+              {currentQ.explanation && <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{currentQ.explanation}</p>}
             </div>
           )}
 
           <div className="mt-6 flex items-center justify-between">
-            <div className="text-sm text-slate-500 flex items-center gap-1">
+            <div className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 flex items-center gap-1">
               <Brain size={14} className="text-primary-500" />
               Score: {sessionStats.correct}/{sessionStats.total}
             </div>

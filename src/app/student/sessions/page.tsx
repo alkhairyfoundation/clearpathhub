@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -367,12 +367,12 @@ export default function StudentSessionsPage() {
   return (
     <DashboardLayout title="Video Lessons" subtitle="Watch lessons and complete checkpoint quizzes to unlock content">
       <div className="space-y-6">
-        <div><h1 className="text-2xl font-bold text-slate-800">Video Lessons</h1><p className="text-slate-500">Watch lessons and complete checkpoint quizzes to unlock content</p></div>
+        <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Video Lessons</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Watch lessons and complete checkpoint quizzes to unlock content</p></div>
         
           {loading ? (
         <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
+        <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-4 text-red-700 dark:text-red-400 dark:text-red-400">{error}</div>
       ) : (
         <div className="card p-4">
           <div className="flex flex-wrap gap-3">
@@ -399,8 +399,8 @@ export default function StudentSessionsPage() {
             return filtered.length === 0 ? (
               <div className="card text-center py-16">
                 <PlayCircle className="mx-auto text-slate-300 mb-4" size={48} />
-                <p className="font-medium text-slate-500">No video lessons available</p>
-                <p className="text-sm text-slate-400 mt-1">Lessons will appear here once assigned to your class</p>
+                <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No video lessons available</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Lessons will appear here once assigned to your class</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -414,21 +414,21 @@ export default function StudentSessionsPage() {
                   <div className="relative pt-[56.25%] bg-gray-900">
                     <img src={`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`} alt={session.title} className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors">
-                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center"><Play className="text-red-600 ml-1" size={32} /></div>
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center"><Play className="text-red-600 dark:text-red-400 dark:text-red-400 ml-1" size={32} /></div>
                     </div>
                   </div>
                 ) : (
-                  <div className="pt-[56.25%] bg-gray-900 flex items-center justify-center"><Play className="text-gray-500" size={48} /></div>
+                  <div className="pt-[56.25%] bg-gray-900 flex items-center justify-center"><Play className="text-gray-500 dark:text-slate-400 dark:text-slate-400" size={48} /></div>
                 )}
                 <div className="p-4">
-                  <h3 className="font-semibold text-slate-800 mb-1">{session.title}</h3>
-                  <p className="text-sm text-slate-500">{session.subject?.name} &bull; {session.duration || '?'} min</p>
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{session.title}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{session.subject?.name} &bull; {session.duration || '?'} min</p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {checkpoints.length > 0 && (
-                      <span className="flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs"><Lock size={12} />{checkpoints.length} checkpoint{checkpoints.length > 1 ? 's' : ''}</span>
+                      <span className="flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300 rounded-full text-xs"><Lock size={12} />{checkpoints.length} checkpoint{checkpoints.length > 1 ? 's' : ''}</span>
                     )}
                     {postQuiz && (
-                      <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"><FileText size={12} />Post-video quiz</span>
+                      <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700 rounded-full text-xs"><FileText size={12} />Post-video quiz</span>
                     )}
                   </div>
                 </div>
@@ -453,8 +453,8 @@ export default function StudentSessionsPage() {
             {checkpointActive && currentCheckpoint && (
               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-8">
                 <div className="bg-white rounded-xl max-w-xl w-full p-6">
-                  <div className="flex items-center gap-2 mb-4"><Lock className="text-amber-500" size={24} /><span className="text-amber-600 font-medium">Checkpoint Required</span></div>
-                  <h3 className="text-xl font-semibold text-slate-800 mb-4">{currentCheckpoint.question}</h3>
+                  <div className="flex items-center gap-2 mb-4"><Lock className="text-amber-500 dark:text-amber-400 dark:text-amber-400" size={24} /><span className="text-amber-600 dark:text-amber-400 dark:text-amber-400 font-medium">Checkpoint Required</span></div>
+                  <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4">{currentCheckpoint.question}</h3>
 
                   {(() => {
                     const answered = checkpointAnswers[currentCheckpoint.id] !== undefined;
@@ -467,10 +467,10 @@ export default function StudentSessionsPage() {
                           {currentCheckpoint.options.map((opt, i) => {
                             const isCorrectIdx = i === currentCheckpoint.correct_answer;
                             return (
-                              <button key={i} onClick={() => !answered && handleCheckpointAnswer(i)} disabled={answered} className={`w-full p-4 rounded-lg text-left border transition-colors ${answered ? (isCorrectIdx ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500') : 'hover:border-primary-500 hover:bg-primary-50'}`}>
+                              <button key={i} onClick={() => !answered && handleCheckpointAnswer(i)} disabled={answered} className={`w-full p-4 rounded-lg text-left border transition-colors ${answered ? (isCorrectIdx ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 border-green-500' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 border-red-500') : 'hover:border-primary-500 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20'}`}>
                                 <span className="font-medium">{String.fromCharCode(65 + i)}.</span> {opt}
-                                {answered && isCorrectIdx && <CheckCircle size={16} className="float-right text-green-600" />}
-                                {answered && !isCorrectIdx && checkpointAnswers[currentCheckpoint.id] === false && <XCircle size={16} className="float-right text-red-600" />}
+                                {answered && isCorrectIdx && <CheckCircle size={16} className="float-right text-green-600 dark:text-green-400 dark:text-green-400" />}
+                                {answered && !isCorrectIdx && checkpointAnswers[currentCheckpoint.id] === false && <XCircle size={16} className="float-right text-red-600 dark:text-red-400 dark:text-red-400" />}
                               </button>
                             );
                           })}
@@ -483,7 +483,7 @@ export default function StudentSessionsPage() {
                       return (
                         <div className="space-y-3">
                           {currentCheckpoint.options.map((opt, i) => (
-                            <label key={i} className={`w-full p-4 rounded-lg text-left border flex items-center gap-3 cursor-pointer transition-colors ${answered ? 'opacity-60 cursor-default' : 'hover:border-primary-500 hover:bg-primary-50'} ${!answered && multiSelected.includes(i) ? 'border-primary-500 bg-primary-50' : 'border-slate-200 bg-white'}`}>
+                            <label key={i} className={`w-full p-4 rounded-lg text-left border flex items-center gap-3 cursor-pointer transition-colors ${answered ? 'opacity-60 cursor-default' : 'hover:border-primary-500 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20'} ${!answered && multiSelected.includes(i) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
                               <input type="checkbox" checked={multiSelected.includes(i)} disabled={answered} onChange={() => { if (answered) return; setMultiSelected(prev => prev.includes(i) ? prev.filter(v => v !== i) : [...prev, i]); }} className="w-5 h-5" />
                               <span>{opt}</span>
                             </label>
@@ -520,29 +520,29 @@ export default function StudentSessionsPage() {
                     }
 
                     // fallback
-                    return <p className="text-slate-500">Unsupported question type.</p>;
+                    return <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Unsupported question type.</p>;
                   })()}
 
                   {checkpointAnswers[currentCheckpoint.id] === false && (
-                    <div className="mt-4 p-3 bg-red-50 rounded-lg text-sm text-red-600 flex items-center gap-2"><AlertCircle size={16} />Incorrect. Rewinding to last checkpoint for review...</div>
+                    <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg text-sm text-red-600 dark:text-red-400 dark:text-red-400 flex items-center gap-2"><AlertCircle size={16} />Incorrect. Rewinding to last checkpoint for review...</div>
                   )}
                   {checkpointAnswers[currentCheckpoint.id] === true && (
-                    <div className="mt-4 p-3 bg-green-50 rounded-lg text-sm text-green-600 flex items-center gap-2"><CheckCircle size={16} />Correct! Continuing video...</div>
+                    <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-lg text-sm text-green-600 dark:text-green-400 dark:text-green-400 flex items-center gap-2"><CheckCircle size={16} />Correct! Continuing video...</div>
                   )}
                 </div>
               </div>
             )}
             
-            <button onClick={() => router.push('/student/lessons')} className="absolute top-4 right-4 z-10 p-2 bg-white/90 rounded-lg hover:bg-white" title="View Lesson Notes"><BookOpen size={20} /></button>
-            <button onClick={handleCloseVideo} className="absolute top-4 left-4 z-10 p-2 bg-white/90 rounded-lg hover:bg-white"><XCircle size={20} /></button>
+            <button onClick={() => router.push('/student/lessons')} className="absolute top-4 right-4 z-10 p-2 bg-white/90 rounded-lg hover:bg-white dark:bg-slate-800" title="View Lesson Notes"><BookOpen size={20} /></button>
+            <button onClick={handleCloseVideo} className="absolute top-4 left-4 z-10 p-2 bg-white/90 rounded-lg hover:bg-white dark:bg-slate-800"><XCircle size={20} /></button>
 
             {videoEnded && (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-white rounded-xl px-6 py-4 shadow-lg">
                 <div className="flex items-center gap-4">
-                  <CheckCircle size={24} className="text-green-600" />
+                  <CheckCircle size={24} className="text-green-600 dark:text-green-400 dark:text-green-400" />
                   <div className="flex-1">
-                    <p className="font-semibold text-slate-800">Lesson Complete!</p>
-                    {checkpointScore && <p className="text-sm text-slate-500">Checkpoints: {checkpointScore.correct}/{checkpointScore.total} correct {checkpointScore.total > 0 && `(${Math.round((checkpointScore.correct / checkpointScore.total) * 100)}%)`}</p>}
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Lesson Complete!</p>
+                    {checkpointScore && <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Checkpoints: {checkpointScore.correct}/{checkpointScore.total} correct {checkpointScore.total > 0 && `(${Math.round((checkpointScore.correct / checkpointScore.total) * 100)}%)`}</p>}
                   </div>
                   {!checkpointSavedRef.current && (
                     <button onClick={() => saveCheckpointResults()} className="btn-outline text-sm">Save Results</button>
@@ -561,12 +561,12 @@ export default function StudentSessionsPage() {
             return (
               <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
                 <div className="bg-white rounded-xl max-w-lg w-full p-8 mx-4">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"><FileText size={32} className="text-purple-600" /></div>
-                  <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Post-Video Quiz</h2>
-                  <p className="text-slate-500 text-center mb-6">Test your understanding with this short quiz based on the lesson.</p>
-                  <div className="bg-slate-50 rounded-lg p-4 mb-6">
-                    <p className="text-sm text-slate-600"><strong>{quiz?.title || 'Quiz'}</strong></p>
-                    <p className="text-sm text-slate-500 mt-1">{quiz?.quiz_questions?.length || 0} questions &bull; {quiz?.time_limit || 'No'} time limit</p>
+                  <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><FileText size={32} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" /></div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white text-center mb-2">Post-Video Quiz</h2>
+                  <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-center mb-6">Test your understanding with this short quiz based on the lesson.</p>
+                  <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400"><strong>{quiz?.title || 'Quiz'}</strong></p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">{quiz?.quiz_questions?.length || 0} questions &bull; {quiz?.time_limit || 'No'} time limit</p>
                   </div>
                   <div className="flex gap-3">
                     <button onClick={() => setShowPostQuiz(false)} className="btn-ghost flex-1">Skip</button>

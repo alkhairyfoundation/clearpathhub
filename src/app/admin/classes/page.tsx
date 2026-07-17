@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -97,12 +97,12 @@ export default function AdminClassesPage() {
     <DashboardLayout title="Classes" subtitle="Manage school classes and class teachers">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Classes</h1>
-            <p className="text-slate-500 mt-1">Manage school classes and class teachers</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Classes</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage school classes and class teachers</p>
           </div>
         </div>
         <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
@@ -110,28 +110,28 @@ export default function AdminClassesPage() {
         </button>
       </div>
 
-      {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-      {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+      {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+      {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
       {loading ? (
         <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
       ) : classes.length === 0 ? (
         <div className="card text-center py-16">
           <GraduationCap className="mx-auto text-slate-300 mb-4" size={48} />
-          <p className="font-medium text-slate-500">No classes yet</p>
-          <p className="text-sm text-slate-400 mt-1 mb-4">Create your first class</p>
+          <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No classes yet</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 mb-4">Create your first class</p>
           <button onClick={() => openModal()} className="btn-primary">Add Class</button>
         </div>
       ) : (
         <div className="card overflow-hidden p-0">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
               <tr>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Class Name</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Level</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Department</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden lg:table-cell">Class Teacher</th>
-                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Class Name</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Level</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden md:table-cell">Department</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden lg:table-cell">Class Teacher</th>
+                <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -139,16 +139,16 @@ export default function AdminClassesPage() {
                 const dept = departments.find(d => d.id === cls.department_id);
                 const teacher = teachers.find(t => t.id === cls.class_teacher_id);
                 return (
-                  <tr key={cls.id} className="hover:bg-slate-50">
-                    <td className="py-3 px-4 font-semibold text-slate-900">{cls.name}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600">Level {cls.level}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600 hidden md:table-cell">{dept?.name || '-'}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600 hidden lg:table-cell">{teacher ? `${teacher.first_name} ${teacher.last_name}` : '-'}</td>
+                  <tr key={cls.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                    <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white dark:text-white">{cls.name}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Level {cls.level}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{dept?.name || '-'}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden lg:table-cell">{teacher ? `${teacher.first_name} ${teacher.last_name}` : '-'}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => openModal(cls)} className="p-2 hover:bg-gray-100 rounded-lg"><Edit size={16} className="text-slate-500" /></button>
-                        <button onClick={() => handleDelete(cls.id)} disabled={deleting === cls.id} className="p-2 hover:bg-gray-100 rounded-lg">
-                          {deleting === cls.id ? <Loader2 size={16} className="animate-spin text-red-500" /> : <Trash2 size={16} className="text-red-500" />}
+                        <button onClick={() => openModal(cls)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                        <button onClick={() => handleDelete(cls.id)} disabled={deleting === cls.id} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                          {deleting === cls.id ? <Loader2 size={16} className="animate-spin text-red-500 dark:text-red-400 dark:text-red-400" /> : <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />}
                         </button>
                       </div>
                     </td>
@@ -164,11 +164,11 @@ export default function AdminClassesPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-lg font-semibold text-slate-800">{editing ? 'Edit Class' : 'Add Class'}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">{editing ? 'Edit Class' : 'Add Class'}</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
             </div>
             <div className="p-6 space-y-4">
-              {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+              {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
               <div><label className="label">Class Name</label><input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="e.g., JSS 1A" /></div>
               <div><label className="label">Level</label><input type="number" value={formData.level} onChange={e => setFormData({...formData, level: parseInt(e.target.value) || 1})} className="input" min={1} max={12} /></div>
               <div><label className="label">Department</label><select value={formData.department_id} onChange={e => setFormData({...formData, department_id: e.target.value})} className="input"><option value="">No Department</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>

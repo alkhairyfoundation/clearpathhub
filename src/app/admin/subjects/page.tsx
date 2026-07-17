@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -132,18 +132,18 @@ export default function AdminSubjectsPage() {
     <DashboardLayout title="Subjects" subtitle="Manage school subjects and assignments">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-slate-900">Subjects</h1>
-            <p className="text-slate-500 mt-1">{subjects.length} subjects across {departments.length} departments</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Subjects</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">{subjects.length} subjects across {departments.length} departments</p>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
             <Plus size={18} /> Add Subject
           </button>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
         
         <div className="card">
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -167,8 +167,8 @@ export default function AdminSubjectsPage() {
         ) : filtered.length === 0 ? (
           <div className="card text-center py-16">
             <FileText className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No subjects found</p>
-            <p className="text-sm text-slate-400 mt-1 mb-4">Create your first subject</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No subjects found</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 mb-4">Create your first subject</p>
             <button onClick={() => openModal()} className="btn-primary">Add Subject</button>
           </div>
         ) : (
@@ -177,17 +177,17 @@ export default function AdminSubjectsPage() {
               <div key={subj.id} className="card hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-bold text-slate-900">{subj.name}</h3>
-                    <p className="text-sm text-slate-500">{subj.code} • {subj.class?.name || 'All Classes'}</p>
+                    <h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{subj.name}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{subj.code} • {subj.class?.name || 'All Classes'}</p>
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => openModal(subj)} className="p-1.5 hover:bg-blue-50 rounded-lg"><Edit size={15} className="text-blue-600" /></button>
-                    <button onClick={() => handleDelete(subj.id)} disabled={deleting === subj.id} className="p-1.5 hover:bg-red-50 rounded-lg disabled:opacity-50">
-                      {deleting === subj.id ? <Loader2 size={15} className="text-red-600 animate-spin" /> : <Trash2 size={15} className="text-red-600" />}
+                    <button onClick={() => openModal(subj)} className="p-1.5 hover:bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg"><Edit size={15} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /></button>
+                    <button onClick={() => handleDelete(subj.id)} disabled={deleting === subj.id} className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg disabled:opacity-50">
+                      {deleting === subj.id ? <Loader2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400 animate-spin" /> : <Trash2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400" />}
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-500">
+                <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                   <span>{subj.department?.name || 'No Department'}</span>
                   {subj.teacher && <span>• {subj.teacher.first_name} {subj.teacher.last_name}</span>}
                 </div>
@@ -199,19 +199,19 @@ export default function AdminSubjectsPage() {
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
-                <h3 className="text-lg font-bold text-slate-900">{editingSubject ? 'Edit' : 'Add'} Subject</h3>
-                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{editingSubject ? 'Edit' : 'Add'} Subject</h3>
+                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
-                {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+                {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
                 <div><label className="label">Subject Name</label><input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="e.g., Mathematics" /></div>
                 <div><label className="label">Subject Code</label><input type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="input" placeholder="e.g., MATH101" /></div>
                 <div><label className="label">Department</label><select value={formData.department_id} onChange={e => setFormData({...formData, department_id: e.target.value})} className="input"><option value="">No Department</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
                 <div><label className="label">Class (Optional)</label><select value={formData.class_id} onChange={e => setFormData({...formData, class_id: e.target.value})} className="input"><option value="">All Classes</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                 <div><label className="label">Assigned Teacher</label><select value={formData.teacher_id} onChange={e => setFormData({...formData, teacher_id: e.target.value})} className="input"><option value="">No Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 bg-white sticky bottom-0">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white sticky bottom-0">
                 <button onClick={() => { setShowModal(false); setError(''); }} className="btn-ghost">Cancel</button>
                 <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">
                   {saving && <Loader2 size={16} className="animate-spin" />}

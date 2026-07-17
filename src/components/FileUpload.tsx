@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef } from 'react';
 import { Upload, X, FileText, Image as ImageIcon, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
@@ -90,10 +90,10 @@ export default function FileUpload({
       
       <div 
         className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${
-          uploading ? 'bg-slate-50 border-slate-300' :
-          error ? 'bg-red-50 border-red-200' :
-          success ? 'bg-emerald-50 border-emerald-200' :
-          'bg-white border-slate-200 hover:border-cp-gold/50'
+          uploading ? 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-slate-300 dark:border-slate-600 dark:border-slate-600' :
+          error ? 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border-red-200 dark:border-red-900/40 dark:border-red-900/40' :
+          success ? 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40' :
+          'bg-white border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-cp-gold/50'
         }`}
       >
         <input
@@ -108,10 +108,10 @@ export default function FileUpload({
           {previewUrl && !error ? (
             <div className="relative mb-3 group">
               {previewUrl.startsWith('data:') || previewUrl.includes('image') || previewUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                <img src={previewUrl} alt="Preview" className="w-20 h-20 object-contain rounded-lg border border-slate-200 shadow-sm" />
+                <img src={previewUrl} alt="Preview" className="w-20 h-20 object-contain rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 shadow-sm" />
               ) : (
-                <div className="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center">
-                  <FileText className="text-slate-400" size={32} />
+                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+                  <FileText className="text-slate-400 dark:text-slate-500 dark:text-slate-500" size={32} />
                 </div>
               )}
               <button 
@@ -124,39 +124,39 @@ export default function FileUpload({
           ) : (
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3 cursor-pointer hover:bg-slate-200 transition-colors"
+              className="w-12 h-12 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full flex items-center justify-center mb-3 cursor-pointer hover:bg-slate-200 transition-colors"
             >
-              <Upload className="text-slate-400" size={20} />
+              <Upload className="text-slate-400 dark:text-slate-500 dark:text-slate-500" size={20} />
             </div>
           )}
 
           <div className="text-center">
             {uploading ? (
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400">
                 <Loader2 className="animate-spin" size={16} />
                 Uploading...
               </div>
             ) : error ? (
-              <div className="flex items-center gap-2 text-sm font-medium text-red-600">
+              <div className="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 dark:text-red-400">
                 <AlertCircle size={16} />
                 {error}
                 <button onClick={() => fileInputRef.current?.click()} className="underline ml-1">Retry</button>
               </div>
             ) : success ? (
-              <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
+              <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 dark:text-emerald-400">
                 <CheckCircle2 size={16} />
                 Upload successful!
                 <button onClick={() => fileInputRef.current?.click()} className="underline ml-1">Change</button>
               </div>
             ) : (
               <>
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="text-cp-gold hover:underline">
                     Click to upload
                   </button>
                   {' '}or drag and drop
                 </p>
-                <p className="text-xs text-slate-400 mt-1">{helperText}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{helperText}</p>
               </>
             )}
           </div>

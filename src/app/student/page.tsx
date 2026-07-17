@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -182,18 +182,18 @@ useEffect(() => {
             </Link>
 
             {[
-              { title: 'Video Lessons', value: stats.sessions, icon: <Video size={24} />, href: '/student/sessions', bg: 'bg-primary-100', color: 'text-primary-600' },
-              { title: 'Homework', value: stats.homework, icon: <FileText size={24} />, href: '/student/homework', bg: 'bg-emerald-100', color: 'text-emerald-600', badge: stats.pendingHomework > 0 ? `${stats.pendingHomework} pending` : '' },
-              { title: 'Average Score', value: `${stats.avgScore}%`, icon: <Award size={24} />, href: '/student/results', bg: 'bg-purple-100', color: 'text-purple-600' },
+              { title: 'Video Lessons', value: stats.sessions, icon: <Video size={24} />, href: '/student/sessions', bg: 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30', color: 'text-primary-600 dark:text-primary-400 dark:text-primary-400' },
+              { title: 'Homework', value: stats.homework, icon: <FileText size={24} />, href: '/student/homework', bg: 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400', badge: stats.pendingHomework > 0 ? `${stats.pendingHomework} pending` : '' },
+              { title: 'Average Score', value: `${stats.avgScore}%`, icon: <Award size={24} />, href: '/student/results', bg: 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400 dark:text-purple-400' },
             ].map((card, i) => (
               <Link key={i} href={card.href} className="card hover:shadow-md cursor-pointer">
                 <div className="flex items-center justify-between mb-3">
                   <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center ${card.color}`}>{card.icon}</div>
-                  <ChevronRight size={16} className="text-slate-400" />
+                  <ChevronRight size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                 </div>
-                <h3 className="text-sm font-medium text-slate-500">{card.title}</h3>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{card.value}</p>
-                {card.badge && <p className="text-xs text-amber-600 font-medium mt-1">{card.badge}</p>}
+                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">{card.title}</h3>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white mt-1">{card.value}</p>
+                {card.badge && <p className="text-xs text-amber-600 dark:text-amber-400 dark:text-amber-400 font-medium mt-1">{card.badge}</p>}
               </Link>
             ))}
           </div>
@@ -233,17 +233,17 @@ useEffect(() => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><BookOpen size={18} className="text-slate-400" />Recent Lessons</h2>
-                <Link href="/student/lessons" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">View all <ArrowRight size={14} /></Link>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><BookOpen size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Recent Lessons</h2>
+                <Link href="/student/lessons" className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium flex items-center gap-1">View all <ArrowRight size={14} /></Link>
               </div>
               {recentLessons.length === 0 ? (
-                <div className="text-center py-12"><Video className="mx-auto text-slate-300 mb-3" size={40} /><p className="text-slate-500">No lessons available yet</p></div>
+                <div className="text-center py-12"><Video className="mx-auto text-slate-300 mb-3" size={40} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No lessons available yet</p></div>
               ) : (
                 <div className="space-y-3">
                   {recentLessons.map(lesson => (
-                    <div key={lesson.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                      <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"><Video size={20} className="text-primary-600" /></div>
-                      <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 truncate">{lesson.title}</p><p className="text-xs text-slate-500">{lesson.teacher ? `${lesson.teacher.first_name} ${lesson.teacher.last_name}` : ''} • {new Date(lesson.created_at).toLocaleDateString()}</p></div>
+                    <div key={lesson.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl">
+                      <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-lg flex items-center justify-center"><Video size={20} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
+                      <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 dark:text-white dark:text-white truncate">{lesson.title}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{lesson.teacher ? `${lesson.teacher.first_name} ${lesson.teacher.last_name}` : ''} • {new Date(lesson.created_at).toLocaleDateString()}</p></div>
                     </div>
                   ))}
                 </div>
@@ -252,19 +252,19 @@ useEffect(() => {
 
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><FileText size={18} className="text-slate-400" />Homework</h2>
-                <Link href="/student/homework" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">View all <ArrowRight size={14} /></Link>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><FileText size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Homework</h2>
+                <Link href="/student/homework" className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium flex items-center gap-1">View all <ArrowRight size={14} /></Link>
               </div>
               {recentHomework.length === 0 ? (
-                <div className="text-center py-12"><FileText className="mx-auto text-slate-300 mb-3" size={40} /><p className="text-slate-500">No homework assigned</p></div>
+                <div className="text-center py-12"><FileText className="mx-auto text-slate-300 mb-3" size={40} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No homework assigned</p></div>
               ) : (
                 <div className="space-y-3">
                   {recentHomework.map(hw => (
-                    <div key={hw.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hw.due_date && new Date(hw.due_date) < new Date() ? 'bg-red-100' : 'bg-emerald-100'}`}>
-                        <FileText size={20} className={hw.due_date && new Date(hw.due_date) < new Date() ? 'text-red-600' : 'text-emerald-600'} />
+                    <div key={hw.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hw.due_date && new Date(hw.due_date) < new Date() ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30' : 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30'}`}>
+                        <FileText size={20} className={hw.due_date && new Date(hw.due_date) < new Date() ? 'text-red-600 dark:text-red-400 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400'} />
                       </div>
-                      <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 truncate">{hw.title}</p><p className="text-xs text-slate-500">{hw.subject?.name || 'No subject'} • Due: {hw.due_date ? new Date(hw.due_date).toLocaleDateString() : 'No date'}</p></div>
+                      <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 dark:text-white dark:text-white truncate">{hw.title}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{hw.subject?.name || 'No subject'} • Due: {hw.due_date ? new Date(hw.due_date).toLocaleDateString() : 'No date'}</p></div>
                     </div>
                   ))}
                 </div>
@@ -274,15 +274,15 @@ useEffect(() => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
-              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-slate-400" />My Progress</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />My Progress</h2>
               <div className="space-y-4">
                 {[
-                  { label: 'Average Score', value: `${stats.avgScore}%`, color: stats.avgScore >= 70 ? 'text-green-600' : stats.avgScore >= 50 ? 'text-amber-600' : 'text-red-600', bg: stats.avgScore >= 70 ? 'bg-green-500' : stats.avgScore >= 50 ? 'bg-amber-500' : 'bg-red-500' },
-                  { label: 'Attendance Rate', value: `${stats.attendance}%`, color: stats.attendance >= 80 ? 'text-green-600' : 'text-amber-600', bg: stats.attendance >= 80 ? 'bg-green-500' : 'bg-amber-500' },
-                  { label: 'Results Recorded', value: stats.resultsCount.toString(), color: 'text-primary-600', bg: 'bg-primary-500' },
+                  { label: 'Average Score', value: `${stats.avgScore}%`, color: stats.avgScore >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : stats.avgScore >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400', bg: stats.avgScore >= 70 ? 'bg-green-500' : stats.avgScore >= 50 ? 'bg-amber-500' : 'bg-red-500' },
+                  { label: 'Attendance Rate', value: `${stats.attendance}%`, color: stats.attendance >= 80 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-amber-600 dark:text-amber-400 dark:text-amber-400', bg: stats.attendance >= 80 ? 'bg-green-500' : 'bg-amber-500' },
+                  { label: 'Results Recorded', value: stats.resultsCount.toString(), color: 'text-primary-600 dark:text-primary-400 dark:text-primary-400', bg: 'bg-primary-500' },
                 ].map((item, i) => (
                   <div key={i}>
-                    <div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-600">{item.label}</span><span className={`font-bold ${item.color}`}>{item.value}</span></div>
+                    <div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{item.label}</span><span className={`font-bold ${item.color}`}>{item.value}</span></div>
                     <div className="w-full bg-slate-200 rounded-full h-2"><div className={`${item.bg} h-2 rounded-full transition-all`} style={{ width: item.value.includes('%') ? item.value : `${item.value}%` }}></div></div>
                   </div>
                 ))}
@@ -291,18 +291,18 @@ useEffect(() => {
 
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Bell size={18} className="text-slate-400" />Announcements</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><Bell size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Announcements</h2>
                 {announcements.length > 0 && <span className="badge badge-red">{announcements.length}</span>}
               </div>
               {announcements.length === 0 ? (
-                <div className="text-center py-8 text-slate-400"><Bell size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No new announcements</p></div>
+                <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500"><Bell size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No new announcements</p></div>
               ) : (
                 <div className="space-y-3">
                   {announcements.map(a => (
-                    <div key={a.id} className={`p-3 rounded-lg border-l-4 ${a.priority === 'urgent' ? 'bg-red-50 border-red-500' : a.priority === 'high' ? 'bg-amber-50 border-amber-500' : 'bg-primary-50 border-primary-500'}`}>
-                      <p className="font-semibold text-sm text-slate-900">{a.title}</p>
-                      <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">{a.content}</p>
-                      <p className="text-xs text-slate-400 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>
+                    <div key={a.id} className={`p-3 rounded-lg border-l-4 ${a.priority === 'urgent' ? 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border-red-500' : a.priority === 'high' ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-500' : 'bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border-primary-500'}`}>
+                      <p className="font-semibold text-sm text-slate-900 dark:text-white dark:text-white">{a.title}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400 line-clamp-1 mt-0.5">{a.content}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>
                     </div>
                   ))}
                 </div>
@@ -311,15 +311,15 @@ useEffect(() => {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Printer size={18} className="text-slate-400" />Quick Links</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Printer size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Quick Links</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: 'Daily Practice', href: '/student/practice', icon: <Brain size={20} />, bg: 'bg-indigo-50 text-indigo-600' },
-                { label: 'Video Lessons', href: '/student/sessions', icon: <Video size={20} />, bg: 'bg-primary-50 text-primary-600' },
-                { label: 'Homework', href: '/student/homework', icon: <FileText size={20} />, bg: 'bg-emerald-50 text-emerald-600' },
-                { label: 'Attendance', href: '/student/attendance', icon: <UserCheck size={20} />, bg: 'bg-amber-50 text-amber-600' },
-                { label: 'Results', href: '/student/results', icon: <Award size={20} />, bg: 'bg-purple-50 text-purple-600' },
-                { label: 'History', href: '/student/practice/history', icon: <Brain size={20} />, bg: 'bg-pink-50 text-pink-600' },
+                { label: 'Daily Practice', href: '/student/practice', icon: <Brain size={20} />, bg: 'bg-indigo-50 dark:bg-indigo-900/20 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 dark:text-indigo-400' },
+                { label: 'Video Lessons', href: '/student/sessions', icon: <Video size={20} />, bg: 'bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 dark:text-primary-400' },
+                { label: 'Homework', href: '/student/homework', icon: <FileText size={20} />, bg: 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' },
+                { label: 'Attendance', href: '/student/attendance', icon: <UserCheck size={20} />, bg: 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 dark:text-amber-400' },
+                { label: 'Results', href: '/student/results', icon: <Award size={20} />, bg: 'bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 dark:text-purple-400' },
+                { label: 'History', href: '/student/practice/history', icon: <Brain size={20} />, bg: 'bg-pink-50 dark:bg-pink-900/20 dark:bg-pink-900/20 text-pink-600 dark:text-pink-400 dark:text-pink-400' },
               ].map((link, i) => (
                 <Link key={i} href={link.href} className={`p-4 rounded-xl ${link.bg} hover:opacity-80 transition-all text-center`}>
                   <div className="mb-2 flex justify-center">{link.icon}</div>

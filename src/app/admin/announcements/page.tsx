@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -121,25 +121,25 @@ export default function AdminAnnouncementsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Announcements</h1>
-            <p className="text-slate-500 mt-1">Manage school-wide communications</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Announcements</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage school-wide communications</p>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />New Announcement</button>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total</span><Megaphone size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-slate-900">{announcements.length}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Active</span><CheckCircle size={16} className="text-green-600" /></div><p className="text-2xl font-bold text-green-600">{activeCount}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Scheduled</span><Clock size={16} className="text-amber-600" /></div><p className="text-2xl font-bold text-amber-600">{scheduledCount}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Expired</span><AlertTriangle size={16} className="text-red-600" /></div><p className="text-2xl font-bold text-red-600">{expiredCount}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Total</span><Megaphone size={16} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /></div><p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{announcements.length}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Active</span><CheckCircle size={16} className="text-green-600 dark:text-green-400 dark:text-green-400" /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{activeCount}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Scheduled</span><Clock size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /></div><p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{scheduledCount}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Expired</span><AlertTriangle size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{expiredCount}</p></div>
         </div>
 
         <div className="card">
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} /><input type="text" placeholder="Search announcements..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
+            <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" size={18} /><input type="text" placeholder="Search announcements..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
             <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="input w-auto"><option value="all">All Priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option></select>
             <select value={filterAudience} onChange={(e) => setFilterAudience(e.target.value)} className="input w-auto"><option value="all">All Audiences</option><option value="all">Everyone</option><option value="parents">Parents</option><option value="teachers">Teachers</option><option value="students">Students</option></select>
           </div>
@@ -147,21 +147,21 @@ export default function AdminAnnouncementsPage() {
           {loading ? (
             <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16"><Megaphone className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500">No announcements found</p></div>
+            <div className="text-center py-16"><Megaphone className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No announcements found</p></div>
           ) : (
             <div className="space-y-3">
               {filtered.map(ann => {
                 const isScheduled = ann.scheduled_at && new Date(ann.scheduled_at) > new Date();
                 const isExpired = ann.expires_at && new Date(ann.expires_at) < new Date();
                 return (
-                  <div key={ann.id} className={`p-4 rounded-xl border ${ann.is_active === false || isExpired ? 'bg-slate-50 border-slate-200 opacity-70' : 'bg-white border-slate-100'} ${ann.priority === 'urgent' ? 'border-l-4 border-l-red-500' : ann.priority === 'high' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-blue-500'}`}>
+                  <div key={ann.id} className={`p-4 rounded-xl border ${ann.is_active === false || isExpired ? 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-slate-200 dark:border-slate-700 dark:border-slate-700 opacity-70' : 'bg-white border-slate-100 dark:border-slate-700 dark:border-slate-700'} ${ann.priority === 'urgent' ? 'border-l-4 border-l-red-500' : ann.priority === 'high' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-blue-500'}`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1">
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100"><Megaphone size={20} className="text-slate-600" /></div>
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><Megaphone size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-slate-900">{ann.title}</p>
-                          <p className="text-sm text-slate-500 line-clamp-1">{ann.content}</p>
-                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-400">
+                          <p className="font-semibold text-slate-900 dark:text-white dark:text-white">{ann.title}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 line-clamp-1">{ann.content}</p>
+                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">
                             <span className="flex items-center gap-1"><Users size={12} />{ann.audience || 'all'}</span>
                             <span className="flex items-center gap-1"><Calendar size={12} />{new Date(ann.created_at).toLocaleDateString()}</span>
                             {ann.scheduled_at && <span className="flex items-center gap-1"><Clock size={12} />Scheduled: {new Date(ann.scheduled_at).toLocaleString()}</span>}
@@ -170,13 +170,13 @@ export default function AdminAnnouncementsPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ann.priority === 'urgent' ? 'bg-red-100 text-red-700' : ann.priority === 'high' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{ann.priority}</span>
-                        {isScheduled && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 flex items-center gap-1"><Clock size={10} />Scheduled</span>}
-                        {isExpired && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Expired</span>}
-                        {ann.is_active !== false && !isExpired && !isScheduled && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 flex items-center gap-1"><Eye size={10} />Active</span>}
-                        <button onClick={() => toggleActive(ann)} className="p-1.5 hover:bg-slate-100 rounded-lg" title={ann.is_active === false ? 'Activate' : 'Deactivate'}>{ann.is_active === false ? <CheckCircle size={15} className="text-green-600" /> : <Eye size={15} className="text-slate-400" />}</button>
-                        <button onClick={() => openModal(ann)} className="p-1.5 hover:bg-blue-50 rounded-lg"><Edit size={15} className="text-blue-600" /></button>
-                        <button onClick={() => handleDelete(ann.id)} className="p-1.5 hover:bg-red-50 rounded-lg"><Trash2 size={15} className="text-red-600" /></button>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ann.priority === 'urgent' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : ann.priority === 'high' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' : 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300'}`}>{ann.priority}</span>
+                        {isScheduled && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700 flex items-center gap-1"><Clock size={10} />Scheduled</span>}
+                        {isExpired && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400">Expired</span>}
+                        {ann.is_active !== false && !isExpired && !isScheduled && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 flex items-center gap-1"><Eye size={10} />Active</span>}
+                        <button onClick={() => toggleActive(ann)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title={ann.is_active === false ? 'Activate' : 'Deactivate'}>{ann.is_active === false ? <CheckCircle size={15} className="text-green-600 dark:text-green-400 dark:text-green-400" /> : <Eye size={15} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />}</button>
+                        <button onClick={() => openModal(ann)} className="p-1.5 hover:bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg"><Edit size={15} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /></button>
+                        <button onClick={() => handleDelete(ann.id)} className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg"><Trash2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400" /></button>
                       </div>
                     </div>
                   </div>
@@ -189,12 +189,12 @@ export default function AdminAnnouncementsPage() {
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-bold text-slate-900">{editingAnn ? 'Edit' : 'New'} Announcement</h3>
-                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{editingAnn ? 'Edit' : 'New'} Announcement</h3>
+                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
-                {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+                {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
                 <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Announcement title" /></div>
                 <div><label className="label">Content</label><textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="input" rows={4} placeholder="Announcement details..." /></div>
                 <div className="grid grid-cols-2 gap-4">
@@ -206,7 +206,7 @@ export default function AdminAnnouncementsPage() {
                   <div><label className="label">Expires (optional)</label><input type="datetime-local" value={formData.expires_at} onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })} className="input" /></div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 sticky bottom-0 bg-white">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 sticky bottom-0 bg-white dark:bg-slate-800">
                 <button type="button" onClick={() => { setShowModal(false); setError(''); }} className="btn-ghost">Cancel</button>
                 <button type="button" onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? <><Loader2 size={16} className="animate-spin" />Saving...</> : editingAnn ? 'Update' : 'Publish'}</button>
               </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -87,8 +87,8 @@ export default function AccountantReportsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-            <div><h1 className="text-2xl font-bold text-slate-800">Financial Reports</h1><p className="text-slate-500">Comprehensive financial analytics and export</p></div>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Financial Reports</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Comprehensive financial analytics and export</p></div>
           </div>
           <button onClick={downloadPDF} className="btn-outline flex items-center gap-2"><Download size={16} />Export PDF</button>
         </div>
@@ -100,18 +100,18 @@ export default function AccountantReportsPage() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="card"><div className="flex items-center gap-3 mb-2"><TrendingUp size={20} className="text-green-600" /><span className="text-sm text-slate-500">Total Income</span></div><p className="text-2xl font-bold text-green-600">&#8358;{stats.totalIncome.toLocaleString()}</p></div>
-          <div className="card"><div className="flex items-center gap-3 mb-2"><DollarSign size={20} className="text-yellow-600" /><span className="text-sm text-slate-500">Pending</span></div><p className="text-2xl font-bold text-yellow-600">&#8358;{stats.totalPending.toLocaleString()}</p></div>
-          <div className="card"><div className="flex items-center gap-3 mb-2"><TrendingDown size={20} className="text-red-600" /><span className="text-sm text-slate-500">Overdue</span></div><p className="text-2xl font-bold text-red-600">&#8358;{stats.totalOverdue.toLocaleString()}</p></div>
-          <div className="card"><div className="flex items-center gap-3 mb-2"><FileText size={20} className="text-blue-600" /><span className="text-sm text-slate-500">Transactions</span></div><p className="text-2xl font-bold text-blue-600">{stats.transactionCount}</p></div>
+          <div className="card"><div className="flex items-center gap-3 mb-2"><TrendingUp size={20} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Income</span></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">&#8358;{stats.totalIncome.toLocaleString()}</p></div>
+          <div className="card"><div className="flex items-center gap-3 mb-2"><DollarSign size={20} className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400" /><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Pending</span></div><p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 dark:text-yellow-400">&#8358;{stats.totalPending.toLocaleString()}</p></div>
+          <div className="card"><div className="flex items-center gap-3 mb-2"><TrendingDown size={20} className="text-red-600 dark:text-red-400 dark:text-red-400" /><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Overdue</span></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">&#8358;{stats.totalOverdue.toLocaleString()}</p></div>
+          <div className="card"><div className="flex items-center gap-3 mb-2"><FileText size={20} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Transactions</span></div><p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{stats.transactionCount}</p></div>
         </div>
 
         {Object.keys(stats.byMethod).length > 0 && (
           <div className="card">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">Payment Methods</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4">Payment Methods</h2>
             <div className="space-y-3">
               {Object.entries(stats.byMethod).map(([method, amount]) => (
-                <div key={method} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div key={method} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                   <span className="font-medium capitalize">{method}</span>
                   <span className="font-bold">&#8358;{amount.toLocaleString()}</span>
                 </div>
@@ -121,21 +121,21 @@ export default function AccountantReportsPage() {
         )}
 
         <div className="card">
-          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-slate-400" />Invoices</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Invoices</h2>
           {invoices.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">No invoices in this period</div>
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No invoices in this period</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Student</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Description</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Amount</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Due Date</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th></tr></thead>
+                <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden sm:table-cell">Description</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Amount</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden md:table-cell">Due Date</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Status</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {invoices.map(inv => (
-                    <tr key={inv.id} className="hover:bg-slate-50">
-                      <td className="py-3 px-4 font-medium text-slate-900">{inv.student?.first_name} {inv.student?.last_name}</td>
-                      <td className="py-3 px-4 text-sm text-slate-600 hidden sm:table-cell">{inv.description || 'School Fees'}</td>
+                    <tr key={inv.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                      <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{inv.student?.first_name} {inv.student?.last_name}</td>
+                      <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden sm:table-cell">{inv.description || 'School Fees'}</td>
                       <td className="py-3 px-4 font-semibold">&#8358;{inv.amount?.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-sm text-slate-500 hidden md:table-cell">{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</td>
-                      <td className="py-3 px-4"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${inv.status === 'paid' ? 'bg-green-100 text-green-700' : inv.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{inv.status}</span></td>
+                      <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</td>
+                      <td className="py-3 px-4"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${inv.status === 'paid' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : inv.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400'}`}>{inv.status}</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -145,20 +145,20 @@ export default function AccountantReportsPage() {
         </div>
 
         <div className="card">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Transactions</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4">Transactions</h2>
           {transactions.length === 0 ? (
-            <div className="text-center py-8 text-slate-500">No transactions in this period</div>
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No transactions in this period</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Description</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Amount</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Method</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Date</th></tr></thead>
+                <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Description</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Amount</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden sm:table-cell">Method</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Date</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {transactions.map(tx => (
-                    <tr key={tx.id} className="hover:bg-slate-50">
-                      <td className="py-3 px-4 font-medium text-slate-900">{tx.description || 'Payment'}</td>
-                      <td className="py-3 px-4 font-semibold text-green-600">+&#8358;{tx.amount?.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-sm text-slate-500 hidden sm:table-cell capitalize">{tx.payment_method || 'cash'}</td>
-                      <td className="py-3 px-4 text-sm text-slate-500">{new Date(tx.created_at).toLocaleDateString()}</td>
+                    <tr key={tx.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                      <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{tx.description || 'Payment'}</td>
+                      <td className="py-3 px-4 font-semibold text-green-600 dark:text-green-400 dark:text-green-400">+&#8358;{tx.amount?.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden sm:table-cell capitalize">{tx.payment_method || 'cash'}</td>
+                      <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(tx.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>

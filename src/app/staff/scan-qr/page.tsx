@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -125,9 +125,9 @@ export default function StaffScanQRPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card text-center">
-          <QrCode size={48} className="mx-auto text-primary-600 mb-4" />
-          <h2 className="text-lg font-semibold text-slate-800 mb-2">Scan QR Code</h2>
-          <p className="text-sm text-slate-500 mb-6">Point your camera at the school QR code displayed at the entrance</p>
+          <QrCode size={48} className="mx-auto text-primary-600 dark:text-primary-400 dark:text-primary-400 mb-4" />
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Scan QR Code</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-6">Point your camera at the school QR code displayed at the entrance</p>
           {!showCamera ? (
             <button onClick={startCamera} className="btn-primary flex items-center gap-2 mx-auto"><Camera size={18} />Open Camera</button>
           ) : (
@@ -136,22 +136,22 @@ export default function StaffScanQRPage() {
         </div>
 
         <div className="card">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><Calendar size={18} className="text-slate-400" />Today&apos;s Attendance</h2>
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><Calendar size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Today&apos;s Attendance</h2>
           {lastScan ? (
-            <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center"><Check className="text-green-600" size={24} /></div>
-              <div><p className="font-semibold text-slate-800">Checked In</p><p className="text-sm text-slate-500">{new Date(lastScan.marked_at).toLocaleTimeString()}</p></div>
+            <div className="flex items-center gap-4 p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-lg mb-4">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 rounded-full flex items-center justify-center"><Check className="text-green-600 dark:text-green-400 dark:text-green-400" size={24} /></div>
+              <div><p className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Checked In</p><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(lastScan.marked_at).toLocaleTimeString()}</p></div>
             </div>
           ) : (
-            <div className="text-center py-8 text-slate-500"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>No attendance marked yet</p></div>
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>No attendance marked yet</p></div>
           )}
           {scanHistory.length > 0 && (
-            <div className="mt-4"><h3 className="font-medium text-slate-800 mb-2">Today&apos;s Scans ({scanHistory.length})</h3>
+            <div className="mt-4"><h3 className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Today&apos;s Scans ({scanHistory.length})</h3>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {scanHistory.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg text-sm">
+                  <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg text-sm">
                     <div className="flex items-center gap-2"><Check size={14} className="text-green-500" /><span>{s.date}</span></div>
-                    <span className="text-slate-500">{new Date(s.marked_at).toLocaleTimeString()}</span>
+                    <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(s.marked_at).toLocaleTimeString()}</span>
                   </div>
                 ))}
               </div>
@@ -163,9 +163,9 @@ export default function StaffScanQRPage() {
       {showCamera && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">QR Scanner</h3>
-              <button onClick={stopCamera} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">QR Scanner</h3>
+              <button onClick={stopCamera} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
             </div>
             <div className="relative bg-black">
               <video ref={videoRef} className="w-full h-64 object-cover" playsInline />
@@ -175,8 +175,8 @@ export default function StaffScanQRPage() {
               </div>
               {scanning && <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Scanning...</div>}
             </div>
-            {cameraError && <div className="p-4 bg-red-50 text-red-600 text-sm text-center">{cameraError}</div>}
-            <div className="p-4 text-center text-sm text-slate-500">Point camera at the school QR code</div>
+            {cameraError && <div className="p-4 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-600 dark:text-red-400 dark:text-red-400 text-sm text-center">{cameraError}</div>}
+            <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Point camera at the school QR code</div>
           </div>
         </div>
       )}

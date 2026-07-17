@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -157,10 +157,10 @@ export default function Sidebar({ role }: SidebarProps) {
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
               isActive
                 ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-700 hover:text-slate-900 dark:text-white dark:text-white dark:hover:text-white'
             }`}
           >
-            <item.icon size={20} className={isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'} />
+            <item.icon size={20} className={isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400 dark:text-slate-400'} />
             <span>{item.label}</span>
           </Link>
         );

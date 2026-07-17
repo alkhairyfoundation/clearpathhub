@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -36,7 +36,7 @@ export default function StudentCcrPage() {
   if (loading) {
     return (
       <DashboardLayout title="Child Review" subtitle="Self-assessment questionnaire">
-        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary-600" /></div>
+        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
       </DashboardLayout>
     );
   }
@@ -44,7 +44,7 @@ export default function StudentCcrPage() {
   if (!studentRecord) {
     return (
       <DashboardLayout title="Child Review" subtitle="Self-assessment questionnaire">
-        <div className="text-center py-20 text-slate-500">Student record not found.</div>
+        <div className="text-center py-20 text-slate-500 dark:text-slate-400 dark:text-slate-400">Student record not found.</div>
       </DashboardLayout>
     );
   }

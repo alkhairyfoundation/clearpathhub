@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -151,46 +151,46 @@ function WeeklyReportContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-          <div><h1 className="text-2xl font-bold text-slate-800">Weekly Report</h1><p className="text-slate-500">{child ? `${child.profile?.first_name} ${child.profile?.last_name}` : ''}</p></div>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+          <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Weekly Report</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{child ? `${child.profile?.first_name} ${child.profile?.last_name}` : ''}</p></div>
         </div>
         {report && <button onClick={downloadPDF} className="btn-outline flex items-center gap-2"><Download size={16} />Download PDF</button>}
       </div>
 
       {!child ? (
-        <div className="bg-white rounded-xl p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No children linked to your account</p></div>
+        <div className="bg-white rounded-xl p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
       ) : !report ? (
-        <div className="bg-white rounded-xl p-12 text-center"><Calendar className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No report available for this week</p></div>
+        <div className="bg-white rounded-xl p-12 text-center"><Calendar className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No report available for this week</p></div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="card"><div className="flex items-center gap-3 mb-2"><UserCheck size={20} className="text-green-600" /><span className="text-sm text-slate-500">Attendance</span></div><p className="text-2xl font-bold text-green-600">{report.attendance.rate}%</p></div>
-            <div className="card"><div className="flex items-center gap-3 mb-2"><TrendingUp size={20} className="text-primary-600" /><span className="text-sm text-slate-500">Avg Score</span></div><p className="text-2xl font-bold text-primary-600">{report.avgScore}%</p></div>
-            <div className="card"><div className="flex items-center gap-3 mb-2"><Brain size={20} className="text-purple-600" /><span className="text-sm text-slate-500">Quizzes/Tests</span></div><p className="text-2xl font-bold text-purple-600">{report.quizzes.length + report.tests.length}</p></div>
-            <div className="card"><div className="flex items-center gap-3 mb-2"><Award size={20} className="text-amber-600" /><span className="text-sm text-slate-500">Positive</span></div><p className="text-2xl font-bold text-amber-600">{report.positiveNotes}</p></div>
+            <div className="card"><div className="flex items-center gap-3 mb-2"><UserCheck size={20} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Attendance</span></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{report.attendance.rate}%</p></div>
+            <div className="card"><div className="flex items-center gap-3 mb-2"><TrendingUp size={20} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Avg Score</span></div><p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{report.avgScore}%</p></div>
+            <div className="card"><div className="flex items-center gap-3 mb-2"><Brain size={20} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" /><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Quizzes/Tests</span></div><p className="text-2xl font-bold text-purple-600 dark:text-purple-400 dark:text-purple-400">{report.quizzes.length + report.tests.length}</p></div>
+            <div className="card"><div className="flex items-center gap-3 mb-2"><Award size={20} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Positive</span></div><p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{report.positiveNotes}</p></div>
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">Week of {report.weekStart} - {report.weekEnd}</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4">Week of {report.weekStart} - {report.weekEnd}</h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg"><div className="flex items-center gap-3"><UserCheck size={20} className="text-green-600" /><div><p className="font-medium">Attendance</p><p className="text-sm text-slate-500">{report.attendance.present} out of {report.attendance.total} days</p></div></div><span className={`text-lg font-bold ${report.attendance.rate >= 80 ? 'text-green-600' : report.attendance.rate >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>{report.attendance.rate}%</span></div>
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><div className="flex items-center gap-3"><UserCheck size={20} className="text-green-600 dark:text-green-400 dark:text-green-400" /><div><p className="font-medium">Attendance</p><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{report.attendance.present} out of {report.attendance.total} days</p></div></div><span className={`text-lg font-bold ${report.attendance.rate >= 80 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : report.attendance.rate >= 60 ? 'text-yellow-600 dark:text-yellow-400 dark:text-yellow-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{report.attendance.rate}%</span></div>
               {report.results.length > 0 && (
-                <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3">Results This Week</h3><div className="space-y-2">{report.results.map((r: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{r.subject?.name}</span><span className="font-semibold">{r.score}%</span></div>))}</div></div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><h3 className="font-semibold mb-3">Results This Week</h3><div className="space-y-2">{report.results.map((r: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{r.subject?.name}</span><span className="font-semibold">{r.score}%</span></div>))}</div></div>
               )}
               {report.homework.length > 0 && (
-                <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3">Homework Submitted</h3><div className="space-y-2">{report.homework.map((h: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{h.homework?.title}</span><span className="text-xs text-slate-500">{h.homework?.subject?.name}</span></div>))}</div></div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><h3 className="font-semibold mb-3">Homework Submitted</h3><div className="space-y-2">{report.homework.map((h: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{h.homework?.title}</span><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{h.homework?.subject?.name}</span></div>))}</div></div>
               )}
               {report.quizzes.length > 0 && (
-                <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3 flex items-center gap-2"><Brain size={16} className="text-purple-600" />Quizzes Taken</h3><div className="space-y-2">{report.quizzes.map((q: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{q.quiz?.title || 'Quiz'}</span><span className={`font-semibold text-sm ${q.score >= 70 ? 'text-green-600' : q.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{q.score}%</span></div>))}</div></div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><h3 className="font-semibold mb-3 flex items-center gap-2"><Brain size={16} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" />Quizzes Taken</h3><div className="space-y-2">{report.quizzes.map((q: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{q.quiz?.title || 'Quiz'}</span><span className={`font-semibold text-sm ${q.score >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : q.score >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{q.score}%</span></div>))}</div></div>
               )}
               {report.tests.length > 0 && (
-                <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3 flex items-center gap-2"><BookOpen size={16} className="text-blue-600" />Tests Taken</h3><div className="space-y-2">{report.tests.map((t: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{t.test?.title || 'Test'}</span><span className={`font-semibold text-sm ${t.score >= 70 ? 'text-green-600' : t.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{t.score}%</span></div>))}</div></div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><h3 className="font-semibold mb-3 flex items-center gap-2"><BookOpen size={16} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" />Tests Taken</h3><div className="space-y-2">{report.tests.map((t: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{t.test?.title || 'Test'}</span><span className={`font-semibold text-sm ${t.score >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : t.score >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{t.score}%</span></div>))}</div></div>
               )}
               {report.behavior.length > 0 && (
-                <div className="p-4 bg-slate-50 rounded-lg"><h3 className="font-semibold mb-3">Behavior Notes</h3><div className="space-y-2">{report.behavior.map((b: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{b.title}</span><span className="text-xs text-slate-500">{b.teacher?.first_name}</span></div>))}</div></div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><h3 className="font-semibold mb-3">Behavior Notes</h3><div className="space-y-2">{report.behavior.map((b: any, i: number) => (<div key={i} className="flex items-center justify-between"><span className="text-sm">{b.title}</span><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{b.teacher?.first_name}</span></div>))}</div></div>
               )}
               {report.results.length === 0 && report.homework.length === 0 && report.behavior.length === 0 && (
-                <div className="text-center py-8 text-slate-500">No activities recorded this week</div>
+                <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No activities recorded this week</div>
               )}
             </div>
           </div>

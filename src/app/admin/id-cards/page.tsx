@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -147,11 +147,11 @@ export default function AdminIDCardsPage() {
 
   const getCardTheme = () => {
     const themes: Record<string, { bg: string, header: string, text: string }> = {
-      blue: { bg: 'bg-blue-50', header: 'bg-blue-600', text: 'text-blue-900' },
-      green: { bg: 'bg-emerald-50', header: 'bg-emerald-600', text: 'text-emerald-900' },
-      purple: { bg: 'bg-purple-50', header: 'bg-purple-600', text: 'text-purple-900' },
-      amber: { bg: 'bg-amber-50', header: 'bg-amber-600', text: 'text-amber-900' },
-      slate: { bg: 'bg-slate-50', header: 'bg-slate-600', text: 'text-slate-900' },
+      blue: { bg: 'bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20', header: 'bg-blue-600', text: 'text-blue-900' },
+      green: { bg: 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20', header: 'bg-emerald-600', text: 'text-emerald-900' },
+      purple: { bg: 'bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20', header: 'bg-purple-600', text: 'text-purple-900' },
+      amber: { bg: 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20', header: 'bg-amber-600', text: 'text-amber-900' },
+      slate: { bg: 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800', header: 'bg-slate-600', text: 'text-slate-900 dark:text-white dark:text-white' },
     };
     return themes[cardConfig.cardTheme] || themes.blue;
   };
@@ -164,7 +164,7 @@ export default function AdminIDCardsPage() {
   }
 
   const renderCardFront = (student: any, qr: string, idCard: any) => (
-    <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg" ref={cardRef}>
+    <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg" ref={cardRef}>
       <div className={`${theme.header} text-white p-4 text-center`}>
         <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
         <h3 className="text-lg font-bold">STUDENT ID CARD</h3>
@@ -173,32 +173,32 @@ export default function AdminIDCardsPage() {
       <div className="p-4">
         <div className="flex flex-col items-center mb-4">
           {student.profile?.avatar_url ? (
-            <img src={student.profile.avatar_url} alt="Photo" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100" />
+            <img src={student.profile.avatar_url} alt="Photo" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 dark:border-slate-700" />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-bold text-slate-400">
+            <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-bold text-slate-400 dark:text-slate-500 dark:text-slate-500">
               {student.profile?.first_name?.[0]}{student.profile?.last_name?.[0]}
             </div>
           )}
         </div>
 
         <div className="text-center mb-4">
-          <h4 className="text-xl font-bold text-slate-900">{student.profile?.first_name} {student.profile?.last_name}</h4>
-          <p className="text-xs text-slate-500 mt-1 font-mono">Adm No: {student.admission_number}</p>
+          <h4 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{student.profile?.first_name} {student.profile?.last_name}</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 font-mono">Adm No: {student.admission_number}</p>
           {student.date_of_birth && (
-            <p className="text-sm text-slate-600 mt-1">DOB: {formatDate(student.date_of_birth)}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-1">DOB: {formatDate(student.date_of_birth)}</p>
           )}
           {idCard?.issued_at && (
-            <p className="text-xs text-slate-400 mt-1">Issued: {formatDate(idCard.issued_at)}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Issued: {formatDate(idCard.issued_at)}</p>
           )}
         </div>
 
         <div className="flex justify-center mb-4">
-          <div className="bg-white p-2 rounded-lg border-2 border-slate-200">
+          <div className="bg-white p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700">
             <img src={qr} alt="QR Code" className="w-32 h-32" />
           </div>
         </div>
 
-        <div className="text-center text-xs text-slate-500">
+        <div className="text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">
           <p>Scan to mark attendance</p>
         </div>
       </div>
@@ -206,27 +206,27 @@ export default function AdminIDCardsPage() {
   );
 
   const renderCardBack = (student: any, qr: string) => (
-    <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
+    <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
       <div className={`${theme.header} text-white p-4 text-center`}>
         <h3 className="text-lg font-bold">ID CARD RULES</h3>
       </div>
 
       <div className="p-4">
-        <div className="text-sm text-slate-700 whitespace-pre-wrap min-h-[120px]">
+        <div className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 whitespace-pre-wrap min-h-[120px]">
           {cardConfig.backRules || 'This ID card is non-transferable.'}
         </div>
       </div>
 
-      <div className="p-4 text-center border-t border-slate-100">
+      <div className="p-4 text-center border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
         <div className="flex justify-center mb-2">
           <div className="bg-white p-2 rounded-lg border">
             <img src={qr} alt="Verification QR" className="w-20 h-20" />
           </div>
         </div>
-        <p className="text-xs text-slate-500">ID Verification Code</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">ID Verification Code</p>
       </div>
 
-      <div className="p-3 bg-slate-50 text-center text-xs text-slate-500 border-t">
+      <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 border-t">
         {cardConfig.backMessage || 'This ID card is the property of the school.'}
       </div>
     </div>
@@ -457,12 +457,12 @@ const qrImg = document.createElement('img');
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Student ID Cards</h1>
-              <p className="text-slate-500 mt-1">{students.length} students eligible for ID cards</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Student ID Cards</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">{students.length} students eligible for ID cards</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -488,15 +488,15 @@ const qrImg = document.createElement('img');
           </div>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {loading ? (
           <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
         ) : filtered.length === 0 ? (
           <div className="card text-center py-16">
             <Users className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No students found</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No students found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -504,17 +504,17 @@ const qrImg = document.createElement('img');
               <div key={student.id} className="card hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600">
+                    <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 dark:text-slate-400 dark:text-slate-400">
                       {student.profile?.first_name?.[0]}{student.profile?.last_name?.[0]}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-900">{student.profile?.first_name} {student.profile?.last_name}</h3>
-                      <p className="text-sm text-slate-500">{student.class?.name || 'No Class'}</p>
+                      <h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{student.profile?.first_name} {student.profile?.last_name}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{student.class?.name || 'No Class'}</p>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs font-mono text-slate-500">{student.admission_number}</span>
+                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400 dark:text-slate-400">{student.admission_number}</span>
                   <button onClick={() => handleShowCard(student)} disabled={generating} className="btn-primary text-sm py-1.5 px-3 flex items-center gap-1">
                     <Eye size={14} /> View
                   </button>
@@ -527,10 +527,10 @@ const qrImg = document.createElement('img');
         {showCardModal && selectedStudent && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-bold text-slate-900">ID Card Preview - {selectedStudent.profile?.first_name}</h3>
-                <button onClick={() => setShowCardModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                  <X size={20} className="text-slate-500" />
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">ID Card Preview - {selectedStudent.profile?.first_name}</h3>
+                <button onClick={() => setShowCardModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                  <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
               
@@ -540,13 +540,13 @@ const qrImg = document.createElement('img');
                   {renderCardBack(selectedStudent, qrBackUrl)}
                 </div>
 
-                <div className="card bg-slate-50 p-4">
-                  <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <div className="card bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-4">
+                  <h4 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-3 flex items-center gap-2">
                     <FileDown size={16} /> Download Options
                   </h4>
                   <div className="flex flex-wrap gap-3 items-center">
                     <div className="flex gap-2">
-                      <label className="text-sm text-slate-600">Format:</label>
+                      <label className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Format:</label>
                       <select value={downloadFormat} onChange={(e) => setDownloadFormat(e.target.value as any)} className="input py-1 text-sm">
                         <option value="both">Front & Back</option>
                         <option value="front">Front Only</option>
@@ -592,10 +592,10 @@ const qrImg = document.createElement('img');
         {showConfigModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900">ID Card Configuration</h3>
-                <button onClick={() => setShowConfigModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                  <X size={20} className="text-slate-500" />
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">ID Card Configuration</h3>
+                <button onClick={() => setShowConfigModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                  <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
               
@@ -632,7 +632,7 @@ const qrImg = document.createElement('img');
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
                 <button onClick={() => setShowConfigModal(false)} className="btn-ghost">Cancel</button>
                 <button onClick={saveCardConfig} disabled={saving} className="btn-primary flex items-center gap-2">
                   {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
@@ -646,18 +646,18 @@ const qrImg = document.createElement('img');
         {showBulkModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900">Bulk Download</h3>
-                <button onClick={() => setShowBulkModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                  <X size={20} className="text-slate-500" />
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Bulk Download</h3>
+                <button onClick={() => setShowBulkModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                  <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
               
               <div className="p-5">
-                <p className="text-sm text-slate-600 mb-4">Select students to download ID cards (PDF):</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-4">Select students to download ID cards (PDF):</p>
                 <div className="max-h-64 overflow-y-auto space-y-2 mb-4">
                   {filtered.map(student => (
-                    <label key={student.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer">
+                    <label key={student.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg cursor-pointer">
                       <input 
                         type="checkbox" 
                         checked={selectedStudents.includes(student.id)}
@@ -672,15 +672,15 @@ const qrImg = document.createElement('img');
                       />
                       <div className="flex-1">
                         <p className="font-medium text-sm">{student.profile?.first_name} {student.profile?.last_name}</p>
-                        <p className="text-xs text-slate-500">{student.class?.name} - {student.admission_number}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{student.class?.name} - {student.admission_number}</p>
                       </div>
                     </label>
                   ))}
                 </div>
-                <p className="text-sm text-slate-500">{selectedStudents.length} students selected</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{selectedStudents.length} students selected</p>
               </div>
 
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
                 <button onClick={() => setShowBulkModal(false)} className="btn-ghost">Cancel</button>
                 <button onClick={handleBulkDownload} disabled={selectedStudents.length === 0 || generating} className="btn-primary flex items-center gap-2">
                   {generating ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}

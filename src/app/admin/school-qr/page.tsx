@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -169,31 +169,31 @@ export default function AdminSchoolQRPage() {
     <DashboardLayout title="School QR Code" subtitle="Generate and download the school identity QR code">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-slate-900">School QR Code</h1>
-            <p className="text-slate-500 mt-1">Generate and download the school identity QR code</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">School QR Code</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Generate and download the school identity QR code</p>
           </div>
         </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 card">
-          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <QrCode size={18} className="text-slate-400" />
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2">
+            <QrCode size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
             School Identity QR
           </h2>
 
           {qrCodeUrl ? (
             <div className="text-center">
-              <div className="bg-white rounded-xl p-8 mb-6 inline-block border-2 border-slate-200">
+              <div className="bg-white rounded-xl p-8 mb-6 inline-block border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700">
                 <img src={qrCodeUrl} alt="School QR Code" className="w-80 h-80 sm:w-96 sm:h-96" />
               </div>
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-slate-900">{schoolSettings?.school_name || 'Mastery Engine'}</h3>
-                {schoolSettings?.school_address && <p className="text-slate-500 text-sm">{schoolSettings.school_address}</p>}
-                {schoolSettings?.school_motto && <p className="text-primary-600 italic text-sm mt-1">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{schoolSettings?.school_name || 'Mastery Engine'}</h3>
+                {schoolSettings?.school_address && <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">{schoolSettings.school_address}</p>}
+                {schoolSettings?.school_motto && <p className="text-primary-600 dark:text-primary-400 dark:text-primary-400 italic text-sm mt-1">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
               </div>
               <div className="flex flex-wrap gap-3 justify-center">
                 <button onClick={downloadPNG} className="btn-primary flex items-center gap-2">
@@ -219,7 +219,7 @@ export default function AdminSchoolQRPage() {
 
         <div className="space-y-6">
           <div className="card">
-            <h3 className="font-bold text-slate-900 mb-4">QR Settings</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-4">QR Settings</h3>
             <div className="space-y-4">
               <div>
                 <label className="label">QR Size</label>
@@ -240,18 +240,18 @@ export default function AdminSchoolQRPage() {
           </div>
 
           <div className="card">
-            <h3 className="font-bold text-slate-900 mb-4">School Information</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-4">School Information</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-slate-500">Name</span><span className="font-medium">{schoolSettings?.school_name || 'N/A'}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Address</span><span className="font-medium">{schoolSettings?.school_address || 'N/A'}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Phone</span><span className="font-medium">{schoolSettings?.school_phone || 'N/A'}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Email</span><span className="font-medium">{schoolSettings?.school_email || 'N/A'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Name</span><span className="font-medium">{schoolSettings?.school_name || 'N/A'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Address</span><span className="font-medium">{schoolSettings?.school_address || 'N/A'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Phone</span><span className="font-medium">{schoolSettings?.school_phone || 'N/A'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Email</span><span className="font-medium">{schoolSettings?.school_email || 'N/A'}</span></div>
             </div>
           </div>
 
-          <div className="card bg-primary-50 border-primary-200">
-            <h3 className="font-bold text-slate-900 mb-2">Usage</h3>
-            <ul className="text-sm text-slate-700 space-y-1 list-disc list-inside">
+          <div className="card bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40">
+            <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-2">Usage</h3>
+            <ul className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 space-y-1 list-disc list-inside">
               <li>Print and display at school entrance</li>
               <li>Include in official documents</li>
               <li>Share on school website</li>
@@ -266,20 +266,20 @@ export default function AdminSchoolQRPage() {
         <div className="fixed inset-0 z-50 bg-white flex flex-col">
           <div className="flex items-center justify-between px-6 py-4 border-b bg-white shrink-0">
             <div className="flex items-center gap-3">
-              <Smartphone size={20} className="text-slate-500" />
-              <span className="text-sm font-semibold text-slate-700">Rotate your device to landscape for maximum scan distance</span>
+              <Smartphone size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Rotate your device to landscape for maximum scan distance</span>
             </div>
             <button onClick={() => setLandscapeMode(false)} className="btn-ghost flex items-center gap-2">
               <Minimize2 size={18} /> Exit
             </button>
           </div>
-          <div className="flex-1 flex items-center justify-center p-4 bg-slate-50">
+          <div className="flex-1 flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
             <div className="bg-white rounded-2xl shadow-lg p-4 max-w-full max-h-full flex items-center justify-center" style={{ aspectRatio: '1' }}>
               <img src={qrCodeUrl} alt="School QR" className="max-w-full max-h-full object-contain" style={{ width: 'min(85vw, 85vh)' }} />
             </div>
           </div>
           <div className="shrink-0 border-t bg-white px-4 py-3 flex items-center justify-between flex-wrap gap-2">
-            <span className="text-xs text-slate-400">{schoolSettings?.school_name} &mdash; Scan for staff attendance</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{schoolSettings?.school_name} &mdash; Scan for staff attendance</span>
             <div className="flex gap-2">
               <button onClick={downloadPNG} className="btn-primary text-xs flex items-center gap-1.5 px-3 py-1.5">
                 <Download size={14} /> PNG
@@ -299,9 +299,9 @@ export default function AdminSchoolQRPage() {
       {showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">QR Code Preview</h3>
-              <button onClick={() => setShowPreview(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">QR Code Preview</h3>
+              <button onClick={() => setShowPreview(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </button>
             </div>
@@ -315,7 +315,7 @@ export default function AdminSchoolQRPage() {
                 {schoolSettings?.school_motto && <p className="text-primary-200 italic text-sm mt-4">&ldquo;{schoolSettings.school_motto}&rdquo;</p>}
               </div>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
               <button onClick={() => setShowPreview(false)} className="btn-ghost">Close</button>
               <button onClick={handlePrint} className="btn-primary flex items-center gap-2"><Printer size={18} />Print</button>
             </div>

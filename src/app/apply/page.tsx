@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, Suspense, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -289,18 +289,18 @@ function ApplyPageContent() {
     <>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50 to-slate-100">
       {/* Header */}
-      <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200/60 sticky top-0 z-50">
+      <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 dark:border-slate-700/60 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl flex items-center justify-center shadow-lg shadow-primary-600/25">
               <GraduationCap className="text-white" size={22} />
             </div>
             <div>
-              <p className="font-bold text-slate-900">ClearPath</p>
-              <p className="text-xs text-slate-500">Edu Hub</p>
+              <p className="font-bold text-slate-900 dark:text-white dark:text-white">ClearPath</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Edu Hub</p>
             </div>
           </Link>
-          <Link href="/" className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors">
+          <Link href="/" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white transition-colors">
             <ArrowLeft size={16} />
             Back to Home
           </Link>
@@ -309,27 +309,27 @@ function ApplyPageContent() {
 
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">Entrance Examination</h1>
-          <p className="text-slate-600 mt-2">Take your entrance exam to begin the admission process</p>
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Entrance Examination</h1>
+          <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-2">Take your entrance exam to begin the admission process</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2">
             <AlertCircle size={18} />
             {error}
           </div>
         )}
 
         {step === 'info' && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/60 p-8">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8">
             {!codeValid && !exam ? (
               <div className="space-y-6">
                 <div className="text-center">
                   <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileText className="text-primary-600" size={36} />
+                    <FileText className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={36} />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-800">Enter Exam Code</h2>
-                  <p className="text-slate-500 mt-1">You need an exam code from the school to proceed</p>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Enter Exam Code</h2>
+                  <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">You need an exam code from the school to proceed</p>
                 </div>
                 <div>
                   <label className="label">Exam Code</label>
@@ -354,30 +354,30 @@ function ApplyPageContent() {
               <div className="space-y-6">
                 <div className="text-center">
                   <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Check className="text-green-600" size={36} />
+                    <Check className="text-green-600 dark:text-green-400 dark:text-green-400" size={36} />
                   </div>
-                  <h2 className="text-xl font-bold text-slate-800">{exam.title}</h2>
-                  <p className="text-slate-500">{exam.level} • {exam.academic_year}</p>
+                  <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{exam.title}</h2>
+                  <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{exam.level} • {exam.academic_year}</p>
                 </div>
                 {exam.description && (
-                  <p className="text-sm text-slate-600 text-center bg-slate-50 p-4 rounded-xl">{exam.description}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-4 rounded-xl">{exam.description}</p>
                 )}
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-primary-50 p-4 rounded-xl border border-primary-100">
-                    <p className="text-slate-500 text-xs uppercase font-semibold">Duration</p>
-                    <p className="font-bold text-lg text-slate-900">{exam.duration_minutes} min</p>
+                  <div className="bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 p-4 rounded-xl border border-primary-100">
+                    <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-xs uppercase font-semibold">Duration</p>
+                    <p className="font-bold text-lg text-slate-900 dark:text-white dark:text-white">{exam.duration_minutes} min</p>
                   </div>
-                  <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                    <p className="text-slate-500 text-xs uppercase font-semibold">Questions</p>
-                    <p className="font-bold text-lg text-slate-900">{questions.length}</p>
+                  <div className="bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 p-4 rounded-xl border border-purple-100">
+                    <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-xs uppercase font-semibold">Questions</p>
+                    <p className="font-bold text-lg text-slate-900 dark:text-white dark:text-white">{questions.length}</p>
                   </div>
-                  <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                    <p className="text-slate-500 text-xs uppercase font-semibold">Passing Score</p>
-                    <p className="font-bold text-lg text-slate-900">{exam.passing_score}%</p>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 p-4 rounded-xl border border-amber-100">
+                    <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-xs uppercase font-semibold">Passing Score</p>
+                    <p className="font-bold text-lg text-slate-900 dark:text-white dark:text-white">{exam.passing_score}%</p>
                   </div>
-                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                    <p className="text-slate-500 text-xs uppercase font-semibold">Level</p>
-                    <p className="font-bold text-lg text-slate-900">{exam.level}</p>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 p-4 rounded-xl border border-emerald-100">
+                    <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-xs uppercase font-semibold">Level</p>
+                    <p className="font-bold text-lg text-slate-900 dark:text-white dark:text-white">{exam.level}</p>
                   </div>
                 </div>
                 <button onClick={() => setStep('form')} className="btn-primary w-full py-3">Proceed to Application Form</button>
@@ -387,8 +387,8 @@ function ApplyPageContent() {
         )}
 
         {step === 'form' && exam && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/60 p-8">
-            <h2 className="text-xl font-bold text-slate-800 mb-6">Application Form</h2>
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-6">Application Form</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div><label className="label">First Name *</label><input type="text" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} className="input" /></div>
@@ -413,17 +413,17 @@ function ApplyPageContent() {
         )}
 
         {step === 'exam' && exam && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/60 p-8">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8">
             <div className="flex items-center justify-between mb-6">
-              <span className="font-medium text-slate-600">Question {currentQuestion + 1} of {questions.length}</span>
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${timeRemaining <= 5 ? 'bg-red-100 text-red-700' : 'bg-primary-100 text-primary-700'}`}>
+              <span className="font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400">Question {currentQuestion + 1} of {questions.length}</span>
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${timeRemaining <= 5 ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300'}`}>
                 <Clock size={16} />
                 <span>{timeRemaining} min left</span>
               </div>
             </div>
 
             {/* Progress bar */}
-            <div className="w-full bg-slate-100 rounded-full h-2 mb-6">
+            <div className="w-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-2 mb-6">
               <div className="bg-primary-600 h-2 rounded-full transition-all" style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}></div>
             </div>
             
@@ -432,7 +432,7 @@ function ApplyPageContent() {
                 {questions[currentQuestion].question_image && (
                   <img src={questions[currentQuestion].question_image} alt="Question" className="w-full rounded-lg" />
                 )}
-                <p className="text-lg font-medium text-slate-800">{questions[currentQuestion].question}</p>
+                <p className="text-lg font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{questions[currentQuestion].question}</p>
                 
                 <div className="space-y-3">
                   {questions[currentQuestion].options?.map((opt: string, i: number) => (
@@ -441,11 +441,11 @@ function ApplyPageContent() {
                       onClick={() => setAnswers({ ...answers, [currentQuestion]: i })}
                       className={`w-full p-4 rounded-xl text-left border-2 transition-all ${
                         answers[currentQuestion] === i
-                          ? 'border-primary-500 bg-primary-50 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800'
                       }`}
                     >
-                      <span className="font-semibold text-slate-500 mr-2">{String.fromCharCode(65 + i)}.</span>
+                      <span className="font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 mr-2">{String.fromCharCode(65 + i)}.</span>
                       {opt}
                     </button>
                   ))}
@@ -475,7 +475,7 @@ function ApplyPageContent() {
                 </div>
 
                 {/* Question navigation dots */}
-                <div className="flex flex-wrap gap-2 justify-center pt-4 border-t border-slate-100">
+                <div className="flex flex-wrap gap-2 justify-center pt-4 border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
                   {questions.map((_, i) => (
                     <button
                       key={i}
@@ -484,8 +484,8 @@ function ApplyPageContent() {
                         i === currentQuestion
                           ? 'bg-primary-600 text-white'
                           : answers[i] !== undefined
-                          ? 'bg-green-100 text-green-700 border border-green-300'
-                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                          ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 border border-green-300'
+                          : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
                       }`}
                     >
                       {i + 1}
@@ -498,22 +498,22 @@ function ApplyPageContent() {
         )}
 
         {step === 'result' && exam && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/60 p-8 text-center">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8 text-center">
             <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center ${examScore >= exam.passing_score ? 'bg-gradient-to-br from-green-100 to-green-200' : 'bg-gradient-to-br from-red-100 to-red-200'}`}>
-              {examScore >= exam.passing_score ? <Check className="text-green-600" size={48} /> : <X className="text-red-600" size={48} />}
+              {examScore >= exam.passing_score ? <Check className="text-green-600 dark:text-green-400 dark:text-green-400" size={48} /> : <X className="text-red-600 dark:text-red-400 dark:text-red-400" size={48} />}
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 mt-6">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mt-6">
               {examScore >= exam.passing_score ? 'Congratulations! 🎉' : 'Keep Trying!'}
             </h2>
-            <p className="text-slate-600 mt-2">
+            <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-2">
               {examScore >= exam.passing_score
                 ? 'You have passed the entrance exam. The school will contact you regarding admission.'
                 : 'You did not meet the passing score this time. Please contact the school for more information.'}
             </p>
-            <div className={`text-5xl font-bold my-6 ${examScore >= exam.passing_score ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-5xl font-bold my-6 ${examScore >= exam.passing_score ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>
               {examScore}%
             </div>
-            <p className="text-sm text-slate-500">Passing score: {exam.passing_score}%</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Passing score: {exam.passing_score}%</p>
             <div className="mt-8">
               <Link href="/" className="btn-primary inline-flex items-center gap-2">
                 <ArrowLeft size={16} />
@@ -528,11 +528,11 @@ function ApplyPageContent() {
       {fullscreenBlocked && (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in">
-            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShieldAlert size={40} className="text-red-600" />
+            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShieldAlert size={40} className="text-red-600 dark:text-red-400 dark:text-red-400" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">Fullscreen Required</h2>
-            <p className="text-slate-600 mb-6">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white mb-2">Fullscreen Required</h2>
+            <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-6">
               You exited fullscreen mode during the exam. You must re-enter fullscreen to continue.
               Multiple fullscreen exits may result in automatic submission.
             </p>
@@ -555,7 +555,7 @@ function ApplyPageContent() {
                   submitExam();
                 }
               }}
-              className="btn-ghost w-full mt-2 text-sm text-slate-500"
+              className="btn-ghost w-full mt-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400"
             >
               Submit Exam Now
             </button>

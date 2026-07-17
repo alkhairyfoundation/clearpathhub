@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -93,33 +93,33 @@ export default function AdminAttendancePage() {
     present: 'bg-green-600 text-white', absent: 'bg-red-600 text-white', late: 'bg-amber-500 text-white', excused: 'bg-purple-600 text-white'
   };
   const statusBg: Record<string, string> = {
-    present: 'bg-green-50 border-green-200', absent: 'bg-red-50 border-red-200', late: 'bg-amber-50 border-amber-200', excused: 'bg-purple-50 border-purple-200'
+    present: 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border-green-200 dark:border-green-900/40 dark:border-green-900/40', absent: 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border-red-200 dark:border-red-900/40 dark:border-red-900/40', late: 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40', excused: 'bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 border-purple-200 dark:border-purple-900/40 dark:border-purple-900/40'
   };
 
   return (
     <DashboardLayout title="Attendance" subtitle="Track and manage student attendance">
       <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">Attendance</h1>
-          <p className="text-slate-500 mt-1">Track and manage student attendance</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Attendance</h1>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Track and manage student attendance</p>
         </div>
         <button className="btn-outline flex items-center gap-2" onClick={exportCSV}><Download size={18} /> Export CSV</button>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="card"><label className="label">Date</label><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" /></div>
         <div className="card"><label className="label">Class</label><select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="input"><option value="all">All Classes</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500">Present</span><CheckCircle size={16} className="text-green-600" /></div><p className="text-2xl font-bold text-green-600">{stats.present}</p><p className="text-xs text-slate-500">{presentPct}%</p></div>
-        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500">Absent</span><XCircle size={16} className="text-red-600" /></div><p className="text-2xl font-bold text-red-600">{stats.absent}</p></div>
-        <div className="card col-span-2 lg:col-span-1"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500">Late / Excused</span><Clock size={16} className="text-amber-600" /></div><p className="text-2xl font-bold text-amber-600">{stats.late}</p><p className="text-xs text-slate-500">{stats.excused} excused</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Present</span><CheckCircle size={16} className="text-green-600 dark:text-green-400 dark:text-green-400" /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{stats.present}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{presentPct}%</p></div>
+        <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Absent</span><XCircle size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{stats.absent}</p></div>
+        <div className="card col-span-2 lg:col-span-1"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Late / Excused</span><Clock size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /></div><p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{stats.late}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{stats.excused} excused</p></div>
       </div>
 
       <div className="card">
-        <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <Users size={18} className="text-slate-400" />
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2">
+          <Users size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
           {selectedClass === 'all' ? 'All Classes' : classes.find(c => c.id === selectedClass)?.name} — {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </h2>
 
@@ -128,26 +128,26 @@ export default function AdminAttendancePage() {
         ) : attendance.length === 0 ? (
           <div className="text-center py-16">
             <UserCheck className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No attendance records for this date</p>
-            <p className="text-sm text-slate-400 mt-1">Records are created when teachers mark attendance or students scan ID cards</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No attendance records for this date</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Records are created when teachers mark attendance or students scan ID cards</p>
           </div>
         ) : (
           <div className="space-y-2">
             {attendance.map((record) => (
-              <div key={record.id} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border ${statusBg[record.status] || 'bg-slate-50 border-slate-200'} hover:shadow-sm transition-shadow`}>
+              <div key={record.id} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border ${statusBg[record.status] || 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-slate-200 dark:border-slate-700 dark:border-slate-700'} hover:shadow-sm transition-shadow`}>
                 <div className="flex items-center gap-3 mb-3 sm:mb-0">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${record.status === 'present' ? 'bg-green-100 text-green-700' : record.status === 'absent' ? 'bg-red-100 text-red-700' : record.status === 'late' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700'}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${record.status === 'present' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : record.status === 'absent' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : record.status === 'late' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' : 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700'}`}>
                     {record.student?.first_name?.[0]}{record.student?.last_name?.[0]}
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">{record.student?.first_name} {record.student?.last_name}</p>
-                    <p className="text-xs text-slate-500">{record.class?.name}{record.marked_at ? ` • Marked ${new Date(record.marked_at).toLocaleTimeString()}` : ''}</p>
+                    <p className="font-semibold text-slate-900 dark:text-white dark:text-white">{record.student?.first_name} {record.student?.last_name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{record.class?.name}{record.marked_at ? ` • Marked ${new Date(record.marked_at).toLocaleTimeString()}` : ''}</p>
                   </div>
                 </div>
                 <div className="flex gap-1.5">
                   {(['present', 'late', 'absent', 'excused'] as const).map((status) => (
                     <button key={status} onClick={() => markAttendance(record.student_id, status)} disabled={saving === record.student_id}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all capitalize disabled:opacity-50 ${record.status === status ? statusColors[status] : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all capitalize disabled:opacity-50 ${record.status === status ? statusColors[status] : 'bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700'}`}>
                       {status}
                     </button>
                   ))}

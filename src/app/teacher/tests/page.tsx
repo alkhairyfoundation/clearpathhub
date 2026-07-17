@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -368,47 +368,47 @@ export default function TeacherTestsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Tests & Exams</h1>
-              <p className="text-slate-500 mt-1">{tests.length} tests available</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Tests & Exams</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">{tests.length} tests available</p>
             </div>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2"><Plus size={18} />Create Test</button>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
-        {warning && <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-700 text-sm">{warning}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
+        {warning && <div className="bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-lg p-3 text-amber-700 dark:text-amber-300 dark:text-amber-300 text-sm">{warning}</div>}
 
         <div className="card">
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" size={18} />
             <input type="text" placeholder="Search tests..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" />
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16"><FileText className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500">{tests.length === 0 ? 'No tests yet. Create your first test!' : 'No tests match your search'}</p></div>
+            <div className="text-center py-16"><FileText className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">{tests.length === 0 ? 'No tests yet. Create your first test!' : 'No tests match your search'}</p></div>
           ) : (
             <div className="space-y-3">
               {filtered.map(test => (
-                <div key={test.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div key={test.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 dark:border-slate-700">
                   <div className="flex items-center gap-4 mb-3 sm:mb-0">
-                    <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"><FileText size={20} className="text-primary-600" /></div>
+                    <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-lg flex items-center justify-center"><FileText size={20} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
                     <div>
-                      <p className="font-semibold text-slate-900">{test.title}</p>
-                      <p className="text-sm text-slate-500">{test.subject?.name || 'No Subject'} • {test.class?.name || 'No Class'} • {test.test_type.replace('_', ' ')} • {test.total_marks} marks</p>
+                      <p className="font-semibold text-slate-900 dark:text-white dark:text-white">{test.title}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{test.subject?.name || 'No Subject'} • {test.class?.name || 'No Class'} • {test.test_type.replace('_', ' ')} • {test.total_marks} marks</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${test.is_published ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{test.is_published ? 'Published' : 'Draft'}</span>
-                    <button onClick={() => openQuestions(test)} className="p-1.5 hover:bg-primary-50 rounded-lg" title="Manage Questions"><Hash size={15} className="text-primary-600" /></button>
-                    <button onClick={() => openAnalysis(test)} className="p-1.5 hover:bg-purple-50 rounded-lg" title="View Analysis"><BarChart3 size={15} className="text-purple-600" /></button>
-                    <button onClick={() => togglePublish(test)} className="p-1.5 hover:bg-green-50 rounded-lg text-green-600" title={test.is_published ? 'Unpublish' : 'Publish'}><Send size={15} /></button>
-                    <button onClick={() => openModal(test)} className="p-1.5 hover:bg-primary-50 rounded-lg"><Edit size={15} className="text-primary-600" /></button>
-                    <button onClick={() => handleDelete(test.id)} disabled={deleting === test.id} className="p-1.5 hover:bg-red-50 rounded-lg disabled:opacity-50">{deleting === test.id ? <Loader2 size={15} className="text-red-600 animate-spin" /> : <Trash2 size={15} className="text-red-600" />}</button>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${test.is_published ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300'}`}>{test.is_published ? 'Published' : 'Draft'}</span>
+                    <button onClick={() => openQuestions(test)} className="p-1.5 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg" title="Manage Questions"><Hash size={15} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></button>
+                    <button onClick={() => openAnalysis(test)} className="p-1.5 hover:bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 rounded-lg" title="View Analysis"><BarChart3 size={15} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" /></button>
+                    <button onClick={() => togglePublish(test)} className="p-1.5 hover:bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400 dark:text-green-400" title={test.is_published ? 'Unpublish' : 'Publish'}><Send size={15} /></button>
+                    <button onClick={() => openModal(test)} className="p-1.5 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg"><Edit size={15} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></button>
+                    <button onClick={() => handleDelete(test.id)} disabled={deleting === test.id} className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg disabled:opacity-50">{deleting === test.id ? <Loader2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400 animate-spin" /> : <Trash2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400" />}</button>
                   </div>
                 </div>
               ))}
@@ -419,12 +419,12 @@ export default function TeacherTestsPage() {
         {showTestModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
-                <h3 className="text-lg font-bold text-slate-900">{editingTest ? 'Edit Test' : 'Create Test'}</h3>
-                <button onClick={() => setShowTestModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{editingTest ? 'Edit Test' : 'Create Test'}</h3>
+                <button onClick={() => setShowTestModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
-                {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+                {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
                 <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="e.g., Mathematics Mid-Term" /></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className="label">Subject</label><select value={formData.subject_id} onChange={(e) => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
@@ -442,17 +442,17 @@ export default function TeacherTestsPage() {
                 </div>
                 <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={2} /></div>
                 <div className="border-t pt-4">
-                  <h4 className="font-semibold text-slate-800 mb-3 text-sm">Security Settings</h4>
+                  <h4 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3 text-sm">Security Settings</h4>
                   <div className="space-y-3">
-                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.shuffle_questions} onChange={(e) => setFormData({ ...formData, shuffle_questions: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700">Shuffle Questions</p><p className="text-xs text-slate-400">Display questions in random order</p></div></label>
-                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.shuffle_options} onChange={(e) => setFormData({ ...formData, shuffle_options: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700">Shuffle Options</p><p className="text-xs text-slate-400">Randomize answer option order</p></div></label>
-                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.require_fullscreen} onChange={(e) => setFormData({ ...formData, require_fullscreen: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700">Require Fullscreen</p></div></label>
-                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.prevent_tab_switch} onChange={(e) => setFormData({ ...formData, prevent_tab_switch: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700">Prevent Tab Switching</p><p className="text-xs text-slate-400">Auto-submit if too many tab switches</p></div></label>
+                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.shuffle_questions} onChange={(e) => setFormData({ ...formData, shuffle_questions: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Shuffle Questions</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Display questions in random order</p></div></label>
+                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.shuffle_options} onChange={(e) => setFormData({ ...formData, shuffle_options: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Shuffle Options</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Randomize answer option order</p></div></label>
+                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.require_fullscreen} onChange={(e) => setFormData({ ...formData, require_fullscreen: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Require Fullscreen</p></div></label>
+                    <label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked={formData.prevent_tab_switch} onChange={(e) => setFormData({ ...formData, prevent_tab_switch: e.target.checked })} className="w-4 h-4" /><div><p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Prevent Tab Switching</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Auto-submit if too many tab switches</p></div></label>
                     {formData.prevent_tab_switch && <div><label className="label text-xs">Max Tab Switches</label><input type="number" value={formData.max_tab_switches} onChange={(e) => setFormData({ ...formData, max_tab_switches: parseInt(e.target.value) })} className="input" min={1} max={10} /></div>}
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 bg-white sticky bottom-0">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white sticky bottom-0">
                 <button onClick={() => setShowTestModal(false)} className="btn-ghost">Cancel</button>
                 <button onClick={handleSaveTest} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving...' : editingTest ? 'Update' : 'Create'}</button>
               </div>
@@ -463,13 +463,13 @@ export default function TeacherTestsPage() {
         {showQuestionsModal && selectedTest && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-bold text-slate-900">Questions — {selectedTest.title}</h3>
-                <button onClick={() => setShowQuestionsModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Questions — {selectedTest.title}</h3>
+                <button onClick={() => setShowQuestionsModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-slate-500">{questions.length} question(s)</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{questions.length} question(s)</p>
                   <div className="flex gap-2">
                     <button onClick={openBankSelect} className="btn-outline text-sm flex items-center gap-1.5"><Copy size={14} />From Bank</button>
                     <button onClick={handleAutoPopulate} disabled={saving} className="btn-outline text-sm flex items-center gap-1.5"><Download size={14} />Auto-populate</button>
@@ -518,7 +518,7 @@ export default function TeacherTestsPage() {
                   <div><label className="label">Correct Answer</label>
                     <div className="grid grid-cols-2 gap-2">
                       {['True', 'False'].map((opt, i) => (
-                        <label key={i} className={`p-3 rounded-lg border-2 cursor-pointer text-center ${questionForm.correct_answer === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
+                        <label key={i} className={`p-3 rounded-lg border-2 cursor-pointer text-center ${questionForm.correct_answer === i ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>
                           <input type="radio" checked={questionForm.correct_answer === i} onChange={() => setQuestionForm({...questionForm, correct_answer: i})} className="sr-only" />
                           <span className="font-medium">{opt}</span>
                         </label>
@@ -528,13 +528,13 @@ export default function TeacherTestsPage() {
                 )}
 
                 {questionForm.question_type === 'fill_blank' && (
-                  <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700">
-                    Students will type the answer. Include <code className="bg-primary-100 px-1 rounded">___</code> in the question text.
+                  <div className="p-3 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40 rounded-lg text-sm text-primary-700 dark:text-primary-300 dark:text-primary-300">
+                    Students will type the answer. Include <code className="bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 px-1 rounded">___</code> in the question text.
                   </div>
                 )}
 
                 {questionForm.question_type === 'short_answer' && (
-                  <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-700">
+                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-900/40 dark:border-purple-900/40 rounded-lg text-sm text-purple-700">
                     Students write a short answer. Requires manual grading.
                   </div>
                 )}
@@ -574,20 +574,20 @@ export default function TeacherTestsPage() {
 
                 {questions.length > 0 && (
                   <div className="mt-4 border-t pt-4">
-                    <h4 className="font-semibold text-slate-700 mb-2">{questions.length} Questions</h4>
+                    <h4 className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">{questions.length} Questions</h4>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {questions.map((q, i) => (
-                        <div key={q.id} className="flex items-start justify-between p-3 bg-slate-50 rounded-lg text-sm">
+                        <div key={q.id} className="flex items-start justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg text-sm">
                           <div className="flex-1">
                             <span className="font-medium">{i + 1}.</span> {q.question}
-                            <span className="text-xs text-slate-400 ml-2">({q.question_type})</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 ml-2">({q.question_type})</span>
                           </div>
                           <div className="flex gap-1 ml-2 flex-shrink-0">
-                            <button onClick={() => editTestQuestion(q)} className="p-1 hover:bg-primary-50 rounded-lg" title="Edit question">
-                              <Edit size={14} className="text-primary-600" />
+                            <button onClick={() => editTestQuestion(q)} className="p-1 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg" title="Edit question">
+                              <Edit size={14} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
                             </button>
-                            <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-50 rounded-lg" title="Delete question">
-                              <Trash2 size={14} className="text-red-500" />
+                            <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg" title="Delete question">
+                              <Trash2 size={14} className="text-red-500 dark:text-red-400 dark:text-red-400" />
                             </button>
                           </div>
                         </div>
@@ -604,32 +604,32 @@ export default function TeacherTestsPage() {
         {showBankSelect && selectedTest && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
-                <h3 className="text-lg font-bold text-slate-900">Add from Question Bank</h3>
-                <button onClick={() => setShowBankSelect(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Add from Question Bank</h3>
+                <button onClick={() => setShowBankSelect(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" size={18} />
                   <input type="text" placeholder="Search questions..." value={bankSearch} onChange={(e) => filterBank(e.target.value)} className="input pl-10 text-sm" />
                 </div>
                 {bankFiltered.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400 text-sm">No questions in bank</div>
+                  <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm">No questions in bank</div>
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {bankFiltered.map((q: any) => (
-                      <label key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${selectedBankIds.has(q.id) ? 'border-primary-300 bg-primary-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-                        <input type="checkbox" checked={selectedBankIds.has(q.id)} onChange={() => toggleBankSelect(q.id)} className="w-4 h-4 mt-0.5 text-primary-600 rounded" />
+                      <label key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${selectedBankIds.has(q.id) ? 'border-primary-300 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800'}`}>
+                        <input type="checkbox" checked={selectedBankIds.has(q.id)} onChange={() => toggleBankSelect(q.id)} className="w-4 h-4 mt-0.5 text-primary-600 dark:text-primary-400 dark:text-primary-400 rounded" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900">{q.question}</p>
-                          <p className="text-xs text-slate-500">{q.subject} • {q.level} • {q.difficulty_level}</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{q.subject} • {q.level} • {q.difficulty_level}</p>
                         </div>
                       </label>
                     ))}
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-2 border-t">
-                  <span className="text-sm text-slate-500">{selectedBankIds.size} selected</span>
+                  <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{selectedBankIds.size} selected</span>
                   <div className="flex gap-2">
                     <button onClick={() => setShowBankSelect(false)} className="btn-ghost text-sm">Cancel</button>
                     <button onClick={handleAddFromBank} disabled={saving || selectedBankIds.size === 0} className="btn-primary text-sm disabled:opacity-50">{saving ? 'Adding...' : `Add ${selectedBankIds.size} Question(s)`}</button>
@@ -644,9 +644,9 @@ export default function TeacherTestsPage() {
         {showAnalysis && analysisTest && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
-                <h3 className="text-lg font-bold text-slate-900">Analysis — {analysisTest.title}</h3>
-                <button onClick={() => setShowAnalysis(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Analysis — {analysisTest.title}</h3>
+                <button onClick={() => setShowAnalysis(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-6">
                 {analysisLoading ? (
@@ -654,40 +654,40 @@ export default function TeacherTestsPage() {
                 ) : (
                   <>
                     <div className="grid grid-cols-3 gap-4">
-                      <div className="card text-center"><p className="text-xs text-slate-500 uppercase">Total Students</p><p className="text-2xl font-bold text-slate-900">{analysisAttempts.length}</p></div>
-                      <div className="card text-center"><p className="text-xs text-slate-500 uppercase">Avg Score</p><p className="text-2xl font-bold text-amber-600">{analysisAttempts.length > 0 ? Math.round(analysisAttempts.reduce((s: number, a: any) => s + (a.score || 0), 0) / analysisAttempts.length) : 0}%</p></div>
-                      <div className="card text-center"><p className="text-xs text-slate-500 uppercase">Questions</p><p className="text-2xl font-bold text-primary-600">{analysisData.length}</p></div>
+                      <div className="card text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Total Students</p><p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{analysisAttempts.length}</p></div>
+                      <div className="card text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Avg Score</p><p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{analysisAttempts.length > 0 ? Math.round(analysisAttempts.reduce((s: number, a: any) => s + (a.score || 0), 0) / analysisAttempts.length) : 0}%</p></div>
+                      <div className="card text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Questions</p><p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{analysisData.length}</p></div>
                     </div>
 
                     {analysisData.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-slate-700 mb-3">Per-Question Breakdown</h4>
+                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-3">Per-Question Breakdown</h4>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
-                            <thead className="bg-slate-50 border-b border-slate-200">
+                            <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
                               <tr>
-                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">#</th>
-                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Question</th>
-                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Subject</th>
-                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Topic</th>
-                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Correct</th>
-                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Total</th>
-                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">%</th>
-                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Bar</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">#</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Question</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Subject</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Topic</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Correct</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Total</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">%</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Bar</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                               {analysisData.map((q: any, i: number) => (
-                                <tr key={q.id} className="hover:bg-slate-50">
-                                  <td className="py-2 px-3 text-slate-400">{i + 1}</td>
-                                  <td className="py-2 px-3 font-medium text-slate-900 max-w-xs truncate">{q.question}</td>
-                                  <td className="py-2 px-3 text-xs text-slate-600">{q.subject || 'N/A'}</td>
-                                  <td className="py-2 px-3 text-xs text-slate-600">{q.topic || 'N/A'}</td>
-                                  <td className="py-2 px-3 text-center font-semibold text-green-600">{q.correct}</td>
-                                  <td className="py-2 px-3 text-center text-slate-600">{q.total}</td>
-                                  <td className={`py-2 px-3 text-center font-semibold ${q.percentage >= 70 ? 'text-green-600' : q.percentage >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{q.percentage}%</td>
+                                <tr key={q.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                                  <td className="py-2 px-3 text-slate-400 dark:text-slate-500 dark:text-slate-500">{i + 1}</td>
+                                  <td className="py-2 px-3 font-medium text-slate-900 dark:text-white dark:text-white max-w-xs truncate">{q.question}</td>
+                                  <td className="py-2 px-3 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">{q.subject || 'N/A'}</td>
+                                  <td className="py-2 px-3 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">{q.topic || 'N/A'}</td>
+                                  <td className="py-2 px-3 text-center font-semibold text-green-600 dark:text-green-400 dark:text-green-400">{q.correct}</td>
+                                  <td className="py-2 px-3 text-center text-slate-600 dark:text-slate-400 dark:text-slate-400">{q.total}</td>
+                                  <td className={`py-2 px-3 text-center font-semibold ${q.percentage >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : q.percentage >= 40 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{q.percentage}%</td>
                                   <td className="py-2 px-3">
-                                    <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden mx-auto">
+                                    <div className="w-24 h-2 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full overflow-hidden mx-auto">
                                       <div className={`h-full rounded-full ${q.percentage >= 70 ? 'bg-green-500' : q.percentage >= 40 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${Math.min(q.percentage, 100)}%` }}></div>
                                     </div>
                                   </td>
@@ -701,29 +701,29 @@ export default function TeacherTestsPage() {
 
                     {analysisAttempts.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-slate-700 mb-3">Student Attempts</h4>
+                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-3">Student Attempts</h4>
                         <div className="overflow-x-auto max-h-72 overflow-y-auto">
                           <table className="w-full text-sm">
-                            <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
+                            <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 sticky top-0">
                               <tr>
-                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Student</th>
-                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Score</th>
-                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Passed</th>
-                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Date</th>
-                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 uppercase">Report</th>
+                                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Score</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Passed</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden md:table-cell">Date</th>
+                                <th className="text-center py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Report</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                               {analysisAttempts.map((a: any) => (
-                                <tr key={a.id} className="hover:bg-slate-50">
-                                  <td className="py-2 px-3 font-medium text-slate-900">{a.student?.first_name} {a.student?.last_name}</td>
-                                  <td className={`py-2 px-3 text-center font-semibold ${a.score >= (analysisTest.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{a.score}%</td>
-                                  <td className="py-2 px-3 text-center">{a.passed ? <Check size={16} className="text-green-500 inline" /> : <X size={16} className="text-red-500 inline" />}</td>
-                                  <td className="py-2 px-3 text-center text-slate-500 hidden md:table-cell">{formatDate(a.created_at)}</td>
+                                <tr key={a.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                                  <td className="py-2 px-3 font-medium text-slate-900 dark:text-white dark:text-white">{a.student?.first_name} {a.student?.last_name}</td>
+                                  <td className={`py-2 px-3 text-center font-semibold ${a.score >= (analysisTest.passing_score || 50) ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{a.score}%</td>
+                                  <td className="py-2 px-3 text-center">{a.passed ? <Check size={16} className="text-green-500 inline" /> : <X size={16} className="text-red-500 dark:text-red-400 dark:text-red-400 inline" />}</td>
+                                  <td className="py-2 px-3 text-center text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{formatDate(a.created_at)}</td>
                                   <td className="py-2 px-3 text-center">
                                     <button
                                       onClick={() => window.open(`/student/tests/report/${a.id}`, '_blank')}
-                                      className="text-primary-600 hover:text-primary-700 text-xs font-semibold underline"
+                                      className="text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-700 dark:text-primary-300 dark:text-primary-300 text-xs font-semibold underline"
                                     >
                                       View
                                     </button>
@@ -737,7 +737,7 @@ export default function TeacherTestsPage() {
                     )}
 
                     {analysisData.length === 0 && analysisAttempts.length === 0 && (
-                      <div className="text-center py-12 text-slate-400"><BarChart3 size={40} className="mx-auto mb-3 opacity-50" /><p>No data available for analysis</p></div>
+                      <div className="text-center py-12 text-slate-400 dark:text-slate-500 dark:text-slate-500"><BarChart3 size={40} className="mx-auto mb-3 opacity-50" /><p>No data available for analysis</p></div>
                     )}
                   </>
                 )}

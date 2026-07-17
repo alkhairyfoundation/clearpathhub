@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -77,8 +77,8 @@ export default function AdminSettingsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">School Settings</h1>
-            <p className="text-slate-500 mt-1">Configure school details and appearance</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">School Settings</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Configure school details and appearance</p>
           </div>
         <button onClick={handleSave} disabled={loading} className="btn-primary flex items-center gap-2 disabled:opacity-50">
           {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
@@ -87,12 +87,12 @@ export default function AdminSettingsPage() {
       </div>
 
       {saved && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm flex items-center gap-2">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-center gap-2">
           <Check size={16} /> Settings saved successfully
         </div>
       )}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2">
+        <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2">
           <AlertCircle size={16} /> {error}
         </div>
       )}
@@ -101,8 +101,8 @@ export default function AdminSettingsPage() {
         {/* School Information */}
         <div className="card">
           <div className="flex items-center gap-2 mb-5">
-            <Shield className="text-blue-600" size={20} />
-            <h2 className="text-lg font-semibold text-slate-900">School Information</h2>
+            <Shield className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={20} />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white">School Information</h2>
           </div>
           <div className="space-y-4">
             <div>
@@ -133,28 +133,28 @@ export default function AdminSettingsPage() {
         {/* Appearance */}
         <div className="card">
           <div className="flex items-center gap-2 mb-5">
-            <Palette className="text-purple-600" size={20} />
-            <h2 className="text-lg font-semibold text-slate-900">Appearance</h2>
+            <Palette className="text-purple-600 dark:text-purple-400 dark:text-purple-400" size={20} />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white">Appearance</h2>
           </div>
           <div className="space-y-4">
             <div>
               <label className="label">Primary Color</label>
               <div className="flex items-center gap-3">
-                <input type="color" value={settings.primary_color || '#b3922f'} onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer" />
+                <input type="color" value={settings.primary_color || '#b3922f'} onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 cursor-pointer" />
                 <input type="text" value={settings.primary_color || ''} onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })} className="input flex-1" placeholder="#b3922f" />
               </div>
             </div>
             <div>
               <label className="label">Secondary Color</label>
               <div className="flex items-center gap-3">
-                <input type="color" value={settings.secondary_color || '#0f172a'} onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer" />
+                <input type="color" value={settings.secondary_color || '#0f172a'} onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 cursor-pointer" />
                 <input type="text" value={settings.secondary_color || ''} onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })} className="input flex-1" placeholder="#0f172a" />
               </div>
             </div>
             <div>
               <label className="label">Accent Color</label>
               <div className="flex items-center gap-3">
-                <input type="color" value={settings.accent_color || '#059669'} onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 cursor-pointer" />
+                <input type="color" value={settings.accent_color || '#059669'} onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 cursor-pointer" />
                 <input type="text" value={settings.accent_color || ''} onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })} className="input flex-1" placeholder="#059669" />
               </div>
             </div>
@@ -164,8 +164,8 @@ export default function AdminSettingsPage() {
         {/* Academic Settings */}
         <div className="card">
           <div className="flex items-center gap-2 mb-5">
-            <FileText className="text-emerald-600" size={20} />
-            <h2 className="text-lg font-semibold text-slate-900">Academic Settings</h2>
+            <FileText className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" size={20} />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white">Academic Settings</h2>
           </div>
           <div className="space-y-4">
             <div>
@@ -196,92 +196,92 @@ export default function AdminSettingsPage() {
         {/* Assessment Configuration */}
         <div className="card">
           <div className="flex items-center gap-2 mb-5">
-            <FileText className="text-amber-600" size={20} />
-            <h2 className="text-lg font-semibold text-slate-900">Assessment Configuration</h2>
+            <FileText className="text-amber-600 dark:text-amber-400 dark:text-amber-400" size={20} />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white">Assessment Configuration</h2>
           </div>
-          <p className="text-xs text-slate-500 mb-4">Configure how many Continuous Assessment (CA) columns appear on score entry and report cards, and their max scores.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">Configure how many Continuous Assessment (CA) columns appear on score entry and report cards, and their max scores.</p>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-900/40 dark:border-blue-900/40">
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={settings.assessment_config?.ca1_enabled ?? true}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca1_enabled: e.target.checked } })}
                   className="w-4 h-4" />
-                <label className="text-sm font-medium text-slate-700">CA1</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">CA1</label>
               </div>
               <div>
-                <label className="text-xs text-slate-500">Max Score</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Max Score</label>
                 <input type="number" min={0} max={100} value={settings.assessment_config?.ca1_max ?? 40}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca1_max: parseInt(e.target.value) || 0 } })}
                   className="input py-1 text-sm" />
               </div>
               <div className="col-span-2">
-                <label className="text-xs text-slate-500">Label</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Label</label>
                 <input type="text" value={settings.assessment_config?.ca1_label ?? 'Mid-Term Test'}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca1_label: e.target.value } })}
                   className="input py-1 text-sm" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-900/40 dark:border-green-900/40">
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={settings.assessment_config?.ca2_enabled ?? false}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca2_enabled: e.target.checked } })}
                   className="w-4 h-4" />
-                <label className="text-sm font-medium text-slate-700">CA2</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">CA2</label>
               </div>
               <div>
-                <label className="text-xs text-slate-500">Max Score</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Max Score</label>
                 <input type="number" min={0} max={100} value={settings.assessment_config?.ca2_max ?? 10}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca2_max: parseInt(e.target.value) || 0 } })}
                   className="input py-1 text-sm" />
               </div>
               <div className="col-span-2">
-                <label className="text-xs text-slate-500">Label</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Label</label>
                 <input type="text" value={settings.assessment_config?.ca2_label ?? '2nd CA'}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca2_label: e.target.value } })}
                   className="input py-1 text-sm" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-900/40 dark:border-purple-900/40">
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={settings.assessment_config?.ca3_enabled ?? false}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca3_enabled: e.target.checked } })}
                   className="w-4 h-4" />
-                <label className="text-sm font-medium text-slate-700">CA3</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">CA3</label>
               </div>
               <div>
-                <label className="text-xs text-slate-500">Max Score</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Max Score</label>
                 <input type="number" min={0} max={100} value={settings.assessment_config?.ca3_max ?? 10}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca3_max: parseInt(e.target.value) || 0 } })}
                   className="input py-1 text-sm" />
               </div>
               <div className="col-span-2">
-                <label className="text-xs text-slate-500">Label</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Label</label>
                 <input type="text" value={settings.assessment_config?.ca3_label ?? '3rd CA'}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, ca3_label: e.target.value } })}
                   className="input py-1 text-sm" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40">
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={settings.assessment_config?.exam_enabled ?? true}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, exam_enabled: e.target.checked } })}
                   className="w-4 h-4" />
-                <label className="text-sm font-medium text-slate-700">Exam</label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Exam</label>
               </div>
               <div>
-                <label className="text-xs text-slate-500">Max Score</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Max Score</label>
                 <input type="number" min={0} max={100} value={settings.assessment_config?.exam_max ?? 60}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, exam_max: parseInt(e.target.value) || 0 } })}
                   className="input py-1 text-sm" />
               </div>
               <div className="col-span-2">
-                <label className="text-xs text-slate-500">Label</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Label</label>
                 <input type="text" value={settings.assessment_config?.exam_label ?? 'Exam'}
                   onChange={e => setSettings({ ...settings, assessment_config: { ...settings.assessment_config!, exam_label: e.target.value } })}
                   className="input py-1 text-sm" />
               </div>
             </div>
-            <div className="text-xs text-slate-400 bg-slate-50 p-3 rounded-lg">
+            <div className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-3 rounded-lg">
               Total: {(settings.assessment_config?.ca1_enabled ? settings.assessment_config?.ca1_max ?? 0 : 0) +
                 (settings.assessment_config?.ca2_enabled ? settings.assessment_config?.ca2_max ?? 0 : 0) +
                 (settings.assessment_config?.ca3_enabled ? settings.assessment_config?.ca3_max ?? 0 : 0) +
@@ -290,7 +290,7 @@ export default function AdminSettingsPage() {
                 (settings.assessment_config?.ca2_enabled ? settings.assessment_config?.ca2_max ?? 0 : 0) +
                 (settings.assessment_config?.ca3_enabled ? settings.assessment_config?.ca3_max ?? 0 : 0) +
                 (settings.assessment_config?.exam_enabled ? settings.assessment_config?.exam_max ?? 0 : 0)) !== 100 && (
-                <span className="text-red-500 ml-2">(Should total 100)</span>
+                <span className="text-red-500 dark:text-red-400 dark:text-red-400 ml-2">(Should total 100)</span>
               )}
             </div>
           </div>
@@ -299,8 +299,8 @@ export default function AdminSettingsPage() {
         {/* Logo */}
         <div className="card">
           <div className="flex items-center gap-2 mb-5">
-            <Image className="text-pink-600" size={20} />
-            <h2 className="text-lg font-semibold text-slate-900">School Logo</h2>
+            <Image className="text-pink-600 dark:text-pink-400 dark:text-pink-400" size={20} />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white">School Logo</h2>
           </div>
           <div className="space-y-4">
             <FileUpload
@@ -317,7 +317,7 @@ export default function AdminSettingsPage() {
                   type="url" 
                   value={settings.school_logo} 
                   readOnly 
-                  className="input bg-slate-50 text-xs text-slate-500" 
+                  className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400" 
                 />
               </div>
             )}

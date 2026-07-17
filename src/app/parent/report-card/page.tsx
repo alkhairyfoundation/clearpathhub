@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -214,7 +214,7 @@ function ReportCardContent() {
     scoreTypes.forEach(st => { total += s[st.key] ?? 0; });
     total = Math.min(100, total);
     const grade = calculateGrade(total);
-    const gradeColor = total >= 70 ? 'text-green-600' : total >= 50 ? 'text-amber-600' : 'text-red-600';
+    const gradeColor = total >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : total >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400';
     return { ...s, average: total, grade, gradeColor };
   });
 
@@ -640,8 +640,8 @@ function ReportCardContent() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-            <div><h1 className="text-2xl font-bold text-slate-800">Report Card</h1><p className="text-slate-500 text-sm">Comprehensive student report card</p></div>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Report Card</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">Comprehensive student report card</p></div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={downloadPDF} className="btn-primary flex items-center gap-2 text-sm"><Download size={16} /> PDF</button>
@@ -649,10 +649,10 @@ function ReportCardContent() {
           </div>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2"><AlertCircle size={16} />{error}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2"><AlertCircle size={16} />{error}</div>}
 
         {!child ? (
-          <div className="bg-white rounded-xl p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No children linked to your account</p></div>
+          <div className="bg-white rounded-xl p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-4">
@@ -689,19 +689,19 @@ function ReportCardContent() {
             ) : (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="card"><div className="flex items-center gap-2 mb-1"><TrendingUp size={16} className="text-primary-600" /><span className="text-xs text-slate-500">Overall Average</span></div><p className={`text-2xl font-bold ${overallAvg >= 70 ? 'text-green-600' : overallAvg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{overallAvg}%</p></div>
-                  <div className="card"><div className="flex items-center gap-2 mb-1"><UserCheck size={16} className="text-green-600" /><span className="text-xs text-slate-500">Attendance</span></div><p className="text-2xl font-bold text-green-600">{attendanceRate}%</p><p className="text-xs text-slate-400">{presentDays}/{totalDays} days</p></div>
-                  <div className="card"><div className="flex items-center gap-2 mb-1"><FileText size={16} className="text-amber-600" /><span className="text-xs text-slate-500">Homework</span></div><p className="text-2xl font-bold text-amber-600">{homeworkCount}</p><p className="text-xs text-slate-400">submitted</p></div>
-                  <div className="card"><div className="flex items-center gap-2 mb-1"><BookOpen size={16} className="text-purple-600" /><span className="text-xs text-slate-500">Grade</span></div><p className="text-2xl font-bold text-purple-600">{calculateGrade(overallAvg)}</p><p className="text-xs text-slate-400">{computeRemark(overallAvg)}</p></div>
+                  <div className="card"><div className="flex items-center gap-2 mb-1"><TrendingUp size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Overall Average</span></div><p className={`text-2xl font-bold ${overallAvg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : overallAvg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{overallAvg}%</p></div>
+                  <div className="card"><div className="flex items-center gap-2 mb-1"><UserCheck size={16} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Attendance</span></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{attendanceRate}%</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{presentDays}/{totalDays} days</p></div>
+                  <div className="card"><div className="flex items-center gap-2 mb-1"><FileText size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Homework</span></div><p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{homeworkCount}</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">submitted</p></div>
+                  <div className="card"><div className="flex items-center gap-2 mb-1"><BookOpen size={16} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Grade</span></div><p className="text-2xl font-bold text-purple-600 dark:text-purple-400 dark:text-purple-400">{calculateGrade(overallAvg)}</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{computeRemark(overallAvg)}</p></div>
                 </div>
 
                 <div className="card">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Award size={18} className="text-slate-400" />
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2">
+                    <Award size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                     {selectedTerm?.name} Score Sheet
                   </h2>
                   {subjectGrades.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500"><Calendar size={40} className="mx-auto mb-3 opacity-50" /><p>No results found for this term</p></div>
+                    <div className="text-center py-12 text-slate-500 dark:text-slate-400 dark:text-slate-400"><Calendar size={40} className="mx-auto mb-3 opacity-50" /><p>No results found for this term</p></div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
@@ -724,14 +724,14 @@ function ReportCardContent() {
                             const grade = calculateGrade(total);
                             const remark = computeRemark(total);
                             return (
-                              <tr key={sg.subjectId} className={i % 2 === 0 ? 'bg-slate-50' : ''}>
-                                <td className="p-3 font-medium text-slate-800">{sg.subjectName}</td>
+                              <tr key={sg.subjectId} className={i % 2 === 0 ? 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800' : ''}>
+                                <td className="p-3 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{sg.subjectName}</td>
                                 {scoreTypes.map(st => (
                                   <td key={st.key} className="p-3 text-center font-bold">{sg[st.key] != null ? sg[st.key] : '-'}</td>
                                 ))}
-                                <td className={`p-3 text-center font-bold ${total >= 70 ? 'text-green-600' : total >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{total}%</td>
-                                <td className={`p-3 text-center font-bold ${grade === 'A+' || grade === 'A' ? 'text-green-600' : grade === 'F' ? 'text-red-600' : 'text-slate-600'}`}>{grade}</td>
-                                <td className="p-3 text-right text-slate-600">{remark}</td>
+                                <td className={`p-3 text-center font-bold ${total >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : total >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{total}%</td>
+                                <td className={`p-3 text-center font-bold ${grade === 'A+' || grade === 'A' ? 'text-green-600 dark:text-green-400 dark:text-green-400' : grade === 'F' ? 'text-red-600 dark:text-red-400 dark:text-red-400' : 'text-slate-600 dark:text-slate-400 dark:text-slate-400'}`}>{grade}</td>
+                                <td className="p-3 text-right text-slate-600 dark:text-slate-400 dark:text-slate-400">{remark}</td>
                               </tr>
                             );
                           })}
@@ -739,15 +739,15 @@ function ReportCardContent() {
                       </table>
 
                       {behaviorReports.length > 0 && (
-                        <div className="mt-6 p-4 bg-slate-50 rounded-lg">
-                          <h3 className="text-sm font-semibold text-slate-800 mb-3">Teacher Remarks & Behavior Notes</h3>
+                        <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                          <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3">Teacher Remarks & Behavior Notes</h3>
                           <div className="space-y-2">
                             {behaviorReports.map((b, i) => (
                               <div key={i} className="flex items-start gap-2 text-sm">
-                                <span className="text-primary-600 mt-0.5">•</span>
+                                <span className="text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-0.5">•</span>
                                 <div>
-                                  <p className="text-slate-700">{b.teacher_notes || b.behavior || `Rating: ${b.rating}/5`}</p>
-                                  <p className="text-xs text-slate-400">{b.teacher?.first_name} {b.teacher?.last_name} &middot; {new Date(b.created_at).toLocaleDateString()}</p>
+                                  <p className="text-slate-700 dark:text-slate-300 dark:text-slate-300">{b.teacher_notes || b.behavior || `Rating: ${b.rating}/5`}</p>
+                                  <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{b.teacher?.first_name} {b.teacher?.last_name} &middot; {new Date(b.created_at).toLocaleDateString()}</p>
                                 </div>
                               </div>
                             ))}
@@ -761,18 +761,18 @@ function ReportCardContent() {
                 {insights.strengths.length > 0 || insights.weaknesses.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {insights.strengths.length > 0 && (
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                      <div className="bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 rounded-xl p-4">
                         <h3 className="font-semibold text-green-800 text-sm mb-2">Strengths</h3>
                         {insights.strengths.map((s: any) => (
-                          <div key={s.subjectId} className="flex items-center gap-2 text-sm text-green-700"><span>✅</span><span>{s.subjectName}: {s.average}%</span></div>
+                          <div key={s.subjectId} className="flex items-center gap-2 text-sm text-green-700 dark:text-green-300 dark:text-green-300"><span>✅</span><span>{s.subjectName}: {s.average}%</span></div>
                         ))}
                       </div>
                     )}
                     {insights.weaknesses.length > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                        <h3 className="font-semibold text-red-800 text-sm mb-2">Needs Improvement</h3>
+                      <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl p-4">
+                        <h3 className="font-semibold text-red-800 dark:text-red-300 dark:text-red-300 text-sm mb-2">Needs Improvement</h3>
                         {insights.weaknesses.map((s: any) => (
-                          <div key={s.subjectId} className="flex items-center gap-2 text-sm text-red-700"><span>⚠️</span><span>{s.subjectName}: {s.average}%</span></div>
+                          <div key={s.subjectId} className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 dark:text-red-400"><span>⚠️</span><span>{s.subjectName}: {s.average}%</span></div>
                         ))}
                       </div>
                     )}
@@ -781,11 +781,11 @@ function ReportCardContent() {
 
                 {Object.keys(domainGrades).length > 0 && (
                   <div className="card">
-                    <h3 className="text-sm font-bold text-slate-800 mb-3">Domain Assessment</h3>
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3">Domain Assessment</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      {[{ title: 'Cognitive', fields: COGNITIVE_FIELDS, color: 'text-blue-600' },
-                        { title: 'Affective', fields: AFFECTIVE_FIELDS, color: 'text-green-600' },
-                        { title: 'Psychomotor', fields: PSYCHOMOTOR_FIELDS, color: 'text-purple-600' },
+                      {[{ title: 'Cognitive', fields: COGNITIVE_FIELDS, color: 'text-blue-600 dark:text-blue-400 dark:text-blue-400' },
+                        { title: 'Affective', fields: AFFECTIVE_FIELDS, color: 'text-green-600 dark:text-green-400 dark:text-green-400' },
+                        { title: 'Psychomotor', fields: PSYCHOMOTOR_FIELDS, color: 'text-purple-600 dark:text-purple-400 dark:text-purple-400' },
                       ].map(group => {
                         const entries = group.fields.filter(f => domainGrades[f.key] != null);
                         if (entries.length === 0) return null;
@@ -793,7 +793,7 @@ function ReportCardContent() {
                           <div key={group.title}>
                             <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${group.color}`}>{group.title}</h4>
                             <div className="space-y-1">{entries.map(f => (
-                              <div key={f.key} className="flex justify-between text-sm"><span className="text-slate-600">{f.label}</span><span className="font-bold text-slate-800">{domainGrades[f.key]}/5</span></div>
+                              <div key={f.key} className="flex justify-between text-sm"><span className="text-slate-600 dark:text-slate-400 dark:text-slate-400">{f.label}</span><span className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{domainGrades[f.key]}/5</span></div>
                             ))}</div>
                           </div>
                         );
@@ -805,10 +805,10 @@ function ReportCardContent() {
                 {(reportRemarks.teacher_remarks || reportRemarks.principal_remarks) && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {reportRemarks.teacher_remarks && (
-                      <div className="card"><h3 className="text-sm font-bold text-slate-800 mb-2">Teacher's Remark</h3><p className="text-sm text-slate-600 italic">"{reportRemarks.teacher_remarks}"</p></div>
+                      <div className="card"><h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Teacher's Remark</h3><p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 italic">"{reportRemarks.teacher_remarks}"</p></div>
                     )}
                     {reportRemarks.principal_remarks && (
-                      <div className="card"><h3 className="text-sm font-bold text-slate-800 mb-2">Principal's Remark</h3><p className="text-sm text-slate-600 italic">"{reportRemarks.principal_remarks}"</p></div>
+                      <div className="card"><h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Principal's Remark</h3><p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 italic">"{reportRemarks.principal_remarks}"</p></div>
                     )}
                   </div>
                 )}

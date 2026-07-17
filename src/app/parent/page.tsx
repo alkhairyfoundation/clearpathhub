@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -86,23 +86,23 @@ useEffect(() => {
 
   function activityIcon(icon: string) {
     switch (icon) {
-      case 'quiz': return <Brain size={16} className="text-purple-600" />;
-      case 'test': return <BookOpen size={16} className="text-blue-600" />;
-      case 'homework': return <FileText size={16} className="text-amber-600" />;
-      case 'behavior': return <Award size={16} className="text-green-600" />;
-      case 'security': return <ShieldAlert size={16} className="text-red-600" />;
-      default: return <TrendingUp size={16} className="text-primary-600" />;
+      case 'quiz': return <Brain size={16} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" />;
+      case 'test': return <BookOpen size={16} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" />;
+      case 'homework': return <FileText size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" />;
+      case 'behavior': return <Award size={16} className="text-green-600 dark:text-green-400 dark:text-green-400" />;
+      case 'security': return <ShieldAlert size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" />;
+      default: return <TrendingUp size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />;
     }
   }
 
   function activityBg(icon: string) {
     switch (icon) {
-      case 'quiz': return 'bg-purple-100';
-      case 'test': return 'bg-blue-100';
-      case 'homework': return 'bg-amber-100';
-      case 'behavior': return 'bg-green-100';
-      case 'security': return 'bg-red-100';
-      default: return 'bg-primary-100';
+      case 'quiz': return 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30';
+      case 'test': return 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30';
+      case 'homework': return 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30';
+      case 'behavior': return 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30';
+      case 'security': return 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30';
+      default: return 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30';
     }
   }
 
@@ -114,64 +114,64 @@ useEffect(() => {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { title: 'My Children', value: stats.totalChildren, icon: <Users size={24} />, href: '/parent/children', bg: 'bg-primary-100', color: 'text-primary-600' },
-              { title: 'Avg Performance', value: `${stats.avgPerformance}%`, icon: <TrendingUp size={24} />, href: '/parent/progress', bg: 'bg-emerald-100', color: 'text-emerald-600' },
-              { title: 'Pending Fees', value: `₦${stats.pendingFees.toLocaleString()}`, icon: <DollarSign size={24} />, href: '/parent/payments', bg: 'bg-amber-100', color: 'text-amber-600' },
-              { title: 'Announcements', value: stats.unreadAnnouncements, icon: <Bell size={24} />, href: '/parent/announcements', bg: 'bg-purple-100', color: 'text-purple-600' },
+              { title: 'My Children', value: stats.totalChildren, icon: <Users size={24} />, href: '/parent/children', bg: 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30', color: 'text-primary-600 dark:text-primary-400 dark:text-primary-400' },
+              { title: 'Avg Performance', value: `${stats.avgPerformance}%`, icon: <TrendingUp size={24} />, href: '/parent/progress', bg: 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' },
+              { title: 'Pending Fees', value: `₦${stats.pendingFees.toLocaleString()}`, icon: <DollarSign size={24} />, href: '/parent/payments', bg: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400 dark:text-amber-400' },
+              { title: 'Announcements', value: stats.unreadAnnouncements, icon: <Bell size={24} />, href: '/parent/announcements', bg: 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400 dark:text-purple-400' },
             ].map((card, i) => (
               <Link key={i} href={card.href} className="card hover:shadow-md cursor-pointer">
                 <div className="flex items-center justify-between mb-3">
                   <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center ${card.color}`}>{card.icon}</div>
-                  <ChevronRight size={16} className="text-slate-400" />
+                  <ChevronRight size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                 </div>
-                <h3 className="text-sm font-medium text-slate-500">{card.title}</h3>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{card.value}</p>
+                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">{card.title}</h3>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white mt-1">{card.value}</p>
               </Link>
             ))}
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { title: 'Quizzes Taken', value: stats.totalQuizzes, icon: <Brain size={20} />, bg: 'bg-purple-100', color: 'text-purple-600' },
-              { title: 'Tests Taken', value: stats.totalTests, icon: <BookOpen size={20} />, bg: 'bg-blue-100', color: 'text-blue-600' },
-              { title: 'Homework', value: stats.totalHomework, icon: <FileText size={20} />, bg: 'bg-amber-100', color: 'text-amber-600' },
-              { title: 'Behavior Reports', value: stats.behaviorReports, icon: <Award size={20} />, bg: 'bg-green-100', color: 'text-green-600' },
+              { title: 'Quizzes Taken', value: stats.totalQuizzes, icon: <Brain size={20} />, bg: 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400 dark:text-purple-400' },
+              { title: 'Tests Taken', value: stats.totalTests, icon: <BookOpen size={20} />, bg: 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30', color: 'text-blue-600 dark:text-blue-400 dark:text-blue-400' },
+              { title: 'Homework', value: stats.totalHomework, icon: <FileText size={20} />, bg: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400 dark:text-amber-400' },
+              { title: 'Behavior Reports', value: stats.behaviorReports, icon: <Award size={20} />, bg: 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30', color: 'text-green-600 dark:text-green-400 dark:text-green-400' },
             ].map((card, i) => (
               <div key={i} className="card">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center ${card.color}`}>{card.icon}</div>
-                  <div><p className="text-xs text-slate-500">{card.title}</p><p className="text-lg font-bold text-slate-900">{card.value}</p></div>
+                  <div><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{card.title}</p><p className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{card.value}</p></div>
                 </div>
               </div>
             ))}
           </div>
 
           {stats.securityEvents > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-              <ShieldAlert size={24} className="text-red-600 flex-shrink-0" />
+            <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl p-4 flex items-center gap-3">
+              <ShieldAlert size={24} className="text-red-600 dark:text-red-400 dark:text-red-400 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-red-800 text-sm">{stats.securityEvents} security event{stats.securityEvents > 1 ? 's' : ''} detected during exams</p>
-                <p className="text-xs text-red-600 mt-0.5">Tab switches, copy/paste attempts, or fullscreen exits recorded. <Link href="/parent/behavior" className="underline font-medium">View details</Link></p>
+                <p className="font-semibold text-red-800 dark:text-red-300 dark:text-red-300 text-sm">{stats.securityEvents} security event{stats.securityEvents > 1 ? 's' : ''} detected during exams</p>
+                <p className="text-xs text-red-600 dark:text-red-400 dark:text-red-400 mt-0.5">Tab switches, copy/paste attempts, or fullscreen exits recorded. <Link href="/parent/behavior" className="underline font-medium">View details</Link></p>
               </div>
             </div>
           )}
 
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><GraduationCap size={18} className="text-slate-400" />My Children</h2>
-              <Link href="/parent/children" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">View all <ArrowRight size={14} /></Link>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><GraduationCap size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />My Children</h2>
+              <Link href="/parent/children" className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium flex items-center gap-1">View all <ArrowRight size={14} /></Link>
             </div>
             {children.length === 0 ? (
-              <div className="text-center py-16"><Users className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500">No children linked to your account</p><p className="text-sm text-slate-400 mt-1">Contact the school admin to link your children</p></div>
+              <div className="text-center py-16"><Users className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p><p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Contact the school admin to link your children</p></div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {children.map(child => (
-                  <div key={child.id} className="border border-slate-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+                  <div key={child.id} className="border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-xl p-5 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center font-bold text-primary-700">{child.profile?.first_name?.[0]}{child.profile?.last_name?.[0]}</div>
-                      <div><p className="font-bold text-slate-900">{child.profile?.first_name} {child.profile?.last_name}</p><p className="text-sm text-slate-500">{child.class?.name || 'No class'}</p></div>
+                      <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center font-bold text-primary-700 dark:text-primary-300 dark:text-primary-300">{child.profile?.first_name?.[0]}{child.profile?.last_name?.[0]}</div>
+                      <div><p className="font-bold text-slate-900 dark:text-white dark:text-white">{child.profile?.first_name} {child.profile?.last_name}</p><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{child.class?.name || 'No class'}</p></div>
                     </div>
-                    {child.admission_number && <p className="text-xs text-slate-400 font-mono">ID: {child.admission_number}</p>}
+                    {child.admission_number && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 font-mono">ID: {child.admission_number}</p>}
                     <div className="flex gap-2 mt-4">
                       <Link href={`/parent/progress?child=${child.id}`} className="btn-outline flex-1 text-xs py-2 text-center">Progress</Link>
                       <Link href={`/parent/behavior?child=${child.id}`} className="btn-outline flex-1 text-xs py-2 text-center">Behavior</Link>
@@ -185,16 +185,16 @@ useEffect(() => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Clock size={18} className="text-slate-400" />Recent Activity</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><Clock size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Recent Activity</h2>
               </div>
               {recentActivity.length === 0 ? (
-                <div className="text-center py-8 text-slate-400"><Activity size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No recent activity</p></div>
+                <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500"><Activity size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No recent activity</p></div>
               ) : (
                 <div className="space-y-2">
                   {recentActivity.map((a, i) => (
-                    <Link key={i} href={a.href} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                    <Link key={i} href={a.href} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
                       <div className={`w-8 h-8 ${activityBg(a.icon)} rounded-lg flex items-center justify-center flex-shrink-0`}>{activityIcon(a.icon)}</div>
-                      <div className="flex-1 min-w-0"><p className="text-sm text-slate-700 truncate">{a.label}</p><p className="text-xs text-slate-400">{new Date(a.time).toLocaleDateString()}</p></div>
+                      <div className="flex-1 min-w-0"><p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 truncate">{a.label}</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{new Date(a.time).toLocaleDateString()}</p></div>
                       <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
                     </Link>
                   ))}
@@ -204,18 +204,18 @@ useEffect(() => {
 
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Bell size={18} className="text-slate-400" />Announcements</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><Bell size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Announcements</h2>
                 {announcements.length > 0 && <span className="badge badge-red">{announcements.length}</span>}
               </div>
               {announcements.length === 0 ? (
-                <div className="text-center py-8 text-slate-400"><Bell size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No new announcements</p></div>
+                <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500"><Bell size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No new announcements</p></div>
               ) : (
                 <div className="space-y-3">
                   {announcements.map(a => (
-                    <div key={a.id} className={`p-3 rounded-lg border-l-4 ${a.priority === 'urgent' ? 'bg-red-50 border-red-500' : a.priority === 'high' ? 'bg-amber-50 border-amber-500' : 'bg-primary-50 border-primary-500'}`}>
-                      <p className="font-semibold text-sm text-slate-900">{a.title}</p>
-                      <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">{a.content}</p>
-                      <p className="text-xs text-slate-400 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>
+                    <div key={a.id} className={`p-3 rounded-lg border-l-4 ${a.priority === 'urgent' ? 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border-red-500' : a.priority === 'high' ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-500' : 'bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border-primary-500'}`}>
+                      <p className="font-semibold text-sm text-slate-900 dark:text-white dark:text-white">{a.title}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400 line-clamp-1 mt-0.5">{a.content}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>
                     </div>
                   ))}
                 </div>

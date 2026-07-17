@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -85,20 +85,20 @@ export default function LearningPathPage() {
     <DashboardLayout title="Learning Path" subtitle="Master each topic step by step">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Learning Path</h1>
-            <p className="text-slate-500 mt-1">Study → Practice → Challenge → Master → Advance</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Learning Path</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Study → Practice → Challenge → Master → Advance</p>
           </div>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {subjects.length === 0 && !loading && (
           <div className="card text-center py-16">
             <BookOpen className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No subjects available</p>
-            <p className="text-sm text-slate-400 mt-1">Subjects will appear once assigned to your class</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No subjects available</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Subjects will appear once assigned to your class</p>
           </div>
         )}
 
@@ -113,24 +113,24 @@ export default function LearningPathPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary-100">
-                          <BookOpen size={20} className="text-primary-600" />
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30">
+                          <BookOpen size={20} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
                         </div>
                         <div>
-                          <h3 className="font-bold text-slate-900">{subj.name}</h3>
-                          <p className="text-xs text-slate-500">{subj.code} • {subj.class?.name}</p>
+                          <h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{subj.name}</h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{subj.code} • {subj.class?.name}</p>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className={`text-xl font-bold ${color.textColor}`}>{agg.avgScore}%</p>
-                      <p className="text-xs text-slate-400">Mastery</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Mastery</p>
                     </div>
                   </div>
 
                   {agg.paths.length > 0 && (
                     <div className="mt-3">
-                      <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2">
                         <span>Topics: {agg.completed}/{agg.topics} mastered</span>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-1.5 mb-3">
@@ -147,12 +147,12 @@ export default function LearningPathPage() {
                             <div key={stage} className="flex items-center gap-1">
                               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
                                 completedCount === stageItems.length && stageItems.length > 0
-                                  ? 'bg-emerald-100 text-emerald-700'
+                                  ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300'
                                   : hasIntervention
-                                    ? 'bg-red-100 text-red-700'
+                                    ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400'
                                     : stageItems.some(p => p.is_unlocked)
-                                      ? 'bg-amber-100 text-amber-700'
-                                      : 'bg-slate-100 text-slate-400'
+                                      ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300'
+                                      : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-400 dark:text-slate-500 dark:text-slate-500'
                               }`}>
                                 {completedCount === stageItems.length && stageItems.length > 0 ? <CheckCircle size={12} /> : STAGE_ICONS[stage]}
                               </div>
@@ -164,13 +164,13 @@ export default function LearningPathPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                    <span className="text-xs text-slate-400">
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
+                    <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">
                       {agg.paths.length > 0 ? `${agg.paths.filter(p => p.is_unlocked).length} stages unlocked` : 'No topics yet'}
                     </span>
                     <Link
                       href={`/student/learning-path/${subj.id}`}
-                      className="text-sm text-primary-600 font-medium flex items-center gap-1 hover:underline"
+                      className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 font-medium flex items-center gap-1 hover:underline"
                     >
                       View Topics <ChevronRight size={14} />
                     </Link>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -94,12 +94,12 @@ export default function AdminArchetypesPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Archetypes</h1>
-              <p className="text-slate-500 mt-1">Identity cards students choose from each term</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Archetypes</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Identity cards students choose from each term</p>
             </div>
           </div>
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
@@ -107,24 +107,24 @@ export default function AdminArchetypesPage() {
           </button>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="card animate-pulse">
                 <div className="h-5 bg-slate-200 rounded w-1/2 mb-3"></div>
-                <div className="h-3 bg-slate-100 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-slate-100 rounded w-1/2"></div>
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded w-1/2"></div>
               </div>
             ))}
           </div>
         ) : archetypes.length === 0 ? (
           <div className="card text-center py-16">
             <Target className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No archetypes yet</p>
-            <p className="text-sm text-slate-400 mt-1 mb-4">Create identity cards for students to choose from</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No archetypes yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 mb-4">Create identity cards for students to choose from</p>
             <button onClick={() => openModal()} className="btn-primary">Create Archetype</button>
           </div>
         ) : (
@@ -132,25 +132,25 @@ export default function AdminArchetypesPage() {
             {archetypes.map((item) => (
               <div key={item.id} className={`card relative ${!item.is_active ? 'opacity-60' : ''}`}>
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center">
-                    <Target className="text-primary-600" size={24} />
+                  <div className="w-12 h-12 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-xl flex items-center justify-center">
+                    <Target className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={24} />
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => openModal(item)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                      <Edit size={16} className="text-slate-400" />
+                    <button onClick={() => openModal(item)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                      <Edit size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                     </button>
-                    <button onClick={() => handleDelete(item.id)} disabled={deleting === item.id} className="p-1.5 hover:bg-red-50 rounded-lg">
-                      {deleting === item.id ? <Loader2 size={16} className="animate-spin text-red-500" /> : <Trash2 size={16} className="text-red-400" />}
+                    <button onClick={() => handleDelete(item.id)} disabled={deleting === item.id} className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg">
+                      {deleting === item.id ? <Loader2 size={16} className="animate-spin text-red-500 dark:text-red-400 dark:text-red-400" /> : <Trash2 size={16} className="text-red-400" />}
                     </button>
                   </div>
                 </div>
-                <h3 className="font-semibold text-slate-900">{item.name}</h3>
-                <p className="text-sm text-slate-500 mt-1 line-clamp-2">{item.description}</p>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                  <span className="text-xs text-slate-400">icon: {item.icon_key}</span>
+                <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white">{item.name}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 line-clamp-2">{item.description}</p>
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">icon: {item.icon_key}</span>
                   <button
                     onClick={() => handleToggleActive(item)}
-                    className={`text-xs px-2 py-1 rounded-full font-medium ${item.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}
+                    className={`text-xs px-2 py-1 rounded-full font-medium ${item.is_active ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}
                   >
                     {item.is_active ? 'Active' : 'Inactive'}
                   </button>
@@ -166,7 +166,7 @@ export default function AdminArchetypesPage() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-5 border-b flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
               <h3 className="text-lg font-bold">{editing ? 'Edit Archetype' : 'Create Archetype'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
             </div>
             <div className="p-5 space-y-4">
               <div>
@@ -182,7 +182,7 @@ export default function AdminArchetypesPage() {
                 <div className="grid grid-cols-6 gap-2">
                   {ICON_OPTIONS.map((icon) => (
                     <button key={icon} onClick={() => setFormData({ ...formData, icon_key: icon })}
-                      className={`p-2 rounded-lg border text-center text-xs ${formData.icon_key === icon ? 'border-primary-500 bg-primary-50 text-primary-600' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}>
+                      className={`p-2 rounded-lg border text-center text-xs ${formData.icon_key === icon ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 dark:text-primary-400' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'}`}>
                       {icon}
                     </button>
                   ))}

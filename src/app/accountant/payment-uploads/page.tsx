@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -171,22 +171,22 @@ export default function PaymentUploadsPage() {
     <DashboardLayout title="Payment Uploads" subtitle="Review and verify parent-uploaded payment receipts">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Payment Uploads</h1>
-          <p className="text-slate-500">Review and verify payment receipts uploaded by parents</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Payment Uploads</h1>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Review and verify payment receipts uploaded by parents</p>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
           <div className="card cursor-pointer" onClick={() => setFilter('pending')}>
-            <div className="flex items-center gap-2 mb-2"><Clock size={16} className="text-amber-600" /><span className="text-xs text-slate-500">Pending</span></div>
-            <p className={`text-2xl font-bold ${filter === 'pending' ? 'text-amber-600' : 'text-slate-900'}`}>{pendingCount}</p>
+            <div className="flex items-center gap-2 mb-2"><Clock size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Pending</span></div>
+            <p className={`text-2xl font-bold ${filter === 'pending' ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-slate-900 dark:text-white dark:text-white'}`}>{pendingCount}</p>
           </div>
           <div className="card cursor-pointer" onClick={() => setFilter('verified')}>
-            <div className="flex items-center gap-2 mb-2"><CheckCircle size={16} className="text-green-600" /><span className="text-xs text-slate-500">Verified</span></div>
-            <p className={`text-2xl font-bold ${filter === 'verified' ? 'text-green-600' : 'text-slate-900'}`}>{verifiedCount}</p>
+            <div className="flex items-center gap-2 mb-2"><CheckCircle size={16} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Verified</span></div>
+            <p className={`text-2xl font-bold ${filter === 'verified' ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-slate-900 dark:text-white dark:text-white'}`}>{verifiedCount}</p>
           </div>
           <div className="card cursor-pointer" onClick={() => setFilter('rejected')}>
-            <div className="flex items-center gap-2 mb-2"><XCircle size={16} className="text-red-600" /><span className="text-xs text-slate-500">Rejected</span></div>
-            <p className={`text-2xl font-bold ${filter === 'rejected' ? 'text-red-600' : 'text-slate-900'}`}>{rejectedCount}</p>
+            <div className="flex items-center gap-2 mb-2"><XCircle size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Rejected</span></div>
+            <p className={`text-2xl font-bold ${filter === 'rejected' ? 'text-red-600 dark:text-red-400 dark:text-red-400' : 'text-slate-900 dark:text-white dark:text-white'}`}>{rejectedCount}</p>
           </div>
         </div>
 
@@ -195,7 +195,7 @@ export default function PaymentUploadsPage() {
             <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} /><input type="text" placeholder="Search by student or parent name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
             <div className="flex gap-2">
               {['pending', 'verified', 'rejected', 'all'].map(s => (
-                <button key={s} onClick={() => setFilter(s)} className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${filter === s ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>{s}</button>
+                <button key={s} onClick={() => setFilter(s)} className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${filter === s ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 text-gray-600 dark:text-slate-400 dark:text-slate-400'}`}>{s}</button>
               ))}
             </div>
           </div>
@@ -203,32 +203,32 @@ export default function PaymentUploadsPage() {
           {filtered.length === 0 ? (
             <div className="text-center py-12">
               <DollarSign className="mx-auto text-gray-400 mb-4" size={48} />
-              <p className="text-slate-500">No payment uploads found</p>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No payment uploads found</p>
             </div>
           ) : (
             <div className="space-y-3">
               {filtered.map((u: any) => (
-                <div key={u.id} className={`p-4 rounded-xl border ${u.status === 'pending' ? 'bg-amber-50 border-amber-200' : u.status === 'verified' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div key={u.id} className={`p-4 rounded-xl border ${u.status === 'pending' ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40' : u.status === 'verified' ? 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border-green-200 dark:border-green-900/40 dark:border-green-900/40' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border-red-200 dark:border-red-900/40 dark:border-red-900/40'}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-slate-900">{u.student?.first_name} {u.student?.last_name}</p>
+                        <p className="font-semibold text-slate-900 dark:text-white dark:text-white">{u.student?.first_name} {u.student?.last_name}</p>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          u.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          u.status === 'verified' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          u.status === 'pending' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' :
+                          u.status === 'verified' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400'
                         }`}>{u.status}</span>
                       </div>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                         Uploaded by {u.parent?.first_name} {u.parent?.last_name}
                         {u.parent?.email && <> &bull; {u.parent.email}</>}
                       </p>
-                      <p className="text-sm text-slate-500">
-                        Amount: <span className="font-semibold text-slate-700">{formatCurrency(u.amount)}</span>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
+                        Amount: <span className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">{formatCurrency(u.amount)}</span>
                         {u.notes && <> &bull; Note: {u.notes}</>}
                         &bull; {new Date(u.created_at).toLocaleDateString()}
                       </p>
                       {u.rejection_reason && (
-                        <p className="text-sm text-red-600 mt-1">Rejection reason: {u.rejection_reason}</p>
+                        <p className="text-sm text-red-600 dark:text-red-400 dark:text-red-400 mt-1">Rejection reason: {u.rejection_reason}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export default function PaymentUploadsPage() {
             <div className="bg-white rounded-xl max-w-2xl max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="font-semibold">Receipt Preview</h3>
-                <button onClick={() => setPreviewUrl(null)} className="p-1 hover:bg-slate-100 rounded"><XCircle size={20} /></button>
+                <button onClick={() => setPreviewUrl(null)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><XCircle size={20} /></button>
               </div>
               <img src={previewUrl} alt="Payment Receipt" className="w-full" />
             </div>
@@ -280,11 +280,11 @@ export default function PaymentUploadsPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
               <div className="flex items-center justify-between p-6 border-b">
-                <h2 className="text-lg font-semibold text-slate-800">Verify Payment</h2>
-                <button onClick={() => setPaymentModal(null)} className="p-2 hover:bg-gray-100 rounded-lg"><XCircle size={20} /></button>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Verify Payment</h2>
+                <button onClick={() => setPaymentModal(null)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><XCircle size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
-                <p className="text-sm text-slate-600">Payment amount from upload: <span className="font-bold text-slate-900">{formatCurrency(paymentModal.amount)}</span></p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Payment amount from upload: <span className="font-bold text-slate-900 dark:text-white dark:text-white">{formatCurrency(paymentModal.amount)}</span></p>
                 
                 <div>
                   <label className="label">Payment Type</label>
@@ -315,15 +315,15 @@ export default function PaymentUploadsPage() {
 
                 <div>
                   <label className="label">Balance Remaining</label>
-                  <input type="number" value={paymentForm.balance_remaining} className="input bg-slate-50" readOnly />
-                  <p className="text-xs text-slate-400 mt-1">
+                  <input type="number" value={paymentForm.balance_remaining} className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800" readOnly />
+                  <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">
                     {paymentForm.balance_remaining > 0 
                       ? `Student still owes ${formatCurrency(paymentForm.balance_remaining)}`
                       : 'Payment is complete — no balance remaining'}
                   </p>
                 </div>
 
-                <div className={`p-3 rounded-lg ${paymentForm.balance_remaining > 0 ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'}`}>
+                <div className={`p-3 rounded-lg ${paymentForm.balance_remaining > 0 ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 dark:text-amber-300' : 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 text-green-700 dark:text-green-300 dark:text-green-300'}`}>
                   <p className="text-sm font-medium flex items-center gap-2">
                     {paymentForm.balance_remaining > 0 ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
                     {paymentForm.balance_remaining > 0 
@@ -347,16 +347,16 @@ export default function PaymentUploadsPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
               <div className="flex items-center justify-between p-6 border-b">
-                <h2 className="text-lg font-semibold text-slate-800">Reject Payment</h2>
-                <button onClick={() => setRejectModal(null)} className="p-2 hover:bg-gray-100 rounded-lg"><XCircle size={20} /></button>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Reject Payment</h2>
+                <button onClick={() => setRejectModal(null)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><XCircle size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
-                <p className="text-sm text-slate-600">Provide a reason for rejection. The parent will see this and can re-upload a corrected receipt.</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Provide a reason for rejection. The parent will see this and can re-upload a corrected receipt.</p>
                 <div>
                   <label className="label">Rejection Reason</label>
                   <textarea value={rejectModal.reason} onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })} className="input" rows={3} placeholder="e.g., Receipt is blurry, amount mismatch, incorrect reference..." />
                 </div>
-                <p className="text-xs text-amber-600 flex items-center gap-1"><AlertCircle size={12} /> The receipt file will be deleted from storage on rejection.</p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 dark:text-amber-400 flex items-center gap-1"><AlertCircle size={12} /> The receipt file will be deleted from storage on rejection.</p>
               </div>
               <div className="flex justify-end gap-3 p-6 border-t">
                 <button onClick={() => setRejectModal(null)} className="btn-outline">Cancel</button>

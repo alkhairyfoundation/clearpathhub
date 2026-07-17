@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -544,10 +544,10 @@ export default function AdminMockExamsPage() {
     : 0;
 
   function getGradeColor(pct: number): string {
-    if (pct >= 80) return 'text-green-600';
-    if (pct >= 60) return 'text-blue-600';
-    if (pct >= 40) return 'text-amber-600';
-    return 'text-red-600';
+    if (pct >= 80) return 'text-green-600 dark:text-green-400 dark:text-green-400';
+    if (pct >= 60) return 'text-blue-600 dark:text-blue-400 dark:text-blue-400';
+    if (pct >= 40) return 'text-amber-600 dark:text-amber-400 dark:text-amber-400';
+    return 'text-red-600 dark:text-red-400 dark:text-red-400';
   }
 
   const availableSubjects = (level: string) => level === 'SS3' ? SS3_SUBJECTS : SUBJECTS;
@@ -556,13 +556,13 @@ export default function AdminMockExamsPage() {
     <DashboardLayout title="Mock Exams" subtitle="BECE & WAEC Preparation Management">
       <div className="space-y-6">
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-slate-200 pb-2">
+        <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 pb-2">
           {(['exams', 'questions', 'students', 'analytics'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab ? 'bg-primary-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                activeTab === tab ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700'
               }`}
             >
               {tab === 'exams' && <><FileText size={14} className="inline mr-1" /> Exams</>}
@@ -573,25 +573,25 @@ export default function AdminMockExamsPage() {
           ))}
         </div>
 
-        {error && <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2"><AlertCircle size={16} /> {error} <button onClick={() => setError('')} className="ml-auto"><X size={16} /></button></div>}
-        {success && <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded-lg flex items-center gap-2"><Check size={16} /> {success} <button onClick={() => setSuccess('')} className="ml-auto"><X size={16} /></button></div>}
+        {error && <div className="bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 border border-red-300 text-red-700 dark:text-red-400 dark:text-red-400 px-4 py-2 rounded-lg flex items-center gap-2"><AlertCircle size={16} /> {error} <button onClick={() => setError('')} className="ml-auto"><X size={16} /></button></div>}
+        {success && <div className="bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 border border-green-300 text-green-700 dark:text-green-300 dark:text-green-300 px-4 py-2 rounded-lg flex items-center gap-2"><Check size={16} /> {success} <button onClick={() => setSuccess('')} className="ml-auto"><X size={16} /></button></div>}
 
         {/* ═══════════════ EXAMS TAB ═══════════════ */}
         {activeTab === 'exams' && (
           <>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900">Mock Exams</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Mock Exams</h2>
               <button onClick={() => { resetBankQuestionForm(); setShowExamModal(true); }} className="btn-primary flex items-center gap-2">
                 <Plus size={16} /> Create Exam
               </button>
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-16"><Loader2 size={32} className="animate-spin text-primary-600" /></div>
+              <div className="flex items-center justify-center py-16"><Loader2 size={32} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
             ) : exams.length === 0 ? (
               <div className="card text-center py-16">
                 <GraduationCap size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-500">No mock exams created yet.</p>
+                <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No mock exams created yet.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -599,38 +599,38 @@ export default function AdminMockExamsPage() {
                   <div key={exam.id} className="card hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-bold text-slate-900">{exam.title}</h3>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${exam.exam_type === 'JSS3_BECE' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                        <h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{exam.title}</h3>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${exam.exam_type === 'JSS3_BECE' ? 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300' : 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700'}`}>
                           {exam.exam_type === 'JSS3_BECE' ? 'JSS3 BECE' : 'SS3 WAEC'}
                         </span>
                       </div>
                       <div className="flex gap-1">
-                        <button onClick={() => openEditExam(exam)} className="p-1.5 hover:bg-slate-100 rounded-lg" title="Edit Exam">
-                          <Edit size={16} className="text-slate-500" />
+                        <button onClick={() => openEditExam(exam)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title="Edit Exam">
+                          <Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                         </button>
-                        <button onClick={() => { setSelectedExam(exam); setActiveTab('questions'); }} className="p-1.5 hover:bg-slate-100 rounded-lg" title="Manage Questions">
-                          <BookOpen size={16} className="text-slate-500" />
+                        <button onClick={() => { setSelectedExam(exam); setActiveTab('questions'); }} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title="Manage Questions">
+                          <BookOpen size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                         </button>
-                        <button onClick={() => handleDeleteExam(exam.id)} className="p-1.5 hover:bg-red-100 rounded-lg" title="Delete Exam">
-                          <Trash2 size={16} className="text-red-500" />
+                        <button onClick={() => handleDeleteExam(exam.id)} className="p-1.5 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded-lg" title="Delete Exam">
+                          <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />
                         </button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-3 text-sm text-slate-500 mb-3">
+                    <div className="flex flex-wrap gap-3 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-3">
                       <span className="flex items-center gap-1"><FileText size={14} /> {exam.total_questions} Qs</span>
                       <span className="flex items-center gap-1"><Clock size={14} /> {exam.duration_minutes}min</span>
                       <span className="flex items-center gap-1"><Award size={14} /> Pass: {exam.passing_score}%</span>
                       <span className="flex items-center gap-1"><RotateCcw size={14} /> {exam.max_attempts === 0 ? 'Unlimited' : `${exam.max_attempts} max`}</span>
                     </div>
-                    {exam.description && <p className="text-xs text-slate-400 mb-2">{exam.description}</p>}
+                    {exam.description && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mb-2">{exam.description}</p>}
                     <div className="flex items-center gap-2 pt-3 border-t text-xs">
-                      <button onClick={() => handlePopulateFromBank(exam.id)} className="text-primary-600 hover:underline flex items-center gap-1">
+                      <button onClick={() => handlePopulateFromBank(exam.id)} className="text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:underline flex items-center gap-1">
                         <Database size={12} /> Populate from Bank
                       </button>
-                      <button onClick={() => openAddFromBank(exam)} className="text-amber-600 hover:underline flex items-center gap-1">
+                      <button onClick={() => openAddFromBank(exam)} className="text-amber-600 dark:text-amber-400 dark:text-amber-400 hover:underline flex items-center gap-1">
                         <Plus size={12} /> Add from Bank
                       </button>
-                      <span className="ml-auto text-slate-400">{exam.academic_year}</span>
+                      <span className="ml-auto text-slate-400 dark:text-slate-500 dark:text-slate-500">{exam.academic_year}</span>
                     </div>
                   </div>
                 ))}
@@ -643,7 +643,7 @@ export default function AdminMockExamsPage() {
                 <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Create Mock Exam</h3>
-                    <button onClick={() => setShowExamModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowExamModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>
@@ -701,7 +701,7 @@ export default function AdminMockExamsPage() {
                         Prevent Tab Switching
                       </label>
                     </div>
-                    <p className="text-xs text-slate-500 bg-blue-50 p-2 rounded">Questions will auto-populate from the question bank based on the selected exam type.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 p-2 rounded">Questions will auto-populate from the question bank based on the selected exam type.</p>
                     <button onClick={handleCreateExam} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2">
                       {saving && <Loader2 size={16} className="animate-spin" />}
                       Create Exam
@@ -717,7 +717,7 @@ export default function AdminMockExamsPage() {
                 <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Edit Exam</h3>
-                    <button onClick={() => setShowEditExamModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowEditExamModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>
@@ -777,16 +777,16 @@ export default function AdminMockExamsPage() {
                 <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Add Questions from Bank — {selectedExam.title}</h3>
-                    <button onClick={() => setShowBankSelectModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowBankSelectModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
                   </div>
                   {bankQuestions.length === 0 ? (
                     <div className="text-center py-8">
                       <Database size={40} className="mx-auto text-slate-300 mb-3" />
-                      <p className="text-slate-500">No questions found in the question bank for {selectedExam.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3'}.</p>
+                      <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No questions found in the question bank for {selectedExam.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3'}.</p>
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2 mb-3 text-sm text-slate-500">
+                      <div className="flex items-center gap-2 mb-3 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                         <span>{bankQuestions.length} questions available</span>
                         {assignCapacity && (
                           <span className="ml-auto">Capacity: {assignCapacity.current}/{assignCapacity.total} used ({assignCapacity.remaining} free)</span>
@@ -794,7 +794,7 @@ export default function AdminMockExamsPage() {
                       </div>
                       <div className="space-y-2 max-h-96 overflow-y-auto">
                         {bankQuestions.map(q => (
-                          <div key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border ${selectedBankIds.has(q.id) ? 'border-primary-500 bg-primary-50' : 'border-slate-200'}`}>
+                          <div key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border ${selectedBankIds.has(q.id) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>
                             <input
                               type="checkbox"
                               checked={selectedBankIds.has(q.id)}
@@ -806,15 +806,15 @@ export default function AdminMockExamsPage() {
                               className="mt-1"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-900">{q.question}</p>
+                              <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</p>
                               <div className="flex flex-wrap gap-2 mt-1">
-                                <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">{q.subject}</span>
+                                <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300">{q.subject}</span>
                                 <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  q.difficulty_level === 'EASY' ? 'bg-green-100 text-green-700' :
-                                  q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 text-blue-700' :
-                                  q.difficulty_level === 'HARD' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                                  q.difficulty_level === 'EASY' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' :
+                                  q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300' :
+                                  q.difficulty_level === 'HARD' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400'
                                 }`}>{q.difficulty_level}</span>
-                                <span className="text-xs text-slate-400">{q.topic}</span>
+                                <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{q.topic}</span>
                               </div>
                             </div>
                           </div>
@@ -845,7 +845,7 @@ export default function AdminMockExamsPage() {
         {activeTab === 'questions' && (
           <>
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900">Mock Question Bank</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Mock Question Bank</h2>
               <button onClick={() => { setEditingBankQuestion(null); resetBankQuestionForm(); setShowBankQuestionModal(true); }} className="btn-primary flex items-center gap-2">
                 <Plus size={16} /> Add Question
               </button>
@@ -855,39 +855,39 @@ export default function AdminMockExamsPage() {
             {selectedExam && (
               <div className="card">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 flex items-center gap-2">
                     <BookOpen size={16} /> Questions in: {selectedExam.title}
                   </h3>
-                  <button onClick={() => { setSelectedExam(null); setQuestions([]); }} className="text-xs text-slate-500 hover:underline">
+                  <button onClick={() => { setSelectedExam(null); setQuestions([]); }} className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:underline">
                     Clear
                   </button>
                 </div>
                 {questions.length === 0 ? (
-                  <p className="text-sm text-slate-400 py-4 text-center">No questions added yet. Use the bank below or click "Populate from Bank" on the exam card.</p>
+                  <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 py-4 text-center">No questions added yet. Use the bank below or click "Populate from Bank" on the exam card.</p>
                 ) : (
                   <div className="space-y-2 max-h-80 overflow-y-auto">
                     {questions.map((q, qi) => (
-                      <div key={q.id} className="flex items-start gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200">
-                        <span className="text-xs font-bold text-slate-400 mt-1 w-6 shrink-0">{qi + 1}.</span>
+                      <div key={q.id} className="flex items-start gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700">
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 w-6 shrink-0">{qi + 1}.</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900">{q.question}</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</p>
                           <div className="flex flex-wrap items-center gap-2 mt-1">
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 text-primary-700">{q.subject}</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300">{q.subject}</span>
                             <span className={`text-xs px-1.5 py-0.5 rounded ${
-                              q.difficulty_level === 'EASY' ? 'bg-green-100 text-green-700' :
-                              q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 text-blue-700' :
-                              q.difficulty_level === 'HARD' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                              q.difficulty_level === 'EASY' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' :
+                              q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300' :
+                              q.difficulty_level === 'HARD' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400'
                             }`}>{q.difficulty_level}</span>
-                            <span className="text-xs text-slate-400">{q.topic}</span>
-                            <span className="text-xs text-slate-400">{q.points} pt(s)</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{q.topic}</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{q.points} pt(s)</span>
                           </div>
                         </div>
                         <div className="flex gap-1 shrink-0">
                           <button onClick={() => handleEditMockQ(q)} className="p-1 hover:bg-slate-200 rounded" title="Edit">
-                            <Edit size={14} className="text-slate-500" />
+                            <Edit size={14} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                           </button>
-                          <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-100 rounded" title="Remove from exam">
-                            <Trash2 size={14} className="text-red-500" />
+                          <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded" title="Remove from exam">
+                            <Trash2 size={14} className="text-red-500 dark:text-red-400 dark:text-red-400" />
                           </button>
                         </div>
                       </div>
@@ -900,7 +900,7 @@ export default function AdminMockExamsPage() {
             {/* Filters */}
             <div className="flex flex-wrap gap-3 items-end">
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Class</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Class</label>
                 <select className="input-field text-sm" value={bankFilter.level} onChange={e => { setBankFilter({ ...bankFilter, level: e.target.value as any }); }}>
                   <option value="">All Classes</option>
                   <option value="JSS3">JSS3</option>
@@ -908,28 +908,28 @@ export default function AdminMockExamsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Subject</label>
                 <select className="input-field text-sm" value={bankFilter.subject} onChange={e => setBankFilter({ ...bankFilter, subject: e.target.value })}>
                   <option value="">All Subjects</option>
                   {bankFilter.level === 'SS3' ? SS3_SUBJECTS.map(s => <option key={s} value={s}>{s}</option>) : SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Difficulty</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Difficulty</label>
                 <select className="input-field text-sm" value={bankFilter.difficulty} onChange={e => setBankFilter({ ...bankFilter, difficulty: e.target.value })}>
                   <option value="">All</option>
                   {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Type</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Type</label>
                 <select className="input-field text-sm" value={bankFilter.questionType} onChange={e => setBankFilter({ ...bankFilter, questionType: e.target.value })}>
                   <option value="">All</option>
                   {QUESTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div className="flex-1 min-w-[200px]">
-                <label className="block text-xs font-medium text-slate-500 mb-1">Search</label>
+                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Search</label>
                 <input className="input-field w-full text-sm" placeholder="Search questions..." value={bankFilter.search} onChange={e => setBankFilter({ ...bankFilter, search: e.target.value })} />
               </div>
               <button onClick={fetchBankQuestions} className="btn-outline text-sm flex items-center gap-1">
@@ -939,14 +939,14 @@ export default function AdminMockExamsPage() {
 
             {/* Assign to Exam bar (visible when bank questions exist) */}
             {bankQuestions.length > 0 && (
-              <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-lg p-3">
                 <span className="text-sm font-medium text-amber-800">Assign to Exam:</span>
                 <select className="input-field text-sm flex-1 max-w-xs" value={assignTargetExam} onChange={e => setAssignTargetExam(e.target.value)}>
                   <option value="">Select exam...</option>
                   {exams.map(ex => <option key={ex.id} value={ex.id}>{ex.title}</option>)}
                 </select>
                 {assignCapacity && (
-                  <span className="text-xs text-slate-500 whitespace-nowrap">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 whitespace-nowrap">
                     {assignCapacity.current}/{assignCapacity.total} used ({assignCapacity.remaining} free)
                   </span>
                 )}
@@ -980,7 +980,7 @@ export default function AdminMockExamsPage() {
                   Assign {selectedBankIds.size > 0 ? `(${selectedBankIds.size})` : ''}
                 </button>
                 {selectedBankIds.size > 0 && (
-                  <button onClick={() => setSelectedBankIds(new Set())} className="text-xs text-slate-500 hover:underline">Clear</button>
+                  <button onClick={() => setSelectedBankIds(new Set())} className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:underline">Clear</button>
                 )}
               </div>
             )}
@@ -989,12 +989,12 @@ export default function AdminMockExamsPage() {
             {bankQuestions.length === 0 ? (
               <div className="card text-center py-16">
                 <Database size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-500">No questions in the mock question bank. Add questions or adjust filters.</p>
+                <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No questions in the mock question bank. Add questions or adjust filters.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {bankQuestions.map(q => (
-                  <div key={q.id} className={`card border-l-4 ${selectedBankIds.has(q.id) ? 'border-primary-500 bg-primary-50/30' : 'border-transparent'}`}>
+                  <div key={q.id} className={`card border-l-4 ${selectedBankIds.has(q.id) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20/30' : 'border-transparent'}`}>
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
@@ -1008,26 +1008,26 @@ export default function AdminMockExamsPage() {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="font-medium text-slate-900">{q.question}</p>
+                          <p className="font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</p>
                           <div className="flex gap-1 shrink-0">
-                            <button onClick={() => openEditBankQuestion(q)} className="p-1 hover:bg-slate-100 rounded"><Edit size={14} className="text-slate-400" /></button>
-                            <button onClick={() => handleDeleteBankQuestion(q.id)} className="p-1 hover:bg-red-100 rounded"><Trash2 size={14} className="text-red-400" /></button>
+                            <button onClick={() => openEditBankQuestion(q)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><Edit size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
+                            <button onClick={() => handleDeleteBankQuestion(q.id)} className="p-1 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded"><Trash2 size={14} className="text-red-400" /></button>
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                          <span className="px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 font-medium">{q.subject}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{q.level}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium">{q.subject}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400">{q.level}</span>
                           <span className={`px-2 py-0.5 rounded-full font-medium ${
-                            q.difficulty_level === 'EASY' ? 'bg-green-100 text-green-700' :
-                            q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 text-blue-700' :
-                            q.difficulty_level === 'HARD' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                            q.difficulty_level === 'EASY' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' :
+                            q.difficulty_level === 'MEDIUM' ? 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300' :
+                            q.difficulty_level === 'HARD' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400'
                           }`}>{q.difficulty_level}</span>
-                          <span className="text-slate-400">{q.topic}{q.subtopic ? ` / ${q.subtopic}` : ''}</span>
+                          <span className="text-slate-400 dark:text-slate-500 dark:text-slate-500">{q.topic}{q.subtopic ? ` / ${q.subtopic}` : ''}</span>
                         </div>
                         {q.options && q.options.length > 0 && q.question_type !== 'FILL_IN_THE_GAP' && q.question_type !== 'fill_blank' && (
                           <div className="flex flex-wrap gap-2 mt-2">
                             {q.options.map((opt: string, oi: number) => (
-                              <span key={oi} className={`text-xs px-2 py-0.5 rounded ${q.correct_answer === oi ? 'bg-green-100 text-green-700 font-medium' : 'bg-slate-50 text-slate-500'}`}>
+                              <span key={oi} className={`text-xs px-2 py-0.5 rounded ${q.correct_answer === oi ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 font-medium' : 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}>
                                 {String.fromCharCode(65 + oi)}. {opt}
                               </span>
                             ))}
@@ -1036,9 +1036,9 @@ export default function AdminMockExamsPage() {
                         {/* Show exam assignments */}
                         {q._examAssignments && q._examAssignments.size > 0 && (
                           <div className="flex flex-wrap items-center gap-1 mt-2">
-                            <span className="text-[10px] text-slate-400">Assigned to:</span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">Assigned to:</span>
                             {exams.filter(ex => q._examAssignments.has(ex.id)).map(ex => (
-                              <span key={ex.id} className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-600 border border-purple-200">
+                              <span key={ex.id} className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 dark:text-purple-400 border border-purple-200 dark:border-purple-900/40 dark:border-purple-900/40">
                                 {ex.title}
                               </span>
                             ))}
@@ -1057,7 +1057,7 @@ export default function AdminMockExamsPage() {
                 <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">{editingBankQuestion ? 'Edit' : 'Add'} Question to Bank</h3>
-                    <button onClick={() => setShowBankQuestionModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowBankQuestionModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>
@@ -1111,7 +1111,7 @@ export default function AdminMockExamsPage() {
                         <label className="block text-sm font-medium mb-1">Options</label>
                         {bankQuestionData.options.map((opt, oi) => (
                           <div key={oi} className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold w-6 text-slate-500">{String.fromCharCode(65 + oi)}.</span>
+                            <span className="text-xs font-bold w-6 text-slate-500 dark:text-slate-400 dark:text-slate-400">{String.fromCharCode(65 + oi)}.</span>
                             <input className="input-field flex-1" value={opt} onChange={e => {
                               const opts = [...bankQuestionData.options];
                               opts[oi] = e.target.value;
@@ -1141,7 +1141,7 @@ export default function AdminMockExamsPage() {
                 <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Edit Exam Question</h3>
-                    <button onClick={() => setShowEditMockQModal(false)} className="p-1 hover:bg-slate-100 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowEditMockQModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>
@@ -1166,7 +1166,7 @@ export default function AdminMockExamsPage() {
                       <label className="block text-sm font-medium mb-1">Options</label>
                       {mockQForm.options.map((opt, oi) => (
                         <div key={oi} className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-bold w-6 text-slate-500">{String.fromCharCode(65 + oi)}.</span>
+                          <span className="text-xs font-bold w-6 text-slate-500 dark:text-slate-400 dark:text-slate-400">{String.fromCharCode(65 + oi)}.</span>
                           <input className="input-field flex-1" value={opt} onChange={e => {
                             const opts = [...mockQForm.options];
                             opts[oi] = e.target.value;
@@ -1198,16 +1198,16 @@ export default function AdminMockExamsPage() {
         {/* ═══════════════ STUDENTS TAB ═══════════════ */}
         {activeTab === 'students' && (
           <>
-            <h2 className="text-lg font-bold text-slate-900">Students Performance</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Students Performance</h2>
             {allAttemptsAnalytics.length === 0 ? (
               <div className="card text-center py-16">
                 <Users size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-500">No student data available yet.</p>
+                <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No student data available yet.</p>
               </div>
             ) : (
               <div className="card overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold">Student</th><th className="p-3 text-center font-semibold">Attempts</th><th className="p-3 text-center font-semibold">Best</th><th className="p-3 text-center font-semibold">Average</th><th className="p-3 text-center font-semibold">Latest</th><th className="p-3 text-center font-semibold">Mastery</th><th className="p-3 text-center font-semibold">Pathway</th><th className="p-3 text-center font-semibold">Action</th></tr></thead>
+                  <thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold">Student</th><th className="p-3 text-center font-semibold">Attempts</th><th className="p-3 text-center font-semibold">Best</th><th className="p-3 text-center font-semibold">Average</th><th className="p-3 text-center font-semibold">Latest</th><th className="p-3 text-center font-semibold">Mastery</th><th className="p-3 text-center font-semibold">Pathway</th><th className="p-3 text-center font-semibold">Action</th></tr></thead>
                   <tbody className="divide-y divide-slate-100">
                     {allAttemptsAnalytics.map((s: any) => (
                       <tr key={s.student?.id || Math.random()}>
@@ -1217,7 +1217,7 @@ export default function AdminMockExamsPage() {
                         <td className={`p-3 text-center font-bold ${getGradeColor(s.avgScore)}`}>{s.avgScore}%</td>
                         <td className={`p-3 text-center font-bold ${getGradeColor(s.latestScore)}`}>{s.latestScore}%</td>
                         <td className="p-3 text-center text-xs">{s.attempts[0]?.mastery_level || '—'}</td>
-                        <td className="p-3 text-center text-xs text-primary-600 font-medium">
+                        <td className="p-3 text-center text-xs text-primary-600 dark:text-primary-400 dark:text-primary-400 font-medium">
                           {analytics.find((a: any) => a.student_id === s.student?.id)?.recommended_pathway || '—'}
                         </td>
                         <td className="p-3 text-center">
@@ -1241,25 +1241,25 @@ export default function AdminMockExamsPage() {
         {/* ═══════════════ ANALYTICS TAB ═══════════════ */}
         {activeTab === 'analytics' && (
           <>
-            <h2 className="text-lg font-bold text-slate-900">Overall Analytics</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Overall Analytics</h2>
 
             {attempts.length === 0 ? (
               <div className="card text-center py-16">
                 <BarChart3 size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-500">No data yet. Students need to take exams first.</p>
+                <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No data yet. Students need to take exams first.</p>
               </div>
             ) : (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="card"><p className="text-xs text-slate-500">Total Students</p><p className="text-2xl font-bold">{allAttemptsAnalytics.length}</p></div>
-                  <div className="card"><p className="text-xs text-slate-500">Total Attempts</p><p className="text-2xl font-bold">{attempts.length}</p></div>
-                  <div className="card"><p className="text-xs text-slate-500">Average Score</p><p className="text-2xl font-bold text-blue-600">{avgScore}%</p></div>
-                  <div className="card"><p className="text-xs text-slate-500">Pass Rate</p><p className="text-2xl font-bold text-green-600">{attempts.length > 0 ? Math.round((attempts.filter((a: any) => a.score >= 50).length / attempts.length) * 100) : 0}%</p></div>
+                  <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Students</p><p className="text-2xl font-bold">{allAttemptsAnalytics.length}</p></div>
+                  <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Attempts</p><p className="text-2xl font-bold">{attempts.length}</p></div>
+                  <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Average Score</p><p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{avgScore}%</p></div>
+                  <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Pass Rate</p><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{attempts.length > 0 ? Math.round((attempts.filter((a: any) => a.score >= 50).length / attempts.length) * 100) : 0}%</p></div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="card">
-                    <h3 className="font-bold text-slate-800 mb-4">Mastery Distribution</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4">Mastery Distribution</h3>
                     <ResponsiveContainer width="100%" height={250}>
                       <PieChart>
                         <Pie data={masteryChartData.filter(d => d.value > 0)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
@@ -1276,16 +1276,16 @@ export default function AdminMockExamsPage() {
 
                   {analytics.filter((a: any) => a.recommended_pathway).length > 0 && (
                     <div className="card">
-                      <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Lightbulb size={16} /> Pathway Recommendations Distribution</h3>
+                      <h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><Lightbulb size={16} /> Pathway Recommendations Distribution</h3>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {['SCIENCE', 'COMMERCIAL', 'ARTS'].map(pathway => {
                           const count = analytics.filter((a: any) => a.recommended_pathway === pathway).length;
                           const total = analytics.filter((a: any) => a.recommended_pathway).length;
                           return (
-                            <div key={pathway} className={`rounded-xl p-4 text-center ${pathway === 'SCIENCE' ? 'bg-green-50 border border-green-200' : pathway === 'COMMERCIAL' ? 'bg-blue-50 border border-blue-200' : 'bg-purple-50 border border-purple-200'}`}>
+                            <div key={pathway} className={`rounded-xl p-4 text-center ${pathway === 'SCIENCE' ? 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40' : pathway === 'COMMERCIAL' ? 'bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/40 dark:border-blue-900/40' : 'bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-900/40 dark:border-purple-900/40'}`}>
                               <p className="text-2xl font-bold">{count}</p>
                               <p className="text-sm font-medium">{pathway} Track</p>
-                              <p className="text-xs text-slate-500">{total > 0 ? Math.round((count / total) * 100) : 0}% of students</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{total > 0 ? Math.round((count / total) * 100) : 0}% of students</p>
                             </div>
                           );
                         })}
@@ -1294,7 +1294,7 @@ export default function AdminMockExamsPage() {
                   )}
 
                   <div className="card">
-                    <h3 className="font-bold text-slate-800 mb-4">Student Average Scores</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4">Student Average Scores</h3>
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={allAttemptsAnalytics.slice(0, 10).map((s: any) => ({
                         name: s.student?.first_name ? `${s.student.first_name} ${s.student.lastName?.charAt(0)}.` : 'Unknown',
@@ -1334,7 +1334,7 @@ export default function AdminMockExamsPage() {
 
                     return (
                       <div className="card">
-                        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Brain size={16} /> Overall Subject Performance</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><Brain size={16} /> Overall Subject Performance</h3>
                         <ResponsiveContainer width="100%" height={250}>
                           <BarChart data={subjectChartData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -366,8 +366,8 @@ export default function TeacherSessionsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Video Lessons</h1>
-            <p className="text-slate-500">Create video lessons with checkpoints and notes</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Video Lessons</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Create video lessons with checkpoints and notes</p>
           </div>
           <button
             onClick={() => { 
@@ -422,7 +422,7 @@ export default function TeacherSessionsPage() {
         ) : filtered.length === 0 ? (
           <div className="col-span-full bg-white rounded-xl shadow-md p-12 text-center">
             <FileVideo className="mx-auto text-gray-400 mb-4" size={48} />
-            <p className="text-slate-500">No video lessons found</p>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No video lessons found</p>
             <button onClick={() => setShowModal(true)} className="btn-primary mt-4">Add First Lesson</button>
           </div>
         ) : (
@@ -440,31 +440,31 @@ export default function TeacherSessionsPage() {
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
-                        <Play className="text-red-600 ml-1" size={32} />
+                        <Play className="text-red-600 dark:text-red-400 dark:text-red-400 ml-1" size={32} />
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="pt-[56.25%] bg-gray-900 flex items-center justify-center">
-                    <FileVideo className="text-gray-500" size={48} />
+                    <FileVideo className="text-gray-500 dark:text-slate-400 dark:text-slate-400" size={48} />
                   </div>
                 )}
                 <div className="p-4">
-                  <h3 className="font-semibold text-slate-800 mb-1">{session.title}</h3>
-                  <p className="text-sm text-slate-500">{session.subject?.name}{session.class?.name ? ` • ${session.class.name}` : ''} • {session.duration || '?'} min</p>
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{session.title}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{session.subject?.name}{session.class?.name ? ` • ${session.class.name}` : ''} • {session.duration || '?'} min</p>
                   <div className="flex items-center gap-2 mt-2">
                     {hasCheckpoint && (
-                      <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                      <span className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 rounded-full text-xs">
                         <CheckCircle size={12} /> Checkpoints
                       </span>
                     )}
                   </div>
                   <div className="flex gap-1 mt-3">
-                    <button onClick={() => openEditModal(session)} className="p-2 hover:bg-gray-100 rounded-lg">
-                      <Edit size={16} className="text-slate-600" />
+                    <button onClick={() => openEditModal(session)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                      <Edit size={16} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
                     </button>
-                    <button onClick={() => handleDelete(session.id)} className="p-2 hover:bg-gray-100 rounded-lg">
-                      <Trash2 size={16} className="text-red-500" />
+                    <button onClick={() => handleDelete(session.id)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                      <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />
                     </button>
                   </div>
                 </div>
@@ -480,8 +480,8 @@ export default function TeacherSessionsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
-              <h2 className="text-lg font-semibold text-slate-800">{editingSession ? 'Edit' : 'New'} Video Lesson</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">{editingSession ? 'Edit' : 'New'} Video Lesson</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
             </div>
             <div className="p-6 space-y-6">
               <div>
@@ -535,7 +535,7 @@ export default function TeacherSessionsPage() {
                       defaultValue={formData.video_url}
                     />
                     {formData.video_url && (
-                      <p className="text-xs text-slate-500 mt-2 truncate">Uploaded: {formData.video_url}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-2 truncate">Uploaded: {formData.video_url}</p>
                     )}
                   </div>
                 )}
@@ -543,15 +543,15 @@ export default function TeacherSessionsPage() {
               <div>
                 <label className="label">Duration</label>
                 {detectingDuration ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 size={14} className="animate-spin" /> Detecting video duration...</div>
+                  <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400"><Loader2 size={14} className="animate-spin" /> Detecting video duration...</div>
                 ) : formData.duration > 0 ? (
                   <div className="flex items-center gap-2 text-sm"><span className="font-medium">{formData.duration} minutes</span>
-                    {formData.video_url && <button type="button" onClick={detectVideoDuration} className="text-primary-600 text-xs hover:underline">Re-detect</button>}
+                    {formData.video_url && <button type="button" onClick={detectVideoDuration} className="text-primary-600 dark:text-primary-400 dark:text-primary-400 text-xs hover:underline">Re-detect</button>}
                   </div>
                 ) : formData.video_url ? (
                   <button type="button" onClick={detectVideoDuration} className="btn-outline text-sm">Detect Video Duration</button>
                 ) : (
-                  <p className="text-sm text-slate-400">Enter or upload a video to auto-detect duration</p>
+                  <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">Enter or upload a video to auto-detect duration</p>
                 )}
               </div>
 
@@ -559,11 +559,11 @@ export default function TeacherSessionsPage() {
               <div className="border-t pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                      <HelpCircle size={18} className="text-primary-600" />
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 flex items-center gap-2">
+                      <HelpCircle size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
                       Video Checkpoints
                     </h3>
-                    <p className="text-sm text-slate-500">Set questions at specific timestamps during the video</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Set questions at specific timestamps during the video</p>
                   </div>
                   <button type="button" onClick={addCheckpoint} className="btn-outline text-sm">
                     + Add Checkpoint
@@ -571,21 +571,21 @@ export default function TeacherSessionsPage() {
                 </div>
 
                 {checkpoints.length === 0 ? (
-                  <div className="p-4 bg-gray-50 rounded-lg text-center">
+                  <div className="p-4 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg text-center">
                     <Clock className="mx-auto text-gray-400 mb-2" size={24} />
-                    <p className="text-sm text-slate-500">No checkpoints added. Add questions that will appear during video playback.</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">No checkpoints added. Add questions that will appear during video playback.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {checkpoints.map((cp, i) => (
-                      <div key={i} className="p-4 bg-primary-50 rounded-lg border border-primary-200">
+                      <div key={i} className="p-4 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40">
                         <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-medium text-primary-700">Checkpoint {i + 1}</span>
+                          <span className="text-sm font-medium text-primary-700 dark:text-primary-300 dark:text-primary-300">Checkpoint {i + 1}</span>
                           <div className="flex items-center gap-2">
                             <select value={cp.question_type} onChange={(e) => updateCheckpoint(i, 'question_type', e.target.value)} className="input text-xs py-1 w-36">
                               {CHECKPOINT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
-                            <button type="button" onClick={() => removeCheckpoint(i)} className="text-red-500 hover:text-red-700">
+                            <button type="button" onClick={() => removeCheckpoint(i)} className="text-red-500 dark:text-red-400 dark:text-red-400 hover:text-red-700 dark:text-red-400 dark:text-red-400">
                               <Trash2 size={16} />
                             </button>
                           </div>
@@ -601,7 +601,7 @@ export default function TeacherSessionsPage() {
                               min={0}
                               max={formData.duration * 60 || 99999}
                             />
-                            <p className="text-xs text-slate-500 mt-1">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">
                               Video is {formData.duration || '?'} min = {(formData.duration || 0) * 60 || '?'} seconds
                             </p>
                           </div>
@@ -622,7 +622,7 @@ export default function TeacherSessionsPage() {
                             <label className="label text-xs">Correct Answer</label>
                             <div className="grid grid-cols-2 gap-2">
                               {['True', 'False'].map((opt, j) => (
-                                <label key={j} className={`p-2 rounded-lg border-2 cursor-pointer text-center text-sm transition-all ${cp.correct_answer === j ? 'border-primary-500 bg-primary-100' : 'border-slate-200 bg-white'}`}>
+                                <label key={j} className={`p-2 rounded-lg border-2 cursor-pointer text-center text-sm transition-all ${cp.correct_answer === j ? 'border-primary-500 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white dark:bg-slate-800'}`}>
                                   <input type="radio" name={`cp-tf-${i}`} checked={cp.correct_answer === j} onChange={() => updateCheckpoint(i, 'correct_answer', j)} className="sr-only" />
                                   <span className="font-medium">{opt}</span>
                                 </label>
@@ -641,7 +641,7 @@ export default function TeacherSessionsPage() {
                               className="input"
                               placeholder="e.g., photosynthesis"
                             />
-                            <p className="text-xs text-slate-500 mt-1">Use <code className="bg-slate-200 px-1 rounded">___</code> in the question text to mark the blank.</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Use <code className="bg-slate-200 px-1 rounded">___</code> in the question text to mark the blank.</p>
                           </div>
                         )}
 
@@ -713,11 +713,11 @@ export default function TeacherSessionsPage() {
               {/* LESSON NOTES SECTION */}
               <div className="border-t pt-6">
                 <div className="mb-4">
-                  <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                    <BookOpen size={18} className="text-green-600" />
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 flex items-center gap-2">
+                    <BookOpen size={18} className="text-green-600 dark:text-green-400 dark:text-green-400" />
                     Lesson Notes
                   </h3>
-                  <p className="text-sm text-slate-500">Add notes for students to read alongside the video</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Add notes for students to read alongside the video</p>
                 </div>
                 <textarea 
                   value={lessonNotes} 
@@ -737,10 +737,10 @@ export default function TeacherSessionsPage() {
 # Additional Resources
 [Links to additional materials]"
                 />
-                <p className="text-xs text-slate-500 mt-2">Supports Markdown formatting</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-2">Supports Markdown formatting</p>
               </div>
             </div>
-            <div className="flex justify-end gap-3 p-6 border-t sticky bottom-0 bg-white">
+            <div className="flex justify-end gap-3 p-6 border-t sticky bottom-0 bg-white dark:bg-slate-800">
               <button onClick={() => { setShowModal(false); setSaving(false); }} className="btn-outline">Cancel</button>
               <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50 flex items-center gap-2">
                 {saving ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : (editingSession ? 'Update' : 'Create') + ' Lesson'}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -56,7 +56,7 @@ export default function PromotionPage() {
   if (loading) {
     return (
       <DashboardLayout title="Promotion" subtitle="Promotion readiness assessment">
-        <div className="flex items-center justify-center py-24"><Loader2 size={32} className="animate-spin text-primary-600" /></div>
+        <div className="flex items-center justify-center py-24"><Loader2 size={32} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
       </DashboardLayout>
     );
   }
@@ -66,8 +66,8 @@ export default function PromotionPage() {
       <DashboardLayout title="Promotion" subtitle="Promotion readiness assessment">
         <div className="max-w-4xl mx-auto text-center py-16">
           <FileText size={48} className="text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">No promotion assessment available for the current term.</p>
-          <p className="text-xs text-slate-400 mt-1">Assessments are generated at the end of each term.</p>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No promotion assessment available for the current term.</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Assessments are generated at the end of each term.</p>
         </div>
       </DashboardLayout>
     );
@@ -80,10 +80,10 @@ export default function PromotionPage() {
     <DashboardLayout title="Promotion" subtitle="Promotion readiness assessment">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Promotion Readiness</h1>
-            <p className="text-xs text-slate-500">{data.academic_year} • {data.term} • {data.current_class_name || 'Current Class'}</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">Promotion Readiness</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{data.academic_year} • {data.term} • {data.current_class_name || 'Current Class'}</p>
           </div>
         </div>
 
@@ -95,8 +95,8 @@ export default function PromotionPage() {
                 <StatusIcon size={24} style={{ color: statusInfo.color }} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900">{statusInfo.label}</h2>
-                <p className="text-sm text-slate-600">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{statusInfo.label}</h2>
+                <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">
                   Overall Score: <span className="font-bold" style={{ color: getMasteryColor(data.overall_score).hex }}>
                     {Math.round(data.overall_score)}%
                   </span>
@@ -104,27 +104,27 @@ export default function PromotionPage() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs text-slate-500">Promotion To</p>
-              <p className="text-sm font-bold text-slate-800">{data.next_class_name || data.recommended_next_class || 'Next Class'}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Promotion To</p>
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{data.next_class_name || data.recommended_next_class || 'Next Class'}</p>
             </div>
           </div>
         </div>
 
         {/* Score Breakdown */}
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-4">Score Breakdown</h3>
+          <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-4">Score Breakdown</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {DIMENSIONS.map(dim => {
               const score = data[dim.key] || 0;
               return (
                 <div key={dim.key}>
                   <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">
                       {dim.icon} {dim.label}
                     </div>
                     <span className="text-xs font-bold" style={{ color: getMasteryColor(score).hex }}>{Math.round(score)}%</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{ width: `${score}%`, backgroundColor: getMasteryColor(score).hex }}
@@ -138,7 +138,7 @@ export default function PromotionPage() {
 
         {/* Overall Progress Ring */}
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-4 text-center">Overall Readiness</h3>
+          <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-4 text-center">Overall Readiness</h3>
           <div className="flex justify-center">
             <div className="relative w-36 h-36">
               <svg className="w-36 h-36 -rotate-90" viewBox="0 0 120 120">
@@ -154,7 +154,7 @@ export default function PromotionPage() {
                 <span className="text-3xl font-bold"                   style={{ color: getMasteryColor(data.overall_score).hex }}>
                   {Math.round(data.overall_score)}%
                 </span>
-                <span className="text-[10px] text-slate-400">Overall</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">Overall</span>
               </div>
             </div>
           </div>
@@ -163,15 +163,15 @@ export default function PromotionPage() {
         {/* Supporting Evidence */}
         {data.supporting_evidence && Object.keys(data.supporting_evidence).length > 0 && (
           <div className="card">
-            <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-3 flex items-center gap-2">
               <FileText size={16} className="text-primary-500" />
               Supporting Evidence
             </h3>
-            <div className="text-xs text-slate-600 space-y-1">
+            <div className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-1">
               {Object.entries(data.supporting_evidence).map(([key, val]) => (
-                <div key={key} className="flex justify-between py-1 border-b border-slate-100 last:border-0">
+                <div key={key} className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 last:border-0">
                   <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-                  <span className="font-medium text-slate-800">{String(val)}</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{String(val)}</span>
                 </div>
               ))}
             </div>
@@ -180,15 +180,15 @@ export default function PromotionPage() {
 
         {/* Conditional Requirements */}
         {data.conditional_requirements && data.conditional_requirements.length > 0 && (
-          <div className="card bg-amber-50 border-amber-200">
-            <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
-              <AlertTriangle size={16} className="text-amber-600" />
+          <div className="card bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40">
+            <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-2 flex items-center gap-2">
+              <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" />
               Requirements to Fulfill
             </h3>
-            <ul className="text-xs text-slate-600 space-y-1">
+            <ul className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-1">
               {data.conditional_requirements.map((req: string, i: number) => (
                 <li key={i} className="flex items-center gap-2">
-                  <AlertTriangle size={12} className="text-amber-500" />
+                  <AlertTriangle size={12} className="text-amber-500 dark:text-amber-400 dark:text-amber-400" />
                   {req}
                 </li>
               ))}

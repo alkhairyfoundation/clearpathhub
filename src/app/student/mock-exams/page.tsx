@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -56,11 +56,11 @@ export default function StudentMockExamsPage() {
 
   function getMasteryColor(level: string) {
     switch (level) {
-      case 'MASTERED': return 'text-green-600 bg-green-100';
-      case 'PROFICIENT': return 'text-blue-600 bg-blue-100';
-      case 'EXCELLENT': return 'text-primary-600 bg-primary-100';
-      case 'GOOD': return 'text-amber-600 bg-amber-100';
-      default: return 'text-red-600 bg-red-100';
+      case 'MASTERED': return 'text-green-600 dark:text-green-400 dark:text-green-400 bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30';
+      case 'PROFICIENT': return 'text-blue-600 dark:text-blue-400 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30';
+      case 'EXCELLENT': return 'text-primary-600 dark:text-primary-400 dark:text-primary-400 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30';
+      case 'GOOD': return 'text-amber-600 dark:text-amber-400 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30';
+      default: return 'text-red-600 dark:text-red-400 dark:text-red-400 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30';
     }
   }
 
@@ -105,8 +105,8 @@ export default function StudentMockExamsPage() {
         ) : exams.length === 0 ? (
           <div className="card text-center py-16">
             <GraduationCap size={48} className="mx-auto text-slate-300 mb-4" />
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">No Mock Exams Available</h3>
-            <p className="text-slate-500 mb-6">There are no mock exams available at this time. Please check back later.</p>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">No Mock Exams Available</h3>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-6">There are no mock exams available at this time. Please check back later.</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -121,15 +121,15 @@ export default function StudentMockExamsPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-slate-900">{exam.title}</h3>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${exam.exam_type === 'JSS3_BECE' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{exam.title}</h3>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${exam.exam_type === 'JSS3_BECE' ? 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300' : 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700'}`}>
                           {exam.exam_type === 'JSS3_BECE' ? 'JSS3 BECE' : 'SS3 WAEC'}
                         </span>
                       </div>
                       {exam.description && (
-                        <p className="text-sm text-slate-500 mb-2">{exam.description}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2">{exam.description}</p>
                       )}
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                         <span className="flex items-center gap-1"><FileText size={14} /> {exam.total_questions} Questions</span>
                         <span className="flex items-center gap-1"><Clock size={14} /> {exam.duration_minutes} mins</span>
                         <span className="flex items-center gap-1"><Award size={14} /> Pass: {exam.passing_score}%</span>
@@ -144,11 +144,11 @@ export default function StudentMockExamsPage() {
                   </div>
 
                   {latestAttempt && latestAttempt.score !== null && (
-                    <div className="bg-slate-50 rounded-lg p-4 mb-4">
+                    <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg p-4 mb-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-slate-500">Latest Score</p>
-                          <p className={`text-2xl font-bold ${latestAttempt.score >= exam.passing_score ? 'text-green-600' : 'text-red-600'}`}>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Latest Score</p>
+                          <p className={`text-2xl font-bold ${latestAttempt.score >= exam.passing_score ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>
                             {latestAttempt.score}%
                           </p>
                           {latestAttempt.mastery_level && (
@@ -159,9 +159,9 @@ export default function StudentMockExamsPage() {
                         </div>
                         <div className="text-right">
                           {examAnalytics && (
-                            <div className="text-sm text-slate-500 mb-2">
-                              <p>Best: <span className="font-bold text-green-600">{examAnalytics.best_score}%</span></p>
-                              <p>Avg: <span className="font-bold text-slate-700">{examAnalytics.average_score}%</span></p>
+                            <div className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2">
+                              <p>Best: <span className="font-bold text-green-600 dark:text-green-400 dark:text-green-400">{examAnalytics.best_score}%</span></p>
+                              <p>Avg: <span className="font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300">{examAnalytics.average_score}%</span></p>
                             </div>
                           )}
                           <Link
@@ -175,8 +175,8 @@ export default function StudentMockExamsPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                    <div className="text-sm text-slate-400">
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
+                    <div className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">
                       {examAttempts.length > 0 ? (
                         <span>{examAttempts.length} attempt{examAttempts.length !== 1 ? 's' : ''} made</span>
                       ) : (
@@ -188,7 +188,7 @@ export default function StudentMockExamsPage() {
                         <Link
                           key={att.id}
                           href={`/student/mock-exams/report/${att.id}`}
-                          className="text-xs text-primary-600 hover:text-primary-800 underline"
+                          className="text-xs text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-800 dark:text-primary-200 dark:text-primary-200 underline"
                         >
                           Attempt {att.attempt_number}: {att.score}%
                         </Link>
@@ -202,7 +202,7 @@ export default function StudentMockExamsPage() {
                         </button>
                       )}
                       {!canTake && (
-                        <span className="text-xs text-red-500 flex items-center">Max attempts reached</span>
+                        <span className="text-xs text-red-500 dark:text-red-400 dark:text-red-400 flex items-center">Max attempts reached</span>
                       )}
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -74,15 +74,15 @@ export default function CompareStudentsPage() {
     <DashboardLayout title="Compare Students" subtitle="Side-by-side student comparison">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/admin/analytics" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
-          <h1 className="text-xl font-bold text-slate-900">Compare Students</h1>
+          <Link href="/admin/analytics" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">Compare Students</h1>
         </div>
 
         {/* Student Selector */}
         <div className="card">
           <div className="flex items-center gap-3 mb-3">
             <div className="relative flex-1">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" />
               <input type="text" placeholder="Search students to add..." value={search} onChange={e => setSearch(e.target.value)} className="input py-1.5 pl-8 pr-3 text-xs w-full" />
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function CompareStudentsPage() {
                 </div>
               );
             })}
-            {selectedIds.length === 0 && <span className="text-xs text-slate-400">Select 2-4 students to compare</span>}
+            {selectedIds.length === 0 && <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Select 2-4 students to compare</span>}
           </div>
 
           {selectedIds.length < 4 && (
@@ -109,11 +109,11 @@ export default function CompareStudentsPage() {
                 <button
                   key={s.id}
                   onClick={() => { setSelectedIds(prev => [...prev, s.id]); setSearch(''); }}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-50 flex items-center gap-2"
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-2"
                 >
-                  <Plus size={12} className="text-slate-400" />
-                  <span className="font-medium text-slate-700">{s.name}</span>
-                  <span className="text-slate-400">{s.class_name}</span>
+                  <Plus size={12} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
+                  <span className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.name}</span>
+                  <span className="text-slate-400 dark:text-slate-500 dark:text-slate-500">{s.class_name}</span>
                 </button>
               ))}
             </div>
@@ -122,14 +122,14 @@ export default function CompareStudentsPage() {
 
         {/* Compare Results */}
         {fetching && (
-          <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-primary-600" /></div>
+          <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
         )}
 
         {compareData && !fetching && (
           <>
             {/* Radar Chart */}
             <div className="card">
-              <h3 className="font-bold text-slate-900 mb-3">Performance Radar</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-3">Performance Radar</h3>
               <ResponsiveContainer width="100%" height={350}>
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="#e2e8f0" />
@@ -148,8 +148,8 @@ export default function CompareStudentsPage() {
             <div className="card p-0 overflow-hidden">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-slate-50">
-                    <th className="text-left py-2.5 px-3 text-slate-500 font-medium">Metric</th>
+                  <tr className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                    <th className="text-left py-2.5 px-3 text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">Metric</th>
                     {compareData.students.map((s: any, i: number) => (
                       <th key={s.id} className="text-center py-2.5 px-3 font-medium" style={{ color: COLORS[i % COLORS.length] }}>
                         {s.name.split(' ')[0]}
@@ -162,8 +162,8 @@ export default function CompareStudentsPage() {
                     const vals = compareData.students.map((s: any) => s[dim.key]);
                     const maxVal = Math.max(...vals.filter((v: any) => v != null));
                     return (
-                      <tr key={dim.key} className="border-t border-slate-100 hover:bg-slate-50">
-                        <td className="py-2 px-3 font-medium text-slate-700 capitalize">{dim.label}</td>
+                      <tr key={dim.key} className="border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                        <td className="py-2 px-3 font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 capitalize">{dim.label}</td>
                         {compareData.students.map((s: any, i: number) => {
                           const val = s[dim.key];
                           const isMax = val === maxVal && val != null && dims.indexOf(dim) < dims.length;

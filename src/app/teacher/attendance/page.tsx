@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -119,44 +119,44 @@ export default function TeacherAttendancePage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Take Attendance</h1>
-              <p className="text-slate-500">Mark student attendance for your class</p>
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Take Attendance</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Mark student attendance for your class</p>
             </div>
           </div>
         </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow-md p-6">
-          <label className="text-sm text-slate-500 mb-2 block">Date</label>
+          <label className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2 block">Date</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
         </div>
         <div className="bg-white rounded-xl shadow-md p-6">
-          <label className="text-sm text-slate-500 mb-2 block">Class</label>
+          <label className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2 block">Class</label>
           <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="input">
             <option value="">Select Class</option>
             {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div className="bg-white rounded-xl shadow-md p-6">
-          <label className="text-sm text-slate-500 mb-2 block">Students</label>
-          <div className="flex items-center gap-2"><Users size={20} className="text-blue-600" /><span className="text-2xl font-bold text-slate-800">{students.length}</span></div>
+          <label className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2 block">Students</label>
+          <div className="flex items-center gap-2"><Users size={20} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /><span className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{students.length}</span></div>
         </div>
         <div className="bg-white rounded-xl shadow-md p-6">
-          <label className="text-sm text-slate-500 mb-2 block">Present</label>
-          <div className="flex items-center gap-2"><CheckCircle size={20} className="text-green-600" /><span className="text-2xl font-bold text-green-600">{presentCount}</span></div>
+          <label className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2 block">Present</label>
+          <div className="flex items-center gap-2"><CheckCircle size={20} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{presentCount}</span></div>
         </div>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+      {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
       {selectedClass && (
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-slate-800">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">
               {classes.find(c => c.id === selectedClass)?.name} - {new Date(date).toLocaleDateString()}
             </h2>
             {students.length > 0 && (
@@ -175,20 +175,20 @@ export default function TeacherAttendancePage() {
           {loading ? (
             <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div></div>
           ) : students.length === 0 ? (
-            <div className="text-center py-12 text-slate-500"><UserCheck size={48} className="mx-auto mb-4 opacity-50" /><p>No students in this class</p></div>
+            <div className="text-center py-12 text-slate-500 dark:text-slate-400 dark:text-slate-400"><UserCheck size={48} className="mx-auto mb-4 opacity-50" /><p>No students in this class</p></div>
           ) : (
             <div className="space-y-3">
               {students.map(student => {
                 const status = attendanceRecords[student.profile_id] || '';
                 return (
-                  <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-medium">{student.profile?.first_name?.[0]}{student.profile?.last_name?.[0]}</span>
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 dark:text-blue-400 dark:text-blue-400 font-medium">{student.profile?.first_name?.[0]}{student.profile?.last_name?.[0]}</span>
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800">{student.profile?.first_name} {student.profile?.last_name}</p>
-                        <p className="text-xs text-slate-500">{student.admission_number}</p>
+                        <p className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{student.profile?.first_name} {student.profile?.last_name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{student.admission_number}</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -201,7 +201,7 @@ export default function TeacherAttendancePage() {
                               ? s === 'present' ? 'bg-green-600 text-white'
                               : s === 'absent' ? 'bg-red-600 text-white'
                               : 'bg-yellow-500 text-white'
-                              : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                              : 'bg-gray-200 text-gray-600 dark:text-slate-400 dark:text-slate-400 hover:bg-gray-300'
                           }`}
                         >
                           {s === 'present' ? 'Present' : s === 'late' ? 'Late' : 'Absent'}

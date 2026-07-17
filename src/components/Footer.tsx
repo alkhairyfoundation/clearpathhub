@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
@@ -24,7 +24,7 @@ export default function Footer({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <h2 className="text-2xl font-bold mb-4">{schoolName}</h2>
-            <p className="text-slate-400 mb-4 max-w-md">
+            <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 mb-4 max-w-md">
               Empowering students with quality education and preparing them for a brighter future. 
               ClearPath Edu Hub - where learning meets excellence.
             </p>
@@ -70,7 +70,7 @@ export default function Footer({
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-            <div className="space-y-3 text-slate-400">
+            <div className="space-y-3 text-slate-400 dark:text-slate-500 dark:text-slate-500">
               <div className="flex items-center gap-2">
                 <MapPin size={16} />
                 <span>{schoolAddress}</span>
@@ -89,23 +89,23 @@ export default function Footer({
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <div className="space-y-2">
-              <Link href="/about" className="block text-slate-400 hover:text-white transition-colors">
+              <Link href="/about" className="block text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-white transition-colors">
                 About Us
               </Link>
-              <Link href="/admissions" className="block text-slate-400 hover:text-white transition-colors">
+              <Link href="/admissions" className="block text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-white transition-colors">
                 Admissions
               </Link>
-              <Link href="/contact" className="block text-slate-400 hover:text-white transition-colors">
+              <Link href="/contact" className="block text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-white transition-colors">
                 Contact
               </Link>
-              <Link href="/portal" className="block text-slate-400 hover:text-white transition-colors">
+              <Link href="/portal" className="block text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-white transition-colors">
                 Portal Login
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400">
+        <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400 dark:text-slate-500 dark:text-slate-500">
           <p>© {currentYear} {schoolName}. All rights reserved.</p>
         </div>
       </div>

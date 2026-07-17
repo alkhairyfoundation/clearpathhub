@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -241,12 +241,12 @@ export default function AdminSessionsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Video Lessons</h1>
-              <p className="text-slate-500 mt-1">{sessions.length} video lessons across all teachers</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Video Lessons</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">{sessions.length} video lessons across all teachers</p>
             </div>
           </div>
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
@@ -275,15 +275,15 @@ export default function AdminSessionsPage() {
           </div>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {loading ? (
           <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
         ) : filtered.length === 0 ? (
           <div className="card text-center py-16">
             <Video className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No video lessons yet</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No video lessons yet</p>
             <button onClick={() => setShowModal(true)} className="btn-primary mt-4">Create First Video Lesson</button>
           </div>
         ) : (
@@ -295,21 +295,21 @@ export default function AdminSessionsPage() {
                     <PlayCircle className="text-white" size={24} />
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => openCheckpoints(session)} className="p-2 hover:bg-primary-50 rounded-lg" title="Manage Checkpoints">
-                      <Clock size={16} className="text-primary-600" />
+                    <button onClick={() => openCheckpoints(session)} className="p-2 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg" title="Manage Checkpoints">
+                      <Clock size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
                     </button>
-                    <button onClick={() => handleDeleteSession(session.id)} className="p-2 hover:bg-red-50 rounded-lg">
-                      <Trash2 size={16} className="text-red-500" />
+                    <button onClick={() => handleDeleteSession(session.id)} className="p-2 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg">
+                      <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />
                     </button>
                   </div>
                 </div>
-                <h3 className="font-bold text-slate-900 mb-1">{session.title}</h3>
-                <p className="text-sm text-slate-500 mb-2">{session.subject?.name || 'No Subject'}{session.class?.name ? ` — ${session.class.name}` : ''}</p>
-                {session.description && <p className="text-sm text-slate-600 line-clamp-2 mb-3">{session.description}</p>}
-                <div className="flex items-center gap-3 text-xs text-slate-400">
+                <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-1">{session.title}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2">{session.subject?.name || 'No Subject'}{session.class?.name ? ` — ${session.class.name}` : ''}</p>
+                {session.description && <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 line-clamp-2 mb-3">{session.description}</p>}
+                <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">
                   {session.teacher && <span>By: {session.teacher.first_name} {session.teacher.last_name}</span>}
                   {session.duration && <span className="flex items-center gap-1"><Clock size={12} />{session.duration} min</span>}
-                  <span className={`px-2 py-0.5 rounded-full font-semibold ${session.is_published ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                  <span className={`px-2 py-0.5 rounded-full font-semibold ${session.is_published ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400'}`}>
                     {session.is_published ? 'Published' : 'Draft'}
                   </span>
                 </div>
@@ -322,9 +322,9 @@ export default function AdminSessionsPage() {
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-bold text-slate-900">Add Video Lesson</h3>
-                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Add Video Lesson</h3>
+                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
                 <div><label className="label">Title *</label><input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Lesson title" /></div>
@@ -358,7 +358,7 @@ export default function AdminSessionsPage() {
                         defaultValue={formData.video_url}
                       />
                       {formData.video_url && (
-                        <p className="text-xs text-slate-500 mt-2 truncate">Uploaded: {formData.video_url}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-2 truncate">Uploaded: {formData.video_url}</p>
                       )}
                     </div>
                   )}
@@ -367,15 +367,15 @@ export default function AdminSessionsPage() {
                 <div>
                   <label className="label">Duration</label>
                   {detectingDuration ? (
-                    <div className="flex items-center gap-2 text-sm text-slate-500"><Loader2 size={14} className="animate-spin" /> Detecting video duration...</div>
+                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400"><Loader2 size={14} className="animate-spin" /> Detecting video duration...</div>
                   ) : formData.duration > 0 ? (
                     <div className="flex items-center gap-2 text-sm"><span className="font-medium">{formData.duration} minutes</span>
-                      {formData.video_url && <button type="button" onClick={detectVideoDuration} className="text-primary-600 text-xs hover:underline">Re-detect</button>}
+                      {formData.video_url && <button type="button" onClick={detectVideoDuration} className="text-primary-600 dark:text-primary-400 dark:text-primary-400 text-xs hover:underline">Re-detect</button>}
                     </div>
                   ) : formData.video_url ? (
                     <button type="button" onClick={detectVideoDuration} className="btn-outline text-sm">Detect Video Duration</button>
                   ) : (
-                    <p className="text-sm text-slate-400">Enter or upload a video to auto-detect duration</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">Enter or upload a video to auto-detect duration</p>
                   )}
                 </div>
                 <div><label className="label">Subject</label><select value={formData.subject_id} onChange={e => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select Subject</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
@@ -384,10 +384,10 @@ export default function AdminSessionsPage() {
                 <div><label className="label">Description</label><textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="input" rows={3} placeholder="Lesson description..." /></div>
                 <label className="flex items-center gap-2">
                   <input type="checkbox" checked={formData.is_published} onChange={e => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4" />
-                  <span className="text-sm font-medium text-slate-700">Publish immediately</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Publish immediately</span>
                 </label>
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
                 <button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button>
                 <button onClick={handleCreateSession} disabled={saving} className="btn-primary disabled:opacity-50 flex items-center gap-2">
                   {saving ? <><Loader2 size={16} className="animate-spin" /> Creating...</> : 'Create Lesson'}
@@ -401,19 +401,19 @@ export default function AdminSessionsPage() {
         {showCheckpointModal && selectedSession && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-bold text-slate-900">Checkpoints — {selectedSession.title}</h3>
-                <button onClick={() => setShowCheckpointModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} className="text-slate-500" /></button>
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Checkpoints — {selectedSession.title}</h3>
+                <button onClick={() => setShowCheckpointModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
-                <div className="p-4 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700">
+                <div className="p-4 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40 rounded-lg text-sm text-primary-700 dark:text-primary-300 dark:text-primary-300">
                   <p className="font-medium">Video Checkpoints</p>
                   <p className="mt-1">Add questions at specific timestamps. Students must answer correctly to continue watching.</p>
                 </div>
 
                 {/* Add Checkpoint Form */}
-                <div className="space-y-3 p-4 bg-slate-50 rounded-xl">
-                  <h4 className="font-semibold text-slate-700">Add New Checkpoint</h4>
+                <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl">
+                  <h4 className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Add New Checkpoint</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="label text-xs">Timestamp (seconds)</label>
@@ -445,21 +445,21 @@ export default function AdminSessionsPage() {
                 {/* Existing Checkpoints */}
                 {checkpoints.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-slate-700 mb-2">{checkpoints.length} Checkpoints</h4>
+                    <h4 className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">{checkpoints.length} Checkpoints</h4>
                     <div className="space-y-2">
                       {checkpoints.map((cp, i) => (
-                        <div key={cp.id} className="p-3 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                        <div key={cp.id} className="p-3 bg-white rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
+                              <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300 rounded-full text-xs font-semibold">
                                 {formatDuration(cp.timestamp_seconds)}
                               </span>
-                              <span className="text-xs text-slate-400">{cp.points} pts</span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{cp.points} pts</span>
                             </div>
-                            <p className="text-sm text-slate-800">{cp.question}</p>
+                            <p className="text-sm text-slate-800 dark:text-slate-200 dark:text-slate-200">{cp.question}</p>
                           </div>
-                          <button onClick={() => deleteCheckpoint(cp.id)} className="p-1.5 hover:bg-red-50 rounded-lg">
-                            <Trash2 size={14} className="text-red-500" />
+                          <button onClick={() => deleteCheckpoint(cp.id)} className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg">
+                            <Trash2 size={14} className="text-red-500 dark:text-red-400 dark:text-red-400" />
                           </button>
                         </div>
                       ))}
@@ -467,7 +467,7 @@ export default function AdminSessionsPage() {
                   </div>
                 )}
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
                 <button onClick={() => setShowCheckpointModal(false)} className="btn-ghost">Close</button>
               </div>
             </div>

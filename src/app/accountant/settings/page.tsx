@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -53,16 +53,16 @@ export default function AccountantSettingsPage() {
   return (
     <DashboardLayout title="Settings" subtitle="Configure your accountant preferences">
       <div className="space-y-6">
-        <div><h1 className="text-2xl font-bold text-slate-900">Accountant Settings</h1><p className="text-slate-500 mt-1">Configure your preferences and defaults</p></div>
+        <div><h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Accountant Settings</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Configure your preferences and defaults</p></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card">
-            <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><DollarSign size={18} className="text-slate-400" />Financial Defaults</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><DollarSign size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Financial Defaults</h2>
             <div className="space-y-4">
               <div>
                 <label className="label">Default Payment Terms (days)</label>
                 <input type="number" value={settings.default_payment_terms} onChange={(e) => setSettings({ ...settings, default_payment_terms: e.target.value })} className="input" />
-                <p className="text-xs text-slate-400 mt-1">Invoice due date will default to this many days from creation</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Invoice due date will default to this many days from creation</p>
               </div>
               <div>
                 <label className="label">Currency</label>
@@ -76,33 +76,33 @@ export default function AccountantSettingsPage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Bell size={18} className="text-slate-400" />Notifications</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Bell size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Notifications</h2>
             <div className="space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={settings.notify_on_payment_upload} onChange={(e) => setSettings({ ...settings, notify_on_payment_upload: e.target.checked })} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
-                <div><p className="text-sm font-medium text-slate-700">Payment Upload Alerts</p><p className="text-xs text-slate-400">Notify when parents upload payment receipts</p></div>
+                <input type="checkbox" checked={settings.notify_on_payment_upload} onChange={(e) => setSettings({ ...settings, notify_on_payment_upload: e.target.checked })} className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 dark:border-slate-600 text-blue-600 dark:text-blue-400 dark:text-blue-400" />
+                <div><p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Payment Upload Alerts</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Notify when parents upload payment receipts</p></div>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={settings.notify_on_invoice_overdue} onChange={(e) => setSettings({ ...settings, notify_on_invoice_overdue: e.target.checked })} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
-                <div><p className="text-sm font-medium text-slate-700">Overdue Invoice Alerts</p><p className="text-xs text-slate-400">Alert when invoices become overdue</p></div>
+                <input type="checkbox" checked={settings.notify_on_invoice_overdue} onChange={(e) => setSettings({ ...settings, notify_on_invoice_overdue: e.target.checked })} className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 dark:border-slate-600 text-blue-600 dark:text-blue-400 dark:text-blue-400" />
+                <div><p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Overdue Invoice Alerts</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Alert when invoices become overdue</p></div>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={settings.notify_weekly_report} onChange={(e) => setSettings({ ...settings, notify_weekly_report: e.target.checked })} className="w-4 h-4 rounded border-slate-300 text-blue-600" />
-                <div><p className="text-sm font-medium text-slate-700">Weekly Summary Report</p><p className="text-xs text-slate-400">Receive weekly financial summary via email</p></div>
+                <input type="checkbox" checked={settings.notify_weekly_report} onChange={(e) => setSettings({ ...settings, notify_weekly_report: e.target.checked })} className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 dark:border-slate-600 text-blue-600 dark:text-blue-400 dark:text-blue-400" />
+                <div><p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Weekly Summary Report</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Receive weekly financial summary via email</p></div>
               </label>
             </div>
           </div>
         </div>
 
-        {msg && <div className={`p-3 rounded-lg flex items-center gap-2 ${msg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{msg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{msg.text}</div>}
+        {msg && <div className={`p-3 rounded-lg flex items-center gap-2 ${msg.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-700 dark:text-red-400 dark:text-red-400'}`}>{msg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{msg.text}</div>}
         <button onClick={handleSave} disabled={saving} className="btn-primary">{saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{saving ? 'Saving...' : 'Save Settings'}</button>
 
         <div className="card max-w-lg">
-          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Shield size={18} className="text-slate-400" />Change Password</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Shield size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Change Password</h2>
           <div className="space-y-4">
-            <div><label className="label">New Password</label><div className="relative"><input type={showNew ? 'text' : 'password'} value={pwData.new} onChange={e => setPwData({...pwData, new: e.target.value})} className="input pr-10" placeholder="Enter new password" /><button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showNew ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></div>
+            <div><label className="label">New Password</label><div className="relative"><input type={showNew ? 'text' : 'password'} value={pwData.new} onChange={e => setPwData({...pwData, new: e.target.value})} className="input pr-10" placeholder="Enter new password" /><button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500">{showNew ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></div>
             <div><label className="label">Confirm Password</label><input type={showNew ? 'text' : 'password'} value={pwData.confirm} onChange={e => setPwData({...pwData, confirm: e.target.value})} className="input" placeholder="Confirm new password" /></div>
-            {pwMsg && <div className={`p-3 rounded-lg flex items-center gap-2 ${pwMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{pwMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{pwMsg.text}</div>}
+            {pwMsg && <div className={`p-3 rounded-lg flex items-center gap-2 ${pwMsg.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-700 dark:text-red-400 dark:text-red-400'}`}>{pwMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{pwMsg.text}</div>}
             <button onClick={handlePasswordChange} disabled={pwLoading} className="btn-primary">{pwLoading ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}{pwLoading ? 'Updating...' : 'Update Password'}</button>
           </div>
         </div>

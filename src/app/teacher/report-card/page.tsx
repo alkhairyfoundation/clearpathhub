@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -1221,8 +1221,8 @@ function ReportCardContent() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-            <div><h1 className="text-2xl font-bold text-slate-800">Official Report Card</h1><p className="text-slate-500 text-sm">Generate and download comprehensive student report cards</p></div>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Official Report Card</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">Generate and download comprehensive student report cards</p></div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={downloadPDF} className="btn-primary flex items-center gap-2 text-sm"><Download size={16} /> PDF</button>
@@ -1231,19 +1231,19 @@ function ReportCardContent() {
         </div>
 
         {/* Error + Success */}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2"><AlertCircle size={16} />{error}</div>}
-        {success && <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm flex items-center gap-2"><CheckCircle size={16} />{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2"><AlertCircle size={16} />{error}</div>}
+        {success && <div className="bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 rounded-lg p-3 text-green-700 dark:text-green-300 dark:text-green-300 text-sm flex items-center gap-2"><CheckCircle size={16} />{success}</div>}
 
         {/* Selectors */}
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            <label className="text-xs text-slate-500 font-medium block mb-1">Student</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium block mb-1">Student</label>
             <select value={selectedStudent?.profile_id || ''} onChange={e => setSelectedStudent(students.find(s => s.profile_id === e.target.value) || null)} className="input py-1.5 text-sm w-auto min-w-[200px]">
               {students.map(s => <option key={s.profile_id} value={s.profile_id}>{s.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs text-slate-500 font-medium block mb-1">Term</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium block mb-1">Term</label>
             <select value={selectedTerm?.id || ''} onChange={e => setSelectedTerm(terms.find(t => t.id === e.target.value) || null)} className="input py-1.5 text-sm w-auto min-w-[180px]">
               {terms.map(t => <option key={t.id} value={t.id}>{t.name} {t.session?.name || ''}{t.is_current ? ' (Current)' : ''}</option>)}
             </select>
@@ -1253,7 +1253,7 @@ function ReportCardContent() {
         {loading ? (
           <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent" /></div>
         ) : !selectedStudent ? (
-          <div className="bg-white rounded-xl p-12 text-center text-slate-500"><User size={48} className="mx-auto mb-4 opacity-30" /><p>No student selected</p></div>
+          <div className="bg-white rounded-xl p-12 text-center text-slate-500 dark:text-slate-400 dark:text-slate-400"><User size={48} className="mx-auto mb-4 opacity-30" /><p>No student selected</p></div>
         ) : (
           <>
             {/* School & Student Info Card */}
@@ -1274,16 +1274,16 @@ function ReportCardContent() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="card"><p className="text-xs text-slate-500">Overall Average</p><p className={`text-2xl font-bold ${totals.totalAvg >= 70 ? 'text-green-600' : totals.totalAvg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{totals.totalAvg}%</p></div>
-              <div className="card"><p className="text-xs text-slate-500">Grade</p><p className="text-2xl font-bold text-slate-800">{totals.totalGrade}</p></div>
-              <div className="card"><p className="text-xs text-slate-500">Remark</p><p className="text-lg font-bold text-primary-600">{totals.remark}</p></div>
-              <div className="card"><p className="text-xs text-slate-500">Attendance</p><p className="text-2xl font-bold text-green-600">{attendanceData.rate}%</p><p className="text-xs text-slate-400">{attendanceData.present}/{attendanceData.total} days</p></div>
+              <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Overall Average</p><p className={`text-2xl font-bold ${totals.totalAvg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : totals.totalAvg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{totals.totalAvg}%</p></div>
+              <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Grade</p><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{totals.totalGrade}</p></div>
+              <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Remark</p><p className="text-lg font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{totals.remark}</p></div>
+              <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Attendance</p><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{attendanceData.rate}%</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{attendanceData.present}/{attendanceData.total} days</p></div>
             </div>
 
             {/* Scores Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-4 border-b bg-slate-50 flex items-center justify-between">
-                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2"><Award size={16} />Score Sheet</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden">
+              <div className="p-4 border-b bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center justify-between">
+                <h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm flex items-center gap-2"><Award size={16} />Score Sheet</h3>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setShowRemarksEditor(!showRemarksEditor)} className="text-xs btn-ghost flex items-center gap-1 px-2 py-1"><Edit3 size={12} /> Remarks</button>
                   <button onClick={() => setShowDomainEditor(!showDomainEditor)} className="text-xs btn-ghost flex items-center gap-1 px-2 py-1"><Edit3 size={12} /> Domain</button>
@@ -1293,32 +1293,32 @@ function ReportCardContent() {
                 {isThirdTerm ? (
                   /* Cumulative 3-Term Table */
                   <table className="w-full text-sm">
-                    <thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Subject</th><th className="p-3 text-center font-semibold text-slate-600">Term 1</th><th className="p-3 text-center font-semibold text-slate-600">Term 2</th><th className="p-3 text-center font-semibold text-slate-600">Term 3</th><th className="p-3 text-center font-semibold text-slate-600">Cumulative</th><th className="p-3 text-center font-semibold text-slate-600">Grade</th><th className="p-3 text-center font-semibold text-slate-600">Remark</th></tr></thead>
-                    <tbody>{cumulative.length === 0 ? <tr><td colSpan={7} className="p-6 text-center text-slate-400">No scores</td></tr> : cumulative.map((c: any, i: number) => (
-                      <tr key={i} className={`border-t border-slate-100 ${c.cumulative_avg != null && c.cumulative_avg < 50 ? 'bg-red-50' : ''}`}>
-                        <td className="p-3 font-medium text-slate-800">{c.subject_name}</td>
-                        <td className="p-3 text-center font-bold text-slate-600">{c.term1_avg != null ? `${c.term1_avg}%` : '-'}</td>
-                        <td className="p-3 text-center font-bold text-slate-600">{c.term2_avg != null ? `${c.term2_avg}%` : '-'}</td>
-                        <td className="p-3 text-center font-bold text-slate-600">{c.term3_avg != null ? `${c.term3_avg}%` : '-'}</td>
-                        <td className={`p-3 text-center font-bold ${c.cumulative_avg != null ? (c.cumulative_avg >= 70 ? 'text-green-600' : c.cumulative_avg >= 50 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}`}>{c.cumulative_avg != null ? `${c.cumulative_avg}%` : '-'}</td>
-                        <td className={`p-3 text-center font-bold ${c.cumulative_avg != null ? (c.cumulative_avg >= 70 ? 'text-green-600' : c.cumulative_avg >= 50 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}`}>{c.cumulative_avg != null ? calculateGrade(c.cumulative_avg) : '-'}</td>
-                        <td className="p-3 text-center text-slate-600">{c.cumulative_avg != null ? computeRemark(c.cumulative_avg) : '-'}</td>
+                    <thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Subject</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Term 1</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Term 2</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Term 3</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Cumulative</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Grade</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Remark</th></tr></thead>
+                    <tbody>{cumulative.length === 0 ? <tr><td colSpan={7} className="p-6 text-center text-slate-400 dark:text-slate-500 dark:text-slate-500">No scores</td></tr> : cumulative.map((c: any, i: number) => (
+                      <tr key={i} className={`border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 ${c.cumulative_avg != null && c.cumulative_avg < 50 ? 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20' : ''}`}>
+                        <td className="p-3 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{c.subject_name}</td>
+                        <td className="p-3 text-center font-bold text-slate-600 dark:text-slate-400 dark:text-slate-400">{c.term1_avg != null ? `${c.term1_avg}%` : '-'}</td>
+                        <td className="p-3 text-center font-bold text-slate-600 dark:text-slate-400 dark:text-slate-400">{c.term2_avg != null ? `${c.term2_avg}%` : '-'}</td>
+                        <td className="p-3 text-center font-bold text-slate-600 dark:text-slate-400 dark:text-slate-400">{c.term3_avg != null ? `${c.term3_avg}%` : '-'}</td>
+                        <td className={`p-3 text-center font-bold ${c.cumulative_avg != null ? (c.cumulative_avg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : c.cumulative_avg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400') : 'text-slate-300'}`}>{c.cumulative_avg != null ? `${c.cumulative_avg}%` : '-'}</td>
+                        <td className={`p-3 text-center font-bold ${c.cumulative_avg != null ? (c.cumulative_avg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : c.cumulative_avg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400') : 'text-slate-300'}`}>{c.cumulative_avg != null ? calculateGrade(c.cumulative_avg) : '-'}</td>
+                        <td className="p-3 text-center text-slate-600 dark:text-slate-400 dark:text-slate-400">{c.cumulative_avg != null ? computeRemark(c.cumulative_avg) : '-'}</td>
                       </tr>
                     ))}</tbody>
                   </table>
                 ) : (
                   /* Standard Single-Term Table */
                   <table className="w-full text-sm">
-                    <thead><tr className="bg-slate-100">
-                      <th className="p-3 text-left font-semibold text-slate-600">Subject</th>
+                    <thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700">
+                      <th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Subject</th>
                       {buildScoreTypes(assessmentConfig).map(h => (
-                        <th key={h.key} className="p-3 text-center font-semibold text-slate-600">{h.label}<br /><span className="font-normal text-xs">(/{h.maxScore})</span></th>
+                        <th key={h.key} className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">{h.label}<br /><span className="font-normal text-xs">(/{h.maxScore})</span></th>
                       ))}
-                      <th className="p-3 text-center font-semibold text-slate-600">Total</th>
-                      <th className="p-3 text-center font-semibold text-slate-600">Grade</th>
-                      <th className="p-3 text-center font-semibold text-slate-600">Remark</th>
+                      <th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Total</th>
+                      <th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Grade</th>
+                      <th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Remark</th>
                     </tr></thead>
-                    <tbody>{subjectScores.length === 0 ? <tr><td colSpan={buildScoreTypes(assessmentConfig).length + 3} className="p-6 text-center text-slate-400">No scores entered yet</td></tr> : subjectScores.map((s: any, i: number) => {
+                    <tbody>{subjectScores.length === 0 ? <tr><td colSpan={buildScoreTypes(assessmentConfig).length + 3} className="p-6 text-center text-slate-400 dark:text-slate-500 dark:text-slate-500">No scores entered yet</td></tr> : subjectScores.map((s: any, i: number) => {
                       const headers = buildScoreTypes(assessmentConfig);
                       let total = 0;
                       const cells = headers.map(h => {
@@ -1330,19 +1330,19 @@ function ReportCardContent() {
                       const grade = calculateGrade(total);
                       const remark = computeRemark(total);
                       return (
-                        <tr key={i} className={`border-t border-slate-100 ${total > 0 && total < 50 ? 'bg-red-50' : ''}`}>
-                          <td className="p-3 font-medium text-slate-800">{s.subject_name}</td>
+                        <tr key={i} className={`border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 ${total > 0 && total < 50 ? 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20' : ''}`}>
+                          <td className="p-3 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{s.subject_name}</td>
                           {cells.map((c, ci) => <td key={ci} className="p-3 text-center font-bold">{c}</td>)}
-                          <td className={`p-3 text-center font-bold ${total > 0 ? (total >= 70 ? 'text-green-600' : total >= 50 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}`}>{total > 0 ? `${total}%` : '-'}</td>
-                          <td className="p-3 text-center font-bold text-slate-600">{grade}</td>
-                          <td className="p-3 text-center text-slate-600">{remark}</td>
+                          <td className={`p-3 text-center font-bold ${total > 0 ? (total >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : total >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400') : 'text-slate-300'}`}>{total > 0 ? `${total}%` : '-'}</td>
+                          <td className="p-3 text-center font-bold text-slate-600 dark:text-slate-400 dark:text-slate-400">{grade}</td>
+                          <td className="p-3 text-center text-slate-600 dark:text-slate-400 dark:text-slate-400">{remark}</td>
                         </tr>
                       );
                     })}</tbody>
                   </table>
                 )}
               </div>
-              <div className="p-3 border-t bg-slate-50 text-xs text-slate-400 flex justify-between">
+              <div className="p-3 border-t bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 flex justify-between">
                 <span>{totals.subjectCount} subject(s)</span>
                 <span>Overall: {totals.totalAvg}% ({totals.totalGrade})</span>
               </div>
@@ -1350,8 +1350,8 @@ function ReportCardContent() {
 
             {/* Remarks Editor */}
             {showRemarksEditor && (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-4">
-                <div className="flex items-center justify-between"><h3 className="font-bold text-slate-800 text-sm">Remarks</h3><button onClick={() => setShowRemarksEditor(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button></div>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5 space-y-4">
+                <div className="flex items-center justify-between"><h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">Remarks</h3><button onClick={() => setShowRemarksEditor(false)} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400"><X size={18} /></button></div>
                 <div><label className="label">Teacher's Remark</label><textarea value={reportRemarks.teacher_remarks || ''} onChange={e => setReportRemarks({ ...reportRemarks, teacher_remarks: e.target.value })} className="input" rows={3} placeholder="Enter teacher's comment..." /></div>
                 <div><label className="label">Principal's Remark</label><textarea value={reportRemarks.principal_remarks || ''} onChange={e => setReportRemarks({ ...reportRemarks, principal_remarks: e.target.value })} className="input" rows={3} placeholder="Enter principal's comment..." /></div>
                 <div><label className="label">Next Term Begins</label><input type="date" value={reportRemarks.next_term_begins || ''} onChange={e => setReportRemarks({ ...reportRemarks, next_term_begins: e.target.value })} className="input" /></div>
@@ -1363,23 +1363,23 @@ function ReportCardContent() {
 
             {/* Domain Grades Editor */}
             {showDomainEditor && (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-5">
-                <div className="flex items-center justify-between"><h3 className="font-bold text-slate-800 text-sm">Domain Assessment (1-5)</h3><button onClick={() => setShowDomainEditor(false)} className="text-slate-400 hover:text-slate-600"><X size={18} /></button></div>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5 space-y-5">
+                <div className="flex items-center justify-between"><h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">Domain Assessment (1-5)</h3><button onClick={() => setShowDomainEditor(false)} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400"><X size={18} /></button></div>
                 {[
-                  { title: 'Cognitive Domain', fields: COGNITIVE_FIELDS, color: 'bg-blue-50 border-blue-200' },
-                  { title: 'Affective Domain', fields: AFFECTIVE_FIELDS, color: 'bg-green-50 border-green-200' },
-                  { title: 'Psychomotor Domain', fields: PSYCHOMOTOR_FIELDS, color: 'bg-purple-50 border-purple-200' },
+                  { title: 'Cognitive Domain', fields: COGNITIVE_FIELDS, color: 'bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/40 dark:border-blue-900/40' },
+                  { title: 'Affective Domain', fields: AFFECTIVE_FIELDS, color: 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border-green-200 dark:border-green-900/40 dark:border-green-900/40' },
+                  { title: 'Psychomotor Domain', fields: PSYCHOMOTOR_FIELDS, color: 'bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 border-purple-200 dark:border-purple-900/40 dark:border-purple-900/40' },
                 ].map(group => (
                   <div key={group.title} className={`p-4 rounded-lg border ${group.color}`}>
-                    <h4 className="font-semibold text-slate-700 text-sm mb-3">{group.title}</h4>
+                    <h4 className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 text-sm mb-3">{group.title}</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {group.fields.map(f => (
                         <div key={f.key}>
-                          <label className="text-xs text-slate-500 block mb-1">{f.label}</label>
+                          <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 block mb-1">{f.label}</label>
                           <div className="flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map(star => (
                               <button key={star} type="button" onClick={() => setDomainGrades({ ...domainGrades, [f.key]: star })}
-                                className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${(domainGrades[f.key] || 0) >= star ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>{star}</button>
+                                className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${(domainGrades[f.key] || 0) >= star ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:bg-slate-200'}`}>{star}</button>
                             ))}
                           </div>
                         </div>
@@ -1397,10 +1397,10 @@ function ReportCardContent() {
             {!showRemarksEditor && (reportRemarks.teacher_remarks || reportRemarks.principal_remarks) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {reportRemarks.teacher_remarks && (
-                  <div className="card"><h3 className="text-sm font-bold text-slate-800 mb-2">Teacher's Remark</h3><p className="text-sm text-slate-600 italic">"{reportRemarks.teacher_remarks}"</p></div>
+                  <div className="card"><h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Teacher's Remark</h3><p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 italic">"{reportRemarks.teacher_remarks}"</p></div>
                 )}
                 {reportRemarks.principal_remarks && (
-                  <div className="card"><h3 className="text-sm font-bold text-slate-800 mb-2">Principal's Remark</h3><p className="text-sm text-slate-600 italic">"{reportRemarks.principal_remarks}"</p></div>
+                  <div className="card"><h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Principal's Remark</h3><p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 italic">"{reportRemarks.principal_remarks}"</p></div>
                 )}
               </div>
             )}
@@ -1408,12 +1408,12 @@ function ReportCardContent() {
             {/* Domain Grades Display */}
             {!showDomainEditor && Object.keys(domainGrades).length > 0 && (
               <div className="card">
-                <h3 className="text-sm font-bold text-slate-800 mb-3">Domain Assessment</h3>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3">Domain Assessment</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { title: 'Cognitive', fields: COGNITIVE_FIELDS, color: 'text-blue-600' },
-                    { title: 'Affective', fields: AFFECTIVE_FIELDS, color: 'text-green-600' },
-                    { title: 'Psychomotor', fields: PSYCHOMOTOR_FIELDS, color: 'text-purple-600' },
+                    { title: 'Cognitive', fields: COGNITIVE_FIELDS, color: 'text-blue-600 dark:text-blue-400 dark:text-blue-400' },
+                    { title: 'Affective', fields: AFFECTIVE_FIELDS, color: 'text-green-600 dark:text-green-400 dark:text-green-400' },
+                    { title: 'Psychomotor', fields: PSYCHOMOTOR_FIELDS, color: 'text-purple-600 dark:text-purple-400 dark:text-purple-400' },
                   ].map(group => {
                     const entries = group.fields.filter(f => domainGrades[f.key] != null);
                     if (entries.length === 0) return null;
@@ -1421,7 +1421,7 @@ function ReportCardContent() {
                       <div key={group.title}>
                         <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${group.color}`}>{group.title}</h4>
                         <div className="space-y-1">{entries.map(f => (
-                          <div key={f.key} className="flex justify-between text-sm"><span className="text-slate-600">{f.label}</span><span className="font-bold text-slate-800">{domainGrades[f.key]}/5</span></div>
+                          <div key={f.key} className="flex justify-between text-sm"><span className="text-slate-600 dark:text-slate-400 dark:text-slate-400">{f.label}</span><span className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{domainGrades[f.key]}/5</span></div>
                         ))}</div>
                       </div>
                     );

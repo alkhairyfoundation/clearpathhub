@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -140,7 +140,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
     if (q.type === 'scale_1_5') {
       return (
         <div key={q.id} className="mb-6">
-          <p className="text-sm font-medium text-slate-700 mb-2">{q.text} {q.required && <span className="text-red-500">*</span>}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">{q.text} {q.required && <span className="text-red-500 dark:text-red-400 dark:text-red-400">*</span>}</p>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map(n => (
               <button
@@ -148,18 +148,18 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
                 type="button"
                 onClick={() => handleResponse(q.id, n)}
                 className={`w-12 h-12 rounded-full text-sm font-medium transition-all ${
-                  val === n ? 'bg-primary-600 text-white ring-2 ring-primary-300 scale-110' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  val === n ? 'bg-primary-600 text-white ring-2 ring-primary-300 scale-110' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
                 }`}
               >
                 {n}
               </button>
             ))}
           </div>
-          <div className="flex justify-between text-xs text-slate-400 mt-1">
+          <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">
             <span>Strongly Disagree</span>
             <span>Strongly Agree</span>
           </div>
-          {q.notes && <p className="text-xs text-slate-400 mt-1 italic">{q.notes}</p>}
+          {q.notes && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 italic">{q.notes}</p>}
         </div>
       );
     }
@@ -167,13 +167,13 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
     if (q.type === 'single_choice') {
       return (
         <div key={q.id} className="mb-6">
-          <p className="text-sm font-medium text-slate-700 mb-2">{q.text} {q.required && <span className="text-red-500">*</span>}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">{q.text} {q.required && <span className="text-red-500 dark:text-red-400 dark:text-red-400">*</span>}</p>
           <div className="space-y-2">
             {q.options?.map(opt => (
               <label
                 key={opt}
                 className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                  val === opt ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'
+                  val === opt ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'
                 }`}
               >
                 <input
@@ -181,9 +181,9 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
                   name={q.id}
                   checked={val === opt}
                   onChange={() => handleResponse(q.id, opt)}
-                  className="w-4 h-4 text-primary-600"
+                  className="w-4 h-4 text-primary-600 dark:text-primary-400 dark:text-primary-400"
                 />
-                <span className="text-sm text-slate-700">{opt}</span>
+                <span className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300">{opt}</span>
               </label>
             ))}
           </div>
@@ -196,9 +196,9 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
       const max = q.maxSelect || 3;
       return (
         <div key={q.id} className="mb-6">
-          <p className="text-sm font-medium text-slate-700 mb-2">
-            {q.text} {q.required && <span className="text-red-500">*</span>}
-            <span className="text-xs text-slate-400 ml-2">(Select up to {max})</span>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">
+            {q.text} {q.required && <span className="text-red-500 dark:text-red-400 dark:text-red-400">*</span>}
+            <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 ml-2">(Select up to {max})</span>
           </p>
           <div className="grid grid-cols-2 gap-2">
             {q.options?.map(opt => {
@@ -217,7 +217,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
                     }
                   }}
                   className={`p-2 rounded-lg border text-sm text-left transition-all ${
-                    isSelected ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                    isSelected ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 dark:text-primary-300' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'
                   } ${isDisabled && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {opt}
@@ -232,7 +232,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
     if (q.type === 'open_text') {
       return (
         <div key={q.id} className="mb-6">
-          <p className="text-sm font-medium text-slate-700 mb-2">{q.text} {q.required && <span className="text-red-500">*</span>}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">{q.text} {q.required && <span className="text-red-500 dark:text-red-400 dark:text-red-400">*</span>}</p>
           <textarea
             value={val || ''}
             onChange={e => handleResponse(q.id, e.target.value)}
@@ -240,7 +240,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
             maxLength={q.maxLength || 2000}
             placeholder="Type your answer here..."
           />
-          <p className="text-xs text-slate-400 mt-1 text-right">{(val || '').length} / {q.maxLength || 2000}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 text-right">{(val || '').length} / {q.maxLength || 2000}</p>
         </div>
       );
     }
@@ -251,7 +251,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" />
       </div>
     );
   }
@@ -260,8 +260,8 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
     return (
       <div className="text-center py-20">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">Questionnaire Complete</h2>
-        <p className="text-slate-500">You have already submitted your responses for this term.</p>
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Questionnaire Complete</h2>
+        <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">You have already submitted your responses for this term.</p>
       </div>
     );
   }
@@ -269,11 +269,11 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
   return (
     <div>
       {studentName && (
-        <p className="text-sm text-slate-500 mb-4">Responding for: <span className="font-semibold">{studentName}</span></p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">Responding for: <span className="font-semibold">{studentName}</span></p>
       )}
 
       <div className="mb-6">
-        <div className="flex justify-between text-sm text-slate-500 mb-1">
+        <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">
           <span>Progress</span>
           <span>{Math.round(progress)}%</span>
         </div>
@@ -283,13 +283,13 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm whitespace-pre-line">
+        <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm whitespace-pre-line">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
       )}
       {success && (
-        <div className="flex items-center gap-2 p-3 mb-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+        <div className="flex items-center gap-2 p-3 mb-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 rounded-lg text-green-700 dark:text-green-300 dark:text-green-300 text-sm">
           <CheckCircle className="w-4 h-4 flex-shrink-0" />
           {success}
         </div>
@@ -304,7 +304,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
               key={d.key}
               onClick={() => setCurrentDomainIdx(i)}
               className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                i === currentDomainIdx ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                i === currentDomainIdx ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
               }`}
             >
               {d.label.split('(')[0].trim()}
@@ -315,9 +315,9 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
       </div>
 
       {currentDomain && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-slate-800 mb-1">{currentDomain.label}</h3>
-          <p className="text-sm text-slate-400 mb-6">Domain {currentDomainIdx + 1} of {domains.length}</p>
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-6 mb-6">
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{currentDomain.label}</h3>
+          <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mb-6">Domain {currentDomainIdx + 1} of {domains.length}</p>
           {domainQuestions.map(renderQuestion)}
         </div>
       )}

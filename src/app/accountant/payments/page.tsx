@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -104,37 +104,37 @@ export default function AccountantPaymentsPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Payments</h1>
-            <p className="text-slate-500">Track and manage all payments</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Payments</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Track and manage all payments</p>
           </div>
           <button onClick={() => setShowReceiptModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Record Payment</button>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="card"><div className="flex items-center gap-2 mb-2"><TrendingUp size={16} className="text-green-600" /><span className="text-xs text-slate-500">Total Collected</span></div><p className="text-lg font-bold text-green-600">{formatCurrency(stats.totalCollected)}</p></div>
-          <div className="card"><div className="flex items-center gap-2 mb-2"><Clock size={16} className="text-yellow-600" /><span className="text-xs text-slate-500">Pending</span></div><p className="text-lg font-bold text-yellow-600">{formatCurrency(stats.totalPending)}</p></div>
-          <div className="card"><div className="flex items-center gap-2 mb-2"><AlertCircle size={16} className="text-red-600" /><span className="text-xs text-slate-500">Overdue</span></div><p className="text-lg font-bold text-red-600">{formatCurrency(stats.totalOverdue)}</p></div>
-          <div className="card"><div className="flex items-center gap-2 mb-2"><CheckCircle size={16} className="text-blue-600" /><span className="text-xs text-slate-500">Collection Rate</span></div><p className="text-lg font-bold text-blue-600">{stats.collectionRate}%</p></div>
-          <div className="card"><div className="flex items-center gap-2 mb-2"><Users size={16} className="text-purple-600" /><span className="text-xs text-slate-500">Students w/ Balance</span></div><p className="text-lg font-bold text-purple-600">{stats.studentsWithBalance}</p></div>
+          <div className="card"><div className="flex items-center gap-2 mb-2"><TrendingUp size={16} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Collected</span></div><p className="text-lg font-bold text-green-600 dark:text-green-400 dark:text-green-400">{formatCurrency(stats.totalCollected)}</p></div>
+          <div className="card"><div className="flex items-center gap-2 mb-2"><Clock size={16} className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Pending</span></div><p className="text-lg font-bold text-yellow-600 dark:text-yellow-400 dark:text-yellow-400">{formatCurrency(stats.totalPending)}</p></div>
+          <div className="card"><div className="flex items-center gap-2 mb-2"><AlertCircle size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Overdue</span></div><p className="text-lg font-bold text-red-600 dark:text-red-400 dark:text-red-400">{formatCurrency(stats.totalOverdue)}</p></div>
+          <div className="card"><div className="flex items-center gap-2 mb-2"><CheckCircle size={16} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Collection Rate</span></div><p className="text-lg font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{stats.collectionRate}%</p></div>
+          <div className="card"><div className="flex items-center gap-2 mb-2"><Users size={16} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Students w/ Balance</span></div><p className="text-lg font-bold text-purple-600 dark:text-purple-400 dark:text-purple-400">{stats.studentsWithBalance}</p></div>
         </div>
 
         {pendingUploads.length > 0 && (
-          <div className="card border-2 border-amber-200 bg-amber-50">
+          <div className="card border-2 border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold text-amber-800 flex items-center gap-2"><AlertCircle size={18} />Pending Receipt Approvals ({pendingUploads.length})</h2>
-              <a href="/accountant/payment-uploads" className="text-sm text-amber-700 hover:text-amber-800 font-medium underline">Review All</a>
+              <a href="/accountant/payment-uploads" className="text-sm text-amber-700 dark:text-amber-300 dark:text-amber-300 hover:text-amber-800 font-medium underline">Review All</a>
             </div>
             <div className="space-y-2">
               {pendingUploads.slice(0, 5).map((u: any) => (
                 <div key={u.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-100">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center"><AlertCircle size={14} className="text-amber-600" /></div>
+                    <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 rounded-full flex items-center justify-center"><AlertCircle size={14} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /></div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{u.student?.first_name} {u.student?.last_name}</p>
-                      <p className="text-xs text-slate-500">₦{u.amount?.toLocaleString()} — {new Date(u.created_at).toLocaleDateString()}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{u.student?.first_name} {u.student?.last_name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">₦{u.amount?.toLocaleString()} — {new Date(u.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <a href="/accountant/payment-uploads" className="text-xs text-blue-600 hover:text-blue-700 font-medium">Review</a>
+                  <a href="/accountant/payment-uploads" className="text-xs text-blue-600 dark:text-blue-400 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 dark:text-blue-300 font-medium">Review</a>
                 </div>
               ))}
             </div>
@@ -146,25 +146,25 @@ export default function AccountantPaymentsPage() {
             <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} /><input type="text" placeholder="Search by student or invoice..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
             <div className="flex gap-2">
               {['all', 'paid', 'pending', 'overdue'].map(status => (
-                <button key={status} onClick={() => setStatusFilter(status)} className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${statusFilter === status ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>{status}</button>
+                <button key={status} onClick={() => setStatusFilter(status)} className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${statusFilter === status ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 text-gray-600 dark:text-slate-400 dark:text-slate-400'}`}>{status}</button>
               ))}
             </div>
           </div>
 
           {filteredInvoices.length === 0 ? (
-            <div className="text-center py-12"><DollarSign className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No payments found</p></div>
+            <div className="text-center py-12"><DollarSign className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No payments found</p></div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
                   <tr>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Invoice #</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Student</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Description</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Amount</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Due Date</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Status</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Balance</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Invoice #</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Description</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Amount</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Due Date</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Status</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Balance</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -173,24 +173,24 @@ export default function AccountantPaymentsPage() {
                     const totalPaid = relatedReceipts.reduce((s: number, r: any) => s + (r.amount_paid || 0), 0);
                     const balance = Math.max(0, (inv.amount || 0) - totalPaid);
                     return (
-                      <tr key={inv.id} className="hover:bg-slate-50">
+                      <tr key={inv.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
                         <td className="py-3 px-4 font-mono text-sm font-medium">{inv.invoice_number}</td>
-                        <td className="py-3 px-4 font-medium text-slate-900">{inv.student?.first_name} {inv.student?.last_name}</td>
-                        <td className="py-3 px-4 text-sm text-slate-600">{inv.description || 'School Fees'}</td>
+                        <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{inv.student?.first_name} {inv.student?.last_name}</td>
+                        <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{inv.description || 'School Fees'}</td>
                         <td className="py-3 px-4 font-semibold">{formatCurrency(inv.amount)}</td>
-                        <td className="py-3 px-4 text-sm text-slate-500">{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '-'}</td>
+                        <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '-'}</td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${
-                            inv.status === 'paid' ? 'bg-green-100 text-green-700' : 
-                            inv.status === 'overdue' ? 'bg-red-100 text-red-700' : 
+                            inv.status === 'paid' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : 
+                            inv.status === 'overdue' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : 
                             'bg-yellow-100 text-yellow-700'
                           }`}>{inv.status}</span>
                         </td>
                         <td className="py-3 px-4">
                           {balance > 0 ? (
-                            <span className="text-sm font-medium text-red-600">{formatCurrency(balance)}</span>
+                            <span className="text-sm font-medium text-red-600 dark:text-red-400 dark:text-red-400">{formatCurrency(balance)}</span>
                           ) : (
-                            <span className="text-sm font-medium text-green-600">Fully Paid</span>
+                            <span className="text-sm font-medium text-green-600 dark:text-green-400 dark:text-green-400">Fully Paid</span>
                           )}
                         </td>
                       </tr>
@@ -206,8 +206,8 @@ export default function AccountantPaymentsPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
               <div className="flex items-center justify-between p-6 border-b">
-                <h2 className="text-lg font-semibold text-slate-800">Record Payment</h2>
-                <button onClick={() => setShowReceiptModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Record Payment</h2>
+                <button onClick={() => setShowReceiptModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
                 <div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -170,37 +170,37 @@ useEffect(() => {
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#6366f1'];
 
   const quickActions = [
-    { label: 'Take Attendance', href: '/teacher/attendance', icon: <UserCheck size={18} />, color: 'bg-primary-50 text-primary-600 hover:bg-primary-100' },
-    { label: 'Scan Student ID', href: '/teacher/scan-id', icon: <QrCode size={18} />, color: 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' },
-    { label: 'Record Results', href: '/teacher/results', icon: <Award size={18} />, color: 'bg-purple-50 text-purple-600 hover:bg-purple-100' },
-    { label: 'Behavior Report', href: '/teacher/behavior', icon: <Activity size={18} />, color: 'bg-orange-50 text-orange-600 hover:bg-orange-100' },
-    { label: 'Scheme of Work', href: '/teacher/scheme-of-work', icon: <BookOpen size={18} />, color: 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' },
+    { label: 'Take Attendance', href: '/teacher/attendance', icon: <UserCheck size={18} />, color: 'bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30' },
+    { label: 'Scan Student ID', href: '/teacher/scan-id', icon: <QrCode size={18} />, color: 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 dark:text-emerald-400 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30' },
+    { label: 'Record Results', href: '/teacher/results', icon: <Award size={18} />, color: 'bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 dark:text-purple-400 hover:bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30' },
+    { label: 'Behavior Report', href: '/teacher/behavior', icon: <Activity size={18} />, color: 'bg-orange-50 dark:bg-orange-900/20 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 dark:text-orange-400 hover:bg-orange-100' },
+    { label: 'Scheme of Work', href: '/teacher/scheme-of-work', icon: <BookOpen size={18} />, color: 'bg-indigo-50 dark:bg-indigo-900/20 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 dark:text-indigo-400 hover:bg-indigo-100' },
   ];
 
   return (
     <DashboardLayout title="Teacher Dashboard" subtitle={`Bismillah! Welcome back, ${profile?.first_name} ${profile?.last_name}`}>
-      {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm mb-4">{error}</div>}
+      {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm mb-4">{error}</div>}
       {loading ? (
         <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { title: 'My Students', value: stats.students, icon: <Users size={24} />, href: '/teacher/students', bg: 'bg-primary-50', iconBg: 'bg-primary-600', text: 'text-primary-600' },
-              { title: 'Subjects', value: stats.subjects, icon: <BookOpen size={24} />, href: '/teacher/classes', bg: 'bg-emerald-50', iconBg: 'bg-emerald-600', text: 'text-emerald-600' },
-              { title: 'Video Lessons', value: stats.sessions, icon: <Video size={24} />, href: '/teacher/sessions', bg: 'bg-purple-50', iconBg: 'bg-purple-600', text: 'text-purple-600' },
-              { title: 'Assignments', value: stats.pendingHomework, icon: <ClipboardList size={24} />, href: '/teacher/homework', bg: 'bg-amber-50', iconBg: 'bg-amber-600', text: 'text-amber-600' },
+              { title: 'My Students', value: stats.students, icon: <Users size={24} />, href: '/teacher/students', bg: 'bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20', iconBg: 'bg-primary-600', text: 'text-primary-600 dark:text-primary-400 dark:text-primary-400' },
+              { title: 'Subjects', value: stats.subjects, icon: <BookOpen size={24} />, href: '/teacher/classes', bg: 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20', iconBg: 'bg-emerald-600', text: 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' },
+              { title: 'Video Lessons', value: stats.sessions, icon: <Video size={24} />, href: '/teacher/sessions', bg: 'bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20', iconBg: 'bg-purple-600', text: 'text-purple-600 dark:text-purple-400 dark:text-purple-400' },
+              { title: 'Assignments', value: stats.pendingHomework, icon: <ClipboardList size={24} />, href: '/teacher/homework', bg: 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20', iconBg: 'bg-amber-600', text: 'text-amber-600 dark:text-amber-400 dark:text-amber-400' },
             ].map((card, i) => (
-              <Link key={i} href={card.href} className="card hover:shadow-md cursor-pointer transition-all border-slate-100 relative overflow-hidden group">
+              <Link key={i} href={card.href} className="card hover:shadow-md cursor-pointer transition-all border-slate-100 dark:border-slate-700 dark:border-slate-700 relative overflow-hidden group">
                 <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:opacity-[0.06] transition-opacity ${card.iconBg}`} />
                 <div className="flex items-center justify-between mb-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${card.iconBg}`}>
                     <span className="text-white">{card.icon}</span>
                   </div>
-                  <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+                  <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 dark:text-slate-400 dark:text-slate-400 transition-colors" />
                 </div>
-                <h3 className="text-sm font-medium text-slate-500">{card.title}</h3>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{card.value}</p>
+                <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">{card.title}</h3>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white mt-1">{card.value}</p>
               </Link>
             ))}
           </div>
@@ -208,11 +208,11 @@ useEffect(() => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 card overflow-hidden">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <BarChart3 size={18} className="text-primary-600" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2">
+                  <BarChart3 size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
                   Student Grade Distribution
                 </h2>
-                <Link href="/teacher/results" className="text-xs font-semibold text-primary-600 hover:underline">View All Results</Link>
+                <Link href="/teacher/results" className="text-xs font-semibold text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:underline">View All Results</Link>
               </div>
               <div className="h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -232,10 +232,10 @@ useEffect(() => {
             </div>
 
             <div className="card">
-              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-slate-400" />Quick Actions</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Quick Actions</h2>
               <div className="grid grid-cols-2 gap-3">
                 {quickActions.map((action, i) => (
-                  <Link key={i} href={action.href} className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-transparent hover:border-slate-100 transition-all text-center ${action.color.split(' ').filter(c => !c.includes('hover')).join(' ')} hover:shadow-sm`}>
+                  <Link key={i} href={action.href} className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-transparent hover:border-slate-100 dark:border-slate-700 dark:border-slate-700 transition-all text-center ${action.color.split(' ').filter(c => !c.includes('hover')).join(' ')} hover:shadow-sm`}>
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm mb-1">
                       {action.icon}
                     </div>
@@ -250,8 +250,8 @@ useEffect(() => {
           {sowCoverage.length > 0 && (
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><BookOpen size={18} className="text-slate-400" />Curriculum Coverage</h2>
-                <Link href="/teacher/scheme-of-work" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><BookOpen size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Curriculum Coverage</h2>
+                <Link href="/teacher/scheme-of-work" className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium flex items-center gap-1">
                   Edit SOW <ArrowRight size={14} />
                 </Link>
               </div>
@@ -261,8 +261,8 @@ useEffect(() => {
                   return (
                     <div key={i}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-slate-700">{item.subject}</span>
-                        <span className={`text-xs font-bold ${pct >= 80 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">{item.subject}</span>
+                        <span className={`text-xs font-bold ${pct >= 80 ? 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' : pct >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>
                           {item.filledWeeks}/{item.totalWeeks} weeks ({pct}%)
                         </span>
                       </div>
@@ -281,15 +281,15 @@ useEffect(() => {
           {classMastery.length > 0 && (
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Award size={18} className="text-slate-400" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2">
+                  <Award size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                   Class Mastery Overview
                 </h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-slate-500 border-b border-slate-200">
+                    <tr className="text-left text-slate-500 dark:text-slate-400 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
                       <th className="pb-3 font-semibold">Class</th>
                       <th className="pb-3 font-semibold">Subject</th>
                       <th className="pb-3 font-semibold text-center">Students</th>
@@ -307,17 +307,17 @@ useEffect(() => {
                         needs_support: 'bg-red-500',
                       };
                       return (
-                        <tr key={i} className="border-b border-slate-50">
+                        <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 dark:border-slate-700/50">
                           <td className="py-3 pr-4">
-                            <span className="font-semibold text-slate-900">{cm.className}</span>
+                            <span className="font-semibold text-slate-900 dark:text-white dark:text-white">{cm.className}</span>
                           </td>
-                          <td className="py-3 pr-4 text-slate-700">{cm.subjectName}</td>
-                          <td className="py-3 text-center text-slate-600">{cm.totalStudents}</td>
+                          <td className="py-3 pr-4 text-slate-700 dark:text-slate-300 dark:text-slate-300">{cm.subjectName}</td>
+                          <td className="py-3 text-center text-slate-600 dark:text-slate-400 dark:text-slate-400">{cm.totalStudents}</td>
                           <td className={`py-3 text-center font-bold ${
-                            cm.avgScore >= 80 ? 'text-emerald-600' : cm.avgScore >= 60 ? 'text-blue-600' : cm.avgScore >= 40 ? 'text-amber-600' : 'text-red-600'
+                            cm.avgScore >= 80 ? 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' : cm.avgScore >= 60 ? 'text-blue-600 dark:text-blue-400 dark:text-blue-400' : cm.avgScore >= 40 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'
                           }`}>{cm.avgScore}%</td>
                           <td className="py-3 min-w-[220px]">
-                            <div className="flex gap-0.5 h-2.5 rounded-full overflow-hidden bg-slate-100">
+                            <div className="flex gap-0.5 h-2.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 dark:bg-slate-700">
                               {['mastered', 'good_progress', 'developing', 'needs_support'].map(level => {
                                 const count = cm.levels[level] || 0;
                                 const pct = total > 0 ? (count / total) * 100 : 0;
@@ -326,7 +326,7 @@ useEffect(() => {
                                 ) : null;
                               })}
                             </div>
-                            <div className="flex gap-2 mt-1.5 text-[10px] text-slate-400">
+                            <div className="flex gap-2 mt-1.5 text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">
                               {['mastered', 'good_progress', 'developing', 'needs_support'].map(level => (
                                 <span key={level} className="flex items-center gap-1">
                                   <span className={`w-1.5 h-1.5 rounded-full ${levelColors[level]}`} />
@@ -347,15 +347,15 @@ useEffect(() => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {myClasses.length > 0 && (
               <div className="card">
-                <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><GraduationCap size={18} className="text-slate-400" />My Classes</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><GraduationCap size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />My Classes</h2>
                 <div className="space-y-2">
                   {myClasses.map(cls => (
-                    <div key={cls.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div key={cls.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center"><GraduationCap size={16} className="text-emerald-600" /></div>
-                        <span className="font-semibold text-slate-900">{cls.name}</span>
+                        <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center"><GraduationCap size={16} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" /></div>
+                        <span className="font-semibold text-slate-900 dark:text-white dark:text-white">{cls.name}</span>
                       </div>
-                      <span className="text-xs text-slate-500">Level {cls.level}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Level {cls.level}</span>
                     </div>
                   ))}
                 </div>
@@ -364,18 +364,18 @@ useEffect(() => {
 
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Bell size={18} className="text-slate-400" />Announcements</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><Bell size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Announcements</h2>
                 {announcements.length > 0 && <span className="badge badge-red">{announcements.length}</span>}
               </div>
               {announcements.length === 0 ? (
-                <div className="text-center py-8 text-slate-400"><Megaphone size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No new announcements</p></div>
+                <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500"><Megaphone size={32} className="mx-auto mb-2 opacity-50" /><p className="text-sm">No new announcements</p></div>
               ) : (
                 <div className="space-y-3">
                   {announcements.map(a => (
-                    <div key={a.id} className={`p-3 rounded-lg border-l-4 ${a.priority === 'urgent' ? 'bg-red-50 border-red-500' : a.priority === 'high' ? 'bg-amber-50 border-amber-500' : 'bg-primary-50 border-primary-500'}`}>
-                      <p className="font-semibold text-sm text-slate-900">{a.title}</p>
-                      <p className="text-xs text-slate-600 line-clamp-1 mt-0.5">{a.content}</p>
-                      <p className="text-xs text-slate-400 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>
+                    <div key={a.id} className={`p-3 rounded-lg border-l-4 ${a.priority === 'urgent' ? 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border-red-500' : a.priority === 'high' ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-500' : 'bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border-primary-500'}`}>
+                      <p className="font-semibold text-sm text-slate-900 dark:text-white dark:text-white">{a.title}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400 line-clamp-1 mt-0.5">{a.content}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>
                     </div>
                   ))}
                 </div>

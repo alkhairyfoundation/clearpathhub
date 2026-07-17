@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -16,10 +16,10 @@ const LEVEL_COLORS: Record<string, string> = {
 };
 
 const LEVEL_BG: Record<string, string> = {
-  mastered: 'bg-emerald-100 text-emerald-700',
-  good_progress: 'bg-blue-100 text-blue-700',
-  developing: 'bg-amber-100 text-amber-700',
-  needs_support: 'bg-red-100 text-red-700',
+  mastered: 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300',
+  good_progress: 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300',
+  developing: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300',
+  needs_support: 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400',
 };
 
 const LEVEL_LABELS: Record<string, string> = {
@@ -81,10 +81,10 @@ export default function StudentMasteryPage() {
     : 0;
 
   function getOverallLevel(avg: number) {
-    if (avg >= 80) return { label: 'Mastered', color: 'text-emerald-600', bg: 'bg-emerald-100' };
-    if (avg >= 60) return { label: 'Good Progress', color: 'text-blue-600', bg: 'bg-blue-100' };
-    if (avg >= 40) return { label: 'Developing', color: 'text-amber-600', bg: 'bg-amber-100' };
-    return { label: 'Needs Support', color: 'text-red-600', bg: 'bg-red-100' };
+    if (avg >= 80) return { label: 'Mastered', color: 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30' };
+    if (avg >= 60) return { label: 'Good Progress', color: 'text-blue-600 dark:text-blue-400 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30' };
+    if (avg >= 40) return { label: 'Developing', color: 'text-amber-600 dark:text-amber-400 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30' };
+    return { label: 'Needs Support', color: 'text-red-600 dark:text-red-400 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30' };
   }
 
   const overallLevel = getOverallLevel(overallAvg);
@@ -94,14 +94,14 @@ export default function StudentMasteryPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/student" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+            <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Mastery Dashboard</h1>
-              <p className="text-slate-500 mt-1">Track your learning progress topic by topic</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Mastery Dashboard</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Track your learning progress topic by topic</p>
             </div>
           </div>
           <button onClick={recalculate} disabled={recalculating}
-            className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-sm">
+            className="px-4 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-2 text-sm">
             <RefreshCw size={14} className={recalculating ? 'animate-spin' : ''} />
             Recalculate
           </button>
@@ -112,8 +112,8 @@ export default function StudentMasteryPage() {
         ) : subjectScores.length === 0 ? (
           <div className="card text-center py-16">
             <Brain className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No mastery data yet</p>
-            <p className="text-sm text-slate-400 mt-1 mb-4">Complete practice sessions to build your mastery scores</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No mastery data yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1 mb-4">Complete practice sessions to build your mastery scores</p>
             <Link href="/student/practice" className="btn-primary">Start Practicing</Link>
           </div>
         ) : (
@@ -140,30 +140,30 @@ export default function StudentMasteryPage() {
               return (
                 <div key={subj.id} className="card overflow-hidden">
                   <button onClick={() => setExpandedSubject(isExpanded ? null : subj.id)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                    className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${level.bg}`}>
                         <Brain size={20} className={level.color} />
                       </div>
                       <div className="text-left">
-                        <h3 className="font-semibold text-slate-900">{subj.name}</h3>
-                        <p className="text-xs text-slate-500">{subj.topicCount} topics • {subj.code}</p>
+                        <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white">{subj.name}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{subj.topicCount} topics • {subj.code}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className={`font-bold text-lg ${level.color}`}>{subj.avgMastery}%</p>
-                        <p className="text-xs text-slate-500">{level.label}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{level.label}</p>
                       </div>
-                      {isExpanded ? <ChevronDown size={20} className="text-slate-400" /> : <ChevronRight size={20} className="text-slate-400" />}
+                      {isExpanded ? <ChevronDown size={20} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /> : <ChevronRight size={20} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />}
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="border-t border-slate-100">
+                    <div className="border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
                       {/* Component breakdown chart */}
                       {subj.topicScores.length > 0 && (
-                        <div className="p-4 bg-slate-50">
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
                           <div className="grid grid-cols-4 gap-3 mb-4">
                             {[
                               { label: 'Accuracy', value: Math.round(subj.topicScores.reduce((s: number, t: any) => s + t.accuracy, 0) / subj.topicScores.length), icon: <Target size={16} />, weight: '50%' },
@@ -172,9 +172,9 @@ export default function StudentMasteryPage() {
                               { label: 'Difficulty', value: Math.round(subj.topicScores.reduce((s: number, t: any) => s + t.difficulty_progress, 0) / subj.topicScores.length), icon: <BarChart3 size={16} />, weight: '15%' },
                             ].map((comp, i) => (
                               <div key={i} className="bg-white rounded-lg p-3 text-center">
-                                <div className="flex items-center justify-center gap-1 text-xs text-slate-500 mb-1">{comp.icon} {comp.label}</div>
-                                <p className="text-xl font-bold text-slate-900">{comp.value}%</p>
-                                <p className="text-[10px] text-slate-400">Weight: {comp.weight}</p>
+                                <div className="flex items-center justify-center gap-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">{comp.icon} {comp.label}</div>
+                                <p className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{comp.value}%</p>
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">Weight: {comp.weight}</p>
                               </div>
                             ))}
                           </div>
@@ -184,22 +184,22 @@ export default function StudentMasteryPage() {
                       {/* Topic list */}
                       <div className="divide-y divide-slate-100">
                         {subj.topicScores.map((ts: any) => (
-                          <div key={ts.id} className="flex items-center justify-between p-4 hover:bg-slate-50">
+                          <div key={ts.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="font-medium text-slate-800">{ts.topic}</p>
-                                {ts.subtopic && <span className="text-xs text-slate-400">› {ts.subtopic}</span>}
+                                <p className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{ts.topic}</p>
+                                {ts.subtopic && <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">› {ts.subtopic}</span>}
                               </div>
                               <div className="flex items-center gap-3 mt-1">
-                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${LEVEL_BG[ts.level] || 'bg-slate-100 text-slate-600'}`}>
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${LEVEL_BG[ts.level] || 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400'}`}>
                                   {LEVEL_LABELS[ts.level] || ts.level}
                                 </span>
-                                <span className="text-xs text-slate-400">{ts.total_attempts} attempts • {ts.correct_attempts} correct</span>
+                                <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{ts.total_attempts} attempts • {ts.correct_attempts} correct</span>
                               </div>
                             </div>
                             <div className="w-32 ml-4">
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm font-bold text-slate-900">{Math.round(ts.mastery_score)}%</span>
+                                <span className="text-sm font-bold text-slate-900 dark:text-white dark:text-white">{Math.round(ts.mastery_score)}%</span>
                               </div>
                               <div className="w-full bg-slate-200 rounded-full h-2">
                                 <div className={`h-2 rounded-full ${LEVEL_COLORS[ts.level] || 'bg-slate-400'}`}

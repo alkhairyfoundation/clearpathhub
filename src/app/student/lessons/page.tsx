@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -183,16 +183,16 @@ export default function StudentLessonsPage() {
     <DashboardLayout title="Lesson Notes" subtitle="Download and view lesson materials">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Lesson Notes</h1>
-            <p className="text-slate-500">Download and view lesson materials</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Lesson Notes</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Download and view lesson materials</p>
           </div>
         </div>
         
-        {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm">{error}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl p-4 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         <div className="card p-4">
           <div className="flex flex-wrap gap-3">
@@ -223,26 +223,26 @@ export default function StudentLessonsPage() {
                 return filtered.length === 0 ? (
                 <div className="col-span-full bg-white rounded-xl p-12 text-center">
                   <FileText className="mx-auto text-gray-400 mb-4" size={48} />
-                  <p className="text-slate-500">No lessons available</p>
+                  <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No lessons available</p>
                 </div>
               ) : (
                 filtered.map((lesson) => (
                   <div key={lesson.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => openLesson(lesson)}>
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                        <FileText className="text-emerald-600" size={24} />
+                      <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                        <FileText className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" size={24} />
                       </div>
-                      <Eye size={16} className="text-slate-600" />
+                      <Eye size={16} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
                     </div>
-                    <h3 className="font-semibold text-slate-800 mb-1">{lesson.title}</h3>
-                    <p className="text-sm text-slate-500 mb-3">{lesson.subject?.name || 'No subject'}</p>
-                    <p className="text-sm text-slate-600 line-clamp-3 mb-4">{lesson.content?.replace(/<[^>]*>/g, '').substring(0, 300)}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{lesson.title}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-3">{lesson.subject?.name || 'No subject'}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 line-clamp-3 mb-4">{lesson.content?.replace(/<[^>]*>/g, '').substring(0, 300)}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">
                       {lesson.class?.name && (
-                        <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full font-medium">{lesson.class.name}</span>
+                        <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300 rounded-full font-medium">{lesson.class.name}</span>
                       )}
                       {lesson.session_id && (
-                        <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">Has Quiz</span>
+                        <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300 rounded-full font-medium">Has Quiz</span>
                       )}
                       {lesson.attachments && lesson.attachments.length > 0 && (
                         <span className="flex items-center gap-1"><Paperclip size={12} />{lesson.attachments.length}</span>
@@ -275,11 +275,11 @@ export default function StudentLessonsPage() {
             <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="p-6 border-b sticky top-0 bg-white z-10 flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-800">{selectedLesson.title}</h2>
-                  <p className="text-sm text-slate-500">{selectedLesson.subject?.name}</p>
+                  <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">{selectedLesson.title}</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{selectedLesson.subject?.name}</p>
                 </div>
-                <button onClick={() => setSelectedLesson(null)} className="p-2 hover:bg-slate-100 rounded-full">
-                  <ArrowLeft size={20} className="rotate-90 text-slate-500" />
+                <button onClick={() => setSelectedLesson(null)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full">
+                  <ArrowLeft size={20} className="rotate-90 text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
               <div className="p-6">
@@ -287,10 +287,10 @@ export default function StudentLessonsPage() {
               </div>
               {selectedLesson.attachments && selectedLesson.attachments.length > 0 && (
                 <div className="p-6 border-t">
-                  <h3 className="font-medium text-slate-800 mb-3">Attachments</h3>
+                  <h3 className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3">Attachments</h3>
                   <div className="space-y-2">
                     {selectedLesson.attachments.map((url: string, i: number) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"><Download size={16} /><span className="truncate">{url.split('/').pop()}</span></a>
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 transition-colors"><Download size={16} /><span className="truncate">{url.split('/').pop()}</span></a>
                     ))}
                   </div>
                 </div>
@@ -299,12 +299,12 @@ export default function StudentLessonsPage() {
               {/* Inline Quiz */}
               {quizQuestions.length > 0 && !showQuiz && !quizFinished && (
                 <div className="p-6 border-t">
-                  <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
+                  <div className="bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40 rounded-xl p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center"><HelpCircle size={20} className="text-primary-600" /></div>
+                      <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-lg flex items-center justify-center"><HelpCircle size={20} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
                       <div className="flex-1">
-                        <p className="font-semibold text-slate-800">Lesson Quiz Available</p>
-                        <p className="text-sm text-slate-600">{quizQuestions.length} question{quizQuestions.length > 1 ? 's' : ''} to test your understanding</p>
+                        <p className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Lesson Quiz Available</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{quizQuestions.length} question{quizQuestions.length > 1 ? 's' : ''} to test your understanding</p>
                       </div>
                       <button onClick={startQuiz} className="btn-primary text-sm">Take Quiz</button>
                     </div>
@@ -315,28 +315,28 @@ export default function StudentLessonsPage() {
               {showQuiz && !quizFinished && quizQuestions.length > 0 && (
                 <div className="p-6 border-t space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-slate-800">Lesson Quiz</h3>
-                    <span className="text-sm text-slate-500">Question {quizIdx + 1} of {quizQuestions.length}</span>
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Lesson Quiz</h3>
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Question {quizIdx + 1} of {quizQuestions.length}</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-1.5">
                     <div className="bg-primary-600 h-1.5 rounded-full transition-all" style={{ width: `${((quizIdx + 1) / quizQuestions.length) * 100}%` }} />
                   </div>
-                  <h4 className="font-semibold text-slate-800 text-lg">{quizQuestions[quizIdx].question}</h4>
+                  <h4 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-lg">{quizQuestions[quizIdx].question}</h4>
                   <div className="space-y-2">
                     {quizQuestions[quizIdx].options.map((opt: string, i: number) => {
                       const isSelected = quizAnswer === i;
                       const isCorrectAnswer = i === quizQuestions[quizIdx].correct_answer;
                       let btnClass = 'w-full text-left p-3 rounded-lg border-2 transition-all text-sm ';
                       if (!quizFeedback) {
-                        btnClass += isSelected ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700';
+                        btnClass += isSelected ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 dark:text-primary-300' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 text-slate-700 dark:text-slate-300 dark:text-slate-300';
                       } else {
-                        btnClass += isCorrectAnswer ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : isSelected ? 'border-red-500 bg-red-50 text-red-700' : 'border-slate-200 text-slate-400';
+                        btnClass += isCorrectAnswer ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300' : isSelected ? 'border-red-500 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-700 dark:text-red-400 dark:text-red-400' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-400 dark:text-slate-500 dark:text-slate-500';
                       }
                       return (
                         <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizFeedback} className={btnClass}>
                           <span className="font-medium mr-2">{String.fromCharCode(65 + i)}.</span>{opt}
-                          {quizFeedback && isCorrectAnswer && <CheckCircle size={16} className="inline ml-2 text-emerald-600" />}
-                          {quizFeedback && isSelected && !isCorrectAnswer && <XCircle size={16} className="inline ml-2 text-red-600" />}
+                          {quizFeedback && isCorrectAnswer && <CheckCircle size={16} className="inline ml-2 text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" />}
+                          {quizFeedback && isSelected && !isCorrectAnswer && <XCircle size={16} className="inline ml-2 text-red-600 dark:text-red-400 dark:text-red-400" />}
                         </button>
                       );
                     })}
@@ -351,12 +351,12 @@ export default function StudentLessonsPage() {
 
               {quizFinished && quizResults && (
                 <div className="p-6 border-t text-center">
-                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${quizResults.correct / quizResults.total >= 0.7 ? 'bg-emerald-100' : 'bg-amber-100'}`}>
-                    {quizResults.correct / quizResults.total >= 0.7 ? <CheckCircle size={32} className="text-emerald-600" /> : <XCircle size={32} className="text-amber-600" />}
+                  <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${quizResults.correct / quizResults.total >= 0.7 ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30'}`}>
+                    {quizResults.correct / quizResults.total >= 0.7 ? <CheckCircle size={32} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" /> : <XCircle size={32} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" />}
                   </div>
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">Quiz Complete</h3>
-                  <p className="text-3xl font-bold text-primary-600 mb-2">{quizResults.correct}/{quizResults.total}</p>
-                  <p className="text-slate-500 mb-6">{Math.round((quizResults.correct / quizResults.total) * 100)}% score</p>
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Quiz Complete</h3>
+                  <p className="text-3xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400 mb-2">{quizResults.correct}/{quizResults.total}</p>
+                  <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-6">{Math.round((quizResults.correct / quizResults.total) * 100)}% score</p>
                   <button onClick={startQuiz} className="btn-primary">Retry Quiz</button>
                 </div>
               )}

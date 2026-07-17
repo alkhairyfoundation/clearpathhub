@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -319,8 +319,8 @@ export default function TeacherResultsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
-            <div><h1 className="text-2xl font-bold text-slate-800">Score Declaration</h1><p className="text-slate-500 text-sm">Enter CA and Exam scores per student per term</p></div>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Score Declaration</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">Enter CA and Exam scores per student per term</p></div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowSummary(!showSummary)} className="btn-outline flex items-center gap-2 text-sm"><BarChart3 size={16} />{showSummary ? 'Hide' : 'Summary'}</button>
@@ -338,19 +338,19 @@ export default function TeacherResultsPage() {
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            <label className="text-xs text-slate-500 font-medium block mb-1">Term</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium block mb-1">Term</label>
             <select value={selectedTerm?.id || ''} onChange={e => setSelectedTerm(terms.find(t => t.id === e.target.value) || null)} className="input py-1.5 text-sm w-auto min-w-[160px]">
               {terms.map(t => <option key={t.id} value={t.id}>{t.name} {t.session?.name || ''}{t.is_current ? ' (Current)' : ''}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs text-slate-500 font-medium block mb-1">Class</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium block mb-1">Class</label>
             <select value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)} className="input py-1.5 text-sm w-auto min-w-[160px]">
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs text-slate-500 font-medium block mb-1">Subject</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium block mb-1">Subject</label>
             <select value={selectedSubjectId} onChange={e => setSelectedSubjectId(e.target.value)} className="input py-1.5 text-sm w-auto min-w-[160px]">
               {subjects.filter(s => !selectedClassId || !s.class_id || s.class_id === selectedClassId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -359,15 +359,15 @@ export default function TeacherResultsPage() {
 
         {/* Term info banner */}
         {selectedTerm && (
-          <div className="bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 flex items-center gap-3 text-sm text-primary-800">
+          <div className="bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40 rounded-xl px-4 py-3 flex items-center gap-3 text-sm text-primary-800 dark:text-primary-200 dark:text-primary-200">
             <GraduationCap size={18} />
             <span>Declaring scores for <strong>{selectedTerm.name}</strong> — {selectedTerm.session?.name || ''} ({new Date(selectedTerm.start_date).toLocaleDateString()} to {new Date(selectedTerm.end_date).toLocaleDateString()})</span>
           </div>
         )}
 
         {/* Error + Success */}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2"><XCircle size={16} />{error}</div>}
-        {success && <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm flex items-center gap-2"><CheckCircle size={16} />{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2"><XCircle size={16} />{error}</div>}
+        {success && <div className="bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 rounded-lg p-3 text-green-700 dark:text-green-300 dark:text-green-300 text-sm flex items-center gap-2"><CheckCircle size={16} />{success}</div>}
 
         {loading ? (
           <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent" /></div>
@@ -377,42 +377,42 @@ export default function TeacherResultsPage() {
             {showSummary && (
               <div className="space-y-4 animate-scale-in">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5"><p className="text-xs text-slate-500">Total Entries</p><p className="text-2xl font-bold text-slate-800">{allResults.length}</p></div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5"><p className="text-xs text-slate-500">Average Score</p><p className={`text-2xl font-bold ${avgScore >= 70 ? 'text-green-600' : avgScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{avgScore}%</p></div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5"><p className="text-xs text-slate-500">Pass Rate</p><p className={`text-2xl font-bold ${passRate >= 70 ? 'text-green-600' : passRate >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{passRate}%</p></div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5"><p className="text-xs text-slate-500">Students</p><p className="text-2xl font-bold text-slate-800">{rows.length}</p></div>
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Entries</p><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{allResults.length}</p></div>
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Average Score</p><p className={`text-2xl font-bold ${avgScore >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : avgScore >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{avgScore}%</p></div>
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Pass Rate</p><p className={`text-2xl font-bold ${passRate >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : passRate >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{passRate}%</p></div>
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Students</p><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{rows.length}</p></div>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                    <h3 className="font-semibold text-slate-800 mb-3 text-sm">Grade Distribution</h3>
-                    {gradeDist.filter(g => g.count > 0).length === 0 ? <p className="text-sm text-slate-400">No data</p> : (
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5">
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3 text-sm">Grade Distribution</h3>
+                    {gradeDist.filter(g => g.count > 0).length === 0 ? <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">No data</p> : (
                       <div className="space-y-2">{gradeDist.filter(g => g.count > 0).map(g => {
                         const pct = Math.round((g.count / allResults.length) * 100);
-                        return (<div key={g.grade} className="flex items-center gap-3"><span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold bg-slate-100 text-slate-700">{g.grade}</span><div className="flex-1 bg-slate-100 rounded-full h-3"><div className="h-3 rounded-full bg-primary-500 transition-all" style={{ width: `${pct}%` }} /></div><span className="text-sm text-slate-500 w-8 text-right">{g.count}</span></div>);
+                        return (<div key={g.grade} className="flex items-center gap-3"><span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-700 dark:text-slate-300 dark:text-slate-300">{g.grade}</span><div className="flex-1 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-3"><div className="h-3 rounded-full bg-primary-500 transition-all" style={{ width: `${pct}%` }} /></div><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 w-8 text-right">{g.count}</span></div>);
                       })}</div>
                     )}
                   </div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                    <h3 className="font-semibold text-slate-800 mb-3 text-sm">Subject Summary</h3>
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"><span className="text-sm text-slate-600">Subject</span><span className="text-sm font-bold text-slate-800">{currentSubject?.name || 'N/A'}</span></div>
-                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg mt-2"><span className="text-sm text-slate-600">Class</span><span className="text-sm font-bold text-slate-800">{classes.find(c => c.id === selectedClassId)?.name || 'N/A'}</span></div>
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5">
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3 text-sm">Subject Summary</h3>
+                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Subject</span><span className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{currentSubject?.name || 'N/A'}</span></div>
+                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg mt-2"><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Class</span><span className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{classes.find(c => c.id === selectedClassId)?.name || 'N/A'}</span></div>
                   </div>
                 </div>
                 {atRisk.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <h3 className="font-semibold text-red-800 mb-2 text-sm flex items-center gap-2"><AlertTriangle size={16} />At-Risk Students (Avg &lt; 50%)</h3>
-                    <div className="flex flex-wrap gap-2">{atRisk.map(r => <span key={r.student_id} className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-medium">{r.student_name} (avg {cellTotal(r)}%)</span>)}</div>
+                  <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl p-4">
+                    <h3 className="font-semibold text-red-800 dark:text-red-300 dark:text-red-300 mb-2 text-sm flex items-center gap-2"><AlertTriangle size={16} />At-Risk Students (Avg &lt; 50%)</h3>
+                    <div className="flex flex-wrap gap-2">{atRisk.map(r => <span key={r.student_id} className="px-3 py-1 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400 rounded-lg text-xs font-medium">{r.student_name} (avg {cellTotal(r)}%)</span>)}</div>
                   </div>
                 )}
               </div>
             )}
 
             {/* Score Declaration Matrix */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 className="font-bold text-slate-800 flex items-center gap-2">
-                  <Edit3 size={16} className="text-primary-600" />
-                  Score Matrix — <span className="text-primary-600">{currentSubject?.name}</span>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+                <h2 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 flex items-center gap-2">
+                  <Edit3 size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
+                  Score Matrix — <span className="text-primary-600 dark:text-primary-400 dark:text-primary-400">{currentSubject?.name}</span>
                 </h2>
                 <div className="flex items-center gap-2">
                   {hasChanges && (
@@ -426,27 +426,27 @@ export default function TeacherResultsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-slate-50 text-left">
-                      <th className="py-3 px-4 font-semibold text-slate-600 sticky left-0 bg-slate-50 z-10 min-w-[180px]">Student</th>
+                    <tr className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-left">
+                      <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 sticky left-0 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 z-10 min-w-[180px]">Student</th>
                       {scoreTypes.map(st => (
-                        <th key={st.key} className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[100px]">{st.label}<br /><span className="text-[10px] font-normal text-slate-400">(/{st.maxScore})</span></th>
+                        <th key={st.key} className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center min-w-[100px]">{st.label}<br /><span className="text-[10px] font-normal text-slate-400 dark:text-slate-500 dark:text-slate-500">(/{st.maxScore})</span></th>
                       ))}
-                      <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[60px]">Total</th>
-                      <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[60px]">Grade</th>
-                      <th className="py-3 px-3 font-semibold text-slate-600 text-center min-w-[120px]">Actions</th>
+                      <th className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center min-w-[60px]">Total</th>
+                      <th className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center min-w-[60px]">Grade</th>
+                      <th className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center min-w-[120px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.length === 0 ? (
-                      <tr><td colSpan={7} className="py-12 text-center text-slate-400">No students in this class</td></tr>
+                      <tr><td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-500 dark:text-slate-500">No students in this class</td></tr>
                     ) : rows.map((row, ri) => {
                       const total = cellTotal(row);
                       const filled = cellCount(row);
                       const grade = filled > 0 ? calculateGrade(total) : '-';
-                      const gradeColor = total >= 70 ? 'text-green-600' : total >= 50 ? 'text-amber-600' : 'text-red-600';
+                      const gradeColor = total >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : total >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400';
                       return (
-                        <tr key={row.student_id} className={`border-t border-slate-100 hover:bg-slate-50/50 transition-colors ${row.dirty ? 'bg-amber-50/50' : ''}`}>
-                          <td className="py-2.5 px-4 font-medium text-slate-800 sticky left-0 bg-white z-10">
+                        <tr key={row.student_id} className={`border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800/50 transition-colors ${row.dirty ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20/50' : ''}`}>
+                          <td className="py-2.5 px-4 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 sticky left-0 bg-white z-10">
                             <div className="flex items-center gap-2">
                               {row.student_name}
                               {row.dirty && <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Unsaved changes" />}
@@ -463,7 +463,7 @@ export default function TeacherResultsPage() {
                                   value={cell?.score ?? ''}
                                   onChange={e => updateCell(ri, st.key, e.target.value === '' ? 0 : Math.min(st.maxScore, Math.max(0, parseInt(e.target.value) || 0)))}
                                   className={`w-20 text-center text-sm font-bold py-1.5 rounded-lg border transition-colors ${
-                                    cell ? 'bg-white border-slate-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500' : 'bg-slate-50 border-dashed border-slate-300 text-slate-400'
+                                    cell ? 'bg-white border-slate-200 dark:border-slate-700 dark:border-slate-700 focus:border-primary-500 focus:ring-1 focus:ring-primary-500' : 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-dashed border-slate-300 dark:border-slate-600 dark:border-slate-600 text-slate-400 dark:text-slate-500 dark:text-slate-500'
                                   }`}
                                   placeholder="-"
                                 />
@@ -475,7 +475,7 @@ export default function TeacherResultsPage() {
                           <td className="py-2.5 px-3 text-center">
                             <div className="flex items-center justify-center gap-1">
                               {row.dirty && (
-                                <button onClick={() => handleSaveSingle(row)} disabled={saving} className="p-1.5 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors" title="Save this student">
+                                <button onClick={() => handleSaveSingle(row)} disabled={saving} className="p-1.5 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300 rounded-lg hover:bg-primary-200 transition-colors" title="Save this student">
                                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                                 </button>
                               )}
@@ -494,7 +494,7 @@ export default function TeacherResultsPage() {
                               {filled > 0 && (
                                 <button
                                   onClick={() => router.push(`/teacher/report-card?student=${row.student_id}&term=${selectedTerm?.id}`)}
-                                  className="p-1.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                                  className="p-1.5 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 rounded-lg hover:bg-slate-200 transition-colors"
                                   title="View Report Card"
                                 >
                                   <Printer size={14} />
@@ -509,9 +509,9 @@ export default function TeacherResultsPage() {
                 </table>
               </div>
               {rows.length > 0 && (
-                <div className="p-3 border-t border-slate-100 bg-slate-50 text-xs text-slate-400 flex justify-between">
+                <div className="p-3 border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 flex justify-between">
                   <span>{rows.length} student(s) &middot; {allResults.length} entries</span>
-                  {hasChanges && <span className="text-amber-600 font-medium">{rows.filter(r => r.dirty).length} unsaved</span>}
+                  {hasChanges && <span className="text-amber-600 dark:text-amber-400 dark:text-amber-400 font-medium">{rows.filter(r => r.dirty).length} unsaved</span>}
                 </div>
               )}
             </div>
@@ -519,18 +519,18 @@ export default function TeacherResultsPage() {
             {/* All Entries Table */}
             {allResults.length > 0 && (
               <div className="card">
-                <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Award size={18} className="text-slate-400" />All Entries</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Award size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />All Entries</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead><tr className="text-left text-slate-500 border-b"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Subject</th><th className="py-2 pr-4">Exam</th><th className="py-2 pr-4">Score</th><th className="py-2 pr-4">Grade</th><th className="py-2 pr-4">Term</th></tr></thead>
+                    <thead><tr className="text-left text-slate-500 dark:text-slate-400 dark:text-slate-400 border-b"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Subject</th><th className="py-2 pr-4">Exam</th><th className="py-2 pr-4">Score</th><th className="py-2 pr-4">Grade</th><th className="py-2 pr-4">Term</th></tr></thead>
                     <tbody>{allResults.map((r: any) => (
-                      <tr key={r.id} className="border-b last:border-0 hover:bg-slate-50">
-                        <td className="py-2 pr-4 font-medium text-slate-800">{r.student?.first_name} {r.student?.last_name}</td>
-                        <td className="py-2 pr-4 text-slate-600">{r.subject?.name || '-'}</td>
-                        <td className="py-2 pr-4 capitalize text-slate-600">{r.exam_type}</td>
+                      <tr key={r.id} className="border-b last:border-0 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                        <td className="py-2 pr-4 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{r.student?.first_name} {r.student?.last_name}</td>
+                        <td className="py-2 pr-4 text-slate-600 dark:text-slate-400 dark:text-slate-400">{r.subject?.name || '-'}</td>
+                        <td className="py-2 pr-4 capitalize text-slate-600 dark:text-slate-400 dark:text-slate-400">{r.exam_type}</td>
                         <td className="py-2 pr-4 font-bold">{r.score}</td>
-                        <td className="py-2 pr-4"><span className={`px-2 py-0.5 rounded text-xs font-medium ${r.grade?.includes('A') ? 'bg-green-100 text-green-700' : r.grade?.includes('F') ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}>{r.grade}</span></td>
-                        <td className="py-2 pr-4 text-slate-400 text-xs">{r.term || '-'}</td>
+                        <td className="py-2 pr-4"><span className={`px-2 py-0.5 rounded text-xs font-medium ${r.grade?.includes('A') ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : r.grade?.includes('F') ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}>{r.grade}</span></td>
+                        <td className="py-2 pr-4 text-slate-400 dark:text-slate-500 dark:text-slate-500 text-xs">{r.term || '-'}</td>
                       </tr>
                     ))}</tbody>
                   </table>
@@ -544,7 +544,7 @@ export default function TeacherResultsPage() {
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-              <div className="p-5 border-b"><h2 className="text-lg font-semibold text-slate-800">Quick Result Entry</h2></div>
+              <div className="p-5 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Quick Result Entry</h2></div>
               <div className="p-5 space-y-4">
                 <div><label className="label">Student</label>
                   <select value={formData.student_id} onChange={e => setFormData({ ...formData, student_id: e.target.value })} className="input">
@@ -581,9 +581,9 @@ export default function TeacherResultsPage() {
                     }}
                     className="input" />
                 </div>
-                <div><label className="label">Grade</label><input type="text" value={formData.grade || calculateGrade(safeScore(formData.score))} disabled className="input bg-slate-50" /></div>
+                <div><label className="label">Grade</label><input type="text" value={formData.grade || calculateGrade(safeScore(formData.score))} disabled className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800" /></div>
                 <div><label className="label">Remarks (optional)</label><input type="text" value={formData.remarks} onChange={e => setFormData({ ...formData, remarks: e.target.value })} className="input" /></div>
-                {selectedTerm && <p className="text-xs text-slate-400">Term: {selectedTerm.name} &middot; {selectedTerm.session?.name || ''}</p>}
+                {selectedTerm && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Term: {selectedTerm.name} &middot; {selectedTerm.session?.name || ''}</p>}
               </div>
               <div className="flex justify-end gap-3 p-5 border-t">
                 <button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button>

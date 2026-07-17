@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Calculator as CalcIcon, X } from 'lucide-react';
@@ -60,8 +60,8 @@ export default function Calculator() {
     setWaiting(false);
   }
 
-  const btn = 'bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-all py-2.5';
-  const opBtn = 'bg-primary-100 border border-primary-200 rounded-lg text-sm font-bold text-primary-700 hover:bg-primary-200 active:bg-primary-300 transition-all py-2.5';
+  const btn = 'bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 active:bg-slate-200 transition-all py-2.5';
+  const opBtn = 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40 rounded-lg text-sm font-bold text-primary-700 dark:text-primary-300 dark:text-primary-300 hover:bg-primary-200 active:bg-primary-300 transition-all py-2.5';
   const eqBtn = 'bg-primary-600 border border-primary-600 rounded-lg text-sm font-bold text-white hover:bg-primary-700 active:bg-primary-800 transition-all py-2.5';
 
   return (
@@ -75,18 +75,18 @@ export default function Calculator() {
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-scale-in">
-          <div className="flex items-center justify-between px-4 py-3 bg-slate-100 border-b border-slate-200">
-            <span className="text-xs font-semibold text-slate-500 flex items-center gap-1.5"><CalcIcon size={14} />Calculator</span>
-            <button onClick={() => setOpen(false)} className="p-0.5 hover:bg-slate-200 rounded"><X size={14} className="text-slate-400" /></button>
+        <div className="fixed bottom-24 right-6 z-50 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden animate-scale-in">
+          <div className="flex items-center justify-between px-4 py-3 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 flex items-center gap-1.5"><CalcIcon size={14} />Calculator</span>
+            <button onClick={() => setOpen(false)} className="p-0.5 hover:bg-slate-200 rounded"><X size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
           </div>
 
-          <div className="px-4 py-3 bg-white border-b border-slate-100 text-right">
-            <div className="text-2xl font-bold text-slate-900 font-mono truncate">{display}</div>
+          <div className="px-4 py-3 bg-white border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 text-right">
+            <div className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white font-mono truncate">{display}</div>
           </div>
 
           <div className="grid grid-cols-4 gap-1.5 p-3">
-            <button onClick={clear} className="bg-red-100 border border-red-200 rounded-lg text-sm font-bold text-red-700 hover:bg-red-200 active:bg-red-300 transition-all py-2.5">C</button>
+            <button onClick={clear} className="bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-sm font-bold text-red-700 dark:text-red-400 dark:text-red-400 hover:bg-red-200 active:bg-red-300 transition-all py-2.5">C</button>
             <button onClick={() => handleOperator('÷')} className={opBtn}>÷</button>
             <button onClick={() => handleOperator('×')} className={opBtn}>×</button>
             <button onClick={() => handleOperator('-')} className={opBtn}>−</button>

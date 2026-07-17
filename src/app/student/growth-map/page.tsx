@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -116,7 +116,7 @@ export default function GrowthMapPage() {
   if (loading) {
     return (
       <DashboardLayout title="Growth Map" subtitle="Your learning journey visualized">
-        <div className="flex items-center justify-center py-24"><Loader2 size={32} className="animate-spin text-primary-600" /></div>
+        <div className="flex items-center justify-center py-24"><Loader2 size={32} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
       </DashboardLayout>
     );
   }
@@ -125,10 +125,10 @@ export default function GrowthMapPage() {
     <DashboardLayout title="Growth Map" subtitle="Your learning journey visualized">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Growth Map</h1>
-            <p className="text-slate-500 mt-1">Your progression through subjects and topics</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Growth Map</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Your progression through subjects and topics</p>
           </div>
         </div>
 
@@ -136,13 +136,13 @@ export default function GrowthMapPage() {
         <div className="flex flex-wrap gap-3 text-xs">
           {[
             { status: 'completed', icon: <CheckCircle size={14} className="text-emerald-500" />, label: 'Completed' },
-            { status: 'unlocked', icon: <Target size={14} className="text-amber-500" />, label: 'In Progress' },
+            { status: 'unlocked', icon: <Target size={14} className="text-amber-500 dark:text-amber-400 dark:text-amber-400" />, label: 'In Progress' },
             { status: 'locked', icon: <Lock size={14} className="text-slate-300" />, label: 'Locked' },
-            { status: 'milestone', icon: <Flag size={14} className="text-emerald-600" />, label: 'Milestone' },
+            { status: 'milestone', icon: <Flag size={14} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" />, label: 'Milestone' },
           ].map(item => (
-            <div key={item.status} className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded-lg">
+            <div key={item.status} className="flex items-center gap-1 px-2 py-1 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
               {item.icon}
-              <span className="text-slate-600">{item.label}</span>
+              <span className="text-slate-600 dark:text-slate-400 dark:text-slate-400">{item.label}</span>
             </div>
           ))}
         </div>
@@ -150,8 +150,8 @@ export default function GrowthMapPage() {
         {nodes.length === 0 ? (
           <div className="card text-center py-16">
             <Brain className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No learning data yet</p>
-            <p className="text-sm text-slate-400 mt-1">Start practicing to build your growth map</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No learning data yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Start practicing to build your growth map</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -164,16 +164,16 @@ export default function GrowthMapPage() {
                   {node.href ? (
                     <Link href={node.href} onClick={() => setSelectedNode(node)}
                       className={`block p-4 rounded-xl border-2 transition-all ${
-                        isActive ? 'border-primary-500 bg-primary-50 shadow-md' :
-                        node.status === 'completed' ? 'border-emerald-200 bg-emerald-50 hover:border-emerald-400' :
-                        node.status === 'unlocked' ? 'border-amber-200 bg-amber-50 hover:border-amber-400' :
-                        'border-slate-200 bg-slate-50 opacity-60'
+                        isActive ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 shadow-md' :
+                        node.status === 'completed' ? 'border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 hover:border-emerald-400' :
+                        node.status === 'unlocked' ? 'border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 hover:border-amber-400' :
+                        'border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 opacity-60'
                       }`}>
                       <div className="flex items-start gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                          node.status === 'completed' ? 'bg-emerald-100 text-emerald-600' :
-                          node.status === 'unlocked' ? 'bg-amber-100 text-amber-600' :
-                          'bg-slate-100 text-slate-400'
+                          node.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' :
+                          node.status === 'unlocked' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 dark:text-amber-400' :
+                          'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-400 dark:text-slate-500 dark:text-slate-500'
                         }`}>
                           {node.status === 'completed' ? <CheckCircle size={18} /> : 
                            node.status === 'unlocked' ? typeIcons[node.type] :
@@ -181,11 +181,11 @@ export default function GrowthMapPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`font-medium text-sm truncate ${
-                            node.status === 'completed' ? 'text-emerald-800' :
+                            node.status === 'completed' ? 'text-emerald-800 dark:text-emerald-200 dark:text-emerald-200' :
                             node.status === 'unlocked' ? 'text-amber-800' :
-                            'text-slate-500'
+                            'text-slate-500 dark:text-slate-400 dark:text-slate-400'
                           }`}>{node.label}</p>
-                          <p className="text-[10px] text-slate-400 capitalize mt-0.5">{node.type}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500 capitalize mt-0.5">{node.type}</p>
                         </div>
                         {color && (
                           <span className={`text-xs font-bold ${color.textColor}`}>{Math.round(node.score!)}%</span>
@@ -194,17 +194,17 @@ export default function GrowthMapPage() {
                     </Link>
                   ) : (
                     <div className={`p-4 rounded-xl border-2 ${
-                      node.status === 'completed' ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50'
+                      node.status === 'completed' ? 'border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800'
                     }`}>
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          node.status === 'completed' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'
+                          node.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-400 dark:text-slate-500 dark:text-slate-500'
                         }`}>
                           {typeIcons[node.type]}
                         </div>
                         <div>
-                          <p className="font-medium text-sm text-slate-800">{node.label}</p>
-                          <p className="text-[10px] text-slate-400">{node.type}</p>
+                          <p className="font-medium text-sm text-slate-800 dark:text-slate-200 dark:text-slate-200">{node.label}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">{node.type}</p>
                         </div>
                       </div>
                     </div>

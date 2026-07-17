@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -111,29 +111,29 @@ export default function ImportExportPage() {
   }
 
   const exportItems = [
-    { title: 'Students', description: `${stats.students} records`, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', formats: ['CSV'] },
-    { title: 'Teachers', description: `${stats.teachers} records`, icon: BookOpen, color: 'text-emerald-600', bg: 'bg-emerald-100', formats: ['CSV'] },
-    { title: 'Results', description: `${stats.results} records`, icon: BarChart3, color: 'text-purple-600', bg: 'bg-purple-100', formats: ['CSV'] },
-    { title: 'Attendance', description: `${stats.attendance} records`, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', formats: ['CSV'] },
-    { title: 'Invoices', description: 'Financial records', icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-100', formats: ['CSV'] },
-    { title: 'ID Cards', description: 'Generate batch PDF', icon: QrCode, color: 'text-slate-600', bg: 'bg-slate-100', formats: ['PDF'] },
+    { title: 'Students', description: `${stats.students} records`, icon: Users, color: 'text-blue-600 dark:text-blue-400 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30', formats: ['CSV'] },
+    { title: 'Teachers', description: `${stats.teachers} records`, icon: BookOpen, color: 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30', formats: ['CSV'] },
+    { title: 'Results', description: `${stats.results} records`, icon: BarChart3, color: 'text-purple-600 dark:text-purple-400 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30', formats: ['CSV'] },
+    { title: 'Attendance', description: `${stats.attendance} records`, icon: CheckCircle, color: 'text-green-600 dark:text-green-400 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30', formats: ['CSV'] },
+    { title: 'Invoices', description: 'Financial records', icon: DollarSign, color: 'text-amber-600 dark:text-amber-400 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30', formats: ['CSV'] },
+    { title: 'ID Cards', description: 'Generate batch PDF', icon: QrCode, color: 'text-slate-600 dark:text-slate-400 dark:text-slate-400', bg: 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700', formats: ['PDF'] },
   ];
 
   return (
     <DashboardLayout title="Import / Export" subtitle="Bulk data operations and report generation">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-slate-900">Import / Export</h1>
-            <p className="text-slate-500 mt-1">Bulk data operations and report generation</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Import / Export</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Bulk data operations and report generation</p>
           </div>
         </div>
 
       {importSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 animate-slide-down">
-          <CheckCircle size={20} className="text-green-600" />
-          <p className="text-green-700 font-medium">{importSuccess}</p>
+        <div className="bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 rounded-xl p-4 flex items-center gap-3 animate-slide-down">
+          <CheckCircle size={20} className="text-green-600 dark:text-green-400 dark:text-green-400" />
+          <p className="text-green-700 dark:text-green-300 dark:text-green-300 font-medium">{importSuccess}</p>
         </div>
       )}
 
@@ -141,8 +141,8 @@ export default function ImportExportPage() {
         {exportItems.map((item, i) => (
           <div key={i} className="card">
             <div className={`w-10 h-10 ${item.bg} rounded-lg flex items-center justify-center mb-3`}><item.icon size={20} className={item.color} /></div>
-            <h3 className="font-bold text-slate-900">{item.title}</h3>
-            <p className="text-sm text-slate-500 mb-4">{item.description}</p>
+            <h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{item.title}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">{item.description}</p>
             <div className="space-y-2">
               <button onClick={() => handleImport(item.title)} disabled={importing === item.title} className="w-full btn-outline flex items-center justify-center gap-2 text-sm disabled:opacity-50">
                 <Upload size={16} />{importing === item.title ? 'Importing...' : 'Import CSV'}
@@ -160,11 +160,11 @@ export default function ImportExportPage() {
       </div>
 
       <div className="card">
-        <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><FileText size={18} className="text-slate-400" />Student Import Template</h2>
-        <p className="text-sm text-slate-500 mb-4">Download the CSV template and fill in student data for bulk import</p>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><FileText size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Student Import Template</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">Download the CSV template and fill in student data for bulk import</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="p-4 bg-blue-50 rounded-xl"><h3 className="font-semibold text-slate-900 mb-2 text-sm">Required Fields</h3><ul className="text-sm text-slate-600 space-y-1"><li>first_name</li><li>last_name</li><li>email (must be unique)</li></ul></div>
-          <div className="p-4 bg-green-50 rounded-xl"><h3 className="font-semibold text-slate-900 mb-2 text-sm">Optional Fields</h3><ul className="text-sm text-slate-600 space-y-1"><li>phone</li><li>address</li><li>date_of_birth</li><li>gender</li></ul></div>
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-xl"><h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-2 text-sm">Required Fields</h3><ul className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-1"><li>first_name</li><li>last_name</li><li>email (must be unique)</li></ul></div>
+          <div className="p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-xl"><h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-2 text-sm">Optional Fields</h3><ul className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-1"><li>phone</li><li>address</li><li>date_of_birth</li><li>gender</li></ul></div>
         </div>
         <button onClick={() => {
           const headers = 'first_name,last_name,email,phone,address,date_of_birth,gender';

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -155,13 +155,13 @@ export default function TeacherScanIDPage() {
   return (
     <DashboardLayout title="Scan Student ID" subtitle="Scan QR code or enter admission number to mark attendance">
       <div className="space-y-6">
-        <div><h1 className="text-2xl font-bold text-slate-800">Scan Student ID</h1><p className="text-slate-500">Scan QR code or enter admission number to mark attendance</p></div>
+        <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Scan Student ID</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Scan QR code or enter admission number to mark attendance</p></div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-slate-800">Manual Entry</h2>
-            <QrCode className="text-primary-600" size={24} />
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Manual Entry</h2>
+            <QrCode className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={24} />
           </div>
 
           <form onSubmit={handleManualEntry} className="space-y-4">
@@ -169,9 +169,9 @@ export default function TeacherScanIDPage() {
             <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2"><Check size={18} />Mark Attendance</button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg text-center">
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg text-center">
             <Camera className="mx-auto text-gray-400 mb-2" size={32} />
-            <p className="text-sm text-slate-500 mb-3">Scan QR code using camera</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-3">Scan QR code using camera</p>
             {!showCamera ? (
               <button onClick={startCamera} className="btn-outline">Open Camera</button>
             ) : (
@@ -181,24 +181,24 @@ export default function TeacherScanIDPage() {
         </div>
 
         <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-6">Last Scanned</h2>
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-6">Last Scanned</h2>
           {lastScanned ? (
-            <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center"><Check className="text-green-600" size={24} /></div>
-              <div className="flex-1"><p className="font-semibold text-slate-800">{lastScanned.profile?.first_name} {lastScanned.profile?.last_name}</p><p className="text-sm text-slate-500">{lastScanned.admission_number} &bull; {lastScanned.class?.name}</p></div>
+            <div className="flex items-center gap-4 p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-lg">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 rounded-full flex items-center justify-center"><Check className="text-green-600 dark:text-green-400 dark:text-green-400" size={24} /></div>
+              <div className="flex-1"><p className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">{lastScanned.profile?.first_name} {lastScanned.profile?.last_name}</p><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{lastScanned.admission_number} &bull; {lastScanned.class?.name}</p></div>
             </div>
           ) : (
-            <div className="text-center py-8 text-slate-500"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>No student scanned yet</p></div>
+            <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>No student scanned yet</p></div>
           )}
 
           {scanHistory.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-medium text-slate-800 mb-3">Today&apos;s Scans ({scanHistory.length})</h3>
+              <h3 className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3">Today&apos;s Scans ({scanHistory.length})</h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {scanHistory.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                  <div key={s.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg text-sm">
                     <div className="flex items-center gap-2"><UserCheck size={16} className="text-green-500" /><span>{s.student?.first_name} {s.student?.last_name}</span></div>
-                    <span className="text-slate-500">{s.marked_at ? new Date(s.marked_at).toLocaleTimeString() : ''}</span>
+                    <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{s.marked_at ? new Date(s.marked_at).toLocaleTimeString() : ''}</span>
                   </div>
                 ))}
               </div>
@@ -211,9 +211,9 @@ export default function TeacherScanIDPage() {
       {showCamera && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">QR Scanner</h3>
-              <button onClick={stopCamera} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">QR Scanner</h3>
+              <button onClick={stopCamera} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
             </div>
             <div className="relative bg-black">
               <video ref={videoRef} className="w-full h-64 object-cover" playsInline />
@@ -228,9 +228,9 @@ export default function TeacherScanIDPage() {
               )}
             </div>
             {cameraError && (
-              <div className="p-4 bg-red-50 text-red-600 text-sm text-center">{cameraError}</div>
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-600 dark:text-red-400 dark:text-red-400 text-sm text-center">{cameraError}</div>
             )}
-            <div className="p-4 text-center text-sm text-slate-500">
+            <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
               Point camera at student ID QR code
             </div>
           </div>

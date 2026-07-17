@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -1474,14 +1474,14 @@ async function viewAnalyticsDetails(record: any) {
 
   function getStatusBadge(status: string) {
     switch (status) {
-      case 'pending': return 'bg-amber-100 text-amber-700';
-      case 'assigned': return 'bg-blue-100 text-blue-700';
-      case 'passed': return 'bg-green-100 text-green-700';
-      case 'failed': return 'bg-red-100 text-red-700';
-      case 'admitted': return 'bg-primary-100 text-primary-700';
-      case 'rejected': return 'bg-slate-100 text-slate-700';
-      case 'banned': return 'bg-red-100 text-red-700';
-      default: return 'bg-slate-100 text-slate-700';
+      case 'pending': return 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300';
+      case 'assigned': return 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300';
+      case 'passed': return 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300';
+      case 'failed': return 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400';
+      case 'admitted': return 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300';
+      case 'rejected': return 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-700 dark:text-slate-300 dark:text-slate-300';
+      case 'banned': return 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400';
+      default: return 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-700 dark:text-slate-300 dark:text-slate-300';
     }
   }
 
@@ -1489,12 +1489,12 @@ async function viewAnalyticsDetails(record: any) {
     <DashboardLayout title="Entrance Exams" subtitle="Manage entrance exams and admissions">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-slate-900">Entrance Exams & Admissions</h1>
-            <p className="text-slate-500 mt-1">Manage applications and admit students</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Entrance Exams & Admissions</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage applications and admit students</p>
           </div>
           <button onClick={() => { setFormData({ title: '', description: '', level: '', subjects: [], academic_year: new Date().getFullYear().toString(), exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 40, shuffle_questions: false, require_fullscreen: false, prevent_tab_switch: false, max_tab_switches: 3 }); setShowExamModal(true); }} className="btn-primary flex items-center gap-2">
             <Plus size={18} />Create Exam
@@ -1502,22 +1502,22 @@ async function viewAnalyticsDetails(record: any) {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Pending</span><Clock size={16} className="text-amber-600" /></div><p className="text-2xl font-bold text-amber-600">{statsCount.pending}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Assigned</span><FileText size={16} className="text-blue-600" /></div><p className="text-2xl font-bold text-blue-600">{statsCount.assigned}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Passed</span><Check size={16} className="text-green-600" /></div><p className="text-2xl font-bold text-green-600">{statsCount.passed}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Failed</span><X size={16} className="text-red-600" /></div><p className="text-2xl font-bold text-red-600">{statsCount.failed}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Admitted</span><Award size={16} className="text-primary-600" /></div><p className="text-2xl font-bold text-primary-600">{statsCount.admitted}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Rejected</span><AlertCircle size={16} className="text-slate-600" /></div><p className="text-2xl font-bold text-slate-600">{statsCount.rejected}</p></div>
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Banned</span><XCircle size={16} className="text-red-600" /></div><p className="text-2xl font-bold text-red-600">{statsCount.banned}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Pending</span><Clock size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /></div><p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{statsCount.pending}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Assigned</span><FileText size={16} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /></div><p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{statsCount.assigned}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Passed</span><Check size={16} className="text-green-600 dark:text-green-400 dark:text-green-400" /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{statsCount.passed}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Failed</span><X size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{statsCount.failed}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Admitted</span><Award size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div><p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{statsCount.admitted}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Rejected</span><AlertCircle size={16} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></div><p className="text-2xl font-bold text-slate-600 dark:text-slate-400 dark:text-slate-400">{statsCount.rejected}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Banned</span><XCircle size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{statsCount.banned}</p></div>
         </div>
 
         <div className="card p-4">
-<div className="flex gap-1 mb-6 bg-slate-100 rounded-lg p-1 w-fit">
+<div className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg p-1 w-fit">
   {(['applications', 'exams', 'codes', 'questionBank', 'analytics'] as const).map(tab => (
     <button 
       key={tab} 
       onClick={() => setActiveTab(tab)} 
-      className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+      className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-primary-600 dark:text-primary-400 dark:text-primary-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}
     >
       {tab === 'questionBank' ? 'Question Bank' : tab === 'analytics' ? 'Analytics' : tab.charAt(0).toUpperCase() + tab.slice(1)}
     </button>
@@ -1535,29 +1535,29 @@ async function viewAnalyticsDetails(record: any) {
               {loading ? (
                 <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
               ) : filteredApps.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">No applications found</div>
+                <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No applications found</div>
               ) : (
                 <div className="space-y-3">
                   {filteredApps.map(app => (
-                    <div key={app.id} className="p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                    <div key={app.id} className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
-                            <p className="font-semibold text-slate-900">{app.first_name} {app.last_name}</p>
+                            <p className="font-semibold text-slate-900 dark:text-white dark:text-white">{app.first_name} {app.last_name}</p>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(app.status)}`}>{app.status}</span>
                           </div>
-                          <p className="text-sm text-slate-500">{app.email} • {app.phone}</p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
+                          <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{app.email} • {app.phone}</p>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">
                             <span>Applied: {app.applied_class}</span>
-                            {app.admitted_class && <span className="text-primary-600 font-medium">Admitted: {app.admitted_class}</span>}
-                            {app.exam_score !== null && <span className={app.exam_score >= (app.exam?.passing_score || 50) ? 'text-green-600' : 'text-red-600'}>Score: {app.exam_score}%</span>}
+                            {app.admitted_class && <span className="text-primary-600 dark:text-primary-400 dark:text-primary-400 font-medium">Admitted: {app.admitted_class}</span>}
+                            {app.exam_score !== null && <span className={app.exam_score >= (app.exam?.passing_score || 50) ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}>Score: {app.exam_score}%</span>}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <button onClick={() => openApplicationModal(app)} className="btn-outline text-sm py-2">Review</button>
                           <div className="flex gap-1">
-                            <button onClick={() => handleDeleteApplication(app.id)} disabled={deleting === app.id} className="p-2 hover:bg-red-50 rounded-lg text-red-500 disabled:opacity-50" title="Delete Application">{deleting === app.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
-                            {app.status !== 'banned' && <button onClick={() => handleBanApplication(app.id, app.email)} disabled={deleting === app.id} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 disabled:opacity-50" title="Ban Applicant"><XCircle size={14} /></button>}
+                            <button onClick={() => handleDeleteApplication(app.id)} disabled={deleting === app.id} className="p-2 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg text-red-500 dark:text-red-400 dark:text-red-400 disabled:opacity-50" title="Delete Application">{deleting === app.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
+                            {app.status !== 'banned' && <button onClick={() => handleBanApplication(app.id, app.email)} disabled={deleting === app.id} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 dark:text-slate-400 disabled:opacity-50" title="Ban Applicant"><XCircle size={14} /></button>}
                           </div>
                         </div>
                       </div>
@@ -1572,21 +1572,21 @@ async function viewAnalyticsDetails(record: any) {
             loading ? (
               <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
             ) : exams.length === 0 ? (
-              <div className="text-center py-16"><FileText className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500">No exams created yet</p><button onClick={() => setShowExamModal(true)} className="btn-primary mt-4">Create First Exam</button></div>
+              <div className="text-center py-16"><FileText className="mx-auto text-slate-300 mb-4" size={48} /><p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No exams created yet</p><button onClick={() => setShowExamModal(true)} className="btn-primary mt-4">Create First Exam</button></div>
             ) : (
               <div className="space-y-4">
                 {exams.map(exam => (
                   <div key={exam.id} className="card hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-3">
-                      <div><h3 className="font-bold text-slate-900">{exam.title}</h3><p className="text-sm text-slate-500">{exam.level} • {exam.academic_year}</p></div>
+                      <div><h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{exam.title}</h3><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{exam.level} • {exam.academic_year}</p></div>
                       <div className="flex gap-1">
-                        {(!exam.questions || exam.questions.length === 0) && <button onClick={() => handlePopulateQuestions(exam)} className="p-2 hover:bg-amber-50 rounded-lg text-amber-600" title="Auto-populate from Question Bank"><Download size={16} /></button>}
-                        <button onClick={() => { setSelectedExam(exam); setShowQuestionModal(true); }} className="p-2 hover:bg-gray-100 rounded-lg" title="Add Questions"><Hash size={16} className="text-slate-500" /></button>
-                        <button onClick={() => { setSelectedExam(exam); setShowCodeModal(true); }} className="p-2 hover:bg-gray-100 rounded-lg" title="Generate Codes"><QrCode size={16} className="text-slate-500" /></button>
-                        <button onClick={() => handleDeleteExam(exam.id)} disabled={deleting === exam.id} className="p-2 hover:bg-gray-100 rounded-lg">{deleting === exam.id ? <Loader2 size={16} className="animate-spin text-red-500" /> : <Trash2 size={16} className="text-red-500" />}</button>
+                        {(!exam.questions || exam.questions.length === 0) && <button onClick={() => handlePopulateQuestions(exam)} className="p-2 hover:bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 rounded-lg text-amber-600 dark:text-amber-400 dark:text-amber-400" title="Auto-populate from Question Bank"><Download size={16} /></button>}
+                        <button onClick={() => { setSelectedExam(exam); setShowQuestionModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title="Add Questions"><Hash size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                        <button onClick={() => { setSelectedExam(exam); setShowCodeModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title="Generate Codes"><QrCode size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                        <button onClick={() => handleDeleteExam(exam.id)} disabled={deleting === exam.id} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">{deleting === exam.id ? <Loader2 size={16} className="animate-spin text-red-500 dark:text-red-400 dark:text-red-400" /> : <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />}</button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                    <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                       <span className="flex items-center gap-1"><Clock size={14} />{exam.duration_minutes} min</span>
                       <span className="flex items-center gap-1"><FileText size={14} />{exam.questions?.length || 0} questions</span>
                       <span className="flex items-center gap-1"><Users size={14} />{exam.applications?.length || 0} applications</span>
@@ -1600,10 +1600,10 @@ async function viewAnalyticsDetails(record: any) {
 
           {activeTab === 'codes' && (
              <div>
-               {exams.length === 0 ? <div className="text-center py-8 text-slate-500">Create an exam first to generate codes</div> : codes.length === 0 ? <div className="text-center py-8 text-slate-500">No codes generated yet</div> : (
+               {exams.length === 0 ? <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">Create an exam first to generate codes</div> : codes.length === 0 ? <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No codes generated yet</div> : (
                  <div className="space-y-2">
                    {codes.map(code => (
-                     <div key={code.id} className="p-3 bg-slate-50 rounded-lg flex items-center justify-between"><code className="font-mono font-bold text-primary-600">{code.code}</code><span className="text-xs text-slate-500">{code.used_count || 0}/{code.max_uses} used</span></div>
+                     <div key={code.id} className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg flex items-center justify-between"><code className="font-mono font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{code.code}</code><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{code.used_count || 0}/{code.max_uses} used</span></div>
                    ))}
                  </div>
                )}
@@ -1613,7 +1613,7 @@ async function viewAnalyticsDetails(record: any) {
            {activeTab === 'questionBank' && (
              <div>
                <div className="space-y-4">
-                 <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-bold text-slate-900">Question Bank</h2><button onClick={() => setShowQuestionBankModal(true)} className="btn-primary"><Plus size={18} />Add Question</button></div>
+                 <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">Question Bank</h2><button onClick={() => setShowQuestionBankModal(true)} className="btn-primary"><Plus size={18} />Add Question</button></div>
                  <div className="mb-4">
                    <div className="flex gap-4">
                       <div><label className="label">Subject</label><select value={questionBankFilter.subject} onChange={e => setQuestionBankFilter({...questionBankFilter, subject: e.target.value})} className="input"><option value="">All Subjects</option><option value="MATHEMATICS">Mathematics</option><option value="ENGLISH">English</option><option value="BASIC SCIENCE">Basic Science</option><option value="VERBAL REASONING">Verbal Reasoning</option><option value="QUANTITATIVE REASONING">Quantitative Reasoning</option><option value="ISLAMIC STUDIES">Islamic Studies</option><option value="GENERAL KNOWLEDGE">General Knowledge</option><option value="PHYSICS">Physics</option><option value="CHEMISTRY">Chemistry</option><option value="BIOLOGY">Biology</option><option value="GEOGRAPHY">Geography</option><option value="BUSINESS STUDIES">Business Studies</option><option value="PRE-VOCATIONAL STUDIES">Pre-Vocational Studies</option></select></div>
@@ -1623,12 +1623,12 @@ async function viewAnalyticsDetails(record: any) {
                    </div>
                    <div className="mt-2 flex items-center gap-4"><input type="text" placeholder="Search questions..." value={questionBankSearch} onChange={e => setQuestionBankSearch(e.target.value)} className="input pl-10" /><button onClick={fetchQuestionBank} className="btn-outline"><Search size={18} />Search</button></div>
                  </div>
-                 {questionBankLoading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : filteredQuestionBank.length === 0 ? <div className="text-center py-8 text-slate-500">No questions found matching criteria</div> : (
+                 {questionBankLoading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : filteredQuestionBank.length === 0 ? <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No questions found matching criteria</div> : (
                    <div className="space-y-3">
                      {filteredQuestionBank.map(q => (
-                       <div key={q.id} className="p-4 bg-slate-50 rounded-lg border-l-4 border-primary-500">
-                         <div className="flex items-start justify-between mb-2"><div className="flex-1"><h3 className="text-lg font-medium text-slate-900">{q.question}</h3><div className="flex items-center gap-3 mt-1 text-sm"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-800">{q.subject}</span><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-800">{q.level}</span><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${q.difficulty_level === 'VERY_HARD' ? 'bg-red-100 text-red-800' : q.difficulty_level === 'HARD' ? 'bg-orange-100 text-orange-800' : q.difficulty_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{q.difficulty_level}</span></div></div><div className="flex items-center gap-2"><button onClick={() => editQuestion(q)} className="p-1 hover:bg-slate-100 rounded-lg"><Edit size={16} className="text-slate-500" /></button><button onClick={() => deleteQuestion(q.id)} className="p-1 hover:bg-slate-100 rounded-lg"><Trash2 size={16} className="text-red-500" /></button></div></div>
-                         {q.options && q.question_type === 'MCQ' && <div className="mt-3 space-y-2">{q.options.map((opt: string, i: number) => (<div key={i} className="flex items-center gap-2 text-sm"><span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-semibold text-sm">{String.fromCharCode(65 + i)}</span><span>{opt}</span>{q.correct_answer === i && <span className="ml-2 text-xs font-medium bg-primary-100 text-primary-800 rounded-full px-1.5">Correct</span>}</div>))}</div>}
+                       <div key={q.id} className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg border-l-4 border-primary-500">
+                         <div className="flex items-start justify-between mb-2"><div className="flex-1"><h3 className="text-lg font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</h3><div className="flex items-center gap-3 mt-1 text-sm"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 dark:text-primary-200">{q.subject}</span><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 dark:text-primary-200">{q.level}</span><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${q.difficulty_level === 'VERY_HARD' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-800 dark:text-red-300 dark:text-red-300' : q.difficulty_level === 'HARD' ? 'bg-orange-100 text-orange-800' : q.difficulty_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-800'}`}>{q.difficulty_level}</span></div></div><div className="flex items-center gap-2"><button onClick={() => editQuestion(q)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button><button onClick={() => deleteQuestion(q.id)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button></div></div>
+                         {q.options && q.question_type === 'MCQ' && <div className="mt-3 space-y-2">{q.options.map((opt: string, i: number) => (<div key={i} className="flex items-center gap-2 text-sm"><span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 flex items-center justify-center font-semibold text-sm">{String.fromCharCode(65 + i)}</span><span>{opt}</span>{q.correct_answer === i && <span className="ml-2 text-xs font-medium bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 dark:text-primary-200 rounded-full px-1.5">Correct</span>}</div>))}</div>}
                        </div>
                      ))}
                    </div>
@@ -1640,14 +1640,14 @@ async function viewAnalyticsDetails(record: any) {
            {activeTab === 'analytics' && (
              <div>
                <div className="space-y-4">
-                 <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-bold text-slate-900">Student Analytics</h2><div className="flex gap-2"><button onClick={() => setShowAnalyticsFilterModal(true)} className="btn-outline"><Filter size={18} />Filter</button><button onClick={generateReports} className="btn-primary"><Download size={18} />Generate Reports</button></div></div>
+                 <div className="flex items-center justify-between mb-4"><h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">Student Analytics</h2><div className="flex gap-2"><button onClick={() => setShowAnalyticsFilterModal(true)} className="btn-outline"><Filter size={18} />Filter</button><button onClick={generateReports} className="btn-primary"><Download size={18} />Generate Reports</button></div></div>
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                   <div className="card"><p className="text-sm text-slate-500">Total Analyzed</p><p className="text-2xl font-bold text-primary-600">{analyticsSummary.totalStudents}</p></div>
-                   <div className="card"><p className="text-sm text-slate-500">Avg Score</p><p className="text-2xl font-bold text-primary-600">{analyticsSummary.averageScore}%</p></div>
-                   <div className="card"><p className="text-sm text-slate-500">Mastered</p><p className="text-2xl font-bold text-primary-600">{analyticsSummary.masteredCount}</p></div>
+                   <div className="card"><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Analyzed</p><p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{analyticsSummary.totalStudents}</p></div>
+                   <div className="card"><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Avg Score</p><p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{analyticsSummary.averageScore}%</p></div>
+                   <div className="card"><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Mastered</p><p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{analyticsSummary.masteredCount}</p></div>
                  </div>
-                 {analyticsLoading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : analyticsData.length === 0 ? <div className="text-center py-8 text-slate-500">No analytics data available</div> : (
-                   <div className="overflow-x-auto"><table className="min-w-full divide-y divide-slate-200"><thead><tr className="bg-slate-50"><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Student</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Subject</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Score</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Level</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Actions</th></tr></thead><tbody className="divide-y divide-slate-200">{analyticsData.map(record => (<tr key={record.id} className="hover:bg-slate-50"><td className="px-6 py-4 whitespace-nowrap"><p className="text-sm font-medium text-slate-900">{record.student_name}</p></td><td className="px-6 py-4 whitespace-nowrap text-sm">{record.subject}</td><td className="px-6 py-4 whitespace-nowrap"><p className={`text-sm font-medium ${record.score >= 70 ? 'text-green-600' : 'text-red-600'}`}>{record.score}%</p></td><td className="px-6 py-4 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100">{record.mastery_level}</span></td><td className="px-6 py-4 whitespace-nowrap text-sm"><div className="flex space-x-2"><button onClick={() => viewAnalyticsDetails(record)} className="p-1 hover:bg-slate-100 rounded-lg"><Eye size={16} /></button><button onClick={() => downloadAnalyticsReport(record.id)} className="p-1 hover:bg-slate-100 rounded-lg"><Download size={16} className="text-primary-600" /></button></div></td></tr>))}</tbody></table></div>
+                 {analyticsLoading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : analyticsData.length === 0 ? <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No analytics data available</div> : (
+                   <div className="overflow-x-auto"><table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 dark:divide-slate-700"><thead><tr className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800"><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Subject</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Score</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Level</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Actions</th></tr></thead><tbody className="divide-y divide-slate-200 dark:divide-slate-700 dark:divide-slate-700">{analyticsData.map(record => (<tr key={record.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800"><td className="px-6 py-4 whitespace-nowrap"><p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{record.student_name}</p></td><td className="px-6 py-4 whitespace-nowrap text-sm">{record.subject}</td><td className="px-6 py-4 whitespace-nowrap"><p className={`text-sm font-medium ${record.score >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{record.score}%</p></td><td className="px-6 py-4 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30">{record.mastery_level}</span></td><td className="px-6 py-4 whitespace-nowrap text-sm"><div className="flex space-x-2"><button onClick={() => viewAnalyticsDetails(record)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Eye size={16} /></button><button onClick={() => downloadAnalyticsReport(record.id)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Download size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></button></div></td></tr>))}</tbody></table></div>
                  )}
                </div>
              </div>
@@ -1658,11 +1658,11 @@ async function viewAnalyticsDetails(record: any) {
          {showExamModal && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-               <div className="p-5 border-b flex items-center justify-between"><h3 className="text-lg font-bold text-slate-900">Create Exam</h3><button onClick={() => setShowExamModal(false)}><X size={20} /></button></div>
+               <div className="p-5 border-b flex items-center justify-between"><h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Create Exam</h3><button onClick={() => setShowExamModal(false)}><X size={20} /></button></div>
                <div className="p-5 space-y-4">
                 <div><label className="label">Title</label><input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="input" /></div>
                 <div><label className="label">Level</label><select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value, subjects: SUBJECT_OPTIONS[e.target.value] || []})} className="input"><option value="">Select Level</option><option value="PRIMARY">Primary</option><option value="JSS">JSS</option><option value="SS1">SS 1</option><option value="SS2">SS 2</option><option value="SS3">SS 3</option></select></div>
-                {formData.level && (<div><label className="label">Subjects</label><div className="flex flex-wrap gap-2">{SUBJECT_OPTIONS[formData.level].map(s => (<label key={s} className={`px-2 py-1 rounded-md cursor-pointer border ${formData.subjects.includes(s) ? 'bg-primary-600 text-white' : 'bg-white'}`}><input type="checkbox" checked={formData.subjects.includes(s)} onChange={e => {const ns = e.target.checked ? [...formData.subjects, s] : formData.subjects.filter(x => x !== s); setFormData({...formData, subjects: ns});}} className="sr-only" />{s}</label>))}</div></div>)}
+                {formData.level && (<div><label className="label">Subjects</label><div className="flex flex-wrap gap-2">{SUBJECT_OPTIONS[formData.level].map(s => (<label key={s} className={`px-2 py-1 rounded-md cursor-pointer border ${formData.subjects.includes(s) ? 'bg-primary-600 text-white' : 'bg-white dark:bg-slate-800'}`}><input type="checkbox" checked={formData.subjects.includes(s)} onChange={e => {const ns = e.target.checked ? [...formData.subjects, s] : formData.subjects.filter(x => x !== s); setFormData({...formData, subjects: ns});}} className="sr-only" />{s}</label>))}</div></div>)}
                 <div className="grid grid-cols-2 gap-4"><div><label className="label">Academic Year</label><input type="text" value={formData.academic_year} onChange={e => setFormData({...formData, academic_year: e.target.value})} className="input" /></div><div><label className="label">Date</label><input type="date" value={formData.exam_date} onChange={e => setFormData({...formData, exam_date: e.target.value})} className="input" /></div></div>
                 <div className="grid grid-cols-3 gap-4"><div><label className="label">Mins</label><input type="number" value={formData.duration_minutes} onChange={e => setFormData({...formData, duration_minutes: parseInt(e.target.value)})} className="input" /></div><div><label className="label">Qs</label><input type="number" value={formData.total_questions} onChange={e => setFormData({...formData, total_questions: parseInt(e.target.value)})} className="input" /></div><div><label className="label">Pass%</label><input type="number" value={formData.passing_score} onChange={e => setFormData({...formData, passing_score: parseInt(e.target.value)})} className="input" /></div></div>
                </div>
@@ -1688,7 +1688,7 @@ async function viewAnalyticsDetails(record: any) {
                   <input type="text" value={questionData.subtopic} onChange={e => setQuestionData({...questionData, subtopic: e.target.value})} className="input" placeholder="Subtopic (optional)" />
                 </div>
                 {questionData.question_type === 'MCQ' && questionData.options.map((opt, i) => (<div key={i} className="flex gap-2 mb-2"><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} /><input type="text" value={opt} onChange={e => {const os = [...questionData.options]; os[i] = e.target.value; setQuestionData({...questionData, options: os});}} className="input flex-1" /></div>))}
-                <div className="mt-4 border-t pt-4"><div className="flex justify-between"><h4>{questions.length} Questions Added</h4><button onClick={() => openBankSelectModal(selectedExam)} className="text-xs text-primary-600">+ From Bank</button></div>{questions.map((q, i) => (<div key={q.id} className="flex justify-between p-2 bg-slate-50 mt-2"><span>{i+1}. {q.question}</span><button onClick={() => handleRemoveQuestion(q.id)} className="text-red-500"><Trash2 size={12} /></button></div>))}</div>
+                <div className="mt-4 border-t pt-4"><div className="flex justify-between"><h4>{questions.length} Questions Added</h4><button onClick={() => openBankSelectModal(selectedExam)} className="text-xs text-primary-600 dark:text-primary-400 dark:text-primary-400">+ From Bank</button></div>{questions.map((q, i) => (<div key={q.id} className="flex justify-between p-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 mt-2"><span>{i+1}. {q.question}</span><button onClick={() => handleRemoveQuestion(q.id)} className="text-red-500 dark:text-red-400 dark:text-red-400"><Trash2 size={12} /></button></div>))}</div>
               </div>
               <div className="flex justify-end gap-3 p-5 border-t"><button onClick={() => setShowQuestionModal(false)} className="btn-ghost">Close</button><button onClick={handleAddQuestion} disabled={saving} className="btn-primary">Add Question</button></div>
             </div>
@@ -1698,7 +1698,7 @@ async function viewAnalyticsDetails(record: any) {
         {/* Code Modal */}
         {showCodeModal && selectedExam && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"><div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3>Codes — {selectedExam.title}</h3><button onClick={() => setShowCodeModal(false)}><X size={20} /></button></div><div className="p-5"><button onClick={handleGenerateCode} disabled={saving} className="btn-primary w-full mb-4">Generate Code</button>{codes.filter(c => c.exam_id === selectedExam.id).map(c => (<div key={c.id} className="flex justify-between p-2 bg-slate-50 mt-1"><code className="font-bold">{c.code}</code><span>{c.used_count}/{c.max_uses}</span></div>))}</div></div>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"><div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3>Codes — {selectedExam.title}</h3><button onClick={() => setShowCodeModal(false)}><X size={20} /></button></div><div className="p-5"><button onClick={handleGenerateCode} disabled={saving} className="btn-primary w-full mb-4">Generate Code</button>{codes.filter(c => c.exam_id === selectedExam.id).map(c => (<div key={c.id} className="flex justify-between p-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 mt-1"><code className="font-bold">{c.code}</code><span>{c.used_count}/{c.max_uses}</span></div>))}</div></div>
           </div>
         )}
 
@@ -1719,8 +1719,8 @@ async function viewAnalyticsDetails(record: any) {
              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                <div className="p-5 border-b flex justify-between"><h3>Review Application</h3><button onClick={() => setShowApplicationModal(false)}><X size={20} /></button></div>
                <div className="p-5 space-y-4">
-                 <div className="bg-slate-50 p-3"><strong>{selectedApplication.first_name} {selectedApplication.last_name}</strong><br/>{selectedApplication.email} | {selectedApplication.applied_class}</div>
-                 {selectedApplication.exam_score !== null && (<div className="bg-primary-50 p-3 font-bold text-center text-xl">{selectedApplication.exam_score}%</div>)}
+                 <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-3"><strong>{selectedApplication.first_name} {selectedApplication.last_name}</strong><br/>{selectedApplication.email} | {selectedApplication.applied_class}</div>
+                 {selectedApplication.exam_score !== null && (<div className="bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 p-3 font-bold text-center text-xl">{selectedApplication.exam_score}%</div>)}
                  <select value={admissionData.status} onChange={e => setAdmissionData({...admissionData, status: e.target.value})} className="input"><option value="">Decision</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="admitted">Admit</option><option value="assigned">Assign Exam</option></select>
                  {admissionData.status === 'admitted' && (<select value={admissionData.admitted_class} onChange={e => setAdmissionData({...admissionData, admitted_class: e.target.value})} className="input">{classes.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}</select>)}
                  {admissionData.status === 'assigned' && (<select onChange={e => handleAssignExam(selectedApplication.id, e.target.value)} className="input"><option value="">Select Exam</option>{exams.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}</select>)}
@@ -1753,7 +1753,7 @@ async function viewAnalyticsDetails(record: any) {
                     <div key={i} className="flex gap-2"><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} /><input type="text" value={opt} onChange={e => {const os = [...questionData.options]; os[i] = e.target.value; setQuestionData({...questionData, options: os});}} className="input flex-1" placeholder={`Option ${String.fromCharCode(65 + i)}`} /></div>
                   ))}
                 </div>
-                {questionBankError && <p className="px-5 text-sm text-red-600 font-medium">{questionBankError}</p>}
+                {questionBankError && <p className="px-5 text-sm text-red-600 dark:text-red-400 dark:text-red-400 font-medium">{questionBankError}</p>}
                 <div className="p-5 border-t flex justify-end gap-2 bg-white sticky bottom-0"><button onClick={() => setShowQuestionBankModal(false)}>Cancel</button><button onClick={() => { if (!questionData.subject) { setQuestionBankError('Please select a subject'); return; } if (!questionData.topic.trim()) { setQuestionBankError('Please enter a topic'); return; } setQuestionBankError(''); addQuestionToBank(questionData); }} className="btn-primary">Save</button></div>
              </div>
            </div>
@@ -1801,7 +1801,7 @@ async function viewAnalyticsDetails(record: any) {
 
                const radarData = subjectEntries.filter(([_, d]) => d.total > 0).map(([subject, d]) => ({ subject, score: Math.round((d.correct / d.total) * 100), fullMark: 100 }));
 
-               function getGradeColor(pct: number): string { if (pct >= 80) return 'text-green-600'; if (pct >= 60) return 'text-blue-600'; if (pct >= 40) return 'text-amber-600'; return 'text-red-600'; }
+               function getGradeColor(pct: number): string { if (pct >= 80) return 'text-green-600 dark:text-green-400 dark:text-green-400'; if (pct >= 60) return 'text-blue-600 dark:text-blue-400 dark:text-blue-400'; if (pct >= 40) return 'text-amber-600 dark:text-amber-400 dark:text-amber-400'; return 'text-red-600 dark:text-red-400 dark:text-red-400'; }
                function getBarColor(pct: number): string { if (pct >= 80) return 'bg-green-500'; if (pct >= 60) return 'bg-blue-500'; if (pct >= 40) return 'bg-amber-500'; return 'bg-red-500'; }
 
                function computePathways(): { label: string; score: number; color: string }[] {
@@ -1971,14 +1971,14 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                       <button onClick={() => downloadAnalyticsReport(selectedAnalytics.id)} disabled={downloadingReport === selectedAnalytics.id} className="btn-primary text-xs py-1 px-3 flex items-center gap-1">
                         {downloadingReport === selectedAnalytics.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} PDF
                       </button>
-                      <button onClick={() => setShowAnalyticsDetailModal(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+                      <button onClick={() => setShowAnalyticsDetailModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
                     </div>
                   </div>
 
                   {/* Tabs */}
-                  <div className="flex border-b shrink-0 px-5 bg-white">
+                  <div className="flex border-b shrink-0 px-5 bg-white dark:bg-slate-800">
                     {tabs.map(tab => (
-                      <button key={tab.key} onClick={() => setAnalyticsTab(tab.key)} className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${analyticsTab === tab.key ? 'border-primary-600 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>{tab.label}</button>
+                      <button key={tab.key} onClick={() => setAnalyticsTab(tab.key)} className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${analyticsTab === tab.key ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:text-primary-400' : 'border-transparent text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}>{tab.label}</button>
                     ))}
                   </div>
 
@@ -1986,27 +1986,27 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                     {/* ═══ TAB: Overview ═══ */}
                     {analyticsTab === 'overview' && (
                       <>
-                        <div className="bg-slate-50 rounded-xl p-5 flex items-center justify-between">
-                          <div><p className="font-bold text-xl text-slate-800">{selectedAnalytics.student_name}</p><p className="text-sm text-slate-500">Email: {application?.email || 'N/A'} | Applied: {application?.applied_class || 'N/A'}</p></div>
-                          <div className="text-center"><div className={`text-3xl font-bold ${passed ? 'text-green-600' : 'text-red-600'}`}>{score}%</div><p className={`text-xs font-semibold ${passed ? 'text-green-600' : 'text-red-600'}`}>{passed ? 'PASSED' : 'FAILED'}</p></div>
+                        <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl p-5 flex items-center justify-between">
+                          <div><p className="font-bold text-xl text-slate-800 dark:text-slate-200 dark:text-slate-200">{selectedAnalytics.student_name}</p><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Email: {application?.email || 'N/A'} | Applied: {application?.applied_class || 'N/A'}</p></div>
+                          <div className="text-center"><div className={`text-3xl font-bold ${passed ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{score}%</div><p className={`text-xs font-semibold ${passed ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{passed ? 'PASSED' : 'FAILED'}</p></div>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 uppercase">Total Q</p><p className="text-xl font-bold text-slate-800">{totalQ}</p></div>
-                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 uppercase">Correct</p><p className="text-xl font-bold text-green-600">{correctQ}</p></div>
-                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 uppercase">Wrong</p><p className="text-xl font-bold text-red-600">{wrongQ}</p></div>
-                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 uppercase">Accuracy</p><p className={`text-xl font-bold ${accuracy >= 70 ? 'text-green-600' : accuracy >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{accuracy}%</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Total Q</p><p className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{totalQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Correct</p><p className="text-xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{correctQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Wrong</p><p className="text-xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{wrongQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Accuracy</p><p className={`text-xl font-bold ${accuracy >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : accuracy >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{accuracy}%</p></div>
                         </div>
-                        <div className="bg-white border rounded-xl p-4"><p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Exam Info</p>
-                          <div className="grid grid-cols-2 gap-2 text-sm"><div><span className="text-slate-500">Exam:</span> <span className="font-medium">{exam?.title || 'N/A'}</span></div><div><span className="text-slate-500">Level:</span> <span className="font-medium">{exam?.level || 'N/A'}</span></div><div><span className="text-slate-500">Mastery:</span> <span className="font-medium">{selectedAnalytics.mastery_level || 'N/A'}</span></div><div><span className="text-slate-500">Passing:</span> <span className="font-medium">{passingScore}%</span></div></div>
+                        <div className="bg-white border rounded-xl p-4"><p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Exam Info</p>
+                          <div className="grid grid-cols-2 gap-2 text-sm"><div><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Exam:</span> <span className="font-medium">{exam?.title || 'N/A'}</span></div><div><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Level:</span> <span className="font-medium">{exam?.level || 'N/A'}</span></div><div><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Mastery:</span> <span className="font-medium">{selectedAnalytics.mastery_level || 'N/A'}</span></div><div><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Passing:</span> <span className="font-medium">{passingScore}%</span></div></div>
                         </div>
-                        <div className="bg-white border rounded-xl p-4"><p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Performance Insights</p>
+                        <div className="bg-white border rounded-xl p-4"><p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Performance Insights</p>
                           {(() => {
                             const sorted = subjectEntries.map(([n, d]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter(s => s.p > 0).sort((a, b) => b.p - a.p);
                             const weak = sorted.filter(s => s.p < 40);
                             const wd2 = difficultyEntries.filter(([_, v]) => v.total > 0 && (v.correct / v.total) < 0.4);
                             const wt2 = topicEntries.filter(([_, v]) => v.total > 0 && (v.correct / v.total) < 0.4);
-                            if (sorted.length === 0 && wd2.length === 0) return <p className="text-sm text-slate-400">No data available for insights.</p>;
-                            return <div className="space-y-2">{sorted.length >= 2 && <div className="bg-green-50 border border-green-200 rounded-lg p-3"><p className="text-xs font-bold text-green-700">Strengths</p><p className="text-sm text-green-800">{sorted.slice(0,2).map(s => `${s.n} (${s.p}%)`).join(', ')}</p></div>}{weak.length > 0 && <div className="bg-red-50 border border-red-200 rounded-lg p-3"><p className="text-xs font-bold text-red-700">Needs Improvement</p><p className="text-sm text-red-800">{weak.map(s => `${s.n} (${s.p}%)`).join(', ')}</p></div>}{wd2.length > 0 && <div className="bg-amber-50 border border-amber-200 rounded-lg p-3"><p className="text-xs font-bold text-amber-700">Difficulty Challenges</p><p className="text-sm text-amber-800">{wd2.slice(0,3).map(([d, v]) => `${d} (${Math.round((v.correct/v.total)*100)}%)`).join(', ')}</p></div>}{wt2.length > 0 && <div className="bg-purple-50 border border-purple-200 rounded-lg p-3"><p className="text-xs font-bold text-purple-700">Topics to Focus On</p><p className="text-sm text-purple-800">{wt2.slice(0,3).map(([t, v]) => `${t} (${Math.round((v.correct/v.total)*100)}%)`).join(', ')}</p></div>}</div>;
+                            if (sorted.length === 0 && wd2.length === 0) return <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">No data available for insights.</p>;
+                            return <div className="space-y-2">{sorted.length >= 2 && <div className="bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 rounded-lg p-3"><p className="text-xs font-bold text-green-700 dark:text-green-300 dark:text-green-300">Strengths</p><p className="text-sm text-green-800">{sorted.slice(0,2).map(s => `${s.n} (${s.p}%)`).join(', ')}</p></div>}{weak.length > 0 && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3"><p className="text-xs font-bold text-red-700 dark:text-red-400 dark:text-red-400">Needs Improvement</p><p className="text-sm text-red-800 dark:text-red-300 dark:text-red-300">{weak.map(s => `${s.n} (${s.p}%)`).join(', ')}</p></div>}{wd2.length > 0 && <div className="bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-lg p-3"><p className="text-xs font-bold text-amber-700 dark:text-amber-300 dark:text-amber-300">Difficulty Challenges</p><p className="text-sm text-amber-800">{wd2.slice(0,3).map(([d, v]) => `${d} (${Math.round((v.correct/v.total)*100)}%)`).join(', ')}</p></div>}{wt2.length > 0 && <div className="bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-900/40 dark:border-purple-900/40 rounded-lg p-3"><p className="text-xs font-bold text-purple-700">Topics to Focus On</p><p className="text-sm text-purple-800">{wt2.slice(0,3).map(([t, v]) => `${t} (${Math.round((v.correct/v.total)*100)}%)`).join(', ')}</p></div>}</div>;
                           })()}
                         </div>
                       </>
@@ -2018,25 +2018,25 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                         {subjectEntries.length > 0 ? (
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                             <div className="bg-white border rounded-xl p-4">
-                              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Subject Performance</p>
+                              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-4">Subject Performance</p>
                               <div className="space-y-3">
                                 {subjectEntries.map(([subj, d]) => {
                                   const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
-                                  return <div key={subj}><div className="flex items-center justify-between text-sm mb-1"><span className="font-medium text-slate-700">{subj}</span><span className={`font-bold ${getGradeColor(pct)}`}>{pct}%</span></div><div className="w-full bg-slate-100 rounded-full h-2.5"><div className={`h-2.5 rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div><p className="text-xs text-slate-400 mt-0.5">{d.correct}/{d.total} correct</p></div>;
+                                  return <div key={subj}><div className="flex items-center justify-between text-sm mb-1"><span className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">{subj}</span><span className={`font-bold ${getGradeColor(pct)}`}>{pct}%</span></div><div className="w-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-2.5"><div className={`h-2.5 rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-0.5">{d.correct}/{d.total} correct</p></div>;
                                 })}
                               </div>
                             </div>
                             <div className="bg-white border rounded-xl p-4">
-                              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Subject Radar</p>
-                              {radarData.length >= 3 ? <ResponsiveContainer width="100%" height={280}><RadarChart data={radarData}><PolarGrid stroke="#e2e8f0" /><PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} /><Radar name="Score" dataKey="score" stroke="#1e3a5f" fill="#1e3a5f" fillOpacity={0.2} /><Tooltip formatter={(value: number) => [`${value}%`, 'Score']} /></RadarChart></ResponsiveContainer> : <p className="text-slate-400 text-sm py-8 text-center">Need 3+ subjects for radar chart</p>}
+                              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-4">Subject Radar</p>
+                              {radarData.length >= 3 ? <ResponsiveContainer width="100%" height={280}><RadarChart data={radarData}><PolarGrid stroke="#e2e8f0" /><PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} /><Radar name="Score" dataKey="score" stroke="#1e3a5f" fill="#1e3a5f" fillOpacity={0.2} /><Tooltip formatter={(value: number) => [`${value}%`, 'Score']} /></RadarChart></ResponsiveContainer> : <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm py-8 text-center">Need 3+ subjects for radar chart</p>}
                             </div>
                           </div>
-                        ) : <p className="text-slate-400 text-sm py-8 text-center">No subject data available</p>}
+                        ) : <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm py-8 text-center">No subject data available</p>}
                         {subjectEntries.length > 0 && (
                           <div className="bg-white border rounded-xl p-4">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Subject Breakdown Table</p>
-                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Subject</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Assessment</th></tr></thead>
-                            <tbody className="divide-y divide-slate-100">{subjectEntries.map(([subj, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={subj}><td className="p-3 font-medium">{subj}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>; })}</tbody></table></div>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Subject Breakdown Table</p>
+                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Subject</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Assessment</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">{subjectEntries.map(([subj, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={subj}><td className="p-3 font-medium">{subj}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>; })}</tbody></table></div>
                           </div>
                         )}
                       </>
@@ -2047,19 +2047,19 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                       <>
                         {difficultyEntries.length > 0 && (
                           <div className="bg-white border rounded-xl p-4">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Difficulty Breakdown</p>
-                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Difficulty</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Verdict</th></tr></thead>
-                            <tbody className="divide-y divide-slate-100">{difficultyEntries.map(([diff, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={diff}><td className="p-3 font-medium">{diff}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>; })}</tbody></table></div>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Difficulty Breakdown</p>
+                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Difficulty</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Verdict</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">{difficultyEntries.map(([diff, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={diff}><td className="p-3 font-medium">{diff}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>; })}</tbody></table></div>
                           </div>
                         )}
                         {topicEntries.length > 0 && (
                           <div className="bg-white border rounded-xl p-4">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Topic Performance</p>
-                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Topic</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Status</th></tr></thead>
-                            <tbody className="divide-y divide-slate-100">{topicEntries.map(([top, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={top}><td className="p-3 font-medium">{top}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Strong' : pct >= 40 ? 'Moderate' : 'Weak'}</td></tr>; })}</tbody></table></div>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Topic Performance</p>
+                            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Topic</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Status</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">{topicEntries.map(([top, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={top}><td className="p-3 font-medium">{top}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Strong' : pct >= 40 ? 'Moderate' : 'Weak'}</td></tr>; })}</tbody></table></div>
                           </div>
                         )}
-                        {difficultyEntries.length === 0 && topicEntries.length === 0 && <p className="text-slate-400 text-sm py-8 text-center">No difficulty/topic data available</p>}
+                        {difficultyEntries.length === 0 && topicEntries.length === 0 && <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm py-8 text-center">No difficulty/topic data available</p>}
                       </>
                     )}
 
@@ -2070,51 +2070,51 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                           <div className="bg-white border rounded-xl overflow-hidden">
                             <div className="overflow-x-auto max-h-96 overflow-y-auto">
                               <table className="w-full text-xs">
-                                <thead><tr className="bg-slate-100 sticky top-0"><th className="p-2 text-center">#</th><th className="p-2 text-left">Subject</th><th className="p-2 text-left">Question</th><th className="p-2 text-center">Diff</th><th className="p-2 text-center">Pts</th><th className="p-2 text-center">Result</th></tr></thead>
+                                <thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 sticky top-0"><th className="p-2 text-center">#</th><th className="p-2 text-left">Subject</th><th className="p-2 text-left">Question</th><th className="p-2 text-center">Diff</th><th className="p-2 text-center">Pts</th><th className="p-2 text-center">Result</th></tr></thead>
                                 <tbody className="divide-y divide-slate-100">
                                   {questions.map((q: any, i: number) => (
-                                    <tr key={i} className={q.is_correct ? '' : 'bg-red-50'}>
-                                      <td className="p-2 text-center text-slate-400">{i + 1}</td>
-                                      <td className="p-2 text-slate-600">{q.subject || '—'}</td>
+                                    <tr key={i} className={q.is_correct ? '' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20'}>
+                                      <td className="p-2 text-center text-slate-400 dark:text-slate-500 dark:text-slate-500">{i + 1}</td>
+                                      <td className="p-2 text-slate-600 dark:text-slate-400 dark:text-slate-400">{q.subject || '—'}</td>
                                       <td className="p-2 max-w-[250px]" title={q.question}><span className="truncate block">{q.question?.length > 60 ? q.question.substring(0, 57) + '...' : q.question}</span></td>
-                                      <td className="p-2 text-center text-slate-500">{q.difficulty_level || '—'}</td>
-                                      <td className="p-2 text-center"><span className="inline-flex items-center gap-0.5">{Array.from({ length: q.points || 1 }).map((_, di) => <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200'}`} />)}<span className="ml-1 text-slate-400">{(q.points_earned || 0)}/{(q.points || 1)}</span></span></td>
-                                      <td className="p-2 text-center">{q.is_correct ? <Check size={14} className="text-green-500 inline" /> : <X size={14} className="text-red-500 inline" />}</td>
+                                      <td className="p-2 text-center text-slate-500 dark:text-slate-400 dark:text-slate-400">{q.difficulty_level || '—'}</td>
+                                      <td className="p-2 text-center"><span className="inline-flex items-center gap-0.5">{Array.from({ length: q.points || 1 }).map((_, di) => <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200'}`} />)}<span className="ml-1 text-slate-400 dark:text-slate-500 dark:text-slate-500">{(q.points_earned || 0)}/{(q.points || 1)}</span></span></td>
+                                      <td className="p-2 text-center">{q.is_correct ? <Check size={14} className="text-green-500 inline" /> : <X size={14} className="text-red-500 dark:text-red-400 dark:text-red-400 inline" />}</td>
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
                             </div>
                           </div>
-                        ) : <p className="text-slate-400 text-sm py-8 text-center">No question data available</p>}
+                        ) : <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm py-8 text-center">No question data available</p>}
                       </>
                     )}
 
                     {/* ═══ TAB: Recommendations ═══ */}
                     {analyticsTab === 'recommendations' && (
                       <>
-                        <div className="bg-slate-50 border rounded-xl p-5">
-                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Recommendations for Improvement</p>
-                          <p className="text-sm text-slate-700 leading-relaxed">{buildRecsText()}</p>
+                        <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border rounded-xl p-5">
+                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Recommendations for Improvement</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 leading-relaxed">{buildRecsText()}</p>
                         </div>
                         {pathwayRecs.length > 0 && (
                           <div className="bg-white border rounded-xl p-4">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Recommended Academic Pathways</p>
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Recommended Academic Pathways</p>
                             <div className="space-y-3">
                               {pathwayRecs.map((pr, i) => (
                                 <div key={i}>
-                                  <div className="flex items-center justify-between text-sm mb-1"><span className="font-medium text-slate-700">{i + 1}. {pr.label}</span><span className="font-bold" style={{ color: pr.color }}>{pr.score}%</span></div>
-                                  <div className="w-full bg-slate-100 rounded-full h-3"><div className="h-3 rounded-full transition-all" style={{ width: `${pr.score}%`, backgroundColor: pr.color }} /></div>
+                                  <div className="flex items-center justify-between text-sm mb-1"><span className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">{i + 1}. {pr.label}</span><span className="font-bold" style={{ color: pr.color }}>{pr.score}%</span></div>
+                                  <div className="w-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-3"><div className="h-3 rounded-full transition-all" style={{ width: `${pr.score}%`, backgroundColor: pr.color }} /></div>
                                 </div>
                               ))}
                             </div>
                           </div>
                         )}
                         {Object.entries(bySubject).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.5).length > 0 && (
-                          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                            <p className="text-xs font-bold text-red-700 uppercase mb-2">Weak Areas Need Attention</p>
+                          <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl p-4">
+                            <p className="text-xs font-bold text-red-700 dark:text-red-400 dark:text-red-400 uppercase mb-2">Weak Areas Need Attention</p>
                             <div className="flex flex-wrap gap-2">
-                              {Object.entries(bySubject).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.5).map(([s, d]) => <span key={s} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm font-medium">{s} ({Math.round((d.correct / d.total) * 100)}%)</span>)}
+                              {Object.entries(bySubject).filter(([_, d]) => d.total > 0 && (d.correct / d.total) < 0.5).map(([s, d]) => <span key={s} className="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400 rounded-lg text-sm font-medium">{s} ({Math.round((d.correct / d.total) * 100)}%)</span>)}
                             </div>
                           </div>
                         )}
@@ -2122,7 +2122,7 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                     )}
                   </div>
 
-                  <div className="p-5 border-t flex justify-end gap-2 shrink-0 bg-white">
+                  <div className="p-5 border-t flex justify-end gap-2 shrink-0 bg-white dark:bg-slate-800">
                     <button onClick={() => setShowAnalyticsDetailModal(false)} className="btn-outline">Close</button>
                   </div>
                 </div>

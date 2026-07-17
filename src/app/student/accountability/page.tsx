@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -51,7 +51,7 @@ export default function AccountabilityPage() {
   if (loading) {
     return (
       <DashboardLayout title="Accountability" subtitle="Daily accountability score">
-        <div className="flex items-center justify-center py-24"><Loader2 size={32} className="animate-spin text-primary-600" /></div>
+        <div className="flex items-center justify-center py-24"><Loader2 size={32} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
       </DashboardLayout>
     );
   }
@@ -62,18 +62,18 @@ export default function AccountabilityPage() {
 
   const getTrendIcon = (score: number) => {
     if (score >= 80) return <TrendingUp size={14} className="text-emerald-500" />;
-    if (score >= 60) return <Minus size={14} className="text-amber-500" />;
-    return <TrendingDown size={14} className="text-red-500" />;
+    if (score >= 60) return <Minus size={14} className="text-amber-500 dark:text-amber-400 dark:text-amber-400" />;
+    return <TrendingDown size={14} className="text-red-500 dark:text-red-400 dark:text-red-400" />;
   };
 
   return (
     <DashboardLayout title="Accountability" subtitle="Daily accountability score">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Daily Accountability</h1>
-            <p className="text-xs text-slate-500">Track your daily performance across all dimensions</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">Daily Accountability</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Track your daily performance across all dimensions</p>
           </div>
         </div>
 
@@ -81,7 +81,7 @@ export default function AccountabilityPage() {
         <div className={`card ${today ? 'border-2' : ''}`} style={{
           borderColor: today ? getAccountabilityColor(today.total_score).hex : undefined,
         }}>
-          <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-3 flex items-center gap-2">
             <Clock size={16} className="text-primary-500" />
             Today's Score
           </h2>
@@ -109,8 +109,8 @@ export default function AccountabilityPage() {
                 {COMPONENTS.map(comp => {
                   const val = today[comp.key] || 0;
                   return (
-                    <div key={comp.key} className="flex items-center justify-between bg-slate-50 rounded-lg px-2 py-1">
-                      <span className="text-[10px] text-slate-500">{comp.label}</span>
+                    <div key={comp.key} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg px-2 py-1">
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400">{comp.label}</span>
                       <span className="text-[11px] font-bold" style={{ color: getAccountabilityColor(val).hex }}>
                         {Math.round(val)}
                       </span>
@@ -119,14 +119,14 @@ export default function AccountabilityPage() {
                 })}
               </div>
               {today.discipline_deductions > 0 && (
-                <div className="mt-3 flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                <div className="mt-3 flex items-center gap-2 text-xs text-red-600 dark:text-red-400 dark:text-red-400 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg px-3 py-2">
                   <AlertTriangle size={14} />
                   Discipline deductions: -{Math.round(today.discipline_deductions)} points
                 </div>
               )}
             </>
           ) : (
-            <div className="text-center py-8 text-sm text-slate-400">
+            <div className="text-center py-8 text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">
               No accountability data for today yet. Complete your daily activities to see your score.
             </div>
           )}
@@ -136,39 +136,39 @@ export default function AccountabilityPage() {
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div className="card py-2 px-3 text-center">
-              <p className="text-xs text-slate-500">Avg Score</p>
-              <p className="text-lg font-bold text-slate-800">{stats.avg_score || 0}%</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Avg Score</p>
+              <p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.avg_score || 0}%</p>
             </div>
             <div className="card py-2 px-3 text-center">
-              <p className="text-xs text-slate-500">Good Days</p>
-              <p className="text-lg font-bold text-emerald-600">{stats.good_days || 0}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Good Days</p>
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 dark:text-emerald-400">{stats.good_days || 0}</p>
             </div>
             <div className="card py-2 px-3 text-center">
-              <p className="text-xs text-slate-500">Best</p>
-              <p className="text-lg font-bold text-primary-600">{Math.round(stats.best_score || 0)}%</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Best</p>
+              <p className="text-lg font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{Math.round(stats.best_score || 0)}%</p>
             </div>
             <div className="card py-2 px-3 text-center">
-              <p className="text-xs text-slate-500">Days Tracked</p>
-              <p className="text-lg font-bold text-slate-800">{stats.total_days || 0}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Days Tracked</p>
+              <p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.total_days || 0}</p>
             </div>
           </div>
         )}
 
         {/* History */}
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-3 flex items-center gap-2">
             <Calendar size={16} className="text-primary-500" />
             Recent History
           </h3>
           {history.length === 0 ? (
-            <p className="text-sm text-slate-400 text-center py-4">No history yet.</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 text-center py-4">No history yet.</p>
           ) : (
             <div className="space-y-1">
               {history.map((day: any) => (
-                <div key={day.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50">
+                <div key={day.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
                   <div className="flex items-center gap-2">
                     {getTrendIcon(day.total_score)}
-                    <span className="text-xs text-slate-600">
+                    <span className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">
                       {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                     </span>
                   </div>
@@ -179,7 +179,7 @@ export default function AccountabilityPage() {
                         style={{ width: `${day.total_score}%`, backgroundColor: getAccountabilityColor(day.total_score).hex }}
                       />
                     </div>
-                    <span className="text-xs font-bold text-slate-700 w-8 text-right">{Math.round(day.total_score)}%</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300 w-8 text-right">{Math.round(day.total_score)}%</span>
                   </div>
                 </div>
               ))}
@@ -188,8 +188,8 @@ export default function AccountabilityPage() {
         </div>
 
         {/* Legend */}
-        <div className="card bg-slate-50">
-          <h3 className="font-bold text-slate-900 mb-2 text-sm">Score Legend</h3>
+        <div className="card bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+          <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-2 text-sm">Score Legend</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-xs">
             {[
               { range: '90-100%', label: 'Excellent', color: '#059669' },
@@ -200,7 +200,7 @@ export default function AccountabilityPage() {
             ].map(l => (
               <div key={l.range} className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded" style={{ backgroundColor: l.color }} />
-                <span className="text-slate-600">{l.range} - {l.label}</span>
+                <span className="text-slate-600 dark:text-slate-400 dark:text-slate-400">{l.range} - {l.label}</span>
               </div>
             ))}
           </div>

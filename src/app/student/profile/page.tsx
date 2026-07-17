@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -63,12 +63,12 @@ export default function StudentProfilePage() {
     <DashboardLayout title="My Profile" subtitle="Manage your account and view your academic overview">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-            <p className="text-slate-500 mt-1">Manage your account and view your academic overview</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">My Profile</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage your account and view your academic overview</p>
           </div>
         </div>
 
@@ -81,41 +81,41 @@ export default function StudentProfilePage() {
               <span className="text-3xl font-bold text-white">{profile.first_name[0]?.toUpperCase()}{profile.last_name[0]?.toUpperCase()}</span>
             )}
           </div>
-          <h2 className="text-xl font-bold text-slate-900">{profile.first_name} {profile.last_name}</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{profile.first_name} {profile.last_name}</h2>
           <p className="text-sm text-violet-600 font-medium mt-1">Student</p>
-          {studentInfo && <p className="text-xs text-slate-400 mt-1">{studentInfo.admission_number}</p>}
-          {studentClass && <p className="text-xs text-slate-400">{studentClass.name}</p>}
+          {studentInfo && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{studentInfo.admission_number}</p>}
+          {studentClass && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{studentClass.name}</p>}
 
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="p-3 bg-blue-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-blue-600">{attendanceRate}%</p>
-              <p className="text-xs text-blue-500">Attendance</p>
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg text-center">
+              <p className="text-lg font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{attendanceRate}%</p>
+              <p className="text-xs text-blue-500 dark:text-blue-400 dark:text-blue-400">Attendance</p>
             </div>
-            <div className="p-3 bg-emerald-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-emerald-600">{averageScore}%</p>
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 rounded-lg text-center">
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 dark:text-emerald-400">{averageScore}%</p>
               <p className="text-xs text-emerald-500">Avg Score</p>
             </div>
-            <div className="p-3 bg-amber-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-amber-600">{homeworkStats.submitted}/{homeworkStats.total}</p>
-              <p className="text-xs text-amber-500">Homework</p>
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 rounded-lg text-center">
+              <p className="text-lg font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{homeworkStats.submitted}/{homeworkStats.total}</p>
+              <p className="text-xs text-amber-500 dark:text-amber-400 dark:text-amber-400">Homework</p>
             </div>
-            <div className="p-3 bg-purple-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-purple-600">{recentResults.length}</p>
-              <p className="text-xs text-purple-500">Results</p>
+            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 rounded-lg text-center">
+              <p className="text-lg font-bold text-purple-600 dark:text-purple-400 dark:text-purple-400">{recentResults.length}</p>
+              <p className="text-xs text-purple-500 dark:text-purple-400 dark:text-purple-400">Results</p>
             </div>
           </div>
 
           <div className="mt-6 space-y-2 text-left">
-            <div className="flex items-center gap-3 text-sm text-slate-600 p-2 rounded-lg bg-slate-50">
-              <Mail size={16} className="text-slate-400 flex-shrink-0" /><span className="truncate">{profile.email}</span>
+            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+              <Mail size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 flex-shrink-0" /><span className="truncate">{profile.email}</span>
             </div>
             {profile.phone && (
-              <div className="flex items-center gap-3 text-sm text-slate-600 p-2 rounded-lg bg-slate-50">
-                <Phone size={16} className="text-slate-400 flex-shrink-0" /><span>{profile.phone}</span>
+              <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                <Phone size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 flex-shrink-0" /><span>{profile.phone}</span>
               </div>
             )}
-            <div className="flex items-center gap-3 text-sm text-slate-600 p-2 rounded-lg bg-slate-50">
-              <Calendar size={16} className="text-slate-400 flex-shrink-0" /><span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+              <Calendar size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 flex-shrink-0" /><span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
             </div>
           </div>
         </div>
@@ -123,27 +123,27 @@ export default function StudentProfilePage() {
         <div className="lg:col-span-2 space-y-6">
           {studentInfo && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2"><GraduationCap size={20} className="text-violet-600" />Student Details</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><GraduationCap size={20} className="text-violet-600" />Student Details</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-500 mb-1">Admission Number</p><p className="font-semibold text-slate-900 flex items-center gap-2"><Hash size={14} className="text-slate-400" />{studentInfo.admission_number}</p></div>
-                <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-500 mb-1">Class</p><p className="font-semibold text-slate-900 flex items-center gap-2"><BookOpen size={14} className="text-slate-400" />{studentClass?.name || 'N/A'}</p></div>
-                {studentInfo.gender && <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-500 mb-1">Gender</p><p className="font-semibold text-slate-900">{studentInfo.gender}</p></div>}
-                {studentInfo.date_of_birth && <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-500 mb-1">Date of Birth</p><p className="font-semibold text-slate-900">{new Date(studentInfo.date_of_birth).toLocaleDateString()}</p></div>}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Admission Number</p><p className="font-semibold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><Hash size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />{studentInfo.admission_number}</p></div>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Class</p><p className="font-semibold text-slate-900 dark:text-white dark:text-white flex items-center gap-2"><BookOpen size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />{studentClass?.name || 'N/A'}</p></div>
+                {studentInfo.gender && <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Gender</p><p className="font-semibold text-slate-900 dark:text-white dark:text-white">{studentInfo.gender}</p></div>}
+                {studentInfo.date_of_birth && <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Date of Birth</p><p className="font-semibold text-slate-900 dark:text-white dark:text-white">{new Date(studentInfo.date_of_birth).toLocaleDateString()}</p></div>}
               </div>
             </div>
           )}
 
           {recentResults.length > 0 && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-violet-600" />Recent Results</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-violet-600" />Recent Results</h2>
               <div className="space-y-2">
                 {recentResults.map(r => (
-                  <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div key={r.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                     <div>
-                      <p className="font-medium text-slate-900 text-sm">{r.subject?.name || `Subject #${r.subject_id?.slice(0, 8)}`}</p>
-                      <p className="text-xs text-slate-400">{r.exam_type.toUpperCase()} • {new Date(r.created_at).toLocaleDateString()}</p>
+                      <p className="font-medium text-slate-900 dark:text-white dark:text-white text-sm">{r.subject?.name || `Subject #${r.subject_id?.slice(0, 8)}`}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{r.exam_type.toUpperCase()} • {new Date(r.created_at).toLocaleDateString()}</p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${r.score >= 50 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{r.score}%</span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${r.score >= 50 ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400'}`}>{r.score}%</span>
                   </div>
                 ))}
               </div>

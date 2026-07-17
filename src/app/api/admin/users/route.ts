@@ -5,7 +5,8 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, first_name, last_name, role, phone, class_id, subject_ids } = await request.json();
+    const { email, password, first_name, last_name, role, phone, class_id, subject_ids,
+      date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact, admission_number } = await request.json();
     
     // Validate required fields
     if (!email || !password || !first_name || !last_name || !role) {
@@ -70,12 +71,27 @@ export async function POST(request: Request) {
 
       // If role is student, create student record in both databases
     if (role === 'student') {
-      const admissionPrefix = 'STD';
-      const { count } = await adminClient
-        .from('students')
-        .select('*', { count: 'exact', head: true });
+      let admissionNum: string;
+      if (admission_number && admission_number.trim() !== '') {
+        admissionNum = admission_number.trim();
+      } else {
+        const year = new Date().getFullYear();
+        const { data: maxRecord } = await adminClient
+          .from('students')
+          .select('admission_number')
+          .like('admission_number', `STD${year}%`)
+          .order('admission_number', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      const admissionNumber = `${admissionPrefix}${new Date().getFullYear()}${String((count || 0) + 1).padStart(4, '0')}`;
+        let nextNum = 1;
+        if (maxRecord?.admission_number) {
+          const suffix = maxRecord.admission_number.replace(`STD${year}`, '');
+          const parsed = parseInt(suffix, 10);
+          if (!isNaN(parsed)) nextNum = parsed + 1;
+        }
+        admissionNum = `STD${year}${String(nextNum).padStart(4, '0')}`;
+      }
 
       const classId = class_id && class_id.trim() !== '' ? class_id : null;
 
@@ -83,8 +99,16 @@ export async function POST(request: Request) {
         .from('students')
         .insert({
           profile_id: userId,
-          admission_number: admissionNumber,
+          admission_number: admissionNum,
           class_id: classId,
+          date_of_birth: date_of_birth || null,
+          gender: gender || null,
+          address: address || null,
+          guardian_name: guardian_name || null,
+          guardian_phone: guardian_phone || null,
+          guardian_email: guardian_email || null,
+          blood_group: blood_group || null,
+          emergency_contact: emergency_contact || null,
         });
 
       if (studentError) {
@@ -96,7 +120,7 @@ export async function POST(request: Request) {
         await neonQuery(
           `INSERT INTO students (profile_id, admission_number, class_id)
            VALUES ($1, $2, $3)`,
-          [userId, admissionNumber, classId]
+          [userId, admissionNum, classId]
         );
       } catch (neonStudentError) {
         console.error('Error creating student record in Neon:', neonStudentError);

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -129,9 +129,9 @@ export default function StudentHomeworkPage() {
 
   function getFileIcon(filename: string) {
     const ext = filename.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext || '')) return <Image size={14} className="text-purple-600" />;
-    if (['mp4', 'mov', 'avi'].includes(ext || '')) return <FileVideo size={14} className="text-red-600" />;
-    return <Paperclip size={14} className="text-blue-600" />;
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext || '')) return <Image size={14} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" />;
+    if (['mp4', 'mov', 'avi'].includes(ext || '')) return <FileVideo size={14} className="text-red-600 dark:text-red-400 dark:text-red-400" />;
+    return <Paperclip size={14} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" />;
   }
 
   function isUrl(str: string) {
@@ -142,16 +142,16 @@ export default function StudentHomeworkPage() {
     <DashboardLayout title="Homework" subtitle="View and submit homework assignments">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Homework</h1>
-            <p className="text-slate-500">View and submit homework assignments</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Homework</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">View and submit homework assignments</p>
           </div>
         </div>
         
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -163,7 +163,7 @@ export default function StudentHomeworkPage() {
               {homework.length === 0 ? (
                 <div className="bg-white rounded-xl p-12 text-center">
                   <FileText className="mx-auto text-gray-400 mb-4" size={48} />
-                  <p className="text-slate-500">No homework assigned</p>
+                  <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No homework assigned</p>
                 </div>
               ) : (
                 homework.map((hw) => {
@@ -173,39 +173,39 @@ export default function StudentHomeworkPage() {
                   const isExpanded = expandedHw === hw.id;
                   return (
                     <div key={hw.id} className={`bg-white rounded-xl shadow-md overflow-hidden transition-all ${overdue ? 'border-l-4 border-red-500' : ''}`}>
-                      <div className="p-6 cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => setExpandedHw(isExpanded ? null : hw.id)}>
+                      <div className="p-6 cursor-pointer hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors" onClick={() => setExpandedHw(isExpanded ? null : hw.id)}>
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <h3 className="font-semibold text-slate-800 mb-1">{hw.title}</h3>
-                            <p className="text-sm text-slate-500">{hw.subject?.name || 'No subject'} &bull; {hw.class?.name || 'All Classes'}</p>
+                            <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{hw.title}</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{hw.subject?.name || 'No subject'} &bull; {hw.class?.name || 'All Classes'}</p>
                           </div>
-                          <div className={`px-3 py-1 rounded-full text-sm font-medium ${submitted ? 'bg-green-100 text-green-700' : overdue ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                          <div className={`px-3 py-1 rounded-full text-sm font-medium ${submitted ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : overdue ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : 'bg-yellow-100 text-yellow-700'}`}>
                             {submitted ? 'Submitted' : overdue ? 'Overdue' : 'Pending'}
                           </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 mb-4">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">
                           <span className="flex items-center gap-1"><Clock size={16} />Due: {hw.due_date ? new Date(hw.due_date).toLocaleDateString() : 'No due date'}</span>
                           <span className="flex items-center gap-1"><FileText size={16} />Total: {hw.total_marks} marks</span>
                           {attachments.length > 0 && <span className="flex items-center gap-1"><Paperclip size={16} />{attachments.length} attachment{attachments.length > 1 ? 's' : ''}</span>}
                         </div>
                         {hw.description && (
-                          <p className="text-sm text-slate-600">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">
                             {isExpanded ? hw.description : (hw.description.substring(0, 100) + (hw.description.length > 100 ? '...' : ''))}
                           </p>
                         )}
                       </div>
 
                       {isExpanded && (
-                        <div className="px-6 pb-6 space-y-4 border-t pt-4 bg-slate-50/50">
+                        <div className="px-6 pb-6 space-y-4 border-t pt-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800/50">
                           {attachments.length > 0 && (
                             <div>
-                              <h4 className="text-sm font-semibold text-slate-800 mb-2">Attachments</h4>
+                              <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Attachments</h4>
                               <div className="flex flex-wrap gap-2">
                                 {attachments.map((url: string, i: number) => (
-                                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
                                     {getFileIcon(url)}
                                     <span className="text-sm truncate max-w-[150px]">{url.split('/').pop()}</span>
-                                    <ExternalLink size={12} className="text-slate-400" />
+                                    <ExternalLink size={12} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                                   </a>
                                 ))}
                               </div>
@@ -213,28 +213,28 @@ export default function StudentHomeworkPage() {
                           )}
 
                           {submitted ? (
-                            <div className="p-4 bg-green-50 border border-green-100 rounded-lg">
-                              <div className="flex items-center gap-2 text-green-700 font-medium mb-2">
+                            <div className="p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-100 rounded-lg">
+                              <div className="flex items-center gap-2 text-green-700 dark:text-green-300 dark:text-green-300 font-medium mb-2">
                                 <Check size={18} />
                                 <span>Submitted on {new Date(submitted.submitted_at).toLocaleDateString()}</span>
                               </div>
                               {submitted.marks !== null && submitted.marks !== undefined && (
-                                <p className="text-sm text-green-600 mb-1">Marks: <span className="font-bold">{submitted.marks}/{hw.total_marks}</span></p>
+                                <p className="text-sm text-green-600 dark:text-green-400 dark:text-green-400 mb-1">Marks: <span className="font-bold">{submitted.marks}/{hw.total_marks}</span></p>
                               )}
                               {submitted.feedback && (
-                                <div className="mt-2 text-sm text-green-700 bg-white/50 p-2 rounded">
-                                  <p className="font-semibold text-xs uppercase tracking-wider text-green-600 mb-1">Teacher's Feedback</p>
+                                <div className="mt-2 text-sm text-green-700 dark:text-green-300 dark:text-green-300 bg-white/50 p-2 rounded">
+                                  <p className="font-semibold text-xs uppercase tracking-wider text-green-600 dark:text-green-400 dark:text-green-400 mb-1">Teacher's Feedback</p>
                                   {submitted.feedback}
                                 </div>
                               )}
                               {submitted.submission_url && (
                                 <div className="mt-3">
                                   {isUrl(submitted.submission_url) ? (
-                                    <a href={submitted.submission_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-green-600 hover:underline font-medium">
+                                    <a href={submitted.submission_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-green-600 dark:text-green-400 dark:text-green-400 hover:underline font-medium">
                                       <ExternalLink size={14} /> View My Submission
                                     </a>
                                   ) : (
-                                    <div className="text-sm text-green-700 bg-white p-3 rounded-lg border border-green-200 whitespace-pre-wrap">
+                                    <div className="text-sm text-green-700 dark:text-green-300 dark:text-green-300 bg-white p-3 rounded-lg border border-green-200 dark:border-green-900/40 dark:border-green-900/40 whitespace-pre-wrap">
                                       {submitted.submission_url}
                                     </div>
                                   )}
@@ -242,8 +242,8 @@ export default function StudentHomeworkPage() {
                               )}
                             </div>
                           ) : (
-                            <div className="space-y-4 bg-white p-4 rounded-lg border border-slate-200 shadow-inner">
-                              <h4 className="text-sm font-semibold text-slate-800">Your Submission</h4>
+                            <div className="space-y-4 bg-white p-4 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 shadow-inner">
+                              <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Your Submission</h4>
                               <div className="space-y-3">
                                 <textarea
                                   placeholder="Type your answer here..."
@@ -261,7 +261,7 @@ export default function StudentHomeworkPage() {
                                     className="input flex-1"
                                   />
                                 </div>
-                                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all group">
+                                <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20/30 transition-all group">
                                   <input
                                     type="file"
                                     multiple
@@ -269,7 +269,7 @@ export default function StudentHomeworkPage() {
                                     className="hidden"
                                     id={`file-${hw.id}`}
                                   />
-                                  <label htmlFor={`file-${hw.id}`} className="cursor-pointer flex flex-col items-center justify-center gap-2 text-slate-500 group-hover:text-blue-600">
+                                  <label htmlFor={`file-${hw.id}`} className="cursor-pointer flex flex-col items-center justify-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:text-blue-400 dark:text-blue-400">
                                     <Upload size={24} />
                                     <span className="text-sm font-medium">Click to upload files or drag and drop</span>
                                     <span className="text-xs opacity-60">Images, PDFs, Documents, or Videos</span>
@@ -278,14 +278,14 @@ export default function StudentHomeworkPage() {
                                 {submissionFiles[hw.id]?.length > 0 && (
                                   <div className="flex flex-wrap gap-2">
                                     {submissionFiles[hw.id].map((f, i) => (
-                                      <span key={i} className="flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-100">
+                                      <span key={i} className="flex items-center gap-1 text-xs bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 dark:text-blue-400 px-2 py-1 rounded border border-blue-100">
                                         {getFileIcon(f.name)}
                                         {f.name}
                                         <button onClick={() => {
                                           const newFiles = [...submissionFiles[hw.id]];
                                           newFiles.splice(i, 1);
                                           setSubmissionFiles({ ...submissionFiles, [hw.id]: newFiles });
-                                        }} className="ml-1 text-blue-400 hover:text-red-500">×</button>
+                                        }} className="ml-1 text-blue-400 hover:text-red-500 dark:text-red-400 dark:text-red-400">×</button>
                                       </span>
                                     ))}
                                   </div>
@@ -302,7 +302,7 @@ export default function StudentHomeworkPage() {
                                   )}
                                 </button>
                                 {isOverdue(hw.due_date) && !submitted && (
-                                  <p className="text-xs text-red-500 text-center font-medium">This assignment is overdue. Submissions might be disabled or marked as late.</p>
+                                  <p className="text-xs text-red-500 dark:text-red-400 dark:text-red-400 text-center font-medium">This assignment is overdue. Submissions might be disabled or marked as late.</p>
                                 )}
                               </div>
                             </div>

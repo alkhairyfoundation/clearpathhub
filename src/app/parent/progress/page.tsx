@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, Suspense, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -302,10 +302,10 @@ function ProgressContent() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></button>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Analytics</h1>
-              <p className="text-slate-500 text-sm">Comprehensive performance analysis</p>
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Analytics</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">Comprehensive performance analysis</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -326,19 +326,19 @@ function ProgressContent() {
         </div>
 
         {!child ? (
-          <div className="bg-white rounded-xl p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No children linked to your account</p></div>
+          <div className="bg-white rounded-xl p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
         ) : (
           <>
             {/* Time Period Selector */}
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={() => setSelectedPeriod('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'all' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}>All Time</button>
-              <button onClick={() => setSelectedPeriod('current_term')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'current_term' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}>This Term</button>
-              <button onClick={() => setSelectedPeriod('last_term')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'last_term' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}>Last Term</button>
-              <button onClick={() => setSelectedPeriod('custom')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'custom' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}>Custom Range</button>
+              <button onClick={() => setSelectedPeriod('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'all' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>All Time</button>
+              <button onClick={() => setSelectedPeriod('current_term')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'current_term' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>This Term</button>
+              <button onClick={() => setSelectedPeriod('last_term')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'last_term' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>Last Term</button>
+              <button onClick={() => setSelectedPeriod('custom')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'custom' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>Custom Range</button>
               {selectedPeriod === 'custom' && (
                 <div className="flex items-center gap-2">
                   <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="input py-1.5 text-sm" />
-                  <span className="text-slate-400">to</span>
+                  <span className="text-slate-400 dark:text-slate-500 dark:text-slate-500">to</span>
                   <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="input py-1.5 text-sm" />
                 </div>
               )}
@@ -352,36 +352,36 @@ function ProgressContent() {
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                   <div className="card">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-slate-500">Overall Average</span>
-                      {trendDirection === 'up' ? <TrendingUp size={14} className="text-green-600" /> : trendDirection === 'down' ? <TrendingDown size={14} className="text-red-600" /> : <Minus size={14} className="text-slate-400" />}
+                      <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Overall Average</span>
+                      {trendDirection === 'up' ? <TrendingUp size={14} className="text-green-600 dark:text-green-400 dark:text-green-400" /> : trendDirection === 'down' ? <TrendingDown size={14} className="text-red-600 dark:text-red-400 dark:text-red-400" /> : <Minus size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />}
                     </div>
-                    <p className={`text-xl font-bold ${overallAvg >= 70 ? 'text-green-600' : overallAvg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{overallAvg}%</p>
+                    <p className={`text-xl font-bold ${overallAvg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : overallAvg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{overallAvg}%</p>
                   </div>
                   <div className="card">
-                    <div className="flex items-center gap-2 mb-1"><Award size={14} className="text-green-600" /><span className="text-xs text-slate-500">Best Subject</span></div>
-                    <p className="text-lg font-bold text-slate-800 truncate" title={bestSubject?.name}>{bestSubject?.name || 'N/A'}</p>
-                    <p className="text-xs text-green-600">{bestSubject?.average || 0}%</p>
+                    <div className="flex items-center gap-2 mb-1"><Award size={14} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Best Subject</span></div>
+                    <p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 truncate" title={bestSubject?.name}>{bestSubject?.name || 'N/A'}</p>
+                    <p className="text-xs text-green-600 dark:text-green-400 dark:text-green-400">{bestSubject?.average || 0}%</p>
                   </div>
                   <div className="card">
-                    <div className="flex items-center gap-2 mb-1"><AlertTriangle size={14} className="text-red-600" /><span className="text-xs text-slate-500">Weakest</span></div>
-                    <p className="text-lg font-bold text-slate-800 truncate" title={worstSubject?.name}>{worstSubject?.name || 'N/A'}</p>
-                    <p className="text-xs text-red-600">{worstSubject?.average || 0}%</p>
+                    <div className="flex items-center gap-2 mb-1"><AlertTriangle size={14} className="text-red-600 dark:text-red-400 dark:text-red-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Weakest</span></div>
+                    <p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 truncate" title={worstSubject?.name}>{worstSubject?.name || 'N/A'}</p>
+                    <p className="text-xs text-red-600 dark:text-red-400 dark:text-red-400">{worstSubject?.average || 0}%</p>
                   </div>
                   <div className="card">
-                    <div className="flex items-center gap-2 mb-1"><CheckCircle size={14} className="text-green-600" /><span className="text-xs text-slate-500">Pass Rate</span></div>
-                    <p className={`text-xl font-bold ${passRate >= 70 ? 'text-green-600' : 'text-amber-600'}`}>{passRate}%</p>
+                    <div className="flex items-center gap-2 mb-1"><CheckCircle size={14} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Pass Rate</span></div>
+                    <p className={`text-xl font-bold ${passRate >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-amber-600 dark:text-amber-400 dark:text-amber-400'}`}>{passRate}%</p>
                   </div>
                   <div className="card">
-                    <div className="flex items-center gap-2 mb-1"><Flame size={14} className="text-orange-600" /><span className="text-xs text-slate-500">Streak</span></div>
-                    <p className="text-xl font-bold text-orange-600">{learningStreak?.current_streak || 0}</p>
-                    <p className="text-xs text-slate-400">best: {learningStreak?.longest_streak || 0}</p>
+                    <div className="flex items-center gap-2 mb-1"><Flame size={14} className="text-orange-600 dark:text-orange-400 dark:text-orange-400" /><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Streak</span></div>
+                    <p className="text-xl font-bold text-orange-600 dark:text-orange-400 dark:text-orange-400">{learningStreak?.current_streak || 0}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">best: {learningStreak?.longest_streak || 0}</p>
                   </div>
                 </div>
 
                 {/* Grade Distribution + Subject Averages */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="card lg:col-span-1">
-                    <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-slate-400" />Grade Distribution</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Grade Distribution</h2>
                     <div className="space-y-3">
                       {[
                         { grade: 'A', range: '≥80%', count: gradeDistribution.A, color: 'bg-green-500', max: Math.max(...Object.values(gradeDistribution), 1) },
@@ -391,26 +391,26 @@ function ProgressContent() {
                         { grade: 'F', range: '<50%', count: gradeDistribution.F, color: 'bg-red-500', max: Math.max(...Object.values(gradeDistribution), 1) },
                       ].map(g => (
                         <div key={g.grade} className="flex items-center gap-3">
-                          <span className="w-6 font-bold text-sm text-slate-700">{g.grade}</span>
-                          <div className="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden">
+                          <span className="w-6 font-bold text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300">{g.grade}</span>
+                          <div className="flex-1 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-4 overflow-hidden">
                             <div className={`h-full ${g.color} rounded-full transition-all`} style={{ width: `${(g.count / g.max) * 100}%` }} />
                           </div>
-                          <span className="w-8 text-right text-sm text-slate-600">{g.count}</span>
-                          <span className="w-12 text-right text-xs text-slate-400">{g.range}</span>
+                          <span className="w-8 text-right text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{g.count}</span>
+                          <span className="w-12 text-right text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{g.range}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   <div className="card lg:col-span-2">
-                    <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><BookOpen size={18} className="text-slate-400" />Subject Performance</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><BookOpen size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Subject Performance</h2>
                     {subjectAverages.length === 0 ? (
-                      <div className="text-center py-8 text-slate-500">No results recorded</div>
+                      <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No results recorded</div>
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="text-left text-slate-500 border-b border-slate-200">
+                            <tr className="text-left text-slate-500 dark:text-slate-400 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
                               <th className="pb-2 font-medium">Subject</th>
                               <th className="pb-2 font-medium text-right">Average</th>
                               <th className="pb-2 font-medium text-right">Grade</th>
@@ -424,16 +424,16 @@ function ProgressContent() {
                                 ? (s.scores.slice(-1)[0] > s.scores.slice(-3)[0] ? 'up' : s.scores.slice(-1)[0] < s.scores.slice(-3)[0] ? 'down' : 'stable')
                                 : 'stable';
                               const grade = s.average >= 80 ? 'A' : s.average >= 70 ? 'B' : s.average >= 60 ? 'C' : s.average >= 50 ? 'D' : 'F';
-                              const gradeColor = s.average >= 80 ? 'text-green-600' : s.average >= 70 ? 'text-blue-600' : s.average >= 60 ? 'text-yellow-600' : s.average >= 50 ? 'text-orange-600' : 'text-red-600';
+                              const gradeColor = s.average >= 80 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : s.average >= 70 ? 'text-blue-600 dark:text-blue-400 dark:text-blue-400' : s.average >= 60 ? 'text-yellow-600 dark:text-yellow-400 dark:text-yellow-400' : s.average >= 50 ? 'text-orange-600 dark:text-orange-400 dark:text-orange-400' : 'text-red-600 dark:text-red-400 dark:text-red-400';
                               return (
-                                <tr key={i} className="border-b border-slate-100">
-                                  <td className="py-2.5 font-medium text-slate-800">{s.name}</td>
+                                <tr key={i} className="border-b border-slate-100 dark:border-slate-700 dark:border-slate-700">
+                                  <td className="py-2.5 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{s.name}</td>
                                   <td className="py-2.5 text-right font-bold">{s.average}%</td>
                                   <td className={`py-2.5 text-right font-bold ${gradeColor}`}>{grade}</td>
                                   <td className="py-2.5 text-right">
-                                    {trend === 'up' ? <TrendingUp size={16} className="inline text-green-600" /> : trend === 'down' ? <TrendingDown size={16} className="inline text-red-600" /> : <Minus size={16} className="inline text-slate-400" />}
+                                    {trend === 'up' ? <TrendingUp size={16} className="inline text-green-600 dark:text-green-400 dark:text-green-400" /> : trend === 'down' ? <TrendingDown size={16} className="inline text-red-600 dark:text-red-400 dark:text-red-400" /> : <Minus size={16} className="inline text-slate-400 dark:text-slate-500 dark:text-slate-500" />}
                                   </td>
-                                  <td className="py-2.5 text-right text-slate-500">{s.count}</td>
+                                  <td className="py-2.5 text-right text-slate-500 dark:text-slate-400 dark:text-slate-400">{s.count}</td>
                                 </tr>
                               );
                             })}
@@ -447,7 +447,7 @@ function ProgressContent() {
                 {/* Subject Trend Chart */}
                 {subjectAverages.length > 1 && (
                   <div className="card">
-                    <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-slate-400" />Score Trend</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Score Trend</h2>
                     <div className="space-y-6">
                       {[...subjectAverages].sort((a, b) => b.scores.length - a.scores.length).slice(0, 6).map((sub, i) => {
                         const colors = ['#1e3a5f', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2'];
@@ -458,8 +458,8 @@ function ProgressContent() {
                         return (
                           <div key={i}>
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-semibold text-slate-700">{sub.name}</span>
-                              <span className="text-xs text-slate-400">avg: {sub.average}%</span>
+                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">{sub.name}</span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">avg: {sub.average}%</span>
                             </div>
                             <SVGLineChart data={data} color={colors[i % colors.length]} />
                           </div>
@@ -472,18 +472,18 @@ function ProgressContent() {
                 {/* Attendance + Behavior + Homework */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="card">
-                    <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><UserCheck size={18} className="text-slate-400" />Attendance Trend</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><UserCheck size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Attendance Trend</h2>
                     {monthAttendance.length === 0 ? (
-                      <div className="text-center py-8 text-slate-500">No attendance data</div>
+                      <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No attendance data</div>
                     ) : (
                       <div className="space-y-3">
                         {monthAttendance.map(m => (
                           <div key={m.month} className="flex items-center gap-3">
-                            <span className="w-16 text-xs text-slate-600">{new Date(m.month + '-01').toLocaleDateString('en', { month: 'short', year: '2-digit' })}</span>
-                            <div className="flex-1 bg-slate-100 rounded-full h-3 overflow-hidden">
+                            <span className="w-16 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">{new Date(m.month + '-01').toLocaleDateString('en', { month: 'short', year: '2-digit' })}</span>
+                            <div className="flex-1 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
                               <div className={`h-full rounded-full ${m.rate >= 80 ? 'bg-green-500' : m.rate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${m.rate}%` }} />
                             </div>
-                            <span className="w-10 text-right text-sm font-bold text-slate-700">{m.rate}%</span>
+                            <span className="w-10 text-right text-sm font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300">{m.rate}%</span>
                           </div>
                         ))}
                       </div>
@@ -491,15 +491,15 @@ function ProgressContent() {
                   </div>
 
                   <div className="card">
-                    <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Activity size={18} className="text-slate-400" />Behavior Trend</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Activity size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Behavior Trend</h2>
                     {behaviorTrend.length === 0 ? (
-                      <div className="text-center py-8 text-slate-500">No behavior reports</div>
+                      <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No behavior reports</div>
                     ) : (
                       <div className="flex items-end gap-1.5 h-28">
                         {behaviorTrend.map((b, i) => (
                           <div key={i} className="flex-1 flex flex-col items-center gap-1">
                             <div className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600" style={{ height: `${(b.rating / 5) * 100}%`, minHeight: '4px' }} title={`${b.rating}/5`} />
-                            <span className="text-[7px] text-slate-400 rotate-45 origin-left whitespace-nowrap">{b.label}</span>
+                            <span className="text-[7px] text-slate-400 dark:text-slate-500 dark:text-slate-500 rotate-45 origin-left whitespace-nowrap">{b.label}</span>
                           </div>
                         ))}
                       </div>
@@ -507,25 +507,25 @@ function ProgressContent() {
                   </div>
 
                   <div className="card">
-                    <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><FileText size={18} className="text-slate-400" />Homework & Practice</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><FileText size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Homework & Practice</h2>
                     <div className="space-y-4">
                       <div>
-                        <div className="flex justify-between text-sm mb-1"><span className="text-slate-600">Completion Rate</span><span className="font-bold text-slate-800">{hwCompletionRate}%</span></div>
-                        <div className="bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div className="flex justify-between text-sm mb-1"><span className="text-slate-600 dark:text-slate-400 dark:text-slate-400">Completion Rate</span><span className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{hwCompletionRate}%</span></div>
+                        <div className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
                           <div className={`h-full rounded-full ${hwCompletionRate >= 70 ? 'bg-green-500' : hwCompletionRate >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${hwCompletionRate}%` }} />
                         </div>
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <div className="flex items-center gap-2"><FileText size={16} className="text-amber-600" /><span className="text-sm text-slate-600">Submitted</span></div>
-                        <span className="font-bold text-slate-800">{homeworkSubs.length}</span>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                        <div className="flex items-center gap-2"><FileText size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Submitted</span></div>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{homeworkSubs.length}</span>
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <div className="flex items-center gap-2"><Brain size={16} className="text-purple-600" /><span className="text-sm text-slate-600">Practice Sessions</span></div>
-                        <span className="font-bold text-slate-800">{practiceSessions.length}</span>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                        <div className="flex items-center gap-2"><Brain size={16} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" /><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Practice Sessions</span></div>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{practiceSessions.length}</span>
                       </div>
-                      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                        <div className="flex items-center gap-2"><Flame size={16} className="text-orange-600" /><span className="text-sm text-slate-600">Learning Streak</span></div>
-                        <span className="font-bold text-orange-600">{learningStreak?.current_streak || 0} days</span>
+                      <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                        <div className="flex items-center gap-2"><Flame size={16} className="text-orange-600 dark:text-orange-400 dark:text-orange-400" /><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Learning Streak</span></div>
+                        <span className="font-bold text-orange-600 dark:text-orange-400 dark:text-orange-400">{learningStreak?.current_streak || 0} days</span>
                       </div>
                     </div>
                   </div>
@@ -533,30 +533,30 @@ function ProgressContent() {
 
                 {/* Risk Indicators */}
                 {(weakAreas.length > 0 || decliningSubjects.length > 0 || suspiciousAttempts.length > 0) && (
-                  <div className="card border-2 border-red-200 bg-red-50/50">
-                    <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><AlertTriangle size={18} className="text-red-600" />Attention Required</h2>
+                  <div className="card border-2 border-red-200 dark:border-red-900/40 dark:border-red-900/40 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20/50">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><AlertTriangle size={18} className="text-red-600 dark:text-red-400 dark:text-red-400" />Attention Required</h2>
                     <div className="space-y-4">
                       {weakAreas.length > 0 && (
                         <div>
-                          <p className="text-sm font-semibold text-red-800 mb-2">Weak Subjects (below 50%)</p>
-                          <div className="flex flex-wrap gap-2">{weakAreas.map(s => <span key={s.name} className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium">{s.name} ({s.average}%)</span>)}</div>
+                          <p className="text-sm font-semibold text-red-800 dark:text-red-300 dark:text-red-300 mb-2">Weak Subjects (below 50%)</p>
+                          <div className="flex flex-wrap gap-2">{weakAreas.map(s => <span key={s.name} className="px-3 py-1 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400 rounded-lg text-sm font-medium">{s.name} ({s.average}%)</span>)}</div>
                         </div>
                       )}
                       {decliningSubjects.length > 0 && (
                         <div>
                           <p className="text-sm font-semibold text-amber-800 mb-2">Declining Performance (last 3 scores)</p>
-                          <div className="flex flex-wrap gap-2">{decliningSubjects.map(s => <span key={s.name} className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium">{s.name}</span>)}</div>
+                          <div className="flex flex-wrap gap-2">{decliningSubjects.map(s => <span key={s.name} className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300 rounded-lg text-sm font-medium">{s.name}</span>)}</div>
                         </div>
                       )}
                       {suspiciousAttempts.length > 0 && (
                         <div>
                           <p className="text-sm font-semibold text-amber-800 mb-2">Exam Monitoring Alerts</p>
                           <div className="space-y-2">{suspiciousAttempts.slice(0, 5).map(a => (
-                            <div key={a.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-amber-200">
-                              <div><p className="font-medium text-slate-800 text-sm">{a.test?.title || 'Test'}</p><p className="text-xs text-slate-500">{new Date(a.completed_at || a.started_at).toLocaleDateString()}</p></div>
+                            <div key={a.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40">
+                              <div><p className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">{a.test?.title || 'Test'}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(a.completed_at || a.started_at).toLocaleDateString()}</p></div>
                               <div className="flex gap-2 text-xs">
-                                {a.tab_switches > 0 && <span className="text-amber-700">{a.tab_switches} tab switches</span>}
-                                {a.fullscreen_exits > 0 && <span className="text-amber-700">{a.fullscreen_exits} exits</span>}
+                                {a.tab_switches > 0 && <span className="text-amber-700 dark:text-amber-300 dark:text-amber-300">{a.tab_switches} tab switches</span>}
+                                {a.fullscreen_exits > 0 && <span className="text-amber-700 dark:text-amber-300 dark:text-amber-300">{a.fullscreen_exits} exits</span>}
                               </div>
                             </div>
                           ))}</div>
@@ -568,7 +568,7 @@ function ProgressContent() {
 
                 {/* Recent Activity */}
                 <div className="card">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Clock size={18} className="text-slate-400" />Recent Activity</h2>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Clock size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Recent Activity</h2>
                   {(() => {
                     const allActivity = [
                       ...results.map(r => ({ id: `r-${r.id}`, type: 'result', label: r.subject?.name || 'Subject', detail: `${r.score}%`, date: r.created_at, score: r.score })),
@@ -578,25 +578,25 @@ function ProgressContent() {
                     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 30);
 
                     return allActivity.length === 0 ? (
-                      <div className="text-center py-8 text-slate-500">No activity recorded</div>
+                      <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No activity recorded</div>
                     ) : (
                       <div className="space-y-2">
                         {allActivity.map(a => {
                           const icons: Record<string, any> = { quiz: Brain, test: BookOpen, homework: FileText, result: TrendingUp };
                           const Icon = icons[a.type] || TrendingUp;
-                          const colors: Record<string, string> = { quiz: 'bg-purple-100 text-purple-600', test: 'bg-blue-100 text-blue-600', homework: 'bg-amber-100 text-amber-600', result: 'bg-primary-100 text-primary-600' };
-                          const bg = colors[a.type] || 'bg-slate-100 text-slate-600';
+                          const colors: Record<string, string> = { quiz: 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 dark:text-purple-400', test: 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 dark:text-blue-400', homework: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 dark:text-amber-400', result: 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 dark:text-primary-400' };
+                          const bg = colors[a.type] || 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400';
                           const badges: Record<string, string> = { quiz: 'Quiz', test: 'Test', homework: 'HW', result: 'Result' };
-                          const badgeColors: Record<string, string> = { quiz: 'bg-purple-100 text-purple-700', test: 'bg-blue-100 text-blue-700', homework: 'bg-amber-100 text-amber-700', result: 'bg-primary-100 text-primary-700' };
+                          const badgeColors: Record<string, string> = { quiz: 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700', test: 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300', homework: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300', result: 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300' };
                           return (
-                            <div key={a.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                            <div key={a.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                               <div className="flex items-center gap-3">
                                 <div className={`w-9 h-9 ${bg} rounded-lg flex items-center justify-center`}><Icon size={16} /></div>
-                                <div><p className="font-medium text-sm text-slate-800">{a.label}</p><p className="text-xs text-slate-500">{new Date(a.date).toLocaleDateString()}</p></div>
+                                <div><p className="font-medium text-sm text-slate-800 dark:text-slate-200 dark:text-slate-200">{a.label}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(a.date).toLocaleDateString()}</p></div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeColors[a.type] || 'bg-slate-100 text-slate-700'}`}>{badges[a.type] || ''}</span>
-                                <span className={`text-sm font-bold ${a.score >= 70 ? 'text-green-600' : a.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{a.detail}</span>
+                                <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeColors[a.type] || 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}>{badges[a.type] || ''}</span>
+                                <span className={`text-sm font-bold ${a.score >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : a.score >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{a.detail}</span>
                               </div>
                             </div>
                           );

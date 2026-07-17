@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -28,9 +28,9 @@ const PERIOD_ICONS: Record<GoalPeriodType, React.ReactNode> = {
   yearly: <TrendingUp size={18} />,
 };
 const DIMENSION_COLORS: Record<GoalDimension, string> = {
-  academic: 'border-l-blue-500 bg-blue-50',
-  islamic: 'border-l-emerald-500 bg-emerald-50',
-  skills: 'border-l-purple-500 bg-purple-50',
+  academic: 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20',
+  islamic: 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20',
+  skills: 'border-l-purple-500 bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20',
 };
 const DIMENSION_LABELS: Record<GoalDimension, string> = {
   academic: 'Academic',
@@ -53,8 +53,8 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
     return (
       <div className="card text-center py-8">
         <Target className="mx-auto text-slate-300 mb-3" size={40} />
-        <p className="text-slate-500 font-medium">No goals set yet</p>
-        <p className="text-sm text-slate-400 mt-1">Complete daily practice to generate goals</p>
+        <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">No goals set yet</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Complete daily practice to generate goals</p>
       </div>
     );
   }
@@ -86,9 +86,9 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
 
       {/* Goal Chain Visualization */}
       <div className="card overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-slate-100">
-          <h3 className="font-bold text-slate-900 flex items-center gap-2">
-            <Target size={18} className="text-primary-600" />
+        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700 dark:border-slate-700">
+          <h3 className="font-bold text-slate-900 dark:text-white dark:text-white flex items-center gap-2">
+            <Target size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
             Your Growth Chain
           </h3>
           <div className="flex gap-2">
@@ -99,7 +99,7 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
                 className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                   expandedDimension === dim
                     ? 'bg-primary-600 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
                 }`}
               >
                 {DIMENSION_LABELS[dim]}
@@ -121,17 +121,17 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
                     onClick={() => setExpandedPeriod(group.period)}
                     className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all min-w-[100px] ${
                       expandedPeriod === group.period
-                        ? 'border-primary-500 bg-primary-50 shadow-md'
-                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 shadow-md'
+                        : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 bg-white dark:bg-slate-800'
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
-                      progress >= 100 ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'
+                      progress >= 100 ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400'
                     }`}>
                       {progress >= 100 ? <CheckCircle size={16} /> : <Circle size={16} />}
                     </div>
-                    <span className="text-xs font-bold text-slate-700">{group.label.split(' ')[0]}</span>
-                    <span className="text-[10px] text-slate-400">{completedCount}/{dimGoals.length}</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300">{group.label.split(' ')[0]}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">{completedCount}/{dimGoals.length}</span>
                   </button>
                   {idx < groupedByPeriod.length - 1 && (
                     <ArrowRight size={16} className="text-slate-300 mx-1" />
@@ -147,16 +147,16 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
             const dimGoals = group.goals.filter(g => g.dimension === expandedDimension);
             if (dimGoals.length === 0) {
               return (
-                <div key={group.period} className="mt-4 text-center py-6 text-slate-400 text-sm border-t border-slate-100">
+                <div key={group.period} className="mt-4 text-center py-6 text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
                   No {expandedDimension} {group.label.toLowerCase()} for this period
                 </div>
               );
             }
             return (
-              <div key={group.period} className="mt-4 space-y-2 border-t border-slate-100 pt-4">
+              <div key={group.period} className="mt-4 space-y-2 border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 pt-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-slate-700">{group.label} - {DIMENSION_LABELS[expandedDimension]}</span>
-                  <Link href={`/student/goals/${group.period}`} className="text-xs text-primary-600 font-medium hover:underline">
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">{group.label} - {DIMENSION_LABELS[expandedDimension]}</span>
+                  <Link href={`/student/goals/${group.period}`} className="text-xs text-primary-600 dark:text-primary-400 dark:text-primary-400 font-medium hover:underline">
                     View all
                   </Link>
                 </div>
@@ -164,17 +164,17 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
                   <div
                     key={goal.id}
                     className={`flex items-center justify-between p-3 rounded-lg border-l-4 ${
-                      DIMENSION_COLORS[goal.dimension as GoalDimension] || 'border-l-slate-300 bg-slate-50'
+                      DIMENSION_COLORS[goal.dimension as GoalDimension] || 'border-l-slate-300 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800'
                     }`}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 truncate">{goal.goal_text}</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 truncate">{goal.goal_text}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${getGoalStatusBg(goal.status)} ${getGoalStatusColor(goal.status)}`}>
                           {goal.status.replace('_', ' ')}
                         </span>
                         {goal.target_value != null && (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">
                             Target: {goal.target_value} | Achieved: {goal.achieved_value ?? 0}
                           </span>
                         )}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -61,7 +61,7 @@ export default function ParentCcrDashboard() {
   if (loading) {
     return (
       <DashboardLayout title="Child Review" subtitle="Parent questionnaire">
-        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary-600" /></div>
+        <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
       </DashboardLayout>
     );
   }
@@ -71,8 +71,8 @@ export default function ParentCcrDashboard() {
       <DashboardLayout title="Child Review" subtitle="Parent questionnaire">
         <div className="text-center py-20">
           <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-slate-700 mb-2">No Children Found</h2>
-          <p className="text-slate-500">No students are linked to your account.</p>
+          <h2 className="text-xl font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">No Children Found</h2>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No students are linked to your account.</p>
         </div>
       </DashboardLayout>
     );
@@ -86,27 +86,27 @@ export default function ParentCcrDashboard() {
           const fatherSub = getStatus(child.profile_id, 'father');
           const motherSub = getStatus(child.profile_id, 'mother');
           return (
-            <div key={child.id} className="bg-white rounded-xl border border-slate-200 p-6">
+            <div key={child.id} className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800">
+                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">
                     {child.profile?.first_name} {child.profile?.last_name}
                   </h3>
-                  <p className="text-sm text-slate-500">{child.class?.name} | {child.admission_number}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{child.class?.name} | {child.admission_number}</p>
                 </div>
                 <div className="flex gap-3">
                   <Link
                     href={`/parent/ccr/father?child=${child.profile_id}&name=${encodeURIComponent(child.profile?.first_name || '')}`}
                     className={`btn-outline text-sm flex items-center gap-2 ${fatherSub?.is_submitted ? 'opacity-60' : ''}`}
                   >
-                    {fatherSub?.is_submitted ? <CheckCircle className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-amber-500" />}
+                    {fatherSub?.is_submitted ? <CheckCircle className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 dark:text-amber-400" />}
                     Father {fatherSub?.is_submitted ? '(Done)' : '(Pending)'}
                   </Link>
                   <Link
                     href={`/parent/ccr/mother?child=${child.profile_id}&name=${encodeURIComponent(child.profile?.first_name || '')}`}
                     className={`btn-outline text-sm flex items-center gap-2 ${motherSub?.is_submitted ? 'opacity-60' : ''}`}
                   >
-                    {motherSub?.is_submitted ? <CheckCircle className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-amber-500" />}
+                    {motherSub?.is_submitted ? <CheckCircle className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 dark:text-amber-400" />}
                     Mother {motherSub?.is_submitted ? '(Done)' : '(Pending)'}
                   </Link>
                 </div>

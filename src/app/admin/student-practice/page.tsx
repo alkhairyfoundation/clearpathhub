@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -101,47 +101,47 @@ export default function AdminStudentPracticePage() {
     <DashboardLayout title="Student Practice" subtitle="Track student daily practice, streaks, and performance">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Student Practice</h1>
-            <p className="text-slate-500">Monitor student practice activity, streaks, and performance</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Student Practice</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Monitor student practice activity, streaks, and performance</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="card">
-            <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Active Today</span><Users size={16} className="text-blue-600" /></div>
-            <p className="text-2xl font-bold text-slate-900">{totalPracticedToday}<span className="text-sm text-slate-400 font-normal"> / {filtered.length}</span></p>
+            <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Active Today</span><Users size={16} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /></div>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{totalPracticedToday}<span className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 font-normal"> / {filtered.length}</span></p>
           </div>
           <div className="card">
-            <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Avg Score</span><BarChart3 size={16} className="text-primary-600" /></div>
-            <p className="text-2xl font-bold text-slate-900">{avgScoreAll}%</p>
+            <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Avg Score</span><BarChart3 size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{avgScoreAll}%</p>
           </div>
           <div className="card">
-            <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Total Sessions</span><Brain size={16} className="text-purple-600" /></div>
-            <p className="text-2xl font-bold text-slate-900">{totalAllSessions}</p>
+            <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Total Sessions</span><Brain size={16} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" /></div>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{totalAllSessions}</p>
           </div>
           <div className="card">
-            <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 uppercase">Streak 3+ Days</span><Zap size={16} className="text-amber-600" /></div>
-            <p className="text-2xl font-bold text-amber-600">{streak3Plus}</p>
+            <div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Streak 3+ Days</span><Zap size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /></div>
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{streak3Plus}</p>
           </div>
         </div>
 
         <div className="card">
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" size={18} />
               <input type="text" placeholder="Search students..." value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-10" />
             </div>
             <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="input sm:w-48">
               <option value="">All Classes</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+            <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg p-1">
               {(['streak', 'score', 'sessions'] as const).map(s => (
-                <button key={s} onClick={() => setSortBy(s)} className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize ${sortBy === s ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500'}`}>{s}</button>
+                <button key={s} onClick={() => setSortBy(s)} className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize ${sortBy === s ? 'bg-white text-primary-600 dark:text-primary-400 dark:text-primary-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}>{s}</button>
               ))}
             </div>
           </div>
@@ -149,47 +149,47 @@ export default function AdminStudentPracticePage() {
           {loading ? (
             <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-slate-500"><Users size={48} className="mx-auto mb-4 opacity-50" /><p>No students found</p></div>
+            <div className="text-center py-16 text-slate-500 dark:text-slate-400 dark:text-slate-400"><Users size={48} className="mx-auto mb-4 opacity-50" /><p>No students found</p></div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Student</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Class</th>
-                    <th className="text-center py-3 px-4 font-semibold text-slate-600">Streak</th>
-                    <th className="text-center py-3 px-4 font-semibold text-slate-600">Sessions</th>
-                    <th className="text-center py-3 px-4 font-semibold text-slate-600">Answered</th>
-                    <th className="text-center py-3 px-4 font-semibold text-slate-600">Avg Score</th>
-                    <th className="text-center py-3 px-4 font-semibold text-slate-600">Today</th>
-                    <th className="text-center py-3 px-4 font-semibold text-slate-600">Badges</th>
-                    <th className="text-right py-3 px-4 font-semibold text-slate-600">Last Practice</th>
+                  <tr className="border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
+                    <th className="text-left py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Student</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Class</th>
+                    <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Streak</th>
+                    <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Sessions</th>
+                    <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Answered</th>
+                    <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Avg Score</th>
+                    <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Today</th>
+                    <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Badges</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Last Practice</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((s) => (
-                    <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-xs font-bold text-primary-700">
+                          <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-xs font-bold text-primary-700 dark:text-primary-300 dark:text-primary-300">
                             {s.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">{s.name}</p>
-                            <p className="text-xs text-slate-400">{s.admission_number}</p>
+                            <p className="font-medium text-slate-900 dark:text-white dark:text-white">{s.name}</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{s.admission_number}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-slate-600">{s.class_name}</td>
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-400 dark:text-slate-400">{s.class_name}</td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${s.currentStreak >= 7 ? 'bg-amber-100 text-amber-700' : s.currentStreak >= 3 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${s.currentStreak >= 7 ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' : s.currentStreak >= 3 ? 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400'}`}>
                           <Zap size={12} /> {s.currentStreak}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center text-slate-700">{s.totalSessions}</td>
-                      <td className="py-3 px-4 text-center text-slate-700">{s.totalAnswered}</td>
+                      <td className="py-3 px-4 text-center text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.totalSessions}</td>
+                      <td className="py-3 px-4 text-center text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.totalAnswered}</td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`font-medium ${s.avgScore >= 70 ? 'text-green-600' : s.avgScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                        <span className={`font-medium ${s.avgScore >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : s.avgScore >= 40 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>
                           {s.avgScore}%
                         </span>
                       </td>
@@ -202,14 +202,14 @@ export default function AdminStudentPracticePage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         {s.badges > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-medium">
+                          <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 dark:text-amber-400 font-medium">
                             <Award size={12} /> {s.badges}
                           </span>
                         ) : (
-                          <span className="text-xs text-slate-400">-</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">-</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right text-xs text-slate-400">
+                      <td className="py-3 px-4 text-right text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">
                         {s.lastPractice ? new Date(s.lastPractice).toLocaleDateString() : 'Never'}
                       </td>
                     </tr>

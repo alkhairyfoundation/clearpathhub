@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -14,12 +14,12 @@ function BismillahPopup({ onClose }: { onClose: () => void }) {
           <BookOpen className="text-white" size={28} />
         </div>
         
-        <p className="text-3xl font-bold text-amber-600 mb-3">بِسْمِ اللَّهِ</p>
-        <p className="text-lg font-semibold text-amber-500 mb-2">In the Name of Allah</p>
-        <p className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">الرَّحْمَنِ الرَّحِيمِ</p>
-        <p className="text-slate-600 mb-6">The Most Gracious, the Most Merciful</p>
+        <p className="text-3xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400 mb-3">بِسْمِ اللَّهِ</p>
+        <p className="text-lg font-semibold text-amber-500 dark:text-amber-400 dark:text-amber-400 mb-2">In the Name of Allah</p>
+        <p className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white dark:text-white mb-2">الرَّحْمَنِ الرَّحِيمِ</p>
+        <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-6">The Most Gracious, the Most Merciful</p>
         
-        <p className="text-sm text-slate-500 mb-6 italic">
+        <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-6 italic">
           &quot;O my Lord, increase me in knowledge.&quot; — Quran 20:114
         </p>
 
@@ -106,7 +106,7 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-cp-green via-cp-green to-slate-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cp-gold/20 via-transparent to-transparent" />
@@ -142,37 +142,37 @@ function LoginPageContent() {
       {/* Right Panel - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-8 transition-colors lg:hidden">
+          <Link href="/" className="flex items-center gap-2 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white mb-8 transition-colors lg:hidden">
             <ArrowLeft size={18} />
             <span className="text-sm font-medium">Back to Home</span>
           </Link>
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 dark:border-slate-700">
             <div className="text-center mb-8">
               <div className="w-14 h-14 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cp-gold/25">
                 <GraduationCap className="text-white" size={24} />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Welcome Back</h2>
-              <p className="text-slate-500 text-sm mt-1">Sign in to continue your learning journey</p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Welcome Back</h2>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm mt-1">Sign in to continue your learning journey</p>
             </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                <AlertCircle size={20} className="text-red-500 shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl flex items-start gap-3">
+                <AlertCircle size={20} className="text-red-500 dark:text-red-400 dark:text-red-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700 dark:text-red-400 dark:text-red-400">{error}</p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Email Address</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-1.5">Email Address</label>
                 <div className="relative">
-                  <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Mail size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cp-gold/20 focus:border-cp-gold outline-none transition-all text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-cp-gold/20 focus:border-cp-gold outline-none transition-all text-sm"
                     placeholder="Enter your email"
                     required
                     autoFocus
@@ -181,18 +181,18 @@ function LoginPageContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-1.5">Password</label>
                 <div className="relative">
-                  <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cp-gold/20 focus:border-cp-gold outline-none transition-all text-sm"
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-cp-gold/20 focus:border-cp-gold outline-none transition-all text-sm"
                     placeholder="Enter your password"
                     required
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400">
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>

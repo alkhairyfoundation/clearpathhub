@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -92,9 +92,9 @@ export default function YearlyGoalsPage() {
   }
 
   const dimensionMeta = [
-    { key: 'academic', label: 'Academic Excellence', desc: 'Curriculum mastery, assessments, and comprehension', color: 'border-l-blue-500 bg-blue-50' },
-    { key: 'islamic', label: 'Islamic Character', desc: 'Akhlaq, Quran, Salah, discipline and leadership', color: 'border-l-emerald-500 bg-emerald-50' },
-    { key: 'skills', label: 'Life Skills', desc: 'Communication, problem-solving, creativity and leadership', color: 'border-l-purple-500 bg-purple-50' },
+    { key: 'academic', label: 'Academic Excellence', desc: 'Curriculum mastery, assessments, and comprehension', color: 'border-l-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20' },
+    { key: 'islamic', label: 'Islamic Character', desc: 'Akhlaq, Quran, Salah, discipline and leadership', color: 'border-l-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20' },
+    { key: 'skills', label: 'Life Skills', desc: 'Communication, problem-solving, creativity and leadership', color: 'border-l-purple-500 bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20' },
   ];
 
   const stats = {
@@ -118,14 +118,14 @@ export default function YearlyGoalsPage() {
     <DashboardLayout title="Year Goals" subtitle={sessionName}>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Year Goals</h1>
-            <p className="text-slate-500 mt-1">Your big picture targets for {sessionName}</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Year Goals</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Your big picture targets for {sessionName}</p>
           </div>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         <div className="card bg-gradient-to-r from-primary-600 to-primary-700 text-white">
           <div className="flex items-center justify-between mb-3">
@@ -151,8 +151,8 @@ export default function YearlyGoalsPage() {
         {goals.length === 0 ? (
           <div className="card text-center py-12">
             <TrendingUp className="mx-auto text-slate-300 mb-3" size={40} />
-            <p className="font-medium text-slate-500">No yearly goals yet</p>
-            <p className="text-sm text-slate-400 mt-1">Yearly goals are auto-generated from your academic session</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No yearly goals yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Yearly goals are auto-generated from your academic session</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -165,11 +165,11 @@ export default function YearlyGoalsPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <BookOpen size={18} className={dimGoal.status === 'completed' ? 'text-emerald-600' : 'text-primary-600'} />
-                        <h3 className="font-bold text-slate-900">{dim.label}</h3>
+                        <BookOpen size={18} className={dimGoal.status === 'completed' ? 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' : 'text-primary-600 dark:text-primary-400 dark:text-primary-400'} />
+                        <h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{dim.label}</h3>
                       </div>
-                      <p className="text-sm text-slate-600 mt-1">{dimGoal.goal_text}</p>
-                      <p className="text-xs text-slate-400 mt-1">{dim.desc}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-1">{dimGoal.goal_text}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{dim.desc}</p>
                     </div>
                     <div className="text-right ml-4 shrink-0">
                       <p className={`text-2xl font-bold ${color.textColor}`}>

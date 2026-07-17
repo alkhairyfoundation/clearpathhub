@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -83,53 +83,53 @@ export default function AdminPortfolioReportsPage() {
     <DashboardLayout title="Portfolio Reports" subtitle="Class-level portfolio analytics and progress distribution">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Portfolio Reports</h1>
-            <p className="text-slate-500 mt-1">Aggregate view of student growth portfolio data</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Portfolio Reports</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Aggregate view of student growth portfolio data</p>
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 size={32} className="animate-spin text-primary-600" />
+            <Loader2 size={32} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" />
           </div>
         ) : totalGoals === 0 ? (
           <div className="card text-center py-16">
             <BarChart3 className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No portfolio data yet</p>
-            <p className="text-sm text-slate-400 mt-1">Reports will appear once students set up their growth goals</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No portfolio data yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Reports will appear once students set up their growth goals</p>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="card text-center">
-                <p className="text-3xl font-bold text-primary-600">{totalGoals}</p>
-                <p className="text-sm text-slate-500 mt-1">Total Goals</p>
+                <p className="text-3xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{totalGoals}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Total Goals</p>
               </div>
               <div className="card text-center">
-                <p className="text-3xl font-bold text-amber-600">{pendingApprovals}</p>
-                <p className="text-sm text-slate-500 mt-1">Pending Approval</p>
+                <p className="text-3xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{pendingApprovals}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Pending Approval</p>
               </div>
               <div className="card text-center">
-                <p className="text-3xl font-bold text-emerald-600">{activeGoals}</p>
-                <p className="text-sm text-slate-500 mt-1">Active Goals</p>
+                <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 dark:text-emerald-400">{activeGoals}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Active Goals</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="card">
-                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><PieChart size={18} /> Archetype Distribution</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><PieChart size={18} /> Archetype Distribution</h3>
                 <div className="space-y-2">
                   {archetypeDistribution.map((a: any) => (
                     <div key={a.archetype}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-slate-700">{a.archetype}</span>
-                        <span className="text-slate-500">{a.count}</span>
+                        <span className="text-slate-700 dark:text-slate-300 dark:text-slate-300">{a.archetype}</span>
+                        <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{a.count}</span>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-2">
                         <div className="bg-primary-500 h-2 rounded-full transition-all" style={{ width: `${(a.count / maxArch) * 100}%` }} />
                       </div>
                     </div>
@@ -138,15 +138,15 @@ export default function AdminPortfolioReportsPage() {
               </div>
 
               <div className="card">
-                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><BarChart3 size={18} /> Most Selected Skills</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><BarChart3 size={18} /> Most Selected Skills</h3>
                 <div className="space-y-2">
                   {topSkills.map((s: any) => (
                     <div key={s.skill}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-slate-700">{s.skill}</span>
-                        <span className="text-slate-500">{s.count}</span>
+                        <span className="text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.skill}</span>
+                        <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{s.count}</span>
                       </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-2">
                         <div className="bg-secondary-500 h-2 rounded-full transition-all" style={{ width: `${(s.count / maxSkills) * 100}%` }} />
                       </div>
                     </div>
@@ -157,17 +157,17 @@ export default function AdminPortfolioReportsPage() {
 
             {Object.keys(rubricAverages).length > 0 && (
               <div className="card">
-                <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><Users size={18} /> Average Rubric Levels by Skill</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Users size={18} /> Average Rubric Levels by Skill</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {(Object.entries(rubricAverages) as [string, number][]).map(([skill, avg]) => {
                     const levelKey = avg <= 1.5 ? 'emerging' : avg <= 2.5 ? 'developing' : avg <= 3.5 ? 'secure' : 'strong';
                     return (
-                      <div key={skill} className="bg-slate-50 rounded-lg p-4">
-                        <p className="font-medium text-slate-900 text-sm">{skill}</p>
+                      <div key={skill} className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg p-4">
+                        <p className="font-medium text-slate-900 dark:text-white dark:text-white text-sm">{skill}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <div className={`w-2 h-2 rounded-full ${RUBRIC_COLORS[levelKey as keyof typeof RUBRIC_COLORS] || 'bg-slate-400'}`} />
-                          <span className="text-sm text-slate-600">Avg: {avg.toFixed(1)} / 4</span>
-                          <span className="text-xs text-slate-400">({RUBRIC_LABELS[levelKey as keyof typeof RUBRIC_LABELS] || levelKey})</span>
+                          <span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Avg: {avg.toFixed(1)} / 4</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">({RUBRIC_LABELS[levelKey as keyof typeof RUBRIC_LABELS] || levelKey})</span>
                         </div>
                       </div>
                     );

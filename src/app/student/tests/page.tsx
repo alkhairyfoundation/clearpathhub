@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -36,7 +36,7 @@ export default function StudentTestsPage() {
     <DashboardLayout title="Tests" subtitle="View and take tests">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900">Available Tests</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Available Tests</h1>
           <Link href="/student/results" className="btn-outline text-sm flex items-center gap-2"><FileText size={14} />View Results</Link>
         </div>
 
@@ -45,8 +45,8 @@ export default function StudentTestsPage() {
         ) : tests.length === 0 ? (
           <div className="card text-center py-16">
             <FileText className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No tests available yet</p>
-            <p className="text-sm text-slate-400 mt-2">Check back later or contact your teacher</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No tests available yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-2">Check back later or contact your teacher</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -55,18 +55,18 @@ export default function StudentTestsPage() {
               return (
                 <div key={test.id} className="card hover:shadow-lg transition-shadow">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-                      <FileText className="text-primary-600" size={24} />
+                    <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
+                      <FileText className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={24} />
                     </div>
                     {attempt && (
                       attempt.passed
-                        ? <span className="flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full"><CheckCircle size={12} /> Passed</span>
-                        : <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded-full"><XCircle size={12} /> Failed</span>
+                        ? <span className="flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400 dark:text-green-400 bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 px-2 py-1 rounded-full"><CheckCircle size={12} /> Passed</span>
+                        : <span className="flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400 dark:text-red-400 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 px-2 py-1 rounded-full"><XCircle size={12} /> Failed</span>
                     )}
                   </div>
-                  <h3 className="font-bold text-slate-900 mb-1">{test.title}</h3>
-                  <p className="text-sm text-slate-500 mb-3">{test.subject?.name} • {test.class?.name || 'All Classes'}</p>
-                  <div className="flex items-center gap-4 text-xs text-slate-500 mb-4">
+                  <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-1">{test.title}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-3">{test.subject?.name} • {test.class?.name || 'All Classes'}</p>
+                  <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">
                     <span className="flex items-center gap-1"><FileText size={14} />{test.total_marks} marks</span>
                     <span className="flex items-center gap-1"><Clock size={14} />{test.duration_minutes} min</span>
                     <span>Pass: {test.passing_score}%</span>

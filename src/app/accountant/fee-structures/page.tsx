@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -125,38 +125,38 @@ export default function FeeStructuresPage() {
     <DashboardLayout title="Fee Structures" subtitle="Create and publish term fees for each class">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div><h1 className="text-2xl font-bold text-slate-800">Fee Structures</h1><p className="text-slate-500">Create and manage term fee structures</p></div>
+          <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Fee Structures</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Create and manage term fee structures</p></div>
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />New Fee Structure</button>
         </div>
 
         {feeStructures.length === 0 ? (
           <div className="card text-center py-16">
             <DollarSign className="mx-auto text-gray-400 mb-4" size={48} />
-            <p className="text-slate-500 mb-2">No fee structures created yet</p>
-            <p className="text-sm text-slate-400">Create a fee structure to publish term fees that parents can view and pay against</p>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2">No fee structures created yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">Create a fee structure to publish term fees that parents can view and pay against</p>
             <button onClick={() => setShowModal(true)} className="btn-primary mt-4">Create Your First Fee Structure</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {feeStructures.map((fs: any) => (
-              <div key={fs.id} className={`card border-2 ${fs.status === 'published' ? 'border-green-200' : 'border-slate-200'}`}>
+              <div key={fs.id} className={`card border-2 ${fs.status === 'published' ? 'border-green-200 dark:border-green-900/40 dark:border-green-900/40' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-bold text-slate-900 text-lg">{fs.title}</h3>
-                    <p className="text-sm text-slate-500">{fs.class?.name} — {fs.term?.name || ''} {fs.academic_session?.name || ''}</p>
+                    <h3 className="font-bold text-slate-900 dark:text-white dark:text-white text-lg">{fs.title}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{fs.class?.name} — {fs.term?.name || ''} {fs.academic_session?.name || ''}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${fs.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>{fs.status}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${fs.status === 'published' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400'}`}>{fs.status}</span>
                 </div>
 
-                <p className="text-2xl font-bold text-slate-900 mb-3">{formatCurrency(fs.total_amount)}</p>
-                <p className="text-xs text-slate-400 mb-3">Due: {new Date(fs.due_date).toLocaleDateString()}</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white mb-3">{formatCurrency(fs.total_amount)}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mb-3">Due: {new Date(fs.due_date).toLocaleDateString()}</p>
 
                 <div className="flex items-center gap-2">
-                  <button onClick={() => togglePublish(fs.id, fs.status)} className={`flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg ${fs.status === 'published' ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+                  <button onClick={() => togglePublish(fs.id, fs.status)} className={`flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg ${fs.status === 'published' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300 hover:bg-amber-200' : 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 hover:bg-green-200'}`}>
                     {fs.status === 'published' ? <EyeOff size={14} /> : <Eye size={14} />}
                     {fs.status === 'published' ? 'Unpublish' : 'Publish'}
                   </button>
-                  <button onClick={() => handleDelete(fs.id)} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100">
+                  <button onClick={() => handleDelete(fs.id)} className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-600 dark:text-red-400 dark:text-red-400 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30">
                     <Trash2 size={14} />Delete
                   </button>
                 </div>
@@ -169,8 +169,8 @@ export default function FeeStructuresPage() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between p-6 border-b">
-                <h2 className="text-lg font-semibold text-slate-800">Create Fee Structure</h2>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Create Fee Structure</h2>
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -207,32 +207,32 @@ export default function FeeStructuresPage() {
 
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-slate-800">Fee Items</h3>
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Fee Items</h3>
                     <button onClick={addItem} className="btn-outline text-sm flex items-center gap-1"><Plus size={14} />Add Item</button>
                   </div>
 
                   {formData.items.length === 0 ? (
-                    <p className="text-sm text-slate-400 text-center py-4">No items added yet. Click "Add Item" to start building the fee breakdown.</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 text-center py-4">No items added yet. Click "Add Item" to start building the fee breakdown.</p>
                   ) : (
                     <div className="space-y-3">
                       {formData.items.map((item, index) => (
-                        <div key={index} className="flex gap-2 items-start p-3 bg-slate-50 rounded-lg">
+                        <div key={index} className="flex gap-2 items-start p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                           <div className="flex-1">
                             <input type="text" value={item.item_name} onChange={(e) => updateItem(index, 'item_name', e.target.value)} className="input text-sm" placeholder="e.g., Tuition" />
                           </div>
                           <div className="w-32">
                             <input type="number" value={item.amount} onChange={(e) => updateItem(index, 'amount', parseFloat(e.target.value) || 0)} className="input text-sm" placeholder="Amount" />
                           </div>
-                          <button onClick={() => removeItem(index)} className="p-2 hover:bg-red-100 rounded-lg mt-0.5"><X size={16} className="text-red-500" /></button>
+                          <button onClick={() => removeItem(index)} className="p-2 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded-lg mt-0.5"><X size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button>
                         </div>
                       ))}
                     </div>
                   )}
 
                   {formData.items.length > 0 && (
-                    <div className="flex justify-between items-center mt-3 p-3 bg-blue-50 rounded-lg">
-                      <span className="font-semibold text-slate-700">Total Amount</span>
-                      <span className="font-bold text-lg text-blue-700">{formatCurrency(totalAmount)}</span>
+                    <div className="flex justify-between items-center mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Total Amount</span>
+                      <span className="font-bold text-lg text-blue-700 dark:text-blue-300 dark:text-blue-300">{formatCurrency(totalAmount)}</span>
                     </div>
                   )}
                 </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -93,18 +93,18 @@ export default function AccountantProfilePage() {
     <DashboardLayout title="My Profile" subtitle="Manage your account and view financial overview">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-          <p className="text-slate-500 mt-1">Manage your account settings and view financial overview</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">My Profile</h1>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage your account settings and view financial overview</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="card">
-              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><User size={18} className="text-slate-400" />Personal Information</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><User size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Personal Information</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><label className="label">First Name</label><input value={formData.first_name} onChange={e => setFormData({...formData, first_name: e.target.value})} className="input" /></div>
                 <div><label className="label">Last Name</label><input value={formData.last_name} onChange={e => setFormData({...formData, last_name: e.target.value})} className="input" /></div>
-                <div><label className="label">Email</label><input value={formData.email} disabled className="input bg-slate-50 text-slate-500 cursor-not-allowed" type="email" /><p className="text-xs text-slate-400 mt-1">Email cannot be changed</p></div>
+                <div><label className="label">Email</label><input value={formData.email} disabled className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-400 cursor-not-allowed" type="email" /><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Email cannot be changed</p></div>
                 <div><label className="label">Phone</label><input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="input" /></div>
                 <div>
                   <label className="label">Avatar Photo</label>
@@ -118,16 +118,16 @@ export default function AccountantProfilePage() {
                   </div>
                 </div>
               </div>
-              {msg && <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${msg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{msg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{msg.text}</div>}
+              {msg && <div className={`mt-4 p-3 rounded-lg flex items-center gap-2 ${msg.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-700 dark:text-red-400 dark:text-red-400'}`}>{msg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{msg.text}</div>}
               <button onClick={handleSave} disabled={saving} className="btn-primary mt-4">{saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{saving ? 'Saving...' : 'Save Changes'}</button>
             </div>
 
             <div className="card">
-              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Shield size={18} className="text-slate-400" />Change Password</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Shield size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Change Password</h2>
               <div className="space-y-4 max-w-md">
-                <div><label className="label">New Password</label><div className="relative"><input type={showNew ? 'text' : 'password'} value={pwData.new} onChange={e => setPwData({...pwData, new: e.target.value})} className="input pr-10" placeholder="Enter new password" /><button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showNew ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></div>
+                <div><label className="label">New Password</label><div className="relative"><input type={showNew ? 'text' : 'password'} value={pwData.new} onChange={e => setPwData({...pwData, new: e.target.value})} className="input pr-10" placeholder="Enter new password" /><button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500">{showNew ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></div>
                 <div><label className="label">Confirm Password</label><input type={showNew ? 'text' : 'password'} value={pwData.confirm} onChange={e => setPwData({...pwData, confirm: e.target.value})} className="input" placeholder="Confirm new password" /></div>
-                {pwMsg && <div className={`p-3 rounded-lg flex items-center gap-2 ${pwMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{pwMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{pwMsg.text}</div>}
+                {pwMsg && <div className={`p-3 rounded-lg flex items-center gap-2 ${pwMsg.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-700 dark:text-red-400 dark:text-red-400'}`}>{pwMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}{pwMsg.text}</div>}
                 <button onClick={handlePasswordChange} disabled={pwLoading} className="btn-primary">{pwLoading ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}{pwLoading ? 'Updating...' : 'Update Password'}</button>
               </div>
             </div>
@@ -142,37 +142,37 @@ export default function AccountantProfilePage() {
                   <span className="text-3xl font-bold text-white">{profile.first_name[0]?.toUpperCase()}{profile.last_name[0]?.toUpperCase()}</span>
                 )}
               </div>
-              <h2 className="text-xl font-bold text-slate-900">{profile.first_name} {profile.last_name}</h2>
-              <p className="text-sm text-cyan-600 font-medium mt-1">Accountant</p>
-              {staffInfo && <p className="text-xs text-slate-400 mt-1">Staff ID: {staffInfo.staff_id}</p>}
-              <p className="text-sm text-slate-400 mt-1">{profile.email}</p>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{profile.first_name} {profile.last_name}</h2>
+              <p className="text-sm text-cyan-600 dark:text-cyan-400 dark:text-cyan-400 font-medium mt-1">Accountant</p>
+              {staffInfo && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Staff ID: {staffInfo.staff_id}</p>}
+              <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{profile.email}</p>
               {profile.phone && (
-                <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
+                <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
                   <Phone size={14} /><span>{profile.phone}</span>
                 </div>
               )}
-              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">
                 <Calendar size={14} />Joined {new Date(profile.created_at).toLocaleDateString()}
               </div>
             </div>
             <div className="card">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Financial Overview</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4">Financial Overview</h2>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"><div className="flex items-center gap-2"><TrendingUp size={16} className="text-green-600" /><span className="text-sm text-slate-600">Total Income</span></div><span className="font-bold text-green-600">₦{stats.totalIncome.toLocaleString()}</span></div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"><div className="flex items-center gap-2"><TrendingDown size={16} className="text-red-600" /><span className="text-sm text-slate-600">Total Expenses</span></div><span className="font-bold text-red-600">₦{stats.totalExpense.toLocaleString()}</span></div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"><div className="flex items-center gap-2"><Receipt size={16} className="text-amber-600" /><span className="text-sm text-slate-600">Pending Invoices</span></div><span className="font-bold text-amber-600">{stats.pendingInvoices}</span></div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"><div className="flex items-center gap-2"><FileText size={16} className="text-blue-600" /><span className="text-sm text-slate-600">Total Invoices</span></div><span className="font-bold text-blue-600">{stats.totalInvoices}</span></div>
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><div className="flex items-center gap-2"><TrendingUp size={16} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Total Income</span></div><span className="font-bold text-green-600 dark:text-green-400 dark:text-green-400">₦{stats.totalIncome.toLocaleString()}</span></div>
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><div className="flex items-center gap-2"><TrendingDown size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Total Expenses</span></div><span className="font-bold text-red-600 dark:text-red-400 dark:text-red-400">₦{stats.totalExpense.toLocaleString()}</span></div>
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><div className="flex items-center gap-2"><Receipt size={16} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Pending Invoices</span></div><span className="font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{stats.pendingInvoices}</span></div>
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><div className="flex items-center gap-2"><FileText size={16} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Total Invoices</span></div><span className="font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{stats.totalInvoices}</span></div>
               </div>
             </div>
 
             {staffInfo && (
               <div className="card">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Staff Details</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4">Staff Details</h2>
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between"><span className="text-slate-500">Staff ID</span><span className="font-medium">{staffInfo.staff_id}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Department</span><span className="font-medium">{staffInfo.department?.name || 'N/A'}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Designation</span><span className="font-medium">{staffInfo.designation || 'N/A'}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Employment Date</span><span className="font-medium">{staffInfo.date_of_employment ? new Date(staffInfo.date_of_employment).toLocaleDateString() : 'N/A'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Staff ID</span><span className="font-medium">{staffInfo.staff_id}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Department</span><span className="font-medium">{staffInfo.department?.name || 'N/A'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Designation</span><span className="font-medium">{staffInfo.designation || 'N/A'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Employment Date</span><span className="font-medium">{staffInfo.date_of_employment ? new Date(staffInfo.date_of_employment).toLocaleDateString() : 'N/A'}</span></div>
                 </div>
               </div>
             )}

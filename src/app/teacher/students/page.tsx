@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -230,12 +230,12 @@ export default function TeacherStudentsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">My Students</h1>
-              <p className="text-slate-500 mt-1">Add and manage your students</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">My Students</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Add and manage your students</p>
             </div>
           </div>
         <div className="flex gap-2">
@@ -252,7 +252,7 @@ export default function TeacherStudentsPage() {
       <div className="card">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" size={18} />
             <input
               type="text"
               placeholder="Search students..."
@@ -276,12 +276,12 @@ export default function TeacherStudentsPage() {
 
       {/* Success/Error Messages */}
       {success && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm flex items-center gap-2">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-center gap-2">
           <Check size={16} /> {success}
         </div>
       )}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2">
+        <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2">
           <AlertCircle size={16} /> {error}
         </div>
       )}
@@ -293,7 +293,7 @@ export default function TeacherStudentsPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div>
           </div>
         ) : filteredStudents.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
+          <div className="text-center py-16 text-slate-400 dark:text-slate-500 dark:text-slate-500">
             <GraduationCap size={48} className="mx-auto mb-3 opacity-50" />
             <p className="font-medium">No students found</p>
             <p className="text-sm mt-1">Click "Add Student" to create your first student</p>
@@ -301,49 +301,49 @@ export default function TeacherStudentsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
                 <tr>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Student</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Admission #</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Class</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Email</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider">Student</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider">Admission #</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider">Class</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Email</th>
+                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredStudents.map((student) => (
-                  <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={student.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                           {student.profile?.first_name?.[0]?.toUpperCase()}{student.profile?.last_name?.[0]?.toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <span className="font-semibold text-slate-900 text-sm block truncate">
+                          <span className="font-semibold text-slate-900 dark:text-white dark:text-white text-sm block truncate">
                             {student.profile?.first_name} {student.profile?.last_name}
                           </span>
-                          <span className="text-xs text-slate-400">{student.id.slice(0, 8)}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{student.id.slice(0, 8)}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-sm text-slate-600 font-mono">{student.admission_number}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600">{student.class?.name || '—'}</td>
-                    <td className="py-3 px-4 text-sm text-slate-600 hidden md:table-cell">{student.profile?.email}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 font-mono">{student.admission_number}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{student.class?.name || '—'}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{student.profile?.email}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEditModal(student)}
-                          className="p-1.5 hover:bg-primary-50 rounded-lg transition-colors"
+                          className="p-1.5 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg transition-colors"
                           title="Edit"
                         >
-                          <Edit size={15} className="text-primary-600" />
+                          <Edit size={15} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
                         </button>
                         <button
                           onClick={() => handleDelete(student)}
-                          className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg transition-colors"
                           title="Delete"
                         >
-                          <Trash2 size={15} className="text-red-600" />
+                          <Trash2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400" />
                         </button>
                       </div>
                     </td>
@@ -359,24 +359,24 @@ export default function TeacherStudentsPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
-              <h3 className="text-lg font-bold text-slate-900">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">
                 {editingStudent ? 'Edit Student' : 'Add New Student'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                <X size={20} className="text-slate-500" />
+              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
 
             <form onSubmit={handleSave} className="p-5 space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-start gap-2">
                   <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               )}
               {success && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm flex items-start gap-2">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-start gap-2">
                   <Check size={16} className="flex-shrink-0 mt-0.5" />
                   <span>{success}</span>
                 </div>
@@ -458,8 +458,8 @@ export default function TeacherStudentsPage() {
                 />
               </div>
 
-              <div className="border-t border-slate-200 pt-4">
-                <h4 className="text-sm font-semibold text-slate-700 mb-3">Additional Information</h4>
+              <div className="border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 pt-4">
+                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-3">Additional Information</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="label">Date of Birth</label>
@@ -533,33 +533,33 @@ export default function TeacherStudentsPage() {
       {showCredentialsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
-            <div className="p-5 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-900">Student Created Successfully</h3>
-              <p className="text-sm text-slate-500 mt-1">Please save these login credentials</p>
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Student Created Successfully</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Please save these login credentials</p>
             </div>
             <div className="p-5 space-y-4">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-xs text-amber-700 font-medium mb-2"> Save these credentials now. You won't be able to see the password again.</p>
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-lg">
+                <p className="text-xs text-amber-700 dark:text-amber-300 dark:text-amber-300 font-medium mb-2"> Save these credentials now. You won't be able to see the password again.</p>
               </div>
               <div>
-                <label className="label text-xs text-slate-500 uppercase font-semibold">Login Email</label>
-                <input type="text" value={newCredentials.email} readOnly className="input bg-slate-50 font-mono text-sm" />
+                <label className="label text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Login Email</label>
+                <input type="text" value={newCredentials.email} readOnly className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 font-mono text-sm" />
               </div>
               <div>
-                <label className="label text-xs text-slate-500 uppercase font-semibold">Password</label>
-                <input type="text" value={newCredentials.password} readOnly className="input bg-slate-50 font-mono text-sm" />
+                <label className="label text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Password</label>
+                <input type="text" value={newCredentials.password} readOnly className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 font-mono text-sm" />
               </div>
               {newCredentials.admissionNumber && (
                 <div>
-                  <label className="label text-xs text-slate-500 uppercase font-semibold">Admission Number</label>
-                  <input type="text" value={newCredentials.admissionNumber} readOnly className="input bg-slate-50 font-mono text-sm" />
+                  <label className="label text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Admission Number</label>
+                  <input type="text" value={newCredentials.admissionNumber} readOnly className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 font-mono text-sm" />
                 </div>
               )}
-              <div className="p-3 bg-primary-50 rounded-lg">
-                <p className="text-xs text-primary-700 font-medium">Login URL: <span className="font-mono">/login</span></p>
+              <div className="p-3 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg">
+                <p className="text-xs text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium">Login URL: <span className="font-mono">/login</span></p>
               </div>
             </div>
-            <div className="p-5 border-t border-slate-200">
+            <div className="p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
               <button onClick={() => setShowCredentialsModal(false)} className="btn-primary w-full">
                 I've Saved the Credentials
               </button>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { X, Upload, Download, AlertCircle, Check, Loader2, FileText } from 'lucide-react';
 
 interface Props {
@@ -154,57 +154,57 @@ export default function BulkStaffUpload({ isOpen, onClose, onSuccess }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-scale-in">
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Bulk Import Staff</h3>
-            <p className="text-sm text-slate-500 mt-1">Upload a CSV file to create multiple teachers, accountants, or admins at once</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Bulk Import Staff</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Upload a CSV file to create multiple teachers, accountants, or admins at once</p>
           </div>
-          <button onClick={handleClose} className="p-1.5 hover:bg-slate-100 rounded-lg">
-            <X size={20} className="text-slate-500" />
+          <button onClick={handleClose} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
           </button>
         </div>
 
         <div className="p-5 space-y-4 overflow-y-auto flex-1">
           {step === 'upload' && (
             <>
-              <div className="p-4 bg-primary-50 rounded-lg border border-primary-200">
-                <p className="text-sm text-primary-700">
+              <div className="p-4 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40">
+                <p className="text-sm text-primary-700 dark:text-primary-300 dark:text-primary-300">
                   <strong>Required columns:</strong> first_name, last_name, email, password, role
                 </p>
-                <p className="text-sm text-primary-600 mt-1">
+                <p className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">
                   <strong>Role must be:</strong> teacher, accountant, or admin
                 </p>
-                <p className="text-sm text-primary-600 mt-1">
+                <p className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">
                   <strong>Optional columns:</strong> department_name, designation, phone, salary, date_of_employment, staff_id, employee_id
                 </p>
               </div>
 
-              <button onClick={downloadTemplate} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 text-sm">
+              <button onClick={downloadTemplate} className="px-4 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-2 text-sm">
                 <Download size={16} /> Download CSV Template
               </button>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-300 rounded-xl p-10 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50/30 transition-all"
+                className="border-2 border-dashed border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-xl p-10 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20/30 transition-all"
               >
                 <Upload size={36} className="mx-auto text-slate-300 mb-3" />
-                <p className="font-medium text-slate-600">Click to select CSV file</p>
-                <p className="text-sm text-slate-400 mt-1">.csv files only, max 200 rows</p>
+                <p className="font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400">Click to select CSV file</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">.csv files only, max 200 rows</p>
                 <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileSelect} className="hidden" />
               </div>
 
               {parseErrors.length > 0 && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm font-medium text-red-700 mb-1">Validation Errors:</p>
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg">
+                  <p className="text-sm font-medium text-red-700 dark:text-red-400 dark:text-red-400 mb-1">Validation Errors:</p>
                   {parseErrors.map((err, i) => (
-                    <p key={i} className="text-xs text-red-600 flex items-center gap-1"><AlertCircle size={12} /> {err}</p>
+                    <p key={i} className="text-xs text-red-600 dark:text-red-400 dark:text-red-400 flex items-center gap-1"><AlertCircle size={12} /> {err}</p>
                   ))}
                 </div>
               )}
 
               {apiError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-700 flex items-center gap-2"><AlertCircle size={16} /> {apiError}</p>
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg">
+                  <p className="text-sm text-red-700 dark:text-red-400 dark:text-red-400 flex items-center gap-2"><AlertCircle size={16} /> {apiError}</p>
                 </div>
               )}
             </>
@@ -213,45 +213,45 @@ export default function BulkStaffUpload({ isOpen, onClose, onSuccess }: Props) {
           {step === 'preview' && (
             <>
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">
                   <FileText size={16} className="inline mr-1" />
                   {rows.length} staff member{rows.length !== 1 ? 's' : ''} detected
                 </p>
-                <button onClick={() => { reset(); }} className="text-sm text-primary-600 hover:underline">Choose different file</button>
+                <button onClick={() => { reset(); }} className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:underline">Choose different file</button>
               </div>
 
               {parseErrors.length > 0 && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-xs font-medium text-amber-700 mb-1">Warnings:</p>
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-lg">
+                  <p className="text-xs font-medium text-amber-700 dark:text-amber-300 dark:text-amber-300 mb-1">Warnings:</p>
                   {parseErrors.map((err, i) => (
-                    <p key={i} className="text-xs text-amber-600">{err}</p>
+                    <p key={i} className="text-xs text-amber-600 dark:text-amber-400 dark:text-amber-400">{err}</p>
                   ))}
                 </div>
               )}
 
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
+              <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-xl">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-slate-50">
-                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">#</th>
-                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Name</th>
-                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Email</th>
-                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Role</th>
+                    <tr className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400">#</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400">Name</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400">Email</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400">Role</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.slice(0, 10).map((row, i) => (
-                      <tr key={i} className="border-t border-slate-100">
-                        <td className="py-2 px-3 text-slate-400">{i + 1}</td>
-                        <td className="py-2 px-3 font-medium text-slate-900">{row.first_name} {row.last_name}</td>
-                        <td className="py-2 px-3 text-slate-600">{row.email}</td>
-                        <td className="py-2 px-3"><span className="text-xs px-1.5 py-0.5 rounded-full bg-primary-100 text-primary-700">{row.role}</span></td>
+                      <tr key={i} className="border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
+                        <td className="py-2 px-3 text-slate-400 dark:text-slate-500 dark:text-slate-500">{i + 1}</td>
+                        <td className="py-2 px-3 font-medium text-slate-900 dark:text-white dark:text-white">{row.first_name} {row.last_name}</td>
+                        <td className="py-2 px-3 text-slate-600 dark:text-slate-400 dark:text-slate-400">{row.email}</td>
+                        <td className="py-2 px-3"><span className="text-xs px-1.5 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300">{row.role}</span></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 {rows.length > 10 && (
-                  <div className="p-3 bg-slate-50 text-center text-xs text-slate-500 border-t border-slate-200">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
                     ...and {rows.length - 10} more row{rows.length - 10 !== 1 ? 's' : ''}
                   </div>
                 )}
@@ -261,32 +261,32 @@ export default function BulkStaffUpload({ isOpen, onClose, onSuccess }: Props) {
 
           {step === 'importing' && (
             <div className="text-center py-12">
-              <Loader2 size={40} className="mx-auto text-primary-600 animate-spin mb-4" />
-              <p className="font-medium text-slate-700">Importing {rows.length} staff member{rows.length !== 1 ? 's' : ''}...</p>
-              <p className="text-sm text-slate-500 mt-1">Creating accounts and profiles. This may take a moment.</p>
+              <Loader2 size={40} className="mx-auto text-primary-600 dark:text-primary-400 dark:text-primary-400 animate-spin mb-4" />
+              <p className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Importing {rows.length} staff member{rows.length !== 1 ? 's' : ''}...</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Creating accounts and profiles. This may take a moment.</p>
             </div>
           )}
 
           {step === 'results' && (
             <>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
-                  <Check size={24} className="mx-auto text-emerald-600 mb-1" />
-                  <p className="text-2xl font-bold text-emerald-700">{results.filter(r => r.success).length}</p>
-                  <p className="text-xs text-emerald-600">Imported</p>
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-xl text-center">
+                  <Check size={24} className="mx-auto text-emerald-600 dark:text-emerald-400 dark:text-emerald-400 mb-1" />
+                  <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300 dark:text-emerald-300">{results.filter(r => r.success).length}</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 dark:text-emerald-400">Imported</p>
                 </div>
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-center">
-                  <AlertCircle size={24} className="mx-auto text-red-600 mb-1" />
-                  <p className="text-2xl font-bold text-red-700">{results.filter(r => !r.success).length}</p>
-                  <p className="text-xs text-red-600">Failed</p>
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl text-center">
+                  <AlertCircle size={24} className="mx-auto text-red-600 dark:text-red-400 dark:text-red-400 mb-1" />
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-400 dark:text-red-400">{results.filter(r => !r.success).length}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 dark:text-red-400">Failed</p>
                 </div>
               </div>
 
               {results.filter(r => !r.success).length > 0 && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg max-h-40 overflow-y-auto">
-                  <p className="text-xs font-semibold text-red-700 mb-2">Failed Rows:</p>
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg max-h-40 overflow-y-auto">
+                  <p className="text-xs font-semibold text-red-700 dark:text-red-400 dark:text-red-400 mb-2">Failed Rows:</p>
                   {results.filter(r => !r.success).map(r => (
-                    <p key={r.row} className="text-xs text-red-600 mb-1">
+                    <p key={r.row} className="text-xs text-red-600 dark:text-red-400 dark:text-red-400 mb-1">
                       Row {r.row} ({r.email}): {r.error}
                     </p>
                   ))}
@@ -294,10 +294,10 @@ export default function BulkStaffUpload({ isOpen, onClose, onSuccess }: Props) {
               )}
 
               {results.filter(r => r.success).length > 0 && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg max-h-40 overflow-y-auto">
-                  <p className="text-xs font-semibold text-emerald-700 mb-2">Created Staff (first 10):</p>
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg max-h-40 overflow-y-auto">
+                  <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 mb-2">Created Staff (first 10):</p>
                   {results.filter(r => r.success).slice(0, 10).map(r => (
-                    <p key={r.row} className="text-xs text-emerald-600 mb-1">
+                    <p key={r.row} className="text-xs text-emerald-600 dark:text-emerald-400 dark:text-emerald-400 mb-1">
                       Row {r.row}: {r.email} — {r.staff_id}
                     </p>
                   ))}
@@ -307,7 +307,7 @@ export default function BulkStaffUpload({ isOpen, onClose, onSuccess }: Props) {
           )}
         </div>
 
-        <div className="p-5 border-t border-slate-200 flex gap-3">
+        <div className="p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 flex gap-3">
           {step === 'upload' && (
             <button onClick={handleClose} className="btn-ghost flex-1">Cancel</button>
           )}

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -49,7 +49,7 @@ export default function StudentQuizzesPage() {
     <DashboardLayout title="Quizzes" subtitle="View and take quizzes">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900">Available Quizzes</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Available Quizzes</h1>
           <Link href="/student/results" className="btn-outline text-sm flex items-center gap-2"><FileText size={14} />View Results</Link>
         </div>
 
@@ -58,7 +58,7 @@ export default function StudentQuizzesPage() {
         ) : quizzes.length === 0 ? (
           <div className="card text-center py-16">
             <Award className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No quizzes available yet</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No quizzes available yet</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -67,18 +67,18 @@ export default function StudentQuizzesPage() {
               return (
                 <div key={quiz.id} className="card hover:shadow-lg transition-shadow">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                      <Award className="text-purple-600" size={24} />
+                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                      <Award className="text-purple-600 dark:text-purple-400 dark:text-purple-400" size={24} />
                     </div>
                     {attempt && (
                       attempt.passed
-                        ? <span className="flex items-center gap-1 text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full"><CheckCircle size={12} /> Passed</span>
-                        : <span className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded-full"><XCircle size={12} /> Failed</span>
+                        ? <span className="flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400 dark:text-green-400 bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 px-2 py-1 rounded-full"><CheckCircle size={12} /> Passed</span>
+                        : <span className="flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400 dark:text-red-400 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 px-2 py-1 rounded-full"><XCircle size={12} /> Failed</span>
                     )}
                   </div>
-                  <h3 className="font-bold text-slate-900 mb-1">{quiz.title}</h3>
-                  <p className="text-sm text-slate-500 mb-3">{quiz.session?.title || quiz.description || 'No description'}</p>
-                  <div className="flex items-center gap-4 text-xs text-slate-500 mb-4">
+                  <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-1">{quiz.title}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-3">{quiz.session?.title || quiz.description || 'No description'}</p>
+                  <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">
                     <span className="flex items-center gap-1"><Award size={14} />{quiz.questions?.length || 0} questions</span>
                     <span className="flex items-center gap-1"><Clock size={14} />{quiz.time_limit} min</span>
                     <span>Pass: {quiz.passing_score}%</span>

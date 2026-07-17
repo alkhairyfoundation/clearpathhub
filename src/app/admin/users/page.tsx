@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -15,8 +15,8 @@ import BulkStaffUpload from '@/components/BulkStaffUpload';
 import type { Profile, UserRole, Student } from '@/types';
 
 const roleConfig: Record<UserRole, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  admin: { label: 'Admin', color: 'text-primary-700', bg: 'bg-primary-100', icon: <Users size={14} /> },
-  teacher: { label: 'Teacher', color: 'text-emerald-700', bg: 'bg-emerald-100', icon: <UserCheck size={14} /> },
+  admin: { label: 'Admin', color: 'text-primary-700 dark:text-primary-300 dark:text-primary-300', bg: 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30', icon: <Users size={14} /> },
+  teacher: { label: 'Teacher', color: 'text-emerald-700 dark:text-emerald-300 dark:text-emerald-300', bg: 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30', icon: <UserCheck size={14} /> },
   student: { label: 'Student', color: 'text-accent-700', bg: 'bg-accent-100', icon: <GraduationCap size={14} /> },
   parent: { label: 'Parent', color: 'text-secondary-700', bg: 'bg-secondary-100', icon: <UserMinus size={14} /> },
   accountant: { label: 'Accountant', color: 'text-success-700', bg: 'bg-success-100', icon: <DollarSign size={14} /> },
@@ -309,6 +309,17 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
           body: JSON.stringify({
             ...formData,
             subject_ids: formData.role === 'teacher' ? teacherSubjectIds : undefined,
+            ...(formData.role === 'student' ? {
+              date_of_birth: studentData.date_of_birth || null,
+              gender: studentData.gender || null,
+              address: studentData.address || null,
+              guardian_name: studentData.guardian_name || null,
+              guardian_phone: studentData.guardian_phone || null,
+              guardian_email: studentData.guardian_email || null,
+              blood_group: studentData.blood_group || null,
+              emergency_contact: studentData.emergency_contact || null,
+              admission_number: studentData.admission_number || undefined,
+            } : {}),
           }),
         });
 
@@ -452,8 +463,8 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
-          <p className="text-slate-500 mt-1">Create, edit, and manage all users</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">User Management</h1>
+          <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Create, edit, and manage all users</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => openCreateModal('teacher')} className="btn-primary flex items-center gap-2">
@@ -481,7 +492,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       <div className="card">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" size={18} />
             <input
               type="text" placeholder="Search by name, email, or phone..."
               value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -494,7 +505,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                 key={role}
                 onClick={() => setSelectedRole(role)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  selectedRole === role ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  selectedRole === role ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
                 }`}
               >
                 {role === 'all' ? 'All' : roleConfig[role]?.label || role}
@@ -514,7 +525,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
         </div>
       </div>
       {selectedClass && (
-        <div className="flex items-center gap-2 text-sm text-primary-700 bg-primary-50 px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-2 text-sm text-primary-700 dark:text-primary-300 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 px-3 py-2 rounded-lg">
           <span>Filtered by class</span>
           <button onClick={() => setSelectedClass('')} className="ml-1 hover:underline">Clear</button>
         </div>
@@ -522,12 +533,12 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
 
       {/* Success/Error Messages */}
       {success && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm flex items-center gap-2">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-center gap-2">
           <Check size={16} /> {success}
         </div>
       )}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2">
+        <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2">
           <AlertCircle size={16} /> {error}
         </div>
       )}
@@ -539,7 +550,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
+          <div className="text-center py-16 text-slate-400 dark:text-slate-500 dark:text-slate-500">
             <Users size={48} className="mx-auto mb-3 opacity-50" />
             <p className="font-medium">No users found</p>
             <p className="text-sm mt-1">Try adjusting your search or filters</p>
@@ -547,83 +558,83 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
                 <tr>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Class</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Phone</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Created</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider">User</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider">Email</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider">Role</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Class</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">Phone</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider hidden lg:table-cell">Created</th>
+                  <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={user.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                           {user.first_name[0]?.toUpperCase()}{user.last_name[0]?.toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <span className="font-semibold text-slate-900 text-sm block truncate">
+                          <span className="font-semibold text-slate-900 dark:text-white dark:text-white text-sm block truncate">
                             {user.first_name} {user.last_name}
                           </span>
-                          <span className="text-xs text-slate-400">{user.id.slice(0, 8)}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{user.id.slice(0, 8)}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-sm text-slate-600">{user.email}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{user.email}</td>
                     <td className="py-3 px-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${roleConfig[user.role]?.bg} ${roleConfig[user.role]?.color}`}>
                         {roleConfig[user.role]?.icon}
                         {roleConfig[user.role]?.label}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-sm text-slate-600 hidden md:table-cell">
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">
                       {user.role === 'student' ? (() => {
                         const cId = studentClassMap[user.id];
                         const c = allClasses.find(cl => cl.id === cId);
                         return c ? c.name : '—';
                       })() : '—'}
                     </td>
-                    <td className="py-3 px-4 text-sm text-slate-600 hidden md:table-cell">{user.phone || '—'}</td>
-                    <td className="py-3 px-4 text-sm text-slate-500 hidden lg:table-cell">
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{user.phone || '—'}</td>
+                    <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden lg:table-cell">
                       {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setViewingUser(user)}
-                          className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                          className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg transition-colors"
                           title="View Details"
                         >
-                          <Eye size={15} className="text-slate-500" />
+                          <Eye size={15} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                         </button>
                         {user.role === 'parent' && (
                           <button
                             onClick={() => { setLinkingParent(user); setSelectedStudentIds([]); fetchAvailableStudents(); setShowLinkModal(true); }}
-                            className="p-1.5 hover:bg-emerald-50 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 rounded-lg transition-colors"
                             title="Link Students"
                           >
-                            <Link2 size={15} className="text-emerald-600" />
+                            <Link2 size={15} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" />
                           </button>
                         )}
                         <button
                           onClick={() => openEditModal(user)}
-                          className="p-1.5 hover:bg-primary-50 rounded-lg transition-colors"
+                          className="p-1.5 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg transition-colors"
                           title="Edit"
                         >
-                          <Edit size={15} className="text-primary-600" />
+                          <Edit size={15} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
                         </button>
                         <button
                           onClick={() => handleDelete(user)}
                           disabled={deleting === user.id}
-                          className="p-1.5 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
                           title="Delete"
                         >
-                          {deleting === user.id ? <Loader2 size={15} className="text-red-600 animate-spin" /> : <Trash2 size={15} className="text-red-600" />}
+                          {deleting === user.id ? <Loader2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400 animate-spin" /> : <Trash2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400" />}
                         </button>
                       </div>
                     </td>
@@ -634,7 +645,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
           </div>
         )}
         {!loading && filteredUsers.length > 0 && (
-          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
+          <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
             Showing {filteredUsers.length} of {users.length} users
           </div>
         )}
@@ -644,24 +655,24 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
-              <h3 className="text-lg font-bold text-slate-900">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">
                 {editingUser ? 'Edit User' : `Create ${roleConfig[formData.role]?.label || 'User'}`}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                <X size={20} className="text-slate-500" />
+              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
 
             <form onSubmit={handleSave} className="p-5 space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-start gap-2">
                   <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               )}
               {success && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm flex items-start gap-2">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-start gap-2">
                   <Check size={16} className="flex-shrink-0 mt-0.5" />
                   <span>{success}</span>
                 </div>
@@ -691,8 +702,8 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
               ) : (
                 <div>
                   <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" checked={resetPasswordMode} onChange={(e) => { setResetPasswordMode(e.target.checked); if (!e.target.checked) setFormData({ ...formData, password: '' }); }} className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
-                    <span className="text-sm font-medium text-slate-700">Reset Password</span>
+                    <input type="checkbox" checked={resetPasswordMode} onChange={(e) => { setResetPasswordMode(e.target.checked); if (!e.target.checked) setFormData({ ...formData, password: '' }); }} className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 dark:border-slate-600 text-primary-600 dark:text-primary-400 dark:text-primary-400 focus:ring-primary-500" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">Reset Password</span>
                   </label>
                   {resetPasswordMode && (
                     <div className="mt-3">
@@ -734,20 +745,20 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
               {formData.role === 'teacher' && (
                 <div>
                   <label className="label">Assigned Subjects</label>
-                  <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
+                  <div className="max-h-56 overflow-y-auto border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg p-2 space-y-1">
                     {allSubjects.length === 0 && (
-                      <p className="text-sm text-slate-400 p-2">No subjects found. Create subjects first in the Subjects page.</p>
+                      <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 p-2">No subjects found. Create subjects first in the Subjects page.</p>
                     )}
                     {allSubjects.map(s => (
-                      <label key={s.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                      <label key={s.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded cursor-pointer">
                         <input type="checkbox" checked={teacherSubjectIds.includes(s.id)} onChange={(e) => {
                           if (e.target.checked) {
                             setTeacherSubjectIds([...teacherSubjectIds, s.id]);
                           } else {
                             setTeacherSubjectIds(teacherSubjectIds.filter(id => id !== s.id));
                           }
-                        }} className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
-                        <span className="text-sm text-slate-700">{s.name} (<span className="text-slate-500">{s.code}</span>{s.class ? ` — ${s.class.name}` : ''})</span>
+                        }} className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 dark:border-slate-600 text-primary-600 dark:text-primary-400 dark:text-primary-400 focus:ring-primary-500" />
+                        <span className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.name} (<span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{s.code}</span>{s.class ? ` — ${s.class.name}` : ''})</span>
                       </label>
                     ))}
                   </div>
@@ -765,8 +776,8 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                       ))}
                     </select>
                   </div>
-                  <div className="border-t border-slate-200 pt-4">
-                    <h4 className="text-sm font-semibold text-slate-700 mb-3">Additional Student Information</h4>
+                  <div className="border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 pt-4">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-3">Additional Student Information</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="label">Date of Birth</label>
@@ -843,14 +854,14 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {viewingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setViewingUser(null)}>
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
-              <h3 className="text-lg font-bold text-slate-900">User Details</h3>
-              <button onClick={() => setViewingUser(null)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                <X size={20} className="text-slate-500" />
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">User Details</h3>
+              <button onClick={() => setViewingUser(null)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
             <div className="p-5 space-y-4">
-              <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-700 dark:border-slate-700">
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl overflow-hidden ${!viewingUser.avatar_url ? 'bg-gradient-to-br from-primary-500 to-primary-600' : ''}`}>
                   {viewingUser.avatar_url ? (
                     <img src={viewingUser.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -859,7 +870,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                   )}
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-slate-900">{viewingUser.first_name} {viewingUser.last_name}</h4>
+                  <h4 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{viewingUser.first_name} {viewingUser.last_name}</h4>
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mt-1 ${roleConfig[viewingUser.role]?.bg} ${roleConfig[viewingUser.role]?.color}`}>
                     {roleConfig[viewingUser.role]?.icon}
                     {roleConfig[viewingUser.role]?.label}
@@ -867,113 +878,113 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm text-slate-500">Email</span>
-                  <span className="text-sm font-medium text-slate-900">{viewingUser.email}</span>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                  <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Email</span>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{viewingUser.email}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm text-slate-500">Phone</span>
-                  <span className="text-sm font-medium text-slate-900">{viewingUser.phone || '—'}</span>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                  <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Phone</span>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{viewingUser.phone || '—'}</span>
                 </div>
                 {viewingUser.role === 'student' && userExtraInfo?.class && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Class</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.class?.name || 'N/A'}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Class</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.class?.name || 'N/A'}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.admission_number && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Admission No.</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.admission_number}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Admission No.</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.admission_number}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.gender && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Gender</span>
-                    <span className="text-sm font-medium text-slate-900 capitalize">{userExtraInfo.gender}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Gender</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white capitalize">{userExtraInfo.gender}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.date_of_birth && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Date of Birth</span>
-                    <span className="text-sm font-medium text-slate-900">{new Date(userExtraInfo.date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Date of Birth</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{new Date(userExtraInfo.date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.address && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Address</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.address}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Address</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.address}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.guardian_name && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Guardian</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.guardian_name}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Guardian</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.guardian_name}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.guardian_phone && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Guardian Phone</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.guardian_phone}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Guardian Phone</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.guardian_phone}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.blood_group && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Blood Group</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.blood_group}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Blood Group</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.blood_group}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.emergency_contact && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Emergency Contact</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.emergency_contact}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Emergency Contact</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.emergency_contact}</span>
                   </div>
                 )}
                 {(viewingUser.role === 'teacher' || viewingUser.role === 'accountant') && userExtraInfo?.staff_id && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Staff ID</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.staff_id}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Staff ID</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.staff_id}</span>
                   </div>
                 )}
                 {(viewingUser.role === 'teacher' || viewingUser.role === 'accountant') && userExtraInfo?.department && (
-                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500">Department</span>
-                    <span className="text-sm font-medium text-slate-900">{userExtraInfo.department?.name || 'N/A'}</span>
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Department</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.department?.name || 'N/A'}</span>
                   </div>
                 )}
                 {viewingUser.role === 'teacher' && userExtraInfo?.subjects && userExtraInfo.subjects.length > 0 && (
-                  <div className="py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500 block mb-1">Assigned Subjects ({userExtraInfo.subjects.length})</span>
+                  <div className="py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 block mb-1">Assigned Subjects ({userExtraInfo.subjects.length})</span>
                     {userExtraInfo.subjects.map((s: any, i: number) => (
-                      <span key={i} className="text-sm font-medium text-slate-900 block">
+                      <span key={i} className="text-sm font-medium text-slate-900 dark:text-white dark:text-white block">
                         {s.name} ({s.code}) — {s.class?.name || 'No class'}
                       </span>
                     ))}
                   </div>
                 )}
                 {viewingUser.role === 'parent' && userExtraInfo?.children && (
-                  <div className="py-2 px-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-500 block mb-1">Linked Children ({userExtraInfo.children.length})</span>
+                  <div className="py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 block mb-1">Linked Children ({userExtraInfo.children.length})</span>
                     {userExtraInfo.children.map((c: any, i: number) => (
-                      <span key={i} className="text-sm font-medium text-slate-900 block">
+                      <span key={i} className="text-sm font-medium text-slate-900 dark:text-white dark:text-white block">
                         {c.student?.profile?.first_name} {c.student?.profile?.last_name} ({c.student?.admission_number})
                       </span>
                     ))}
                   </div>
                 )}
-                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm text-slate-500">User ID</span>
-                  <span className="text-sm font-mono text-slate-600">{viewingUser.id}</span>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                  <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">User ID</span>
+                  <span className="text-sm font-mono text-slate-600 dark:text-slate-400 dark:text-slate-400">{viewingUser.id}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm text-slate-500">Created</span>
-                  <span className="text-sm font-medium text-slate-900">
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                  <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Created</span>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">
                     {new Date(viewingUser.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
-                  <span className="text-sm text-slate-500">Last Updated</span>
-                  <span className="text-sm font-medium text-slate-900">
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                  <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Last Updated</span>
+                  <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">
                     {new Date(viewingUser.updated_at || viewingUser.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
@@ -993,15 +1004,15 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {showLinkModal && linkingParent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">Link Students to {linkingParent.first_name}</h3>
-              <button onClick={() => setShowLinkModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                <X size={20} className="text-slate-500" />
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Link Students to {linkingParent.first_name}</h3>
+              <button onClick={() => setShowLinkModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
 
               <div className="p-5 space-y-4">
-              <p className="text-sm text-slate-600">Manage students linked to {linkingParent.first_name} {linkingParent.last_name}:</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Manage students linked to {linkingParent.first_name} {linkingParent.last_name}:</p>
 
               {/* Currently linked students */}
               {(() => {
@@ -1009,21 +1020,21 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                 if (linkedStudents.length > 0) {
                   return (
                     <div>
-                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Currently Linked</h4>
+                      <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Currently Linked</h4>
                       <div className="space-y-2 mb-4">
                         {linkedStudents.map((student) => (
-                          <div key={student.id} className="flex items-center gap-3 p-3 rounded-lg border border-emerald-200 bg-emerald-50">
+                          <div key={student.id} className="flex items-center gap-3 p-3 rounded-lg border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20">
                             <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                               {student.profile?.first_name?.[0] || '?'}
                             </div>
-                            <span className="font-medium text-sm text-slate-800 flex-1">
+                            <span className="font-medium text-sm text-slate-800 dark:text-slate-200 dark:text-slate-200 flex-1">
                               {student.profile?.first_name} {student.profile?.last_name}
                             </span>
-                            <span className="text-xs text-slate-400">{student.admission_number}</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{student.admission_number}</span>
                             <button
                               onClick={() => handleUnlinkStudent(student.id)}
                               disabled={saving}
-                              className="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 hover:bg-red-50 rounded"
+                              className="text-xs text-red-600 dark:text-red-400 dark:text-red-400 hover:text-red-700 dark:text-red-400 dark:text-red-400 font-medium px-2 py-1 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded"
                             >
                               Unlink
                             </button>
@@ -1037,13 +1048,13 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
               })()}
 
               {availableStudents.length === 0 ? (
-                <div className="text-center py-8 text-slate-400">
+                <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500">
                   <GraduationCap size={32} className="mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No students found. Create students first.</p>
                 </div>
               ) : (
                 <>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">All Students</h4>
+                  <h4 className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">All Students</h4>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {availableStudents.map((student) => {
                       const isSelected = selectedStudentIds.includes(student.id);
@@ -1051,7 +1062,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                         <label
                           key={student.id}
                           className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                            isSelected ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 hover:bg-slate-50'
+                            isSelected ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800'
                           }`}
                         >
                           <input
@@ -1065,17 +1076,17 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                                 setSelectedStudentIds(selectedStudentIds.filter(id => id !== student.id));
                               }
                             }}
-                            className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 disabled:opacity-40"
+                            className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 dark:border-slate-600 text-emerald-600 dark:text-emerald-400 dark:text-emerald-400 focus:ring-emerald-500 disabled:opacity-40"
                           />
                           <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                             {student.profile?.first_name?.[0] || '?'}
                           </div>
-                          <span className="font-medium text-sm text-slate-800 flex-1">
+                          <span className="font-medium text-sm text-slate-800 dark:text-slate-200 dark:text-slate-200 flex-1">
                             {student.profile?.first_name} {student.profile?.last_name}
                           </span>
-                          <span className="text-xs text-slate-400">{student.admission_number}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{student.admission_number}</span>
                           {student.parent && student.parent_id !== linkingParent.id && (
-                            <span className="text-xs text-amber-600">(linked to {student.parent.first_name})</span>
+                            <span className="text-xs text-amber-600 dark:text-amber-400 dark:text-amber-400">(linked to {student.parent.first_name})</span>
                           )}
                         </label>
                       );
@@ -1108,27 +1119,27 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {showCredentialsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
-            <div className="p-5 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-900">User Created Successfully</h3>
-              <p className="text-sm text-slate-500 mt-1">Please save these login credentials</p>
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">User Created Successfully</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Please save these login credentials</p>
             </div>
             <div className="p-5 space-y-4">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-xs text-amber-700 font-medium mb-2">⚠️ Save these credentials now. You won't be able to see the password again.</p>
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-lg">
+                <p className="text-xs text-amber-700 dark:text-amber-300 dark:text-amber-300 font-medium mb-2">⚠️ Save these credentials now. You won't be able to see the password again.</p>
               </div>
               <div>
-                <label className="label text-xs text-slate-500 uppercase font-semibold">Login Email</label>
-                <input type="text" value={newCredentials.email} readOnly className="input bg-slate-50 font-mono text-sm" />
+                <label className="label text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Login Email</label>
+                <input type="text" value={newCredentials.email} readOnly className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 font-mono text-sm" />
               </div>
               <div>
-                <label className="label text-xs text-slate-500 uppercase font-semibold">Password</label>
-                <input type="text" value={newCredentials.password} readOnly className="input bg-slate-50 font-mono text-sm" />
+                <label className="label text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Password</label>
+                <input type="text" value={newCredentials.password} readOnly className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 font-mono text-sm" />
               </div>
-              <div className="p-3 bg-primary-50 rounded-lg">
-                <p className="text-xs text-primary-700 font-medium">Login URL: <span className="font-mono">/login</span></p>
+              <div className="p-3 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg">
+                <p className="text-xs text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium">Login URL: <span className="font-mono">/login</span></p>
               </div>
             </div>
-            <div className="p-5 border-t border-slate-200">
+            <div className="p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
               <button onClick={() => setShowCredentialsModal(false)} className="btn-primary w-full">
                 I've Saved the Credentials
               </button>

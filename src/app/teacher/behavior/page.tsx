@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -116,12 +116,12 @@ export default function TeacherBehaviorPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Behavioral Reports</h1>
-              <p className="text-slate-500">Weekly behavior reports for students</p>
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Behavioral Reports</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Weekly behavior reports for students</p>
             </div>
           </div>
           <button onClick={() => { getWeekRange(); setShowModal(true); }} className="btn-primary flex items-center justify-center gap-2">
@@ -129,13 +129,13 @@ export default function TeacherBehaviorPage() {
           </button>
         </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
           </div>
         ) : reports.length === 0 ? (
-          <div className="text-center py-20 text-slate-500">
+          <div className="text-center py-20 text-slate-500 dark:text-slate-400 dark:text-slate-400">
             <Activity size={48} className="mx-auto mb-4 opacity-20" />
             <p className="font-medium">No behavior reports yet</p>
             <p className="text-sm opacity-60">Create your first report to start tracking student progress</p>
@@ -143,50 +143,50 @@ export default function TeacherBehaviorPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             {reports.map((report) => (
-              <div key={report.id} className="p-5 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-all">
+              <div key={report.id} className="p-5 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 dark:border-slate-700 hover:border-slate-200 dark:border-slate-700 dark:border-slate-700 transition-all">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                      <User className="text-primary-600" size={20} />
+                    <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
+                      <User className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={20} />
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900">{report.student?.first_name} {report.student?.last_name}</p>
-                      <p className="text-xs text-slate-500">{new Date(report.week_start).toLocaleDateString()} - {new Date(report.week_end).toLocaleDateString()}</p>
+                      <p className="font-bold text-slate-900 dark:text-white dark:text-white">{report.student?.first_name} {report.student?.last_name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(report.week_start).toLocaleDateString()} - {new Date(report.week_end).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                    report.severity === 'critical' ? 'bg-red-100 text-red-700' :
+                    report.severity === 'critical' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' :
                     report.severity === 'high' ? 'bg-orange-100 text-orange-700' :
-                    report.severity === 'medium' ? 'bg-blue-100 text-blue-700' :
-                    'bg-slate-200 text-slate-600'
+                    report.severity === 'medium' ? 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300' :
+                    'bg-slate-200 text-slate-600 dark:text-slate-400 dark:text-slate-400'
                   }`}>
                     {report.severity}
                   </span>
                 </div>
 
-                <p className="text-sm font-semibold text-slate-800 mb-2">{report.title || 'Weekly Report'}</p>
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">{report.title || 'Weekly Report'}</p>
 
                 <div className="grid grid-cols-4 gap-2 mb-4 text-center">
                   <div className="p-2 bg-white rounded-lg shadow-sm">
-                    <div className="text-sm font-bold text-yellow-500">{report.rating}★</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Rating</div>
+                    <div className="text-sm font-bold text-yellow-500 dark:text-yellow-400 dark:text-yellow-400">{report.rating}★</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">Rating</div>
                   </div>
                   <div className="p-2 bg-white rounded-lg shadow-sm">
-                    <div className="text-sm font-bold text-blue-500">{report.punctuality}</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Punctual</div>
+                    <div className="text-sm font-bold text-blue-500 dark:text-blue-400 dark:text-blue-400">{report.punctuality}</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">Punctual</div>
                   </div>
                   <div className="p-2 bg-white rounded-lg shadow-sm">
                     <div className="text-sm font-bold text-emerald-500">{report.class_participation}</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Class</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">Class</div>
                   </div>
                   <div className="p-2 bg-white rounded-lg shadow-sm">
-                    <div className="text-sm font-bold text-purple-500">{report.homework_completion}</div>
-                    <div className="text-[10px] text-slate-500 font-medium">H.Work</div>
+                    <div className="text-sm font-bold text-purple-500 dark:text-purple-400 dark:text-purple-400">{report.homework_completion}</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">H.Work</div>
                   </div>
                 </div>
 
-                {report.behavior && <p className="text-sm text-slate-700 mb-2 line-clamp-2">{report.behavior}</p>}
-                {report.teacher_notes && <p className="text-xs text-slate-500 italic border-l-2 border-slate-200 pl-3">"{report.teacher_notes}"</p>}
+                {report.behavior && <p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2 line-clamp-2">{report.behavior}</p>}
+                {report.teacher_notes && <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 italic border-l-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 pl-3">"{report.teacher_notes}"</p>}
               </div>
             ))}
           </div>
@@ -197,20 +197,20 @@ export default function TeacherBehaviorPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
             <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-slate-800">New Behavior Report</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                <X size={20} className="text-slate-500" />
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">New Behavior Report</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full transition-colors">
+                <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
 
             <div className="p-6 space-y-6">
               {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 text-sm">
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl flex items-center gap-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">
                   <AlertCircle size={20} /> {error}
                 </div>
               )}
               {success && (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-700 text-sm">
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-xl flex items-center gap-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">
                   <Info size={20} /> {success}
                 </div>
               )}
@@ -261,23 +261,23 @@ export default function TeacherBehaviorPage() {
                 <div><label className="label">Week End</label><input type="date" value={formData.week_end} onChange={(e) => setFormData({ ...formData, week_end: e.target.value })} className="input" /></div>
               </div>
 
-              <div className="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Metrics (1-5)</h3>
+              <div className="space-y-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700">
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 dark:text-slate-300 uppercase tracking-wider">Metrics (1-5)</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div>
                     <label className="label text-xs">Punctuality</label>
                     <input type="range" min="1" max="5" value={formData.punctuality} onChange={(e) => setFormData({ ...formData, punctuality: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600" />
-                    <div className="text-center font-bold text-primary-600 mt-1">{formData.punctuality}</div>
+                    <div className="text-center font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">{formData.punctuality}</div>
                   </div>
                   <div>
                     <label className="label text-xs">Participation</label>
                     <input type="range" min="1" max="5" value={formData.class_participation} onChange={(e) => setFormData({ ...formData, class_participation: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600" />
-                    <div className="text-center font-bold text-primary-600 mt-1">{formData.class_participation}</div>
+                    <div className="text-center font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">{formData.class_participation}</div>
                   </div>
                   <div>
                     <label className="label text-xs">H.Work Completion</label>
                     <input type="range" min="1" max="5" value={formData.homework_completion} onChange={(e) => setFormData({ ...formData, homework_completion: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600" />
-                    <div className="text-center font-bold text-primary-600 mt-1">{formData.homework_completion}</div>
+                    <div className="text-center font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">{formData.homework_completion}</div>
                   </div>
                 </div>
               </div>
@@ -294,7 +294,7 @@ export default function TeacherBehaviorPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 p-6 border-t bg-slate-50 sticky bottom-0">
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 sticky bottom-0">
               <button onClick={() => setShowModal(false)} className="btn-ghost px-6">Cancel</button>
               <button onClick={handleSave} className="btn-primary flex items-center gap-2 px-8">
                 <Send size={18} /> Submit Report

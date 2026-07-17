@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -138,7 +138,7 @@ export default function StudentGrowthPathPage() {
     return (
       <DashboardLayout title="My Growth Path" subtitle="Set your term goal">
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={32} className="animate-spin text-primary-600" />
+          <Loader2 size={32} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" />
         </div>
       </DashboardLayout>
     );
@@ -148,60 +148,60 @@ export default function StudentGrowthPathPage() {
     <DashboardLayout title="My Growth Path" subtitle="Who I'm becoming this term">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">My Growth Path</h1>
-            <p className="text-slate-500 mt-1">{existingGoal ? 'Update your term goal' : 'Set your term goal'}</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">My Growth Path</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">{existingGoal ? 'Update your term goal' : 'Set your term goal'}</p>
           </div>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm flex items-center gap-2"><Check size={16} /> {success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2"><AlertCircle size={16} /> {error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-center gap-2"><Check size={16} /> {success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2"><AlertCircle size={16} /> {error}</div>}
 
         {existingGoal?.status === 'active' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-blue-700 text-sm">
+          <div className="bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/40 dark:border-blue-900/40 rounded-lg p-3 text-blue-700 dark:text-blue-300 dark:text-blue-300 text-sm">
             Your goal has been approved by your teacher. You can still update it below.
           </div>
         )}
 
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">1. Choose Your Identity</h2>
-          <p className="text-sm text-slate-500 mb-4">Select the archetype that best describes who you want to become this term.</p>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-3">1. Choose Your Identity</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">Select the archetype that best describes who you want to become this term.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {archetypes.map((arch) => (
               <button key={arch.id} onClick={() => setSelectedArchetype(arch.id)}
-                className={`relative p-4 rounded-xl border-2 text-left transition-all ${selectedArchetype === arch.id ? 'border-primary-500 bg-primary-50 shadow-md' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
+                className={`relative p-4 rounded-xl border-2 text-left transition-all ${selectedArchetype === arch.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 shadow-md' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 bg-white dark:bg-slate-800'}`}>
                 {selectedArchetype === arch.id && (
                   <div className="absolute top-2 right-2 w-6 h-6 bg-primary-600 rounded-full flex items-center justify-center"><Check size={14} className="text-white" /></div>
                 )}
-                <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center mb-2">
-                  <Target className="text-primary-600" size={20} />
+                <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-2">
+                  <Target className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={20} />
                 </div>
-                <h3 className="font-semibold text-slate-900">{arch.name}</h3>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-2">{arch.description}</p>
+                <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white">{arch.name}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 line-clamp-2">{arch.description}</p>
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">2. Choose Your Skills ({selectedSkills.length}/5)</h2>
-          <p className="text-sm text-slate-500 mb-4">Select 3–5 skills you want to develop this term.</p>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-3">2. Choose Your Skills ({selectedSkills.length}/5)</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">Select 3–5 skills you want to develop this term.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {skills.map((skill) => {
               const isSelected = selectedSkills.includes(skill.id);
               const isMaxed = selectedSkills.length >= 5 && !isSelected;
               return (
                 <button key={skill.id} onClick={() => toggleSkill(skill.id)} disabled={isMaxed && !isSelected}
-                  className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${isSelected ? 'border-primary-500 bg-primary-50' : isMaxed ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed' : 'border-slate-200 hover:border-slate-300 bg-white'}`}>
-                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-primary-600 border-primary-600' : 'border-slate-300'}`}>
+                  className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${isSelected ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : isMaxed ? 'border-slate-100 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 opacity-50 cursor-not-allowed' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 bg-white dark:bg-slate-800'}`}>
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-primary-600 border-primary-600' : 'border-slate-300 dark:border-slate-600 dark:border-slate-600'}`}>
                     {isSelected && <Check size={12} className="text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900">{skill.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{skill.category}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{skill.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 truncate">{skill.category}</p>
                   </div>
                 </button>
               );
@@ -210,12 +210,12 @@ export default function StudentGrowthPathPage() {
         </div>
 
         {goalStatement && (
-          <div className="card bg-gradient-to-br from-primary-50 to-amber-50 border-primary-200">
+          <div className="card bg-gradient-to-br from-primary-50 to-amber-50 border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={18} className="text-primary-600" />
-              <h3 className="font-semibold text-primary-800">Your Growth Goal</h3>
+              <Sparkles size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
+              <h3 className="font-semibold text-primary-800 dark:text-primary-200 dark:text-primary-200">Your Growth Goal</h3>
             </div>
-            <p className="text-primary-700 italic">{goalStatement}</p>
+            <p className="text-primary-700 dark:text-primary-300 dark:text-primary-300 italic">{goalStatement}</p>
           </div>
         )}
 

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -23,7 +23,7 @@ function FatherCcrContent() {
   if (!childId) {
     return (
       <div className="text-center py-20">
-        <p className="text-slate-500">No child selected. Please go back and select a child.</p>
+        <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No child selected. Please go back and select a child.</p>
         <Link href="/parent/ccr" className="btn-outline mt-4 inline-flex items-center gap-2">
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
@@ -34,7 +34,7 @@ function FatherCcrContent() {
   return (
     <DashboardLayout
       title="Father Questionnaire"
-      subtitle={`Responding about ${childName}`}><Link href="/parent/ccr" className="text-sm text-primary-600 hover:underline flex items-center gap-1 mb-4">
+      subtitle={`Responding about ${childName}`}><Link href="/parent/ccr" className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:underline flex items-center gap-1 mb-4">
         <ArrowLeft className="w-4 h-4" /> Back to children
       </Link>
       <CcrForm respondentType="father" studentId={childId} studentName={childName} />

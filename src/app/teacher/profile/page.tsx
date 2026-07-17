@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -102,12 +102,12 @@ export default function TeacherProfilePage() {
     <DashboardLayout title="My Profile" subtitle="Manage your account and view your teaching overview">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
-            <p className="text-slate-500 mt-1">Manage your account and view your teaching overview</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">My Profile</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage your account and view your teaching overview</p>
           </div>
         </div>
 
@@ -120,41 +120,41 @@ export default function TeacherProfilePage() {
               <span className="text-3xl font-bold text-white">{profile.first_name[0]?.toUpperCase()}{profile.last_name[0]?.toUpperCase()}</span>
             )}
           </div>
-          <h2 className="text-xl font-bold text-slate-900">{profile.first_name} {profile.last_name}</h2>
-          <p className="text-sm text-emerald-600 font-medium mt-1">Teacher</p>
-          {staffInfo && <p className="text-xs text-slate-400 mt-1">Staff ID: {staffInfo.staff_id}{staffInfo.designation ? ` • ${staffInfo.designation}` : ''}</p>}
-          <p className="text-sm text-slate-400 mt-1">{profile.email}</p>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{profile.first_name} {profile.last_name}</h2>
+          <p className="text-sm text-emerald-600 dark:text-emerald-400 dark:text-emerald-400 font-medium mt-1">Teacher</p>
+          {staffInfo && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Staff ID: {staffInfo.staff_id}{staffInfo.designation ? ` • ${staffInfo.designation}` : ''}</p>}
+          <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{profile.email}</p>
 
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="p-3 bg-blue-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-blue-600">{stats.totalStudents}</p>
-              <p className="text-xs text-blue-500">Students</p>
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg text-center">
+              <p className="text-lg font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{stats.totalStudents}</p>
+              <p className="text-xs text-blue-500 dark:text-blue-400 dark:text-blue-400">Students</p>
             </div>
-            <div className="p-3 bg-purple-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-purple-600">{stats.totalSessions}</p>
-              <p className="text-xs text-purple-500">Sessions</p>
+            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 rounded-lg text-center">
+              <p className="text-lg font-bold text-purple-600 dark:text-purple-400 dark:text-purple-400">{stats.totalSessions}</p>
+              <p className="text-xs text-purple-500 dark:text-purple-400 dark:text-purple-400">Sessions</p>
             </div>
-            <div className="p-3 bg-amber-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-amber-600">{stats.pendingEvaluations}</p>
-              <p className="text-xs text-amber-500">Pending Reviews</p>
+            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 rounded-lg text-center">
+              <p className="text-lg font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{stats.pendingEvaluations}</p>
+              <p className="text-xs text-amber-500 dark:text-amber-400 dark:text-amber-400">Pending Reviews</p>
             </div>
-            <div className="p-3 bg-emerald-50 rounded-lg text-center">
-              <p className="text-lg font-bold text-emerald-600">{stats.completedTasks}</p>
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 rounded-lg text-center">
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 dark:text-emerald-400">{stats.completedTasks}</p>
               <p className="text-xs text-emerald-500">Tasks Done</p>
             </div>
           </div>
 
           <div className="mt-6 space-y-2 text-left">
-            <div className="flex items-center gap-3 text-sm text-slate-600 p-2 rounded-lg bg-slate-50">
-              <Mail size={16} className="text-slate-400 flex-shrink-0" /><span className="truncate">{profile.email}</span>
+            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+              <Mail size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 flex-shrink-0" /><span className="truncate">{profile.email}</span>
             </div>
             {profile.phone && (
-              <div className="flex items-center gap-3 text-sm text-slate-600 p-2 rounded-lg bg-slate-50">
-                <Phone size={16} className="text-slate-400 flex-shrink-0" /><span>{profile.phone}</span>
+              <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                <Phone size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 flex-shrink-0" /><span>{profile.phone}</span>
               </div>
             )}
-            <div className="flex items-center gap-3 text-sm text-slate-600 p-2 rounded-lg bg-slate-50">
-              <Calendar size={16} className="text-slate-400 flex-shrink-0" /><span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 p-2 rounded-lg bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+              <Calendar size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 flex-shrink-0" /><span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
             </div>
           </div>
         </div>
@@ -162,32 +162,32 @@ export default function TeacherProfilePage() {
         <div className="lg:col-span-2 space-y-6">
           {staffInfo && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2"><Users size={20} className="text-emerald-600" />Staff Details</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Users size={20} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" />Staff Details</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-500 mb-1">Staff ID</p><p className="font-semibold text-slate-900">{staffInfo.staff_id}</p></div>
-                <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-500 mb-1">Department</p><p className="font-semibold text-slate-900">{staffInfo.department?.name || 'N/A'}</p></div>
-                <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-500 mb-1">Designation</p><p className="font-semibold text-slate-900">{staffInfo.designation || 'N/A'}</p></div>
-                <div className="p-3 bg-slate-50 rounded-lg"><p className="text-xs text-slate-500 mb-1">Status</p><p className={`font-semibold ${staffInfo.status === 'active' ? 'text-emerald-600' : 'text-red-600'}`}>{staffInfo.status}</p></div>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Staff ID</p><p className="font-semibold text-slate-900 dark:text-white dark:text-white">{staffInfo.staff_id}</p></div>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Department</p><p className="font-semibold text-slate-900 dark:text-white dark:text-white">{staffInfo.department?.name || 'N/A'}</p></div>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Designation</p><p className="font-semibold text-slate-900 dark:text-white dark:text-white">{staffInfo.designation || 'N/A'}</p></div>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">Status</p><p className={`font-semibold ${staffInfo.status === 'active' ? 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{staffInfo.status}</p></div>
               </div>
             </div>
           )}
 
           {(subjects.length > 0 || classes.length > 0) && (
             <div className="card">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2"><BookOpen size={20} className="text-emerald-600" />My Classes & Subjects</h2>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><BookOpen size={20} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" />My Classes & Subjects</h2>
               {classes.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-sm font-medium text-slate-600 mb-2">Classes</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-2">Classes</p>
                   <div className="flex flex-wrap gap-2">
-                    {classes.map(c => <span key={c.id} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">{c.name}</span>)}
+                    {classes.map(c => <span key={c.id} className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300 rounded-full text-sm font-medium">{c.name}</span>)}
                   </div>
                 </div>
               )}
               {subjects.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-slate-600 mb-2">Subjects</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-2">Subjects</p>
                   <div className="flex flex-wrap gap-2">
-                    {subjects.map(s => <span key={s.id} className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">{s.name} ({s.code})</span>)}
+                    {subjects.map(s => <span key={s.id} className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 rounded-full text-sm font-medium">{s.name} ({s.code})</span>)}
                   </div>
                 </div>
               )}
@@ -195,15 +195,15 @@ export default function TeacherProfilePage() {
           )}
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-slate-900 mb-5 flex items-center gap-2"><User size={20} className="text-emerald-600" />Personal Information</h2>
-            {saved && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm flex items-center gap-2"><Check size={16} /> Profile updated successfully</div>}
-            {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2"><AlertCircle size={16} /> {error}</div>}
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-5 flex items-center gap-2"><User size={20} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" />Personal Information</h2>
+            {saved && <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-center gap-2"><Check size={16} /> Profile updated successfully</div>}
+            {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2"><AlertCircle size={16} /> {error}</div>}
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div><label className="label">First Name</label><input type="text" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} className="input" /></div>
                 <div><label className="label">Last Name</label><input type="text" value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} className="input" /></div>
               </div>
-              <div><label className="label">Email</label><input type="email" value={formData.email} disabled className="input bg-slate-50 text-slate-500 cursor-not-allowed" /><p className="text-xs text-slate-400 mt-1">Email cannot be changed</p></div>
+              <div><label className="label">Email</label><input type="email" value={formData.email} disabled className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-400 cursor-not-allowed" /><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Email cannot be changed</p></div>
               <div><label className="label">Phone</label><input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="input" placeholder="+234..." /></div>
               <div>
                 <label className="label">Avatar Photo</label>
@@ -221,11 +221,11 @@ export default function TeacherProfilePage() {
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-slate-900 mb-5 flex items-center gap-2"><Shield size={20} className="text-emerald-600" />Change Password</h2>
-            {passwordSuccess && <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-sm flex items-center gap-2"><Check size={16} /> Password updated successfully</div>}
-            {passwordError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2"><AlertCircle size={16} /> {passwordError}</div>}
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-5 flex items-center gap-2"><Shield size={20} className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" />Change Password</h2>
+            {passwordSuccess && <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-center gap-2"><Check size={16} /> Password updated successfully</div>}
+            {passwordError && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2"><AlertCircle size={16} /> {passwordError}</div>}
             <div className="space-y-4">
-              <div><label className="label">New Password</label><div className="relative"><input type={showPassword ? 'text' : 'password'} value={passwordData.new} onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })} className="input pr-10" placeholder="Minimum 6 characters" minLength={6} /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></div>
+              <div><label className="label">New Password</label><div className="relative"><input type={showPassword ? 'text' : 'password'} value={passwordData.new} onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })} className="input pr-10" placeholder="Minimum 6 characters" minLength={6} /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></div>
               <div><label className="label">Confirm Password</label><input type={showPassword ? 'text' : 'password'} value={passwordData.confirm} onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })} className="input" placeholder="Re-enter new password" /></div>
               <button onClick={handleChangePassword} disabled={changingPassword} className="btn-primary disabled:opacity-50">{changingPassword ? <><Loader2 size={16} className="animate-spin mr-2" />Updating...</> : 'Update Password'}</button>
             </div>

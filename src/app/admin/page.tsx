@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -59,10 +59,10 @@ export default function AdminDashboard() {
   // Show loading while auth is initializing
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cp-gold mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading...</p>
+          <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400">Loading...</p>
         </div>
       </div>
     );
@@ -174,17 +174,17 @@ export default function AdminDashboard() {
   }
 
   const statsCards = [
-    { title: 'Total Students', value: stats.students, icon: <GraduationCap size={24} />, href: '/admin/users?role=student', bg: 'bg-primary-50', iconBg: 'bg-primary-600', text: 'text-primary-600' },
-    { title: 'Teachers', value: stats.teachers, icon: <Users size={24} />, href: '/admin/users?role=teacher', bg: 'bg-emerald-50', iconBg: 'bg-emerald-600', text: 'text-emerald-600' },
-    { title: 'Attendance', value: `${stats.attendanceRate}%`, icon: <TrendingUp size={24} />, href: '/admin/attendance', bg: 'bg-amber-50', iconBg: 'bg-amber-600', text: 'text-amber-600' },
-    { title: 'Avg Score', value: `${stats.avgScore}%`, icon: <BarChart3 size={24} />, href: '/admin/analytics', bg: 'bg-rose-50', iconBg: 'bg-rose-600', text: 'text-rose-600' },
+    { title: 'Total Students', value: stats.students, icon: <GraduationCap size={24} />, href: '/admin/users?role=student', bg: 'bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20', iconBg: 'bg-primary-600', text: 'text-primary-600 dark:text-primary-400 dark:text-primary-400' },
+    { title: 'Teachers', value: stats.teachers, icon: <Users size={24} />, href: '/admin/users?role=teacher', bg: 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20', iconBg: 'bg-emerald-600', text: 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' },
+    { title: 'Attendance', value: `${stats.attendanceRate}%`, icon: <TrendingUp size={24} />, href: '/admin/attendance', bg: 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20', iconBg: 'bg-amber-600', text: 'text-amber-600 dark:text-amber-400 dark:text-amber-400' },
+    { title: 'Avg Score', value: `${stats.avgScore}%`, icon: <BarChart3 size={24} />, href: '/admin/analytics', bg: 'bg-rose-50 dark:bg-rose-900/20 dark:bg-rose-900/20', iconBg: 'bg-rose-600', text: 'text-rose-600 dark:text-rose-400 dark:text-rose-400' },
   ];
 
   const secondaryStats = [
     { label: 'Classes', value: stats.totalClasses, href: '/admin/classes' },
     { label: 'Subjects', value: stats.totalSubjects, href: '/admin/subjects' },
     { label: 'Parents', value: stats.parents, href: '/admin/users?role=parent' },
-    { label: 'At Risk', value: atRiskStudents.length, href: '/admin/analytics', color: 'text-red-600' },
+    { label: 'At Risk', value: atRiskStudents.length, href: '/admin/analytics', color: 'text-red-600 dark:text-red-400 dark:text-red-400' },
   ];
 
   return (
@@ -192,16 +192,16 @@ export default function AdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsCards.map((card, index) => (
-          <Link key={index} href={card.href} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-all hover:border-slate-300 relative overflow-hidden group">
+          <Link key={index} href={card.href} className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5 hover:shadow-md transition-all hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 relative overflow-hidden group">
             <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:opacity-[0.06] transition-opacity ${card.iconBg}`} />
             <div className="flex items-center justify-between mb-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${card.iconBg}`}>
                 <span className="text-white">{card.icon}</span>
               </div>
-              <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+              <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-500 dark:text-slate-400 dark:text-slate-400 transition-colors" />
             </div>
-            <h3 className="text-sm font-medium text-slate-500">{card.title}</h3>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{card.value}</p>
+            <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">{card.title}</h3>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white mt-1">{card.value}</p>
           </Link>
         ))}
       </div>
@@ -209,9 +209,9 @@ export default function AdminDashboard() {
       {/* Secondary Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {secondaryStats.map((stat, i) => (
-          <Link key={i} href={stat.href} className="bg-white p-4 rounded-xl border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors">
-            <span className="text-sm text-slate-500">{stat.label}</span>
-            <span className={`font-bold ${stat.color || 'text-slate-700'}`}>{stat.value}</span>
+          <Link key={i} href={stat.href} className="bg-white p-4 rounded-xl border border-slate-100 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
+            <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{stat.label}</span>
+            <span className={`font-bold ${stat.color || 'text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}>{stat.value}</span>
           </Link>
         ))}
       </div>
@@ -221,13 +221,13 @@ export default function AdminDashboard() {
         {/* Attendance Trend */}
         <div className="lg:col-span-2 card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Attendance Trend</h2>
-            <Link href="/admin/attendance" className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white">Attendance Trend</h2>
+            <Link href="/admin/attendance" className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 hover:text-primary-700 dark:text-primary-300 dark:text-primary-300 font-medium flex items-center gap-1">
               View all <ArrowRight size={14} />
             </Link>
           </div>
           {attendanceTrend.length === 0 ? (
-            <div className="flex items-center justify-center py-12 text-slate-400">
+            <div className="flex items-center justify-center py-12 text-slate-400 dark:text-slate-500 dark:text-slate-500">
               <div className="text-center">
                 <TrendingUp size={32} className="mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No attendance data yet</p>
@@ -248,24 +248,24 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="card h-full">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick Actions</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: 'Users', href: '/admin/users', icon: <Users size={18} />, color: 'text-primary-600 bg-primary-50' },
-              { label: 'Classes', href: '/admin/classes', icon: <GraduationCap size={18} />, color: 'text-emerald-600 bg-emerald-50' },
-              { label: 'Sessions', href: '/admin/sessions', icon: <Video size={18} />, color: 'text-purple-600 bg-purple-50' },
-              { label: 'Lessons', href: '/admin/lessons', icon: <BookOpen size={18} />, color: 'text-blue-600 bg-blue-50' },
-              { label: 'Tests', href: '/admin/tests', icon: <FileText size={18} />, color: 'text-orange-600 bg-orange-50' },
-              { label: 'Results', href: '/admin/results', icon: <Award size={18} />, color: 'text-indigo-600 bg-indigo-50' },
-              { label: 'ID Cards', href: '/admin/id-cards', icon: <QrCode size={18} />, color: 'text-amber-600 bg-amber-50' },
-              { label: 'Analytics', href: '/admin/analytics', icon: <BarChart3 size={18} />, color: 'text-rose-600 bg-rose-50' },
-              { label: 'Settings', href: '/admin/settings', icon: <Settings size={18} />, color: 'text-slate-600 bg-slate-50' },
+              { label: 'Users', href: '/admin/users', icon: <Users size={18} />, color: 'text-primary-600 dark:text-primary-400 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' },
+              { label: 'Classes', href: '/admin/classes', icon: <GraduationCap size={18} />, color: 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20' },
+              { label: 'Sessions', href: '/admin/sessions', icon: <Video size={18} />, color: 'text-purple-600 dark:text-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20' },
+              { label: 'Lessons', href: '/admin/lessons', icon: <BookOpen size={18} />, color: 'text-blue-600 dark:text-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20' },
+              { label: 'Tests', href: '/admin/tests', icon: <FileText size={18} />, color: 'text-orange-600 dark:text-orange-400 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 dark:bg-orange-900/20' },
+              { label: 'Results', href: '/admin/results', icon: <Award size={18} />, color: 'text-indigo-600 dark:text-indigo-400 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 dark:bg-indigo-900/20' },
+              { label: 'ID Cards', href: '/admin/id-cards', icon: <QrCode size={18} />, color: 'text-amber-600 dark:text-amber-400 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20' },
+              { label: 'Analytics', href: '/admin/analytics', icon: <BarChart3 size={18} />, color: 'text-rose-600 dark:text-rose-400 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 dark:bg-rose-900/20' },
+              { label: 'Settings', href: '/admin/settings', icon: <Settings size={18} />, color: 'text-slate-600 dark:text-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800' },
             ].map((action, index) => (
-              <Link key={index} href={action.href} className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all text-center">
+              <Link key={index} href={action.href} className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-transparent hover:border-slate-100 dark:border-slate-700 dark:border-slate-700 transition-all text-center">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${action.color}`}>
                   {action.icon}
                 </div>
-                <span className="font-medium text-slate-700 text-xs">{action.label}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 text-xs">{action.label}</span>
               </Link>
             ))}
           </div>
@@ -276,22 +276,22 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h2>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white mb-4">Recent Activity</h2>
           <div className="space-y-3">
             {recentActivity.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500">
                 <Clock size={32} className="mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No activity yet</p>
               </div>
             ) : (
               recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
-                  <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 flex-shrink-0">
+                <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                  <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 dark:text-primary-400 flex-shrink-0">
                     {activity.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{activity.message}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{activity.time}</p>
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 truncate">{activity.message}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-0.5">{activity.time}</p>
                   </div>
                 </div>
               ))
@@ -302,35 +302,35 @@ export default function AdminDashboard() {
         {/* Announcements */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Announcements</h2>
-            <Link href="/admin/announcements" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white">Announcements</h2>
+            <Link href="/admin/announcements" className="text-sm text-blue-600 dark:text-blue-400 dark:text-blue-400 hover:text-blue-700 dark:text-blue-300 dark:text-blue-300 font-medium flex items-center gap-1">
               View all <ArrowRight size={14} />
             </Link>
           </div>
           <div className="space-y-3">
             {announcements.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500">
                 <Megaphone size={32} className="mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No announcements yet</p>
               </div>
             ) : (
               announcements.map((announcement: any) => (
                 <div key={announcement.id} className={`p-3 rounded-lg border-l-4 ${
-                  announcement.priority === 'urgent' ? 'bg-red-50 border-red-500' :
-                  announcement.priority === 'high' ? 'bg-amber-50 border-amber-500' :
-                  'bg-primary-50 border-primary-500'
+                  announcement.priority === 'urgent' ? 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border-red-500' :
+                  announcement.priority === 'high' ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-500' :
+                  'bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border-primary-500'
                 }`}>
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-medium text-slate-800 text-sm truncate">{announcement.title}</h3>
+                    <h3 className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm truncate">{announcement.title}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      announcement.priority === 'urgent' ? 'bg-red-100 text-red-700' :
-                      announcement.priority === 'high' ? 'bg-amber-100 text-amber-700' :
-                      announcement.priority === 'normal' ? 'bg-primary-100 text-primary-700' :
-                      'bg-slate-100 text-slate-700'
+                      announcement.priority === 'urgent' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' :
+                      announcement.priority === 'high' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' :
+                      announcement.priority === 'normal' ? 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300' :
+                      'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-700 dark:text-slate-300 dark:text-slate-300'
                     }`}>{announcement.priority}</span>
                   </div>
-                  <p className="text-xs text-slate-600 line-clamp-2">{announcement.content}</p>
-                  <p className="text-xs text-slate-400 mt-1">{new Date(announcement.created_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400 line-clamp-2">{announcement.content}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">{new Date(announcement.created_at).toLocaleDateString()}</p>
                 </div>
               ))
             )}
@@ -342,20 +342,20 @@ export default function AdminDashboard() {
       {atRiskStudents.length > 0 && (
         <div className="card">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="text-red-600" size={20} />
-            <h2 className="text-lg font-semibold text-slate-900">Students Needing Attention</h2>
+            <AlertTriangle className="text-red-600 dark:text-red-400 dark:text-red-400" size={20} />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white dark:text-white">Students Needing Attention</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {atRiskStudents.map((student: any, index: number) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-bold text-sm">
+              <div key={index} className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg border border-red-100">
+                <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 dark:text-red-400 font-bold text-sm">
                   {student.student?.first_name?.[0] || '?'}{student.student?.last_name?.[0] || ''}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-800 text-sm">
+                  <p className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">
                     {student.student?.first_name} {student.student?.last_name}
                   </p>
-                  <p className="text-xs text-red-600 font-medium">Score: {student.score}%</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 dark:text-red-400 font-medium">Score: {student.score}%</p>
                 </div>
               </div>
             ))}

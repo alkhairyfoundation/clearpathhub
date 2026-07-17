@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import {
   GraduationCap, Shield, Video, BookOpen, BarChart3, Users,
   CheckCircle, ArrowRight, Target, Award, Zap,
@@ -9,9 +9,9 @@ import {
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-800">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200/60">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700 dark:border-slate-700/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3">
@@ -19,21 +19,21 @@ export default function Home() {
                 <GraduationCap className="text-white" size={22} />
               </div>
               <div>
-                <h1 className="font-bold text-slate-900 text-lg leading-tight">ClearPath</h1>
+                <h1 className="font-bold text-slate-900 dark:text-white dark:text-white text-lg leading-tight">ClearPath</h1>
                 <p className="text-[10px] font-semibold text-cp-gold uppercase tracking-wider -mt-0.5">Edu Hub</p>
               </div>
             </Link>
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
-              <a href="#why" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Why Us</a>
-              <a href="#process" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
+              <a href="#features" className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white transition-colors">Features</a>
+              <a href="#why" className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white transition-colors">Why Us</a>
+              <a href="#process" className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white transition-colors">How It Works</a>
               <Link href="/apply" className="text-sm font-medium text-cp-gold hover:text-cp-gold-light transition-colors flex items-center gap-1">
                 <FileText size={14} />
                 Entrance Exam
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              <Link href="/login" className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 font-medium transition-colors">
+              <Link href="/login" className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white font-medium transition-colors">
                 Sign In
               </Link>
               <Link href="/login" className="btn-gold flex items-center gap-2 shadow-lg shadow-cp-gold/25">
@@ -59,7 +59,7 @@ export default function Home() {
             <div>
               <div className="mb-8">
                 <p className="text-2xl md:text-3xl font-arabic text-amber-400/90 mb-3">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
-                <p className="text-sm text-slate-400 font-medium">In the name of Allah, the Most Gracious, the Most Merciful</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 font-medium">In the name of Allah, the Most Gracious, the Most Merciful</p>
               </div>
 
               <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-cp-gold/10 border border-cp-gold/20 rounded-full text-cp-gold text-sm font-medium mb-6">
@@ -93,19 +93,19 @@ export default function Home() {
               <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
 <div className="text-center p-4 rounded-2xl bg-white/10 border border-white/20">
                    <p className="text-3xl font-bold text-white">5</p>
-                   <p className="text-sm text-slate-500 mt-1">Roles</p>
+                   <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Roles</p>
                  </div>
                  <div className="text-center p-4 rounded-2xl bg-white/10 border border-white/20">
                    <p className="text-3xl font-bold text-white">9+</p>
-                   <p className="text-sm text-slate-500 mt-1">Modules</p>
+                   <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Modules</p>
                  </div>
                  <div className="text-center p-4 rounded-2xl bg-white/10 border border-white/20">
                    <p className="text-3xl font-bold text-white">10K+</p>
-                   <p className="text-sm text-slate-500 mt-1">Students</p>
+                   <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Students</p>
                  </div>
                  <div className="text-center p-4 rounded-2xl bg-white/10 border border-white/20">
                    <p className="text-3xl font-bold text-white">99%</p>
-                   <p className="text-sm text-slate-500 mt-1">Uptime</p>
+                   <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Uptime</p>
                  </div>
               </div>
             </div>
@@ -119,7 +119,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-white font-bold text-lg mb-1">Mastery Gates</h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">
+                      <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm leading-relaxed">
                         Students must score 80% on checkpoint quizzes before unlocking the next lesson. No gaps. Real understanding.
                       </p>
                     </div>
@@ -131,7 +131,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-white font-bold text-lg mb-1">Guided Video Learning</h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">
+                      <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm leading-relaxed">
                         Teachers upload lessons with timestamped checkpoints. Anti-skip player ensures complete viewing.
                       </p>
                     </div>
@@ -143,7 +143,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-white font-bold text-lg mb-1">Real-Time Analytics</h3>
-                      <p className="text-slate-400 text-sm leading-relaxed">
+                      <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm leading-relaxed">
                         Teachers and parents see live performance data. Identify struggling students before they fall behind.
                       </p>
                     </div>
@@ -160,17 +160,17 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-slate-50">
+      <section id="features" className="py-24 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300 rounded-full text-sm font-semibold mb-4">
               <Layers size={14} />
               Everything You Need
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white dark:text-white mb-4">
               One Platform. <span className="text-transparent bg-clip-text bg-gradient-to-r from-cp-gold to-emerald-600">Every Solution.</span>
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 dark:text-slate-400 dark:text-slate-400 max-w-2xl mx-auto">
               ClearPath Edu Hub brings every aspect of school operations — from academics and attendance to finance and parent communication — into a single, unified system.
             </p>
           </div>
@@ -183,7 +183,7 @@ export default function Home() {
                 desc: 'Teachers upload video lessons with interactive timestamp checkpoints. Students must watch fully before taking linked quizzes. Mastery gates ensure 80% comprehension before progressing.',
                 color: 'from-primary-500 to-primary-600',
                 shadow: 'shadow-primary-500/25',
-                border: 'hover:border-primary-200',
+                border: 'hover:border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40',
                 tag: 'Anti-skip Player',
               },
               {
@@ -192,7 +192,7 @@ export default function Home() {
                 desc: 'Students check in by scanning QR codes on their ID cards. Teachers can also record attendance manually. Staff attendance is tracked separately with its own QR workflow.',
                 color: 'from-emerald-500 to-emerald-600',
                 shadow: 'shadow-emerald-500/25',
-                border: 'hover:border-emerald-200',
+                border: 'hover:border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40',
                 tag: 'Camera-Based',
               },
               {
@@ -210,7 +210,7 @@ export default function Home() {
                 desc: 'Parents link their accounts to their children and monitor attendance, grades, behavioral reports, exam attempts, and weekly progress — all updated in real time.',
                 color: 'from-amber-500 to-amber-600',
                 shadow: 'shadow-amber-500/25',
-                border: 'hover:border-amber-200',
+                border: 'hover:border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40',
                 tag: 'Real-Time Updates',
               },
               {
@@ -263,8 +263,8 @@ export default function Home() {
                 <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg ${feature.shadow} group-hover:scale-110 transition-transform duration-300`}>
                   <span className="text-white">{feature.icon}</span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-                <p className="text-slate-600 leading-relaxed mb-4">{feature.desc}</p>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white mb-3">{feature.title}</h3>
+                <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 leading-relaxed mb-4">{feature.desc}</p>
                 <div className="flex items-center gap-2 text-sm font-medium" style={{ color: feature.color.split(' ')[1] }}>
                   <CheckCircle size={14} />
                   {feature.tag}
@@ -280,45 +280,45 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-cp-cream via-white to-emerald-50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 rounded-full text-sm font-semibold mb-4">
               <HeartHandshake size={14} />
               Why ClearPath
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white dark:text-white mb-4">
               Built for <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cp-gold">Real Learning</span>
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 dark:text-slate-400 dark:text-slate-400 max-w-2xl mx-auto">
               Every feature is designed with one goal: ensuring every student truly masters every topic before moving forward.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-8">
-              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Target className="text-primary-600" size={32} />
+              <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Target className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={32} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Mastery, Not Coverage</h3>
-              <p className="text-slate-600 leading-relaxed">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white mb-3">Mastery, Not Coverage</h3>
+              <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 leading-relaxed">
                 Students don&apos;t just watch videos — they prove understanding at every checkpoint. An 80% mastery gate ensures no one advances with gaps.
               </p>
             </div>
 
             <div className="text-center p-8">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Lock className="text-emerald-600" size={32} />
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Lock className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" size={32} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Exam Integrity</h3>
-              <p className="text-slate-600 leading-relaxed">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white mb-3">Exam Integrity</h3>
+              <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 leading-relaxed">
                 Fullscreen enforcement, tab-switch detection, keyboard shortcut blocking, and screenshot prevention ensure fair online assessments.
               </p>
             </div>
 
             <div className="text-center p-8">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Clock className="text-purple-600" size={32} />
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Clock className="text-purple-600 dark:text-purple-400 dark:text-purple-400" size={32} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Real-Time Visibility</h3>
-              <p className="text-slate-600 leading-relaxed">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white mb-3">Real-Time Visibility</h3>
+              <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 leading-relaxed">
                 Parents see attendance, grades, and behavior as they happen. Teachers identify struggling students instantly. No waiting for report cards.
               </p>
             </div>
@@ -355,7 +355,7 @@ export default function Home() {
                   <span className="text-white text-2xl font-black">{step.num}</span>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
-                <p className="text-slate-400 leading-relaxed">{step.desc}</p>
+                <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 leading-relaxed">{step.desc}</p>
                 {i < 3 && (
                   <div className="hidden md:block absolute top-10 left-[60%] w-[calc(80%)] h-0.5 bg-gradient-to-r from-cp-gold/40 to-transparent" />
                 )}
@@ -377,7 +377,7 @@ export default function Home() {
           <p className="text-xl text-cp-gold/80 mb-10 max-w-2xl mx-auto leading-relaxed">
             Sign in to ClearPath Edu Hub and experience a platform built on the principle that every student deserves to truly master every lesson.
           </p>
-          <Link href="/login" className="inline-flex items-center gap-3 px-10 py-5 bg-white text-cp-green rounded-2xl font-bold text-lg hover:bg-primary-50 transition-all shadow-2xl shadow-black/30 hover:shadow-black/40 hover:-translate-y-0.5">
+          <Link href="/login" className="inline-flex items-center gap-3 px-10 py-5 bg-white text-cp-green rounded-2xl font-bold text-lg hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 transition-all shadow-2xl shadow-black/30 hover:shadow-black/40 hover:-translate-y-0.5">
             <GraduationCap size={22} />
             Sign In to Your Dashboard
             <ArrowRight size={20} />
@@ -389,7 +389,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-950 text-slate-400 py-16">
+      <footer className="bg-slate-950 text-slate-400 dark:text-slate-500 dark:text-slate-500 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             <div className="md:col-span-2">
@@ -402,7 +402,7 @@ export default function Home() {
                   <p className="text-[10px] font-semibold text-cp-gold uppercase tracking-wider -mt-0.5">Edu Hub</p>
                 </div>
               </div>
-              <p className="text-slate-400 mb-6 max-w-md leading-relaxed">
+              <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 mb-6 max-w-md leading-relaxed">
                 Our school&apos;s complete management platform — from academics and attendance to finance and parent communication. Built on the principle of mastery learning.
               </p>
               <p className="text-amber-400/80 text-sm font-medium">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
@@ -439,7 +439,7 @@ export default function Home() {
 
           <div className="border-t border-slate-800 mt-12 pt-8 text-center text-sm">
             <p>&copy; {new Date().getFullYear()} ClearPath Edu Hub. All rights reserved. Built with purpose. Every student masters every lesson.</p>
-            <p className="mt-2 text-slate-500">Developed by: Odebunmi Tawwab A.</p>
+            <p className="mt-2 text-slate-500 dark:text-slate-400 dark:text-slate-400">Developed by: Odebunmi Tawwab A.</p>
           </div>
         </div>
       </footer>

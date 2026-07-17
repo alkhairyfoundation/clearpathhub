@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 
 import { useEffect, useState } from 'react';
@@ -35,9 +35,9 @@ export default function StudentAttendancePage() {
   function getStatusIcon(status: string) {
     switch (status) {
       case 'present': return <CheckCircle className="text-green-500" size={18} />;
-      case 'absent': return <XCircle className="text-red-500" size={18} />;
-      case 'late': return <Clock className="text-yellow-500" size={18} />;
-      case 'excused': return <AlertCircle className="text-blue-500" size={18} />;
+      case 'absent': return <XCircle className="text-red-500 dark:text-red-400 dark:text-red-400" size={18} />;
+      case 'late': return <Clock className="text-yellow-500 dark:text-yellow-400 dark:text-yellow-400" size={18} />;
+      case 'excused': return <AlertCircle className="text-blue-500 dark:text-blue-400 dark:text-blue-400" size={18} />;
       default: return null;
     }
   }
@@ -46,38 +46,38 @@ export default function StudentAttendancePage() {
     <DashboardLayout title="My Attendance" subtitle="View your attendance record">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">My Attendance</h1>
-            <p className="text-slate-500">View your attendance record</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">My Attendance</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">View your attendance record</p>
           </div>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Attendance Rate</span><UserCheck className="text-blue-600" size={18} /></div><p className="text-2xl font-bold text-slate-800">{stats.rate}%</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Present</span><CheckCircle className="text-green-600" size={18} /></div><p className="text-2xl font-bold text-green-600">{stats.present}</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Absent</span><XCircle className="text-red-600" size={18} /></div><p className="text-2xl font-bold text-red-600">{stats.absent}</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Late</span><Clock className="text-yellow-600" size={18} /></div><p className="text-2xl font-bold text-yellow-600">{stats.late}</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Excused</span><AlertCircle className="text-blue-600" size={18} /></div><p className="text-2xl font-bold text-blue-600">{stats.excused}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Attendance Rate</span><UserCheck className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={18} /></div><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.rate}%</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Present</span><CheckCircle className="text-green-600 dark:text-green-400 dark:text-green-400" size={18} /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{stats.present}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Absent</span><XCircle className="text-red-600 dark:text-red-400 dark:text-red-400" size={18} /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{stats.absent}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Late</span><Clock className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400" size={18} /></div><p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 dark:text-yellow-400">{stats.late}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Excused</span><AlertCircle className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={18} /></div><p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{stats.excused}</p></div>
         </div>
 
         <div className="bg-white rounded-xl shadow-md p-6">
           {attendance.length === 0 ? (
-            <div className="text-center py-12 text-slate-500"><UserCheck size={48} className="mx-auto mb-4 opacity-50" /><p>No attendance records</p></div>
+            <div className="text-center py-12 text-slate-500 dark:text-slate-400 dark:text-slate-400"><UserCheck size={48} className="mx-auto mb-4 opacity-50" /><p>No attendance records</p></div>
           ) : (
             <div className="space-y-2">
               {attendance.map((record) => (
-                <div key={record.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={record.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-3">
                     {getStatusIcon(record.status)}
                     <div>
-                      <p className="font-medium text-slate-800">{new Date(record.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
-                      <p className="text-xs text-slate-500">{record.scan_method === 'qr_scan' ? 'Scanned' : 'Manual'}</p>
+                      <p className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{new Date(record.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{record.scan_method === 'qr_scan' ? 'Scanned' : 'Manual'}</p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${record.status === 'present' ? 'bg-green-100 text-green-700' : record.status === 'absent' ? 'bg-red-100 text-red-700' : record.status === 'late' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>{record.status}</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${record.status === 'present' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : record.status === 'absent' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : record.status === 'late' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300'}`}>{record.status}</span>
                 </div>
               ))}
             </div>

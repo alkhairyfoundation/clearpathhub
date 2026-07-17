@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -195,12 +195,12 @@ export default function AdminStaffIDCardsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Staff ID Cards</h1>
-              <p className="text-slate-500 mt-1">{staff.length} staff members</p>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Staff ID Cards</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">{staff.length} staff members</p>
             </div>
           </div>
         </div>
@@ -220,15 +220,15 @@ export default function AdminStaffIDCardsPage() {
           </div>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {loading ? (
           <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
         ) : filtered.length === 0 ? (
           <div className="card text-center py-16">
             <Users className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">No staff members found</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No staff members found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -242,16 +242,16 @@ export default function AdminStaffIDCardsPage() {
                         {member.first_name?.[0]}{member.last_name?.[0]}
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-900">{member.first_name} {member.last_name}</h3>
+                        <h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{member.first_name} {member.last_name}</h3>
                         <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold text-white ${badge.bg}`}>
                           {badge.label}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-500 mb-3 truncate">{member.email}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-3 truncate">{member.email}</p>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-slate-400">{member.phone || 'No phone'}</span>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{member.phone || 'No phone'}</span>
                     <button onClick={() => handleShowCard(member)} disabled={generating} className="btn-primary text-sm py-1.5 px-3 flex items-center gap-1">
                       <Eye size={14} /> View ID
                     </button>
@@ -266,10 +266,10 @@ export default function AdminStaffIDCardsPage() {
         {showCardModal && selectedStaff && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8 animate-scale-in">
-              <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
-                <h3 className="text-lg font-bold text-slate-900">Staff ID Card — {selectedStaff.first_name} {selectedStaff.last_name}</h3>
-                <button onClick={() => setShowCardModal(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
-                  <X size={20} className="text-slate-500" />
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Staff ID Card — {selectedStaff.first_name} {selectedStaff.last_name}</h3>
+                <button onClick={() => setShowCardModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                  <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
 
@@ -277,7 +277,7 @@ export default function AdminStaffIDCardsPage() {
                 {/* Card Preview */}
                 <div className="flex flex-wrap justify-center gap-8 mb-6">
                   {/* Front */}
-                  <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
+                  <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
                     <div className="bg-gradient-to-r from-primary-700 to-primary-900 text-white p-5 text-center">
                       <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
                       <h3 className="text-lg font-bold mt-1">STAFF ID CARD</h3>
@@ -285,68 +285,68 @@ export default function AdminStaffIDCardsPage() {
                     </div>
                     <div className="p-5 flex flex-col items-center">
                       {selectedStaff.avatar_url ? (
-                        <img src={selectedStaff.avatar_url} alt="Photo" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 mb-4" />
+                        <img src={selectedStaff.avatar_url} alt="Photo" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 dark:border-slate-700 mb-4" />
                       ) : (
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-3xl font-bold text-white mb-4">
                           {selectedStaff.first_name?.[0]}{selectedStaff.last_name?.[0]}
                         </div>
                       )}
-                      <h4 className="text-xl font-bold text-slate-900">{selectedStaff.first_name} {selectedStaff.last_name}</h4>
+                      <h4 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{selectedStaff.first_name} {selectedStaff.last_name}</h4>
                       <span className={`mt-2 px-3 py-1 rounded-full text-xs font-semibold text-white ${getRoleBadge(selectedStaff.role).bg}`}>
                         {getRoleBadge(selectedStaff.role).label}
                       </span>
-                      <p className="text-sm text-slate-500 mt-2">{selectedStaff.email}</p>
-                      {selectedStaff.phone && <p className="text-sm text-slate-500">{selectedStaff.phone}</p>}
+                      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-2">{selectedStaff.email}</p>
+                      {selectedStaff.phone && <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{selectedStaff.phone}</p>}
 
-                      <div className="mt-4 bg-white p-2 rounded-lg border-2 border-slate-200">
+                      <div className="mt-4 bg-white p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700">
                         {qrCodeUrl && <img src={qrCodeUrl} alt="QR Code" className="w-28 h-28" />}
                       </div>
-                      <p className="text-xs text-slate-400 mt-2">Scan for attendance</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-2">Scan for attendance</p>
                     </div>
                   </div>
 
                   {/* Back */}
-                  <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
+                  <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
                     <div className="bg-gradient-to-r from-primary-700 to-primary-900 text-white p-5 text-center">
                       <h3 className="text-lg font-bold">INFORMATION</h3>
                     </div>
                     <div className="p-5 space-y-4">
-                      <div className="flex justify-between text-sm border-b border-slate-100 pb-2">
-                        <span className="text-slate-500">Email:</span>
+                      <div className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 pb-2">
+                        <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Email:</span>
                         <span className="font-medium text-sm">{selectedStaff.email}</span>
                       </div>
                       {selectedStaff.phone && (
-                        <div className="flex justify-between text-sm border-b border-slate-100 pb-2">
-                          <span className="text-slate-500">Phone:</span>
+                        <div className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 pb-2">
+                          <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Phone:</span>
                           <span className="font-medium">{selectedStaff.phone}</span>
                         </div>
                       )}
-                      <div className="flex justify-between text-sm border-b border-slate-100 pb-2">
-                        <span className="text-slate-500">Role:</span>
+                      <div className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 pb-2">
+                        <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Role:</span>
                         <span className="font-medium">{getRoleBadge(selectedStaff.role).label}</span>
                       </div>
-                      <div className="flex justify-between text-sm border-b border-slate-100 pb-2">
-                        <span className="text-slate-500">Joined:</span>
+                      <div className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 pb-2">
+                        <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Joined:</span>
                         <span className="font-medium">{new Date(selectedStaff.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <div className="p-4 text-center border-t border-slate-100 mt-auto">
+                    <div className="p-4 text-center border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 mt-auto">
                       {qrBackUrl && (
                         <div className="inline-block bg-white p-2 rounded-lg border mb-2">
                           <img src={qrBackUrl} alt="Verification QR" className="w-20 h-20" />
                         </div>
                       )}
-                      <p className="text-xs text-slate-500">ID Verification Code</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">ID Verification Code</p>
                     </div>
-                    <div className="p-3 bg-slate-50 text-center text-xs text-slate-500 border-t">
+                    <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 border-t">
                       This ID card is the property of the school. If found, please return to the school office.
                     </div>
                   </div>
                 </div>
 
                 {/* Download Options */}
-                <div className="card bg-slate-50 p-4">
-                  <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <div className="card bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-4">
+                  <h4 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-3 flex items-center gap-2">
                     <FileDown size={16} /> Download Options
                   </h4>
                   <div className="flex flex-wrap gap-3 items-center">

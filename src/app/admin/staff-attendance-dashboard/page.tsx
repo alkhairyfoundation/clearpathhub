@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -89,32 +89,32 @@ export default function AdminStaffAttendanceDashboard() {
     <DashboardLayout title="Staff Attendance Records" subtitle="View and manage staff attendance by date">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Staff Attendance Records</h1>
-            <p className="text-slate-500 mt-1">View and manage attendance for all staff</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Staff Attendance Records</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">View and manage attendance for all staff</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <Calendar size={18} className="text-slate-400" />
+          <Calendar size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input w-auto" />
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <div className="card text-center"><p className="text-2xl font-bold text-slate-900">{totalStaff}</p><p className="text-xs text-slate-500">Total Staff</p></div>
-          <div className="card text-center"><p className="text-2xl font-bold text-green-600">{presentCount}</p><p className="text-xs text-slate-500">Present</p></div>
-          <div className="card text-center"><p className="text-2xl font-bold text-amber-600">{lateCount}</p><p className="text-xs text-slate-500">Late</p></div>
-          <div className="card text-center"><p className="text-2xl font-bold text-red-600">{absentCount}</p><p className="text-xs text-slate-500">Absent</p></div>
-          <div className="card text-center"><p className="text-2xl font-bold text-slate-400">{pendingCount}</p><p className="text-xs text-slate-500">Not Marked</p></div>
+          <div className="card text-center"><p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{totalStaff}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Staff</p></div>
+          <div className="card text-center"><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{presentCount}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Present</p></div>
+          <div className="card text-center"><p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{lateCount}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Late</p></div>
+          <div className="card text-center"><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{absentCount}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Absent</p></div>
+          <div className="card text-center"><p className="text-2xl font-bold text-slate-400 dark:text-slate-500 dark:text-slate-500">{pendingCount}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Not Marked</p></div>
         </div>
 
         <div className="card">
           <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500" size={16} />
               <input type="text" placeholder="Search staff..." value={search} onChange={(e) => setSearch(e.target.value)} className="input pl-9 text-sm" />
             </div>
             <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="input text-sm sm:w-36">
@@ -130,21 +130,21 @@ export default function AdminStaffAttendanceDashboard() {
           ) : (
             <div className="space-y-2 max-h-[500px] overflow-y-auto">
               {filteredStaff.length === 0 ? (
-                <div className="text-center py-8 text-slate-500"><UserCheck size={32} className="mx-auto mb-2 opacity-50" /><p>No staff found</p></div>
+                <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400"><UserCheck size={32} className="mx-auto mb-2 opacity-50" /><p>No staff found</p></div>
               ) : filteredStaff.map(s => (
-                <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0 bg-gradient-to-br from-primary-600 to-primary-700">
                       {s.first_name?.[0]}{s.last_name?.[0]}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold text-slate-900 text-sm truncate">{s.first_name} {s.last_name}</p>
+                      <p className="font-semibold text-slate-900 dark:text-white dark:text-white text-sm truncate">{s.first_name} {s.last_name}</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 capitalize">{s.role}</span>
-                        {s.status === 'present' && <span className="text-xs text-green-600 flex items-center gap-1"><CheckCircle size={12} />Present</span>}
-                        {s.status === 'late' && <span className="text-xs text-amber-600 flex items-center gap-1"><Clock size={12} />Late</span>}
-                        {s.status === 'absent' && <span className="text-xs text-red-600 flex items-center gap-1"><XCircle size={12} />Absent</span>}
-                        {s.record?.marked_at && <span className="text-xs text-slate-400">&bull; {new Date(s.marked_at).toLocaleTimeString()}</span>}
+                        <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 capitalize">{s.role}</span>
+                        {s.status === 'present' && <span className="text-xs text-green-600 dark:text-green-400 dark:text-green-400 flex items-center gap-1"><CheckCircle size={12} />Present</span>}
+                        {s.status === 'late' && <span className="text-xs text-amber-600 dark:text-amber-400 dark:text-amber-400 flex items-center gap-1"><Clock size={12} />Late</span>}
+                        {s.status === 'absent' && <span className="text-xs text-red-600 dark:text-red-400 dark:text-red-400 flex items-center gap-1"><XCircle size={12} />Absent</span>}
+                        {s.record?.marked_at && <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">&bull; {new Date(s.marked_at).toLocaleTimeString()}</span>}
                       </div>
                     </div>
                   </div>
@@ -156,10 +156,10 @@ export default function AdminStaffAttendanceDashboard() {
                         disabled={updating === s.id}
                         className={`px-2.5 py-1 rounded-lg text-xs font-semibold capitalize transition-all border ${
                           s.status === st
-                            ? st === 'present' ? 'bg-green-100 text-green-700 border-green-300'
-                              : st === 'late' ? 'bg-amber-100 text-amber-700 border-amber-300'
-                              : 'bg-red-100 text-red-700 border-red-300'
-                            : 'bg-white text-slate-400 border-slate-200 hover:border-slate-300'
+                            ? st === 'present' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 border-green-300'
+                              : st === 'late' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300 border-amber-300'
+                              : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400 border-red-300'
+                            : 'bg-white text-slate-400 dark:text-slate-500 dark:text-slate-500 border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'
                         } ${updating === s.id ? 'opacity-50' : ''}`}
                       >
                         {updating === s.id ? <Loader2 size={12} className="animate-spin" /> : st}

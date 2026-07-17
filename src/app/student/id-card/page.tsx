@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -241,14 +241,14 @@ export default function StudentIDCardPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">My ID Card</h1>
-            <p className="text-slate-500">Digital ID card with QR code</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">My ID Card</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Digital ID card with QR code</p>
           </div>
         </div>
 
         {/* Front Card */}
         <div className="flex justify-center">
-          <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
+          <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
             <div className="bg-blue-600 text-white p-4 text-center">
               <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
               <h3 className="text-lg font-bold">STUDENT ID CARD</h3>
@@ -257,37 +257,37 @@ export default function StudentIDCardPage() {
             <div className="p-4">
               <div className="flex flex-col items-center mb-4">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Photo" className="w-20 h-20 rounded-full object-cover border-4 border-slate-100" />
+                  <img src={avatarUrl} alt="Photo" className="w-20 h-20 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 dark:border-slate-700" />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400">
+                  <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400 dark:text-slate-500 dark:text-slate-500">
                     {initials}
                   </div>
                 )}
               </div>
 
               <div className="text-center mb-4">
-                <h4 className="text-lg font-bold text-slate-900">{profile?.first_name} {profile?.last_name}</h4>
-                <p className="text-xs text-slate-500 mt-1 font-mono">Adm No: {student?.admission_number}</p>
+                <h4 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{profile?.first_name} {profile?.last_name}</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 font-mono">Adm No: {student?.admission_number}</p>
                 {student?.date_of_birth && (
-                  <p className="text-sm text-slate-600 mt-1">DOB: {formatDate(student.date_of_birth)}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-1">DOB: {formatDate(student.date_of_birth)}</p>
                 )}
                 {idCard?.issued_at && (
-                  <p className="text-xs text-slate-400 mt-1">Issued: {formatDate(idCard.issued_at)}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Issued: {formatDate(idCard.issued_at)}</p>
                 )}
               </div>
 
               <div className="flex justify-center mb-2">
                 {qrFrontUrl ? (
-                  <div className="bg-white p-2 rounded-lg border-2 border-slate-200">
+                  <div className="bg-white p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700">
                     <img src={qrFrontUrl} alt="QR Code" className="w-28 h-28" />
                   </div>
                 ) : (
-                  <div className="w-28 h-28 bg-slate-100 rounded-lg flex items-center justify-center">
-                    <Loader2 size={24} className="animate-spin text-slate-400" />
+                  <div className="w-28 h-28 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+                    <Loader2 size={24} className="animate-spin text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                   </div>
                 )}
               </div>
-              <p className="text-center text-xs text-slate-500">Scan to mark attendance</p>
+              <p className="text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Scan to mark attendance</p>
             </div>
           </div>
         </div>
@@ -297,7 +297,7 @@ export default function StudentIDCardPage() {
           <div className="flex justify-center">
             <button
               onClick={() => setShowBack(!showBack)}
-              className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800"
+              className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 dark:text-slate-200"
             >
               {showBack ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               {showBack ? 'Hide' : 'Show'} Back of Card
@@ -307,16 +307,16 @@ export default function StudentIDCardPage() {
 
         {showBack && student && (
           <div className="flex justify-center">
-            <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-lg">
+            <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
               <div className="bg-slate-600 text-white p-4 text-center">
                 <h3 className="text-lg font-bold">ID CARD RULES</h3>
               </div>
               <div className="p-4">
-                <div className="text-sm text-slate-700 whitespace-pre-wrap min-h-[80px]">
+                <div className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 whitespace-pre-wrap min-h-[80px]">
                   {backRules || 'This ID card is non-transferable.'}
                 </div>
               </div>
-              <div className="p-4 text-center border-t border-slate-100">
+              <div className="p-4 text-center border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
                 {qrBackUrl ? (
                   <div className="flex justify-center mb-2">
                     <div className="bg-white p-2 rounded-lg border">
@@ -324,11 +324,11 @@ export default function StudentIDCardPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="w-20 h-20 bg-slate-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                    <Loader2 size={16} className="animate-spin text-slate-400" />
+                  <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                    <Loader2 size={16} className="animate-spin text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                   </div>
                 )}
-                <p className="text-xs text-slate-500">ID Verification Code</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">ID Verification Code</p>
               </div>
             </div>
           </div>

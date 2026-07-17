@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -52,7 +52,7 @@ export default function AccountantReceiptsPage() {
     <DashboardLayout title="Receipts" subtitle="View and print payment receipts">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div><h1 className="text-2xl font-bold text-slate-800">Receipts</h1><p className="text-slate-500">View and print payment receipts</p></div>
+          <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Receipts</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">View and print payment receipts</p></div>
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Receipt</button>
         </div>
       
@@ -60,28 +60,28 @@ export default function AccountantReceiptsPage() {
           {loading ? (
             <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
           ) : receipts.length === 0 ? (
-            <div className="p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No receipts yet</p></div>
+            <div className="p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No receipts yet</p></div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
                   <tr>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Receipt #</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Student</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Amount</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Description</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Date</th>
-                    <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Receipt #</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Amount</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden sm:table-cell">Description</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Date</th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {receipts.map(r => (
-                    <tr key={r.id} className="hover:bg-slate-50">
+                    <tr key={r.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
                       <td className="py-3 px-4 font-mono text-sm">{r.id.slice(0, 8)}</td>
-                      <td className="py-3 px-4 font-medium text-slate-900">{r.student?.first_name} {r.student?.last_name}</td>
+                      <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{r.student?.first_name} {r.student?.last_name}</td>
                       <td className="py-3 px-4 font-semibold">₦{r.amount?.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-sm text-slate-600 hidden sm:table-cell">{r.description || '-'}</td>
-                      <td className="py-3 px-4 text-sm text-slate-500">{new Date(r.created_at).toLocaleDateString()}</td>
+                      <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden sm:table-cell">{r.description || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(r.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4 text-right"><button onClick={() => handlePrint(r)} className="btn-outline text-sm py-1 px-3 flex items-center gap-1 ml-auto"><Printer size={14} />Print</button></td>
                     </tr>
                   ))}
@@ -94,7 +94,7 @@ export default function AccountantReceiptsPage() {
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800">Create Receipt</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={20} /></button></div>
+              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Create Receipt</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button></div>
               <div className="p-6 space-y-4">
                 <div><label className="label">Title</label><input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="input" placeholder="Receipt title" /></div>
                 <div><label className="label">Amount</label><input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: parseFloat(e.target.value)})} className="input" /></div>

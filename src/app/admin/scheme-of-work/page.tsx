@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -141,25 +141,25 @@ export default function AdminSchemeOfWorkPage() {
     <DashboardLayout title="Scheme of Work" subtitle="Plan weekly curriculum for each class and subject">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Scheme of Work</h1>
-            <p className="text-slate-500 mt-1">Plan weekly curriculum for each class and subject</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Scheme of Work</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Plan weekly curriculum for each class and subject</p>
           </div>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm">{success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
 
         {/* Filters */}
         <div className="card">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Term</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-1">Term</label>
               <select value={filters.term_id} onChange={e => setFilters(p => ({ ...p, term_id: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <option value="">Select term...</option>
                 {sessions.map(session => (
                   <optgroup key={session.id} label={session.name}>
@@ -173,17 +173,17 @@ export default function AdminSchemeOfWorkPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-1">Class</label>
               <select value={filters.class_id} onChange={e => setFilters(p => ({ ...p, class_id: e.target.value, subject_id: '' }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <option value="">Select class...</option>
                 {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-1">Subject</label>
               <select value={filters.subject_id} onChange={e => setFilters(p => ({ ...p, subject_id: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
                 <option value="">Select subject...</option>
                 {filteredSubjects.map(s => <option key={s.id} value={s.id}>{s.name} {s.class ? `(${s.class.name})` : ''}</option>)}
               </select>
@@ -194,15 +194,15 @@ export default function AdminSchemeOfWorkPage() {
         {/* Week editor */}
         {filters.term_id && filters.class_id && filters.subject_id ? (
           <div className="card p-0 overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
               <div className="flex items-center gap-2">
-                <Layers size={18} className="text-primary-600" />
-                <span className="font-medium text-slate-700">
+                <Layers size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
+                <span className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">
                   {weeks} Weeks
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-400">One item per line for subtopics & objectives</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">One item per line for subtopics & objectives</span>
                 <button onClick={saveAll} disabled={saving}
                   className="btn-primary flex items-center gap-2 px-4 py-2">
                   {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
@@ -219,23 +219,23 @@ export default function AdminSchemeOfWorkPage() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-slate-50 text-left">
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-16">Week</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Topic</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-64">Subtopics</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-64">Learning Objectives</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase w-48">Resources</th>
+                    <tr className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-left">
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase w-16">Week</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Topic</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase w-64">Subtopics</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase w-64">Learning Objectives</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase w-48">Resources</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700 dark:divide-slate-700">
                     {Array.from({ length: weeks }, (_, i) => i + 1).map(weekNum => {
                       const entry = editableEntries[weekNum] || { topic: '', subtopics: '', objectives: '', resources: '' };
                       const existing = entries.find(e => e.week_number === weekNum);
                       return (
-                        <tr key={weekNum} className={`hover:bg-slate-50 ${existing ? 'bg-emerald-50/30' : ''}`}>
+                        <tr key={weekNum} className={`hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 ${existing ? 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20/30' : ''}`}>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${existing ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                              <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${existing ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}>
                                 {weekNum}
                               </span>
                             </div>
@@ -246,7 +246,7 @@ export default function AdminSchemeOfWorkPage() {
                               setEditableEntries(prev => ({ ...prev, [weekNum]: { ...prev[weekNum], topic: val } }));
                             }} onFocus={() => initWeek(weekNum)}
                               placeholder="Topic title"
-                              className="w-full px-2 py-1.5 border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" />
+                              className="w-full px-2 py-1.5 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" />
                           </td>
                           <td className="px-4 py-3">
                             <textarea value={entry.subtopics} onChange={e => {
@@ -254,7 +254,7 @@ export default function AdminSchemeOfWorkPage() {
                               setEditableEntries(prev => ({ ...prev, [weekNum]: { ...prev[weekNum], subtopics: val } }));
                             }} onFocus={() => initWeek(weekNum)}
                               placeholder="One per line&#10;Subtopic 1&#10;Subtopic 2"
-                              rows={3} className="w-full px-2 py-1.5 border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none" />
+                              rows={3} className="w-full px-2 py-1.5 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none" />
                           </td>
                           <td className="px-4 py-3">
                             <textarea value={entry.objectives} onChange={e => {
@@ -262,7 +262,7 @@ export default function AdminSchemeOfWorkPage() {
                               setEditableEntries(prev => ({ ...prev, [weekNum]: { ...prev[weekNum], objectives: val } }));
                             }} onFocus={() => initWeek(weekNum)}
                               placeholder="One per line&#10;Objective 1&#10;Objective 2"
-                              rows={3} className="w-full px-2 py-1.5 border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none" />
+                              rows={3} className="w-full px-2 py-1.5 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none" />
                           </td>
                           <td className="px-4 py-3">
                             <input type="text" value={entry.resources} onChange={e => {
@@ -270,7 +270,7 @@ export default function AdminSchemeOfWorkPage() {
                               setEditableEntries(prev => ({ ...prev, [weekNum]: { ...prev[weekNum], resources: val } }));
                             }} onFocus={() => initWeek(weekNum)}
                               placeholder="Links, references"
-                              className="w-full px-2 py-1.5 border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" />
+                              className="w-full px-2 py-1.5 border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" />
                           </td>
                         </tr>
                       );
@@ -280,7 +280,7 @@ export default function AdminSchemeOfWorkPage() {
               </div>
             )}
 
-            <div className="flex items-center justify-end p-4 border-t border-slate-200 bg-slate-50">
+            <div className="flex items-center justify-end p-4 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
               <button onClick={saveAll} disabled={saving}
                 className="btn-primary flex items-center gap-2 px-6 py-2">
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
@@ -291,8 +291,8 @@ export default function AdminSchemeOfWorkPage() {
         ) : (
           <div className="card text-center py-16">
             <BookOpen className="mx-auto text-slate-300 mb-4" size={48} />
-            <p className="font-medium text-slate-500">Select a term, class, and subject</p>
-            <p className="text-sm text-slate-400 mt-1">to view and edit the scheme of work</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Select a term, class, and subject</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">to view and edit the scheme of work</p>
           </div>
         )}
       </div>

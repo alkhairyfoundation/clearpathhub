@@ -30,7 +30,39 @@
   --background: #0f172a;
   --background-light: #1e293b;
   --background-dark: #0b1121;
+  color-scheme: dark;
 }
+
+/* Improved scrollbar for dark mode */
+.dark ::-webkit-scrollbar-track { background: #1e293b; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* Ensure tables have dark backgrounds */
+.dark table { --tw-bg-opacity: 1; background-color: rgb(30 41 59 / var(--tw-bg-opacity)); }
+.dark th, .dark td { border-color: rgb(51 65 85 / var(--tw-border-opacity, 1)); }
+
+/* Fix select elements in dark mode */
+.dark select { background-color: #1e293b; color: #e2e8f0; }
+.dark select option { background-color: #1e293b; color: #e2e8f0; }
+
+/* Fix input[type="date"], input[type="time"], input[type="datetime-local"] in dark mode */
+.dark input[type="date"],
+.dark input[type="time"],
+.dark input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* Improve modal/overlay dark mode */
+.dark .fixed.inset-0.bg-black\/50 { background-color: rgba(0, 0, 0, 0.7); }
+
+/* Progress bar dark mode */
+.dark .bg-slate-100 { background-color: #334155; }
+
+/* Chart text in dark mode */
+.dark .recharts-text { fill: #94a3b8 !important; }
+.dark .recharts-cartesian-axis-tick-value { fill: #94a3b8 !important; }
+.dark .recharts-legend-item-text { fill: #cbd5e1 !important; color: #cbd5e1 !important; }
 
 * {
   box-sizing: border-box;

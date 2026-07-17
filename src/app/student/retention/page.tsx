@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -69,30 +69,30 @@ export default function RetentionPage() {
     <DashboardLayout title="Knowledge Retention" subtitle="Long-term learning verification">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Knowledge Retention</h1>
-            <p className="text-slate-500 mt-1">Rechecks at 3, 7, 14, and 30 days after mastery</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Knowledge Retention</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Rechecks at 3, 7, 14, and 30 days after mastery</p>
           </div>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{error}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <div className="card"><p className="text-xs text-slate-500">Total Checks</p><p className="text-2xl font-bold text-slate-900">{stats.total}</p></div>
-          <div className="card"><p className="text-xs text-emerald-600 flex items-center gap-1"><CheckCircle size={12} /> Passed</p><p className="text-2xl font-bold text-emerald-600">{stats.passed}</p></div>
-          <div className="card"><p className="text-xs text-red-600 flex items-center gap-1"><XCircle size={12} /> Failed</p><p className="text-2xl font-bold text-red-600">{stats.failed}</p></div>
-          <div className="card bg-amber-50 border-amber-200"><p className="text-xs text-amber-700 flex items-center gap-1"><Clock size={12} /> Due Now</p><p className="text-2xl font-bold text-amber-700">{stats.due}</p></div>
-          <div className="card"><p className="text-xs text-slate-500 flex items-center gap-1"><Brain size={12} /> Upcoming</p><p className="text-2xl font-bold text-slate-600">{stats.upcoming}</p></div>
+          <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Checks</p><p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{stats.total}</p></div>
+          <div className="card"><p className="text-xs text-emerald-600 dark:text-emerald-400 dark:text-emerald-400 flex items-center gap-1"><CheckCircle size={12} /> Passed</p><p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 dark:text-emerald-400">{stats.passed}</p></div>
+          <div className="card"><p className="text-xs text-red-600 dark:text-red-400 dark:text-red-400 flex items-center gap-1"><XCircle size={12} /> Failed</p><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{stats.failed}</p></div>
+          <div className="card bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40"><p className="text-xs text-amber-700 dark:text-amber-300 dark:text-amber-300 flex items-center gap-1"><Clock size={12} /> Due Now</p><p className="text-2xl font-bold text-amber-700 dark:text-amber-300 dark:text-amber-300">{stats.due}</p></div>
+          <div className="card"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 flex items-center gap-1"><Brain size={12} /> Upcoming</p><p className="text-2xl font-bold text-slate-600 dark:text-slate-400 dark:text-slate-400">{stats.upcoming}</p></div>
         </div>
 
         {stats.due > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-            <AlertTriangle size={24} className="text-amber-600" />
+          <div className="bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-xl p-4 flex items-center gap-3">
+            <AlertTriangle size={24} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" />
             <div>
               <p className="font-semibold text-amber-800">{stats.due} retention check{stats.due > 1 ? 's' : ''} due</p>
-              <p className="text-sm text-amber-700">Take a practice session to verify long-term knowledge retention</p>
+              <p className="text-sm text-amber-700 dark:text-amber-300 dark:text-amber-300">Take a practice session to verify long-term knowledge retention</p>
             </div>
             <Link href="/student/practice" className="btn-primary ml-auto text-sm">Practice Now</Link>
           </div>
@@ -103,7 +103,7 @@ export default function RetentionPage() {
           {(['all', 'due', 'passed', 'failed'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize ${
-                filter === f ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                filter === f ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
               }`}>
               {f}
               {f === 'due' && stats.due > 0 && <span className="ml-1">({stats.due})</span>}
@@ -115,8 +115,8 @@ export default function RetentionPage() {
         {filtered.length === 0 ? (
           <div className="card text-center py-12">
             <Brain className="mx-auto text-slate-300 mb-3" size={40} />
-            <p className="font-medium text-slate-500">No retention checks</p>
-            <p className="text-sm text-slate-400 mt-1">Complete mastery verification to schedule retention checks</p>
+            <p className="font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">No retention checks</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Complete mastery verification to schedule retention checks</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -132,28 +132,28 @@ export default function RetentionPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <BookOpen size={16} className="text-slate-400" />
-                        <span className="font-semibold text-slate-900">{check.topic}</span>
-                        <span className="text-xs text-slate-400">{check.subject?.name || check.subject_name}</span>
+                        <BookOpen size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
+                        <span className="font-semibold text-slate-900 dark:text-white dark:text-white">{check.topic}</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{check.subject?.name || check.subject_name}</span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">
                         <span>Check: Day {check.check_days}</span>
                         <span>Scheduled: {new Date(check.check_date).toLocaleDateString()}</span>
                         {check.retest_score != null && <span>Score: {Math.round(check.retest_score)}%</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                          check.passed === true ? 'bg-emerald-100 text-emerald-700' :
-                          check.passed === false ? 'bg-red-100 text-red-700' :
-                          isDue ? 'bg-amber-100 text-amber-700' :
-                          'bg-blue-100 text-blue-700'
+                          check.passed === true ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300' :
+                          check.passed === false ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' :
+                          isDue ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' :
+                          'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300'
                         }`}>
                           {check.passed === true ? 'Passed' :
                            check.passed === false ? 'Needs Reinforcement' :
                            isDue ? 'Due Now' : 'Upcoming'}
                         </span>
                         {check.entered_reinforcement && (
-                          <span className="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700 px-1.5 py-0.5 rounded">
                             In Reinforcement
                           </span>
                         )}
@@ -166,7 +166,7 @@ export default function RetentionPage() {
                         </div>
                       </div>
                       {check.mastery_score_at_verification != null && (
-                        <p className="text-[10px] text-slate-400 mt-1">
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">
                           Initial: {Math.round(check.mastery_score_at_verification)}%
                         </p>
                       )}
@@ -181,7 +181,7 @@ export default function RetentionPage() {
                         style={{ width: `${Math.min(check.check_days / 30 * 100, 100)}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400">{check.check_days}/30 days</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">{check.check_days}/30 days</span>
                   </div>
                 </div>
               );
@@ -190,9 +190,9 @@ export default function RetentionPage() {
         )}
 
         {/* Retention explanation */}
-        <div className="card bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200">
-          <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
-            <Brain size={18} className="text-primary-600" />
+        <div className="card bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40">
+          <h3 className="font-bold text-slate-900 dark:text-white dark:text-white mb-2 flex items-center gap-2">
+            <Brain size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
             How Retention Works
           </h3>
           <div className="grid grid-cols-4 gap-3 text-sm">
@@ -203,16 +203,16 @@ export default function RetentionPage() {
               { days: 30, label: 'Long-term', desc: 'Month-long memory verification' },
             ].map(item => (
               <div key={item.days} className="text-center p-3 bg-white rounded-lg">
-                <div className="w-8 h-8 mx-auto bg-primary-100 rounded-full flex items-center justify-center mb-1">
-                  <span className="text-sm font-bold text-primary-700">{item.days}d</span>
+                <div className="w-8 h-8 mx-auto bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center mb-1">
+                  <span className="text-sm font-bold text-primary-700 dark:text-primary-300 dark:text-primary-300">{item.days}d</span>
                 </div>
-                <p className="font-medium text-slate-900 text-xs">{item.label}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">{item.desc}</p>
+                <p className="font-medium text-slate-900 dark:text-white dark:text-white text-xs">{item.label}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-0.5">{item.desc}</p>
               </div>
             ))}
           </div>
-          <div className="mt-3 p-3 bg-white bg-opacity-50 rounded-lg text-xs text-slate-600">
-            <p className="font-medium text-slate-700">If you score below 80% on a retention check:</p>
+          <div className="mt-3 p-3 bg-white bg-opacity-50 rounded-lg text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">
+            <p className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">If you score below 80% on a retention check:</p>
             <ul className="list-disc list-inside mt-1 space-y-0.5">
               <li>The topic becomes active for reinforcement</li>
               <li>It will appear in your priority practice topics</li>

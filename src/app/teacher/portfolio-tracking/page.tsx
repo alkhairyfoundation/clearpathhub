@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -141,28 +141,28 @@ export default function TeacherPortfolioTrackingPage() {
     <DashboardLayout title="Portfolio Tracking" subtitle="Track and update student skill rubrics">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Portfolio Tracking</h1>
-            <p className="text-slate-500 mt-1">Update rubric levels and add evidence for your students</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Portfolio Tracking</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Update rubric levels and add evidence for your students</p>
           </div>
         </div>
 
-        {success && <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-emerald-700 text-sm flex items-center gap-2"><Check size={16} /> {success}</div>}
-        {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2"><AlertCircle size={16} /> {error}</div>}
+        {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm flex items-center gap-2"><Check size={16} /> {success}</div>}
+        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2"><AlertCircle size={16} /> {error}</div>}
 
         <div className="card">
-          <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2"><Users size={18} /> Select Student</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-3 flex items-center gap-2"><Users size={18} /> Select Student</h3>
           {students.length === 0 ? (
-            <p className="text-sm text-slate-400">No students assigned to your classes.</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">No students assigned to your classes.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {students.map((s: any) => (
                 <button key={s.profile_id} onClick={() => loadStudentData(s.profile_id)}
-                  className={`p-3 rounded-xl border text-left text-sm transition-all ${selectedStudent === s.profile_id ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                  <p className="font-medium text-slate-900 truncate">{s.profile?.first_name} {s.profile?.last_name}</p>
+                  className={`p-3 rounded-xl border text-left text-sm transition-all ${selectedStudent === s.profile_id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'}`}>
+                  <p className="font-medium text-slate-900 dark:text-white dark:text-white truncate">{s.profile?.first_name} {s.profile?.last_name}</p>
                 </button>
               ))}
             </div>
@@ -170,31 +170,31 @@ export default function TeacherPortfolioTrackingPage() {
         </div>
 
         {selectedStudent && loading ? (
-          <div className="flex items-center justify-center py-8"><Loader2 size={24} className="animate-spin text-primary-600" /></div>
+          <div className="flex items-center justify-center py-8"><Loader2 size={24} className="animate-spin text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
         ) : selectedStudent && !goal ? (
           <div className="card text-center py-8">
-            <p className="text-slate-500">This student has not set a growth goal yet.</p>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">This student has not set a growth goal yet.</p>
           </div>
         ) : selectedStudent && goal ? (
           <>
             <div className="card bg-gradient-to-br from-primary-50 to-amber-50">
-              <p className="font-semibold text-primary-800">{selectedStudentProfile?.first_name} {selectedStudentProfile?.last_name}</p>
-              <p className="text-sm text-primary-600 mt-1">{goal.archetype?.name}</p>
-              <p className="text-sm text-primary-700 italic mt-1">{goal.goal_statement_snapshot}</p>
+              <p className="font-semibold text-primary-800 dark:text-primary-200 dark:text-primary-200">{selectedStudentProfile?.first_name} {selectedStudentProfile?.last_name}</p>
+              <p className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">{goal.archetype?.name}</p>
+              <p className="text-sm text-primary-700 dark:text-primary-300 dark:text-primary-300 italic mt-1">{goal.goal_statement_snapshot}</p>
             </div>
 
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-slate-900">Skill Rubrics</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white">Skill Rubrics</h3>
                 <button onClick={saveRubrics} disabled={saving} className="btn-primary text-sm flex items-center gap-1">
                   {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save Changes
                 </button>
               </div>
               <div className="space-y-3">
                 {(goal.goal_skills || []).map((gs: any) => (
-                  <div key={gs.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <div key={gs.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">{gs.skill?.name}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{gs.skill?.name}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {LEVELS.map((level) => (
@@ -202,7 +202,7 @@ export default function TeacherPortfolioTrackingPage() {
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                             (rubricUpdates[gs.skill_id] || '') === level
                               ? `${RUBRIC_COLORS[level as keyof typeof RUBRIC_COLORS]} text-white`
-                              : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+                              : 'bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'
                           }`}
                         >
                           {RUBRIC_LABELS[level as keyof typeof RUBRIC_LABELS]}
@@ -216,23 +216,23 @@ export default function TeacherPortfolioTrackingPage() {
 
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-slate-900">Evidence Notes</h3>
+                <h3 className="font-semibold text-slate-900 dark:text-white dark:text-white">Evidence Notes</h3>
                 <button onClick={() => setShowEvidenceModal(true)} className="btn-primary text-sm flex items-center gap-1">
                   <Plus size={14} /> Add Evidence
                 </button>
               </div>
               {evidence.length === 0 ? (
-                <p className="text-sm text-slate-400">No evidence recorded yet.</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">No evidence recorded yet.</p>
               ) : (
                 <div className="space-y-2">
                   {evidence.map((ev: any) => (
-                    <div key={ev.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
+                    <div key={ev.id} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 capitalize font-medium">{ev.evidence_type}</span>
-                          <span className="text-xs text-slate-400">{new Date(ev.created_at).toLocaleDateString()}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300 capitalize font-medium">{ev.evidence_type}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{new Date(ev.created_at).toLocaleDateString()}</span>
                         </div>
-                        {ev.text_snapshot && <p className="text-sm text-slate-700 mt-1">{ev.text_snapshot}</p>}
+                        {ev.text_snapshot && <p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 mt-1">{ev.text_snapshot}</p>}
                       </div>
                     </div>
                   ))}
@@ -248,7 +248,7 @@ export default function TeacherPortfolioTrackingPage() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
             <div className="p-5 border-b flex items-center justify-between">
               <h3 className="text-lg font-bold">Add Evidence Note</h3>
-              <button onClick={() => setShowEvidenceModal(false)} className="p-2 hover:bg-slate-100 rounded-lg"><X size={20} /></button>
+              <button onClick={() => setShowEvidenceModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
             </div>
             <div className="p-5 space-y-4">
               <div>

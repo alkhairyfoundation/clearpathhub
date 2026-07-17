@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -87,12 +87,12 @@ export default function StudentResultsPage() {
   const sortedResults = [...allScores].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   function getGradeColor(grade: string) {
-    if (grade?.includes('A')) return 'bg-green-100 text-green-700';
-    if (grade?.includes('B')) return 'bg-primary-100 text-primary-700';
+    if (grade?.includes('A')) return 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300';
+    if (grade?.includes('B')) return 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300';
     if (grade?.includes('C')) return 'bg-yellow-100 text-yellow-700';
     if (grade?.includes('D')) return 'bg-orange-100 text-orange-700';
-    if (grade?.includes('F')) return 'bg-red-100 text-red-700';
-    return 'bg-gray-100 text-gray-700';
+    if (grade?.includes('F')) return 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400';
+    return 'bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 text-gray-700 dark:text-slate-300 dark:text-slate-300';
   }
 
   function getLetterGrade(pct: number): string {
@@ -253,12 +253,12 @@ export default function StudentResultsPage() {
     <DashboardLayout title="My Results" subtitle="View your academic performance">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-slate-800">My Results</h1>
-            <p className="text-slate-500">View your academic performance</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">My Results</h1>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">View your academic performance</p>
           </div>
           <button onClick={downloadPDF} disabled={downloading || allScores.length === 0} className="btn-outline flex items-center gap-2 disabled:opacity-50">
             {downloading ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
@@ -267,21 +267,21 @@ export default function StudentResultsPage() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Average</span><Award className="text-primary-600" size={18} /></div><p className={`text-2xl font-bold ${avg >= 70 ? 'text-green-600' : avg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{avg}%</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Highest</span><TrendingUp className="text-green-600" size={18} /></div><p className="text-2xl font-bold text-green-600">{highest}%</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Lowest</span><BookOpen className="text-red-600" size={18} /></div><p className="text-2xl font-bold text-red-600">{lowest}%</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500">Total Assessments</span><Calendar className="text-purple-600" size={18} /></div><p className="text-2xl font-bold text-slate-800">{allScores.length}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Average</span><Award className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={18} /></div><p className={`text-2xl font-bold ${avg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : avg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{avg}%</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Highest</span><TrendingUp className="text-green-600 dark:text-green-400 dark:text-green-400" size={18} /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{highest}%</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Lowest</span><BookOpen className="text-red-600 dark:text-red-400 dark:text-red-400" size={18} /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{lowest}%</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Assessments</span><Calendar className="text-purple-600 dark:text-purple-400 dark:text-purple-400" size={18} /></div><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{allScores.length}</p></div>
         </div>
 
         {subjectBreakdown.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-primary-600" />Per-Subject Performance</h3>
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />Per-Subject Performance</h3>
               <div className="space-y-3">
                 {subjectBreakdown.map(s => (
                   <div key={s.id}>
-                    <div className="flex items-center justify-between text-sm mb-1"><span className="font-medium text-slate-700">{s.name}</span><span className={`font-bold ${s.avg >= 70 ? 'text-green-600' : s.avg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{s.avg}%</span></div>
-                    <div className="w-full bg-slate-100 rounded-full h-2.5">
+                    <div className="flex items-center justify-between text-sm mb-1"><span className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.name}</span><span className={`font-bold ${s.avg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : s.avg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{s.avg}%</span></div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-2.5">
                       <div className={`h-2.5 rounded-full transition-all ${s.avg >= 70 ? 'bg-green-500' : s.avg >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${s.avg}%` }} />
                     </div>
                   </div>
@@ -290,7 +290,7 @@ export default function StudentResultsPage() {
             </div>
 
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-primary-600" />Subject Radar</h3>
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />Subject Radar</h3>
               {radarData.length >= 3 && (
                 <ResponsiveContainer width="100%" height={280}>
                   <RadarChart data={radarData}>
@@ -302,21 +302,21 @@ export default function StudentResultsPage() {
                   </RadarChart>
                 </ResponsiveContainer>
               )}
-              {radarData.length < 3 && <p className="text-slate-400 text-sm py-8 text-center">Add more subjects to see radar</p>}
+              {radarData.length < 3 && <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm py-8 text-center">Add more subjects to see radar</p>}
             </div>
 
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><PieChart size={18} className="text-purple-600" />Grade Distribution</h3>
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><PieChart size={18} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" />Grade Distribution</h3>
               <div className="space-y-2">
                 {Object.entries(gradeDist).sort(([a], [b]) => a.localeCompare(b)).map(([grade, count]) => {
                   const pct = Math.round((count / results.length) * 100);
                   return (
                     <div key={grade} className="flex items-center gap-3">
                       <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${getGradeColor(grade)}`}>{grade}</span>
-                      <div className="flex-1 bg-slate-100 rounded-full h-3">
+                      <div className="flex-1 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-3">
                         <div className={`h-3 rounded-full ${grade === 'F' ? 'bg-red-500' : grade === 'A' ? 'bg-green-500' : 'bg-primary-500'}`} style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-sm text-slate-500 w-12 text-right">{count}</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 w-12 text-right">{count}</span>
                     </div>
                   );
                 })}
@@ -327,30 +327,30 @@ export default function StudentResultsPage() {
 
         {subjectBreakdown.length > 0 && (
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2"><Award size={18} className="text-primary-600" />Performance Insights</h3>
-            <p className="text-slate-600 text-sm leading-relaxed">{buildPerformanceText()}</p>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3 flex items-center gap-2"><Award size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />Performance Insights</h3>
+            <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 text-sm leading-relaxed">{buildPerformanceText()}</p>
           </div>
         )}
 
         {weakAreas.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-            <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2"><AlertTriangle size={18} />Weak Areas Need Attention</h3>
-            <p className="text-sm text-red-700 mb-3">These subjects are below 50%. Consider extra study and practice.</p>
+          <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl p-6">
+            <h3 className="font-semibold text-red-800 dark:text-red-300 dark:text-red-300 mb-3 flex items-center gap-2"><AlertTriangle size={18} />Weak Areas Need Attention</h3>
+            <p className="text-sm text-red-700 dark:text-red-400 dark:text-red-400 mb-3">These subjects are below 50%. Consider extra study and practice.</p>
             <div className="flex flex-wrap gap-2">
-              {weakAreas.map(s => <span key={s.id} className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm font-medium">{s.name} ({s.avg}%)</span>)}
+              {weakAreas.map(s => <span key={s.id} className="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400 rounded-lg text-sm font-medium">{s.name} ({s.avg}%)</span>)}
             </div>
           </div>
         )}
 
         {examTypeAvgs.length > 0 && (
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-green-600" />Performance by Assessment Type</h3>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-green-600 dark:text-green-400 dark:text-green-400" />Performance by Assessment Type</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {examTypeAvgs.map(e => (
-                <div key={e.type} className="bg-slate-50 rounded-lg p-4 text-center">
-                  <p className="text-xs text-slate-500 uppercase font-semibold">{e.type}</p>
-                  <p className={`text-xl font-bold mt-1 ${e.avg >= 70 ? 'text-green-600' : e.avg >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{e.avg}%</p>
-                  <p className="text-xs text-slate-400">{e.count} exam{e.count > 1 ? 's' : ''}</p>
+                <div key={e.type} className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg p-4 text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">{e.type}</p>
+                  <p className={`text-xl font-bold mt-1 ${e.avg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : e.avg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{e.avg}%</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{e.count} exam{e.count > 1 ? 's' : ''}</p>
                 </div>
               ))}
             </div>
@@ -359,12 +359,12 @@ export default function StudentResultsPage() {
 
         {sortedResults.length > 3 && (
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-primary-600" />Score Trend</h3>
+            <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />Score Trend</h3>
             <div className="flex items-end gap-1 h-32">
               {sortedResults.slice(-20).map((r, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
                   <div className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600" style={{ height: `${r.score}%`, minHeight: '4px' }} title={`${r.score}%`} />
-                  <span className="text-[8px] text-slate-400 rotate-45 origin-left whitespace-nowrap">{new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                  <span className="text-[8px] text-slate-400 dark:text-slate-500 dark:text-slate-500 rotate-45 origin-left whitespace-nowrap">{new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 </div>
               ))}
             </div>
@@ -372,27 +372,27 @@ export default function StudentResultsPage() {
         )}
 
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : allScores.length === 0 ? <div className="p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No results yet</p></div> : (
+          {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : allScores.length === 0 ? <div className="p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No results yet</p></div> : (
             <table className="w-full">
-              <thead className="bg-gray-50"><tr><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Assessment</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Type</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Score</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Grade</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Date</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500">Details</th></tr></thead>
+              <thead className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800"><tr><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Assessment</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Type</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Score</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Grade</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Date</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Details</th></tr></thead>
               <tbody>{allScores.map((r) => {
                 const grade = results.find(res => res.id === r.id)?.grade || (r.score >= 90 ? 'A+' : r.score >= 80 ? 'A' : r.score >= 70 ? 'B' : r.score >= 60 ? 'C' : r.score >= 50 ? 'D' : 'F');
                 const tp = r.topic_performance;
                 const subjKeys = tp?.by_subject ? Object.keys(tp.by_subject) : [];
                 return (
-                <tr key={`${r.type}-${r.id}`} className="border-t hover:bg-gray-50">
-                  <td className="py-4 px-6 font-medium text-slate-800">{r.label}</td>
-                  <td className="py-4 px-6"><span className={`capitalize text-xs font-semibold px-2 py-0.5 rounded-full ${r.type === 'exam' ? 'bg-primary-100 text-primary-700' : r.type === 'test' ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700'}`}>{r.type}</span></td>
-                  <td className="py-4 px-6"><span className={`font-bold ${r.score >= 70 ? 'text-green-600' : r.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{r.score}</span></td>
+                <tr key={`${r.type}-${r.id}`} className="border-t hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-800">
+                  <td className="py-4 px-6 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{r.label}</td>
+                  <td className="py-4 px-6"><span className={`capitalize text-xs font-semibold px-2 py-0.5 rounded-full ${r.type === 'exam' ? 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300' : r.type === 'test' ? 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700' : 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300'}`}>{r.type}</span></td>
+                  <td className="py-4 px-6"><span className={`font-bold ${r.score >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : r.score >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{r.score}</span></td>
                   <td className="py-4 px-6"><span className={`px-2 py-1 rounded text-xs font-medium ${getGradeColor(grade)}`}>{grade}</span></td>
-                  <td className="py-4 px-6 text-slate-500">{new Date(r.date).toLocaleDateString()}</td>
+                  <td className="py-4 px-6 text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(r.date).toLocaleDateString()}</td>
                   <td className="py-4 px-6">
                     {subjKeys.length > 0 ? (
-                      <div className="text-xs text-slate-600 space-y-0.5">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-0.5">
                         {subjKeys.map(sk => {
                           const sd = tp.by_subject[sk];
                           const sp = sd.total > 0 ? Math.round((sd.correct / sd.total) * 100) : 0;
-                          return <div key={sk} className="flex items-center gap-1"><span className="font-medium w-16 truncate">{sk}:</span><span className={`font-bold ${sp >= 70 ? 'text-green-600' : sp >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{sp}%</span></div>;
+                          return <div key={sk} className="flex items-center gap-1"><span className="font-medium w-16 truncate">{sk}:</span><span className={`font-bold ${sp >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : sp >= 40 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{sp}%</span></div>;
                         })}
                       </div>
                     ) : <span className="text-slate-300">—</span>}

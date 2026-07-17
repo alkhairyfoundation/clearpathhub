@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -93,18 +93,18 @@ export default function ParentChildrenPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">My Children</h1>
-              <p className="text-slate-500">View your children&apos;s information and progress</p>
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">My Children</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">View your children&apos;s information and progress</p>
             </div>
           </div>
         </div>
 
       {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div> : children.length === 0 ? (
-        <div className="bg-white rounded-xl p-12 text-center"><Users className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500">No children linked to your account</p><p className="text-sm text-slate-400 mt-1">Contact the school admin to link your children</p></div>
+        <div className="bg-white rounded-xl p-12 text-center"><Users className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p><p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Contact the school admin to link your children</p></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {children.map((child) => {
@@ -112,17 +112,17 @@ export default function ParentChildrenPage() {
             return (
               <div key={child.id} className="bg-white rounded-xl shadow-md p-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-xl font-bold">{child.profile?.first_name?.[0]}{child.profile?.last_name?.[0]}</div>
-                  <div><h3 className="font-semibold text-slate-800 text-lg">{child.profile?.first_name} {child.profile?.last_name}</h3><p className="text-sm text-slate-500">{child.admission_number} &bull; {child.class?.name}</p></div>
+                  <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 dark:text-primary-400 text-xl font-bold">{child.profile?.first_name?.[0]}{child.profile?.last_name?.[0]}</div>
+                  <div><h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-lg">{child.profile?.first_name} {child.profile?.last_name}</h3><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{child.admission_number} &bull; {child.class?.name}</p></div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="text-center p-3 bg-primary-50 rounded-lg"><TrendingUp className="mx-auto text-primary-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.avgScore}%</p><p className="text-xs text-slate-500">Average</p></div>
-                  <div className="text-center p-3 bg-green-50 rounded-lg"><UserCheck className="mx-auto text-green-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.attendanceRate}%</p><p className="text-xs text-slate-500">Attendance</p></div>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg"><Brain className="mx-auto text-purple-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalQuizzes}</p><p className="text-xs text-slate-500">Quizzes</p></div>
-                  <div className="text-center p-3 bg-blue-50 rounded-lg"><BookOpen className="mx-auto text-blue-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalTests}</p><p className="text-xs text-slate-500">Tests</p></div>
-                  <div className="text-center p-3 bg-amber-50 rounded-lg"><FileText className="mx-auto text-amber-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalHomework}</p><p className="text-xs text-slate-500">Homework</p></div>
-                  <div className="text-center p-3 bg-slate-50 rounded-lg"><GraduationCap className="mx-auto text-slate-600 mb-1" size={18} /><p className="text-lg font-bold text-slate-800">{stats.totalResults}</p><p className="text-xs text-slate-500">Results</p></div>
+                  <div className="text-center p-3 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg"><TrendingUp className="mx-auto text-primary-600 dark:text-primary-400 dark:text-primary-400 mb-1" size={18} /><p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.avgScore}%</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Average</p></div>
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-lg"><UserCheck className="mx-auto text-green-600 dark:text-green-400 dark:text-green-400 mb-1" size={18} /><p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.attendanceRate}%</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Attendance</p></div>
+                  <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20 rounded-lg"><Brain className="mx-auto text-purple-600 dark:text-purple-400 dark:text-purple-400 mb-1" size={18} /><p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.totalQuizzes}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Quizzes</p></div>
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg"><BookOpen className="mx-auto text-blue-600 dark:text-blue-400 dark:text-blue-400 mb-1" size={18} /><p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.totalTests}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Tests</p></div>
+                  <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 rounded-lg"><FileText className="mx-auto text-amber-600 dark:text-amber-400 dark:text-amber-400 mb-1" size={18} /><p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.totalHomework}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Homework</p></div>
+                  <div className="text-center p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><GraduationCap className="mx-auto text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-1" size={18} /><p className="text-lg font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.totalResults}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Results</p></div>
                 </div>
                 
                   <div className="flex gap-2">
