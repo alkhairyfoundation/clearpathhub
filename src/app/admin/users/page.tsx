@@ -138,7 +138,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
 
   async function fetchUsers() {
     setLoading(true);
-    let query = supabase.from('profiles').select('*');
+    let query = supabase.from('profiles').select('*', { count: 'exact', head: false });
 
     if (selectedRole !== 'all') {
       query = query.eq('role', selectedRole);
@@ -331,7 +331,8 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
         setShowCredentialsModal(true);
       }
 
-      fetchUsers();
+      // Small delay to let DB writes commit before re-fetching
+      setTimeout(() => fetchUsers(), 300);
       setTimeout(() => {
         setShowModal(false);
         setSuccess('');
@@ -926,6 +927,12 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                   <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                     <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Guardian Phone</span>
                     <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.guardian_phone}</span>
+                  </div>
+                )}
+                {viewingUser.role === 'student' && userExtraInfo?.guardian_email && (
+                  <div className="flex justify-between items-center py-2 px-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Guardian Email</span>
+                    <span className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{userExtraInfo.guardian_email}</span>
                   </div>
                 )}
                 {viewingUser.role === 'student' && userExtraInfo?.blood_group && (

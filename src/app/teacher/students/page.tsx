@@ -176,7 +176,7 @@ export default function TeacherStudentsPage() {
         const res = await fetch('/api/teacher/students', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ ...formData, ...studentExtra }),
         });
 
         const result = await res.json();
@@ -190,7 +190,7 @@ export default function TeacherStudentsPage() {
         setShowCredentialsModal(true);
       }
 
-      fetchData();
+      setTimeout(() => fetchData(), 300);
       setTimeout(() => {
         setShowModal(false);
         setSuccess('');

@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, first_name, last_name, class_id, phone } = await request.json();
+    const { email, password, first_name, last_name, class_id, phone, admission_number,
+      date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact } = await request.json();
     let admissionNumber = '';
 
     // Validate required fields
@@ -129,18 +130,33 @@ export async function POST(request: NextRequest) {
     const studentCount = countResult.length > 0 ? parseInt(countResult[0].count || '0') : 0;
     admissionNumber = `STD${String(studentCount + 1).padStart(4, '0')}`;
 
+    // Use provided admission_number or generated one
+    if (admission_number && admission_number.trim() !== '') {
+      admissionNumber = admission_number.trim();
+    }
+
     // Insert into students
     await query(
       `INSERT INTO students (
-        profile_id, admission_number, class_id, parent_id
+        profile_id, admission_number, class_id, parent_id,
+        date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact
       ) VALUES (
-        $1, $2, $3, $4
+        $1, $2, $3, $4,
+        $5, $6, $7, $8, $9, $10, $11, $12
       )`,
       [
         userId,
         admissionNumber,
         class_id,
-        null
+        null,
+        date_of_birth || null,
+        gender || null,
+        address || null,
+        guardian_name || null,
+        guardian_phone || null,
+        guardian_email || null,
+        blood_group || null,
+        emergency_contact || null,
       ]
     );
 
