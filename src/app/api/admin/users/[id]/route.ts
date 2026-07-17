@@ -171,9 +171,23 @@ export async function PATCH(request: Request, { params }: { params: { id: string
           return NextResponse.json({ success: false, error: `Failed to update student record: ${updateErr.message}` }, { status: 500 });
         }
       } else {
-        // Student record doesn't exist — create one (fixes ghost students with no class)
-        const { count } = await supabase.from('students').select('*', { count: 'exact', head: true });
-        const admissionNumber = `STD${new Date().getFullYear()}${String((count || 0) + 1).padStart(4, '0')}`;
+        // Student record doesn't exist in Supabase — check Neon first
+        let existingAdmission = admission_number;
+        if (!existingAdmission || existingAdmission.trim() === '') {
+          try {
+            const neonRows = await neonQuery(
+              'SELECT admission_number FROM students WHERE profile_id = $1',
+              [params.id]
+            );
+            if (neonRows.length > 0) {
+              existingAdmission = neonRows[0].admission_number;
+            }
+          } catch { /* ignore Neon errors */ }
+        }
+        // Generate one if still empty (timestamp-based to avoid collisions)
+        const admissionNumber = (existingAdmission && existingAdmission.trim() !== '')
+          ? existingAdmission.trim()
+          : `STD${new Date().getFullYear()}${Date.now().toString().slice(-6)}`;
         const { error: insertErr } = await supabase.from('students').insert({
           profile_id: params.id,
           admission_number: admissionNumber,
