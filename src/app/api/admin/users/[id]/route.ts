@@ -165,7 +165,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         if (guardian_email !== undefined) studentUpdates.guardian_email = guardian_email || null;
         if (blood_group !== undefined) studentUpdates.blood_group = blood_group || null;
         if (emergency_contact !== undefined) studentUpdates.emergency_contact = emergency_contact || null;
-        if (admission_number !== undefined) studentUpdates.admission_number = admission_number || null;
+        if (admission_number !== undefined && admission_number !== '' && admission_number !== null) studentUpdates.admission_number = admission_number;
         const { error: updateErr } = await supabase.from('students').update(studentUpdates).eq('id', existingStudent.id);
         if (updateErr) {
           return NextResponse.json({ success: false, error: `Failed to update student record: ${updateErr.message}` }, { status: 500 });
@@ -176,7 +176,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         const admissionNumber = `STD${new Date().getFullYear()}${String((count || 0) + 1).padStart(4, '0')}`;
         const { error: insertErr } = await supabase.from('students').insert({
           profile_id: params.id,
-          admission_number: admission_number || admissionNumber,
+          admission_number: admissionNumber,
           class_id: class_id || null,
           date_of_birth: date_of_birth || null,
           gender: gender || null,

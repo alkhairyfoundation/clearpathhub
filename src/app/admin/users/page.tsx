@@ -285,7 +285,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
           body.guardian_email = studentData.guardian_email || null;
           body.blood_group = studentData.blood_group || null;
           body.emergency_contact = studentData.emergency_contact || null;
-          body.admission_number = studentData.admission_number || null;
+          body.admission_number = studentData.admission_number || '';
         }
 
         const res = await fetch(`/api/admin/users/${editingUser.id}`, {
