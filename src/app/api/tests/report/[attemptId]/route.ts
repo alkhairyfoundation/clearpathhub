@@ -149,6 +149,44 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
     const needsImprovement = subjectPerformance.filter(s => s.percentage < 50).map(s => s.name);
     const weakTopics = topicPerformance.filter(t => t.percentage < 50).map(t => t.name);
 
+    // Per-subject detailed recommendations
+    const subjectRecommendations = subjectPerformance.map((s: any) => {
+      const subjTopics = topicPerformance.filter((t: any) => {
+        return subjectTopicBreakdown.some((st: any) =>
+          st.subject === s.name && st.topics.some((tt: any) => tt.name === t.name)
+        );
+      });
+      const weakSubjTopics = subjTopics.filter((t: any) => t.percentage < 50);
+      const strongSubjTopics = subjTopics.filter((t: any) => t.percentage >= 70);
+      const assessment = s.percentage >= 80 ? 'Excellent' : s.percentage >= 70 ? 'Good' : s.percentage >= 50 ? 'Fair' : 'Weak';
+      const recommendation = s.percentage >= 80
+        ? `Continue maintaining this level. Consider exploring advanced topics.`
+        : s.percentage >= 70
+        ? `Good performance. Focus on ${weakSubjTopics.length > 0 ? weakSubjTopics.map((t: any) => t.name).join(', ') : 'weaker areas'} to reach excellence.`
+        : s.percentage >= 50
+        ? `Needs more practice. Prioritize ${weakSubjTopics.length > 0 ? weakSubjTopics.map((t: any) => t.name).join(', ') : 'key topics'} and seek additional support.`
+        : `Critical area requiring immediate attention. Recommend extra tutoring and focused revision on all weak topics.`;
+      return { subject: s.name, score: s.percentage, assessment, weakTopics: weakSubjTopics.map((t: any) => t.name), strongTopics: strongSubjTopics.map((t: any) => t.name), recommendation };
+    });
+
+    // Difficulty-based insights
+    const difficultyInsights = difficultyBreakdown.map((d: any) => {
+      const level = d.level?.toLowerCase() || 'unknown';
+      return {
+        level: d.level,
+        score: d.percentage,
+        insight: d.percentage >= 70 ? `Strong at ${level} level questions` : d.percentage >= 50 ? `Average at ${level} level` : `Struggles with ${level} level questions — needs targeted practice`,
+      };
+    });
+
+    // Time analysis
+    const timeAnalysis = {
+      timeTaken: attempt.time_taken || 0,
+      duration: attempt.time_taken || 0,
+      pace: attempt.time_taken && totalQuestions > 0 ? Math.round((attempt.time_taken / totalQuestions) * 10) / 10 : 0,
+      securityFlags: (attempt.tab_switches || 0) + (attempt.fullscreen_exits || 0),
+    };
+
     let studentName = '';
     let studentAdmission = '';
     try {
@@ -222,6 +260,9 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
           needsImprovement,
           weakTopics,
           overall: score >= 70 ? 'Good' : score >= 50 ? 'Average' : 'Needs Improvement',
+          subjectRecommendations,
+          difficultyInsights,
+          timeAnalysis,
         },
       },
     });
