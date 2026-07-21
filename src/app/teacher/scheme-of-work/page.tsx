@@ -32,9 +32,18 @@ export default function TeacherSchemeOfWorkPage() {
 
   async function fetchInitialData() {
     setLoading(true);
+    // Get teacher's class IDs from teacher_classes
+    const { data: tcData } = await supabase
+      .from('teacher_classes')
+      .select('class_id')
+      .eq('teacher_id', profile?.id);
+    const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || [])) as string[];
+
     const [termsRes, subjectsRes] = await Promise.all([
       supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date'),
-      supabase.from('subjects').select('*, class:classes!class_id(name)').eq('teacher_id', profile?.id).order('name'),
+      teacherClassIds.length > 0
+        ? supabase.from('subjects').select('*, class:classes!class_id(name)').in('class_id', teacherClassIds).order('name')
+        : supabase.from('subjects').select('*, class:classes!class_id(name)').order('name'),
     ]);
     if (!termsRes.error && termsRes.data) setTerms(termsRes.data);
     if (!subjectsRes.error && subjectsRes.data) setMySubjects(subjectsRes.data);

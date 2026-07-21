@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, first_name, last_name, role, phone, class_id, subject_ids,
+    const { email, password, first_name, last_name, role, phone, class_id, teacher_class_ids,
       date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact, admission_number } = await request.json();
     
     // Validate required fields
@@ -57,32 +57,13 @@ export async function POST(request: Request) {
       [userId, email, first_name, last_name, role, phone || null, passwordHash]
     );
 
-    // If role is teacher, assign selected subjects
-    let subjectWarning = '';
-    if (role === 'teacher' && subject_ids && subject_ids.length > 0) {
-      const { error: subjectError } = await adminClient
-        .from('subjects')
-        .update({ teacher_id: userId })
-        .in('id', subject_ids);
-      if (subjectError) {
-        subjectWarning = `User created but subject assignments failed: ${subjectError.message}`;
-      }
-    }
-
-    // If role is teacher, assign class via form_teacher_id
-    if (role === 'teacher' && class_id && class_id.trim() !== '') {
-      // Clear any existing form_teacher assignment for this class
-      await adminClient
-        .from('classes')
-        .update({ form_teacher_id: null })
-        .eq('form_teacher_id', userId);
-      // Assign the class
-      const { error: classError } = await adminClient
-        .from('classes')
-        .update({ form_teacher_id: userId })
-        .eq('id', class_id);
-      if (classError && !subjectWarning) {
-        subjectWarning = `User created but class assignment failed: ${classError.message}`;
+    // If role is teacher, assign classes via teacher_classes junction table
+    if (role === 'teacher' && teacher_class_ids && teacher_class_ids.length > 0) {
+      const { error: tcError } = await adminClient
+        .from('teacher_classes')
+        .insert(teacher_class_ids.map((cid: string) => ({ teacher_id: userId, class_id: cid })));
+      if (tcError) {
+        console.error('Error assigning teacher classes:', tcError);
       }
     }
 
@@ -147,8 +128,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: subjectWarning ? `User created with warnings: ${subjectWarning}` : 'User created successfully',
-        warning: subjectWarning || undefined,
+        message: 'User created successfully',
         user: { id: userId, email, first_name, last_name, role, phone }
       },
       { status: 201 }

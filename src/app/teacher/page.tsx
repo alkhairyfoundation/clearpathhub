@@ -31,32 +31,42 @@ useEffect(() => {
      fetchDashboard();
    }, [profile]);
 
-  async function fetchDashboard() {
+   async function fetchDashboard() {
     setLoading(true);
     try {
+      // Get teacher's class IDs from teacher_classes
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
+        .select('class_id')
+        .eq('teacher_id', profile?.id);
+
+      const uniqueClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+      
+      // Get subjects for these classes
+      const { data: allSubjects } = uniqueClassIds.length > 0
+        ? await supabase.from('subjects').select('id, name, class_id').in('class_id', uniqueClassIds)
+        : { data: [] };
+
       const [
-        subjectsRes, classesRes, homeworkRes, quizzesRes, sessionsRes, announcementsRes, resultsRes
+        classesRes, homeworkRes, quizzesRes, sessionsRes, announcementsRes
       ] = await Promise.all([
-        supabase.from('subjects').select('id, name, class_id', { count: 'exact' }).eq('teacher_id', profile?.id),
-        supabase.from('classes').select('id, name, level').order('level'),
-        supabase.from('homework').select('id, title, due_date, class_id', { count: 'exact' }).eq('teacher_id', profile?.id).eq('is_active', true),
-        supabase.from('quizzes').select('id, title, due_date', { count: 'exact' }).eq('teacher_id', profile?.id).eq('is_active', true),
-        supabase.from('sessions').select('*, class:classes!class_id(name), subject:subjects!subject_id(name)').eq('teacher_id', profile?.id).order('created_at', { ascending: false }).limit(5),
+        uniqueClassIds.length > 0
+          ? supabase.from('classes').select('id, name, level').in('id', uniqueClassIds).order('level')
+          : { data: [] },
+        supabase.from('homework').select('id, title, due_date, class_id', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_active', true),
+        supabase.from('quizzes').select('id, title, due_date', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_active', true),
+        supabase.from('sessions').select('*, class:classes!class_id(name), subject:subjects!subject_id(name)').in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).order('created_at', { ascending: false }).limit(5),
         supabase.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').in('audience', ['all', 'teachers', 'staff']).order('created_at', { ascending: false }).limit(5),
-        supabase.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)').limit(100)
       ]);
 
-      if (subjectsRes.error) throw new Error(subjectsRes.error.message);
-      
-      const myClassIds = subjectsRes.data?.map(s => s.class_id).filter(Boolean) || [];
-      const uniqueClassIds = Array.from(new Set(myClassIds));
-      
       // Fetch students count
-      const { count: studentCount } = await supabase.from('students').select('id', { count: 'exact', head: true }).in('class_id', uniqueClassIds);
+      const { count: studentCount } = uniqueClassIds.length > 0
+        ? await supabase.from('students').select('id', { count: 'exact', head: true }).in('class_id', uniqueClassIds)
+        : { count: 0 };
 
       setStats({
         classes: uniqueClassIds.length,
-        subjects: subjectsRes.count || 0,
+        subjects: allSubjects?.length || 0,
         pendingHomework: homeworkRes.count || 0,
         pendingQuizzes: quizzesRes.count || 0,
         sessions: sessionsRes.data?.length || 0,
@@ -68,19 +78,18 @@ useEffect(() => {
 
       let classMap: Record<string, string> = {};
       if (uniqueClassIds.length > 0) {
-        const { data: classData } = await supabase.from('classes').select('id, name, level').in('id', uniqueClassIds);
-        if (classData) {
-          setMyClasses(classData);
-          classData.forEach(c => { classMap[c.id] = c.name; });
+        if (classesRes.data) {
+          setMyClasses(classesRes.data);
+          classesRes.data.forEach(c => { classMap[c.id] = c.name; });
         }
       }
 
       // Fetch scheme of work coverage
-      if (subjectsRes.data && subjectsRes.data.length > 0) {
+      if (allSubjects && allSubjects.length > 0) {
         const { data: currentTerm } = await supabase.from('terms').select('id, name, start_date, end_date').eq('is_current', true).maybeSingle();
         if (currentTerm) {
           const coverage = await Promise.all(
-            subjectsRes.data.map(async (subj) => {
+            allSubjects.map(async (subj) => {
               const { count } = await supabase
                 .from('scheme_of_work')
                 .select('id', { count: 'exact', head: true })

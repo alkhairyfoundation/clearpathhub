@@ -467,6 +467,7 @@ export default function StudentTakeMockExamPage() {
           </div>
         </div>
       </div>
+      <Calculator />
     </div>
   );
 }

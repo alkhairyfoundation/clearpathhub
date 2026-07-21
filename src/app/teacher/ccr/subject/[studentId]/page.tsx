@@ -28,10 +28,16 @@ function SubjectTeacherCcrContent() {
 
   async function loadSubjects() {
     try {
-      const { data } = await supabase
-        .from('subjects')
-        .select('id, name, code')
+      // Get teacher's class IDs from teacher_classes
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
+        .select('class_id')
         .eq('teacher_id', profile?.id);
+      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+
+      const { data } = teacherClassIds.length > 0
+        ? await supabase.from('subjects').select('id, name, code').in('class_id', teacherClassIds)
+        : await supabase.from('subjects').select('id, name, code');
       if (data) setSubjects(data);
       if (data?.length === 1) setSelectedSubject(data[0].id);
     } finally {

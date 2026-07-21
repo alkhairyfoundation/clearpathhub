@@ -27,13 +27,13 @@ export default function TeacherAttendancePage() {
   useEffect(() => { if (selectedClass) loadClassData(); }, [date, selectedClass]);
 
   async function fetchClasses() {
-    // Get teacher's class IDs from their subject assignments
-    const { data: subjectData } = await supabase
-      .from('subjects')
+    // Get teacher's class IDs from teacher_classes
+    const { data: tcData } = await supabase
+      .from('teacher_classes')
       .select('class_id')
       .eq('teacher_id', profile?.id);
 
-    const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+    const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
 
     if (teacherClassIds.length > 0) {
       const { data } = await supabase.from('classes').select('id, name').in('id', teacherClassIds).order('level');

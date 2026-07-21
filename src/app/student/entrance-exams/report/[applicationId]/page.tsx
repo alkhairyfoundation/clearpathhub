@@ -1011,18 +1011,28 @@ export default function StudentEntranceReportPage() {
         {activeTab === 'subjects' && (
         <>
         {/* Subject Radar Chart */}
-        {radarData.length >= 3 && (
+        {(radarData.length >= 3 || topicEntries.length >= 3) && (
           <div className="card">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={16} /> Subject Performance Radar</h3>
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={16} /> {radarData.length >= 3 ? 'Subject Performance Radar' : 'Topic Performance Radar'}</h3>
             <div className="w-full max-w-md mx-auto">
               <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="#e2e8f0" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                  <Radar name="Score" dataKey="score" stroke="#1e3a5f" fill="#1e3a5f" fillOpacity={0.2} />
-                  <Tooltip formatter={(value: number) => [`${value}%`, 'Score']} />
-                </RadarChart>
+                {radarData.length >= 3 ? (
+                  <RadarChart data={radarData}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    <Radar name="Score" dataKey="score" stroke="#1e3a5f" fill="#1e3a5f" fillOpacity={0.2} />
+                    <Tooltip formatter={(value: number) => [`${value}%`, 'Score']} />
+                  </RadarChart>
+                ) : (
+                  <RadarChart data={topicEntries.map(([topic, d]: [string, any]) => ({ topic, score: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0, fullMark: 100 }))}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="topic" tick={{ fontSize: 10 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    <Radar name="Score" dataKey="score" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
+                    <Tooltip formatter={(value: number) => [`${value}%`, 'Score']} />
+                  </RadarChart>
+                )}
               </ResponsiveContainer>
             </div>
           </div>

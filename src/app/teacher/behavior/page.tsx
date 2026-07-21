@@ -29,12 +29,12 @@ export default function TeacherBehaviorPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: subjectData } = await supabase
-        .from('subjects')
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
         .select('class_id')
         .eq('teacher_id', profile?.id);
 
-      const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
 
       const [reportsRes, studentsRes] = await Promise.all([
         supabase.from('behavioral_reports').select('*, student:profiles!student_id(*)').order('created_at', { ascending: false }).limit(50),

@@ -59,10 +59,13 @@ export default function TeacherProfilePage() {
       const { data: staff } = await supabase.from('staff').select('*, department:departments!department_id(name)').eq('profile_id', profile.id).limit(1).maybeSingle();
       if (staff) setStaffInfo(staff);
 
-      const { data: subjs } = await supabase.from('subjects').select('*, class:classes!class_id(name)').eq('teacher_id', profile.id);
+      const { data: tcData } = await supabase.from('teacher_classes').select('class_id').eq('teacher_id', profile.id);
+      const classIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+      const { data: subjs } = classIds.length > 0
+        ? await supabase.from('subjects').select('*, class:classes!class_id(name)').in('class_id', classIds)
+        : { data: [] };
       if (subjs) {
         setSubjects(subjs);
-        const classIds = Array.from(new Set(subjs.map(s => s.class_id).filter(Boolean)));
         const { data: cls } = await supabase.from('classes').select('*').in('id', classIds);
         if (cls) {
           setClasses(cls);

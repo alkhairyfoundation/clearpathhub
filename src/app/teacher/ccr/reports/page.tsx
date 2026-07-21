@@ -22,11 +22,11 @@ export default function TeacherCcrReports() {
 
   async function fetchData() {
     try {
-      const { data: subjectData } = await supabase
-        .from('subjects')
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
         .select('class_id')
         .eq('teacher_id', profile?.id);
-      const classIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+      const classIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
       const { data: kids } = await supabase
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')

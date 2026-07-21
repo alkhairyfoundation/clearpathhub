@@ -12,7 +12,6 @@ export default function TeacherClassesPage() {
   const router = useRouter();
   const [classes, setClasses] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
-  const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -31,26 +30,24 @@ export default function TeacherClassesPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      // Get teacher's class IDs from their subject assignments
-      const { data: subjectData } = await supabase
-        .from('subjects')
+      // Get teacher's class IDs from teacher_classes
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
         .select('class_id')
         .eq('teacher_id', profile?.id);
 
-      const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
 
-      const [classesRes, studentsRes, subjectsRes] = await Promise.all([
+      const [classesRes, studentsRes] = await Promise.all([
         teacherClassIds.length > 0
           ? supabase.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').in('id', teacherClassIds).order('level')
           : { data: [], error: null },
         supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').order('admission_number'),
-        supabase.from('subjects').select('*').eq('teacher_id', profile?.id).order('name'),
       ]);
       if (classesRes.error) throw new Error(classesRes.error.message);
       if (studentsRes.error) throw new Error(studentsRes.error.message);
       if (classesRes.data) setClasses(classesRes.data);
       if (studentsRes.data) setStudents(studentsRes.data);
-      if (subjectsRes.data) setSubjects(subjectsRes.data);
     } catch (err: any) {
       setError(err.message);
     }

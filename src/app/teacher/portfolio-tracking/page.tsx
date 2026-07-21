@@ -34,8 +34,8 @@ export default function TeacherPortfolioTrackingPage() {
   async function loadStudents() {
     setLoading(true);
     try {
-      const { data: classes } = await supabase.from('classes').select('id').eq('form_teacher_id', profile!.id);
-      const classIds = classes?.map(c => c.id) || [];
+      const { data: classData } = await supabase.from('teacher_classes').select('class_id').eq('teacher_id', profile!.id);
+      const classIds = classData?.map(c => c.class_id) || [];
       if (classIds.length === 0) { setLoading(false); return; }
 
       const { data: studentData } = await supabase

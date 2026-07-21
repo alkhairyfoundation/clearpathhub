@@ -24,12 +24,12 @@ export default function TeacherCcrPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: subjectData } = await supabase
-        .from('subjects')
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
         .select('class_id')
         .eq('teacher_id', profile?.id);
 
-      const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
 
       const { data: kids } = await supabase
         .from('students')

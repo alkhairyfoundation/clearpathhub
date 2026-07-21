@@ -98,31 +98,23 @@ export default function TeacherResultsPage() {
   async function fetchInitial() {
     setLoading(true);
     try {
-      const { data: teacherSubjects } = await supabase
-        .from('subjects')
-        .select('id, class_id, name')
+      // Get teacher's class IDs from teacher_classes
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
+        .select('class_id')
         .eq('teacher_id', profile?.id);
 
-      const subjectClassIds = Array.from(new Set(teacherSubjects?.map(s => s.class_id).filter(Boolean) || [])) as string[];
-
-      // Also check if teacher is assigned as form_teacher to any class
-      const { data: formTeacherClasses } = await supabase
-        .from('classes')
-        .select('id')
-        .eq('form_teacher_id', profile?.id);
-
-      const formTeacherClassIds = formTeacherClasses?.map(c => c.id) || [];
-
-      // Combine both sources of class assignments
-      const allTeacherClassIds = Array.from(new Set([...subjectClassIds, ...formTeacherClassIds]));
+      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || [])) as string[];
 
       const [{ data: termData }, { data: classData }, { data: subjData }, { data: settingsData }] = await Promise.all([
         supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
         // If teacher has assigned classes, show only those; otherwise show ALL classes
-        allTeacherClassIds.length > 0
-          ? supabase.from('classes').select('*').in('id', allTeacherClassIds).order('name')
+        teacherClassIds.length > 0
+          ? supabase.from('classes').select('*').in('id', teacherClassIds).order('name')
           : supabase.from('classes').select('*').order('name'),
-        supabase.from('subjects').select('*').eq('teacher_id', profile?.id).order('name'),
+        teacherClassIds.length > 0
+          ? supabase.from('subjects').select('*').in('class_id', teacherClassIds).order('name')
+          : supabase.from('subjects').select('*').order('name'),
         supabase.from('school_settings').select('assessment_config').limit(1).maybeSingle(),
       ]);
 

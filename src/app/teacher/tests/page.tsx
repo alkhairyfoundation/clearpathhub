@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Edit, Trash2, X, FileText, BarChart3, Check, Loader2, Search, Users, Clock, Eye, Send, Hash, ArrowLeft, Download, Copy, HelpCircle } from 'lucide-react';
 import { formatDate } from '@/lib/date-utils';
+import JSZip from 'jszip';
+import { generateTestReportPdf } from '@/lib/test-report-pdf';
 
 const QUESTION_TYPES = [
   { value: 'multiple_choice', label: 'Multiple Choice' },
@@ -47,6 +49,10 @@ export default function TeacherTestsPage() {
   const [analysisData, setAnalysisData] = useState<any[]>([]);
   const [analysisAttempts, setAnalysisAttempts] = useState<any[]>([]);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  // Bulk export state
+  const [bulkExporting, setBulkExporting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
   const [formData, setFormData] = useState({
     title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test',
@@ -338,6 +344,8 @@ export default function TeacherTestsPage() {
         }
       };
 
+      const testSubjectName = analysisTest?.subject?.name || '';
+
       const analysis = questions.map((q: any, i: number) => {
         let correct = 0, total = 0;
         const studentResults: any[] = [];
@@ -351,13 +359,64 @@ export default function TeacherTestsPage() {
             studentResults.push({ student: a.student, answer: studentAnswer, correct: isCorrect });
           }
         });
-        return { ...q, correct, total, percentage: total > 0 ? Math.round((correct / total) * 100) : 0, studentResults };
+        return {
+          ...q,
+          subject: q.subject || testSubjectName || 'General',
+          topic: q.topic || 'General',
+          correct, total,
+          percentage: total > 0 ? Math.round((correct / total) * 100) : 0,
+          studentResults,
+        };
       });
       setAnalysisData(analysis);
     } catch (err) {
       console.error('Analysis error:', err);
     } finally {
       setAnalysisLoading(false);
+    }
+  }
+
+  async function handleBulkExportPdf() {
+    if (analysisAttempts.length === 0) return;
+    setBulkExporting(true);
+    setBulkProgress({ current: 0, total: analysisAttempts.length });
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder(`${analysisTest?.title || 'Test'}_Results`);
+      if (!folder) return;
+
+      for (let i = 0; i < analysisAttempts.length; i++) {
+        const attempt = analysisAttempts[i];
+        setBulkProgress({ current: i + 1, total: analysisAttempts.length });
+        try {
+          const res = await fetch(`/api/tests/report/${attempt.id}`);
+          const result = await res.json();
+          if (result.success && result.data) {
+            const doc = generateTestReportPdf(result.data);
+            const firstName = result.data.student?.name?.split(' ')[0] || 'Student';
+            const lastName = result.data.student?.name?.split(' ').slice(1).join('') || '';
+            const fileName = lastName
+              ? `${firstName}_${lastName}_TestReport.pdf`
+              : `${firstName}_TestReport.pdf`;
+            folder.file(fileName, doc.output('blob'));
+          }
+        } catch (err) {
+          console.error(`Failed to generate PDF for attempt ${attempt.id}:`, err);
+        }
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${analysisTest?.title || 'Test'}_AllResults.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError('Bulk export failed: ' + err.message);
+    } finally {
+      setBulkExporting(false);
+      setBulkProgress({ current: 0, total: 0 });
     }
   }
 
@@ -701,7 +760,20 @@ export default function TeacherTestsPage() {
 
                     {analysisAttempts.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-3">Student Attempts</h4>
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300">Student Attempts ({analysisAttempts.length})</h4>
+                          <button
+                            onClick={handleBulkExportPdf}
+                            disabled={bulkExporting}
+                            className="btn-outline text-sm flex items-center gap-1.5 disabled:opacity-50"
+                          >
+                            {bulkExporting ? (
+                              <><Loader2 size={14} className="animate-spin" /> Generating {bulkProgress.current}/{bulkProgress.total}...</>
+                            ) : (
+                              <><Download size={14} /> Bulk Export All PDFs</>
+                            )}
+                          </button>
+                        </div>
                         <div className="overflow-x-auto max-h-72 overflow-y-auto">
                           <table className="w-full text-sm">
                             <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 sticky top-0">
@@ -719,7 +791,7 @@ export default function TeacherTestsPage() {
                                   <td className="py-2 px-3 font-medium text-slate-900 dark:text-white dark:text-white">{a.student?.first_name} {a.student?.last_name}</td>
                                   <td className={`py-2 px-3 text-center font-semibold ${a.score >= (analysisTest.passing_score || 50) ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{a.score}%</td>
                                   <td className="py-2 px-3 text-center">{a.passed ? <Check size={16} className="text-green-500 inline" /> : <X size={16} className="text-red-500 dark:text-red-400 dark:text-red-400 inline" />}</td>
-                                  <td className="py-2 px-3 text-center text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{formatDate(a.created_at)}</td>
+                                  <td className="py-2 px-3 text-center text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{formatDate(a.completed_at)}</td>
                                   <td className="py-2 px-3 text-center">
                                     <button
                                       onClick={() => window.open(`/student/tests/report/${a.id}`, '_blank')}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   Loader2, AlertCircle, CheckCircle, XCircle, Clock, Award, BarChart3,
@@ -303,6 +304,62 @@ export default function TestReportPage({ params }: { params: { attemptId: string
 
   return (
     <DashboardLayout title={test.title} subtitle={`Report • ${test.subject_name} • ${test.class_name}`}>
+      {/* School Branding Header */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-xl p-6 text-white mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/student/tests" className="p-2 hover:bg-white/10 rounded-lg">
+              <ArrowLeft size={20} className="text-white/80" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold">{schoolSettings?.school_name || 'ClearPath Edu Hub'}</h1>
+              <p className="text-primary-200 text-sm">Student Test Report</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-primary-200 text-sm">{test.subject_name}</p>
+            <p className="text-white font-semibold">{test.class_name}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Student Info Card */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Student</p>
+            <p className="font-semibold text-slate-800 dark:text-white">
+              {profile?.first_name} {profile?.last_name}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Class</p>
+            <p className="font-semibold text-slate-800 dark:text-white">{test.class_name}</p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Subject</p>
+            <p className="font-semibold text-slate-800 dark:text-white">{test.subject_name}</p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Test Date</p>
+            <p className="font-semibold text-slate-800 dark:text-white">
+              {attempt.completed_at
+                ? new Date(attempt.completed_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                : attempt.started_at
+                  ? new Date(attempt.started_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                  : 'N/A'
+              }
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Time Taken</p>
+            <p className="font-semibold text-slate-800 dark:text-white">
+              {attempt.time_taken ? `${Math.floor(attempt.time_taken / 60)}m ${attempt.time_taken % 60}s` : '--'}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Action Buttons */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <button onClick={handleDownloadPdf} className="btn-outline flex items-center gap-2 text-sm">
@@ -362,7 +419,9 @@ export default function TestReportPage({ params }: { params: { attemptId: string
           <div className="space-y-6">
             {/* Radar Chart */}
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Subject Performance Radar</h3>
+              <h3 className="font-semibold text-slate-800 dark:text-white mb-4">
+                {subjectPerformance.length >= 3 ? 'Subject Performance Radar' : topicPerformance.length >= 3 ? 'Topic Performance Radar' : 'Performance Overview'}
+              </h3>
               {subjectPerformance.length >= 3 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <RadarChart data={subjectPerformance}>
@@ -372,8 +431,17 @@ export default function TestReportPage({ params }: { params: { attemptId: string
                     <Radar name="Score" dataKey="percentage" stroke="#b3922f" fill="#b3922f" fillOpacity={0.2} />
                   </RadarChart>
                 </ResponsiveContainer>
+              ) : topicPerformance.length >= 3 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <RadarChart data={topicPerformance.map((t: any) => ({ name: t.name, percentage: t.percentage, fullMark: 100 }))}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                    <Radar name="Score" dataKey="percentage" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
+                  </RadarChart>
+                </ResponsiveContainer>
               ) : (
-                <p className="text-slate-500 text-sm">Not enough subjects to display radar.</p>
+                <p className="text-slate-500 text-sm">Not enough data points to display radar chart.</p>
               )}
             </div>
 

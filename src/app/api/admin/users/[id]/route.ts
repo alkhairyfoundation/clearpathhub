@@ -16,7 +16,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
 
     // Clean up role-specific dependencies before deleting
     if (profile?.role === 'teacher') {
-      await adminClient.from('subjects').delete().eq('teacher_id', params.id);
+      await adminClient.from('teacher_classes').delete().eq('teacher_id', params.id);
       await adminClient.from('homework').delete().eq('teacher_id', params.id);
       await adminClient.from('sessions').delete().eq('teacher_id', params.id);
       await adminClient.from('lessons').delete().eq('teacher_id', params.id);
@@ -61,7 +61,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const supabase = await createSupabaseAdminClient();
 
     const body = await request.json();
-    const { first_name, last_name, role, phone, password, subject_ids, class_id,
+    const { first_name, last_name, role, phone, password, teacher_class_ids,
       date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact, admission_number } = body;
 
     const updates: Record<string, any> = {};
@@ -118,51 +118,34 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
     }
 
-    // Update teacher subject assignments
-    if (subject_ids !== undefined) {
+    // Update teacher class assignments via teacher_classes junction table
+    if (teacher_class_ids !== undefined) {
       try {
-        // Get current subject IDs assigned to this teacher
-        const { data: existingSubjects } = await supabase
-          .from('subjects')
-          .select('id')
+        // Get current class IDs assigned to this teacher
+        const { data: existingTCs } = await supabase
+          .from('teacher_classes')
+          .select('class_id')
           .eq('teacher_id', params.id);
 
-        const existingIds = existingSubjects?.map(s => s.id) || [];
+        const existingIds = existingTCs?.map(tc => tc.class_id) || [];
 
-        // Subjects to add (in subject_ids but not currently assigned)
-        const addIds = subject_ids.filter((id: string) => !existingIds.includes(id));
+        // Classes to add
+        const addIds = teacher_class_ids.filter((id: string) => !existingIds.includes(id));
         if (addIds.length > 0) {
-          await supabase.from('subjects').update({ teacher_id: params.id }).in('id', addIds);
+          await supabase.from('teacher_classes').insert(
+            addIds.map((cid: string) => ({ teacher_id: params.id, class_id: cid }))
+          );
         }
 
-        // Subjects to remove (currently assigned but not in subject_ids)
-        const removeIds = existingIds.filter((id: string) => !subject_ids.includes(id));
+        // Classes to remove
+        const removeIds = existingIds.filter((id: string) => !teacher_class_ids.includes(id));
         if (removeIds.length > 0) {
-          await supabase.from('subjects').update({ teacher_id: null }).in('id', removeIds);
+          await supabase.from('teacher_classes').delete()
+            .eq('teacher_id', params.id)
+            .in('class_id', removeIds);
         }
-      } catch (subjectErr) {
-        console.error('Error updating teacher subjects:', subjectErr);
-      }
-    }
-
-    // Update teacher class assignment via form_teacher_id
-    if (role !== undefined && class_id !== undefined && role === 'teacher') {
-      try {
-        // Clear any existing form_teacher assignment for this teacher
-        await supabase
-          .from('classes')
-          .update({ form_teacher_id: null })
-          .eq('form_teacher_id', params.id);
-
-        // Assign new class if provided
-        if (class_id && class_id.trim() !== '') {
-          await supabase
-            .from('classes')
-            .update({ form_teacher_id: params.id })
-            .eq('id', class_id);
-        }
-      } catch (classErr) {
-        console.error('Error updating teacher class assignment:', classErr);
+      } catch (tcErr) {
+        console.error('Error updating teacher class assignments:', tcErr);
       }
     }
 

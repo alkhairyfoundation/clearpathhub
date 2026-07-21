@@ -36,26 +36,23 @@ export default function TeacherHomeworkPage() {
     setLoading(true);
     try {
       // Get teacher's class IDs
-      const { data: subjectData } = await supabase
-        .from('subjects')
-        .select('id, class_id')
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
+        .select('class_id')
         .eq('teacher_id', profile?.id);
 
-      const teacherSubjectIds = subjectData?.map(s => s.id) || [];
-      const teacherClassIds = Array.from(new Set(subjectData?.map(s => s.class_id).filter(Boolean) || []));
+      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
 
-      const [hwRes, subsRes, clsRes] = await Promise.all([
-        teacherSubjectIds.length > 0
-          ? supabase.from('homework').select('*, subject:subjects!subject_id(*), class:classes!class_id(*)').in('subject_id', teacherSubjectIds).order('due_date', { ascending: false })
+      const [hwRes, clsRes] = await Promise.all([
+        teacherClassIds.length > 0
+          ? supabase.from('homework').select('*, subject:subjects!subject_id(*), class:classes!class_id(*)').in('class_id', teacherClassIds).order('due_date', { ascending: false })
           : { data: [], error: null },
-        supabase.from('subjects').select('*').eq('teacher_id', profile?.id).order('name'),
         teacherClassIds.length > 0
           ? supabase.from('classes').select('*').in('id', teacherClassIds).order('name')
           : { data: [], error: null },
       ]);
       if (hwRes.error) throw new Error(hwRes.error.message);
       if (hwRes.data) setHomework(hwRes.data);
-      if (subsRes.data) setSubjects(subsRes.data);
       if (clsRes.data) setClasses(clsRes.data);
     } catch (err: any) {
       setError(err.message);

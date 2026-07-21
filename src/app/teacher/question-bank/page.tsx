@@ -44,9 +44,18 @@ export default function TeacherQuestionBankPage() {
 
   async function fetchData() {
     setLoading(true);
+    // Get teacher's class IDs from teacher_classes
+    const { data: tcData } = await supabase
+      .from('teacher_classes')
+      .select('class_id')
+      .eq('teacher_id', profile?.id);
+    const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || [])) as string[];
+
     const [qRes, sRes, cRes] = await Promise.all([
       supabase.from('question_bank').select('*, subject:subjects(name, code)').order('created_at', { ascending: false }),
-      supabase.from('subjects').select('*, class:classes!class_id(name)').eq('teacher_id', profile?.id).order('name'),
+      teacherClassIds.length > 0
+        ? supabase.from('subjects').select('*, class:classes!class_id(name)').in('class_id', teacherClassIds).order('name')
+        : supabase.from('subjects').select('*, class:classes!class_id(name)').order('name'),
       supabase.from('classes').select('*').order('level'),
     ]);
     if (!qRes.error && qRes.data) setQuestions(qRes.data);

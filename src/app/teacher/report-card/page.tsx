@@ -628,7 +628,8 @@ function ReportCardContent() {
       let studentQuery = supabase.from('students')
         .select('id, profile_id, admission_number, profile:profiles!profile_id(first_name, last_name, avatar_url), class:classes!class_id(name)');
       if (profile?.role !== 'admin') {
-        const classIds = (await supabase.from('subjects').select('class_id').eq('teacher_id', profile?.id)).data?.map(s => s.class_id).filter(Boolean) || [];
+        const { data: tcData } = await supabase.from('teacher_classes').select('class_id').eq('teacher_id', profile?.id);
+        const classIds = tcData?.map(tc => tc.class_id).filter(Boolean) || [];
         studentQuery = studentQuery.in('class_id', classIds.length > 0 ? classIds : ['none']);
       }
       const studentRes = await studentQuery;

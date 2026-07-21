@@ -501,6 +501,9 @@ export interface TestQuestion {
   points: number;
   question_type: 'multiple_choice' | 'true_false' | 'fill_blank' | 'short_answer' | 'multiple_selection';
   subject?: string;
+  topic?: string;
+  subtopic?: string;
+  difficulty_level?: string;
   order_index?: number;
   created_at: string;
 }

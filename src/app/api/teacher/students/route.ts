@@ -81,14 +81,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if teacher has access to this class (through subjects)
+    // Check if teacher has access to this class (through teacher_classes)
     const classAccess = await query(
-      `SELECT 1 FROM subjects WHERE teacher_id = $1 AND class_id = $2 LIMIT 1`,
+      `SELECT 1 FROM teacher_classes WHERE teacher_id = $1 AND class_id = $2 LIMIT 1`,
       [token.id, class_id]
     );
 
     if (classAccess.length === 0) {
-      // Teacher doesn't teach any subject in this class, check if they're the form or class teacher
+      // Teacher doesn't have this class assigned, check if they're the form or class teacher
       const teacherClassCheck = await query(
         `SELECT 1 FROM classes WHERE id = $1 AND (form_teacher_id = $2 OR class_teacher_id = $2)`,
         [class_id, token.id]
@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
         // Show all classes taught by this teacher
         conditions.push(`
           s.class_id IN (
-            SELECT class_id FROM subjects WHERE teacher_id = $1
+            SELECT class_id FROM teacher_classes WHERE teacher_id = $1
             UNION
             SELECT form_teacher_id FROM classes WHERE form_teacher_id = $1
             UNION
