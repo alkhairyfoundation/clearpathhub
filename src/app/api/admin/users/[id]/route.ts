@@ -145,6 +145,27 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
     }
 
+    // Update teacher class assignment via form_teacher_id
+    if (role !== undefined && class_id !== undefined && role === 'teacher') {
+      try {
+        // Clear any existing form_teacher assignment for this teacher
+        await supabase
+          .from('classes')
+          .update({ form_teacher_id: null })
+          .eq('form_teacher_id', params.id);
+
+        // Assign new class if provided
+        if (class_id && class_id.trim() !== '') {
+          await supabase
+            .from('classes')
+            .update({ form_teacher_id: params.id })
+            .eq('id', class_id);
+        }
+      } catch (classErr) {
+        console.error('Error updating teacher class assignment:', classErr);
+      }
+    }
+
     // Update student record
     if (class_id !== undefined || date_of_birth !== undefined || gender !== undefined || address !== undefined ||
         guardian_name !== undefined || guardian_phone !== undefined || guardian_email !== undefined ||

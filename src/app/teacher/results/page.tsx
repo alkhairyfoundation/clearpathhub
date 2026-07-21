@@ -103,13 +103,25 @@ export default function TeacherResultsPage() {
         .select('id, class_id, name')
         .eq('teacher_id', profile?.id);
 
-      const teacherClassIds = Array.from(new Set(teacherSubjects?.map(s => s.class_id).filter(Boolean) || [])) as string[];
+      const subjectClassIds = Array.from(new Set(teacherSubjects?.map(s => s.class_id).filter(Boolean) || [])) as string[];
+
+      // Also check if teacher is assigned as form_teacher to any class
+      const { data: formTeacherClasses } = await supabase
+        .from('classes')
+        .select('id')
+        .eq('form_teacher_id', profile?.id);
+
+      const formTeacherClassIds = formTeacherClasses?.map(c => c.id) || [];
+
+      // Combine both sources of class assignments
+      const allTeacherClassIds = Array.from(new Set([...subjectClassIds, ...formTeacherClassIds]));
 
       const [{ data: termData }, { data: classData }, { data: subjData }, { data: settingsData }] = await Promise.all([
         supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
-        teacherClassIds.length > 0
-          ? supabase.from('classes').select('*').in('id', teacherClassIds).order('name')
-          : { data: [], error: null },
+        // If teacher has assigned classes, show only those; otherwise show ALL classes
+        allTeacherClassIds.length > 0
+          ? supabase.from('classes').select('*').in('id', allTeacherClassIds).order('name')
+          : supabase.from('classes').select('*').order('name'),
         supabase.from('subjects').select('*').eq('teacher_id', profile?.id).order('name'),
         supabase.from('school_settings').select('assessment_config').limit(1).maybeSingle(),
       ]);

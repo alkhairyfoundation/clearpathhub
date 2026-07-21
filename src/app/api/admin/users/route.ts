@@ -69,6 +69,23 @@ export async function POST(request: Request) {
       }
     }
 
+    // If role is teacher, assign class via form_teacher_id
+    if (role === 'teacher' && class_id && class_id.trim() !== '') {
+      // Clear any existing form_teacher assignment for this class
+      await adminClient
+        .from('classes')
+        .update({ form_teacher_id: null })
+        .eq('form_teacher_id', userId);
+      // Assign the class
+      const { error: classError } = await adminClient
+        .from('classes')
+        .update({ form_teacher_id: userId })
+        .eq('id', class_id);
+      if (classError && !subjectWarning) {
+        subjectWarning = `User created but class assignment failed: ${classError.message}`;
+      }
+    }
+
       // If role is student, create student record in both databases
     if (role === 'student') {
       let admissionNum: string;

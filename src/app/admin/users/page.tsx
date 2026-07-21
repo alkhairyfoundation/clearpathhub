@@ -222,9 +222,13 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       Promise.all([
         supabase.from('subjects').select('id, name, code, class:classes!class_id(name)').order('name'),
         supabase.from('subjects').select('id').eq('teacher_id', user.id),
-      ]).then(([allRes, assignedRes]) => {
+        supabase.from('classes').select('id').eq('form_teacher_id', user.id).maybeSingle(),
+      ]).then(([allRes, assignedRes, classRes]) => {
         setAllSubjects(allRes.data || []);
         setTeacherSubjectIds(assignedRes.data?.map(s => s.id) || []);
+        if (classRes.data?.id) {
+          setFormData(prev => ({ ...prev, class_id: classRes.data!.id }));
+        }
       });
     } else {
       setTeacherSubjectIds([]);
@@ -274,6 +278,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
         if (formData.password) body.password = formData.password;
         if (formData.role === 'teacher') {
           body.subject_ids = teacherSubjectIds;
+          body.class_id = formData.class_id || null;
         }
         if (formData.role === 'student') {
           body.class_id = formData.class_id || null;
@@ -744,26 +749,38 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
               </div>
 
               {formData.role === 'teacher' && (
-                <div>
-                  <label className="label">Assigned Subjects</label>
-                  <div className="max-h-56 overflow-y-auto border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg p-2 space-y-1">
-                    {allSubjects.length === 0 && (
-                      <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 p-2">No subjects found. Create subjects first in the Subjects page.</p>
-                    )}
-                    {allSubjects.map(s => (
-                      <label key={s.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded cursor-pointer">
-                        <input type="checkbox" checked={teacherSubjectIds.includes(s.id)} onChange={(e) => {
-                          if (e.target.checked) {
-                            setTeacherSubjectIds([...teacherSubjectIds, s.id]);
-                          } else {
-                            setTeacherSubjectIds(teacherSubjectIds.filter(id => id !== s.id));
-                          }
-                        }} className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 dark:border-slate-600 text-primary-600 dark:text-primary-400 dark:text-primary-400 focus:ring-primary-500" />
-                        <span className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.name} (<span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{s.code}</span>{s.class ? ` — ${s.class.name}` : ''})</span>
-                      </label>
-                    ))}
+                <>
+                  <div>
+                    <label className="label">Assigned Class</label>
+                    <select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input">
+                      <option value="">No class assigned (can set results for all classes)</option>
+                      {classes.map(c => (
+                        <option key={c.id} value={c.id}>{c.name} (Level {c.level})</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">If no class is assigned, this teacher can set results for all classes.</p>
                   </div>
-                </div>
+                  <div>
+                    <label className="label">Assigned Subjects</label>
+                    <div className="max-h-56 overflow-y-auto border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg p-2 space-y-1">
+                      {allSubjects.length === 0 && (
+                        <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 p-2">No subjects found. Create subjects first in the Subjects page.</p>
+                      )}
+                      {allSubjects.map(s => (
+                        <label key={s.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded cursor-pointer">
+                          <input type="checkbox" checked={teacherSubjectIds.includes(s.id)} onChange={(e) => {
+                            if (e.target.checked) {
+                              setTeacherSubjectIds([...teacherSubjectIds, s.id]);
+                            } else {
+                              setTeacherSubjectIds(teacherSubjectIds.filter(id => id !== s.id));
+                            }
+                          }} className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 dark:border-slate-600 text-primary-600 dark:text-primary-400 dark:text-primary-400 focus:ring-primary-500" />
+                          <span className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.name} (<span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{s.code}</span>{s.class ? ` — ${s.class.name}` : ''})</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               {formData.role === 'student' && (
