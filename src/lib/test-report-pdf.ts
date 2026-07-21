@@ -262,7 +262,7 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
     return lines;
   };
 
-  newPage();
+  pageCount = 1;
   drawHeader();
   y = 48;
 
@@ -363,7 +363,12 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
 
   y += 34;
 
-  if (data.subjectPerformance && data.subjectPerformance.length >= 3) {
+  const hasRealSubjectData = data.subjectPerformance && data.subjectPerformance.length > 0 &&
+    !(data.subjectPerformance.length === 1 && data.subjectPerformance[0].name === 'General');
+  const hasRealTopicData = data.topicPerformance && data.topicPerformance.length > 0 &&
+    !(data.topicPerformance.length === 1 && data.topicPerformance[0].name === 'General');
+
+  if (hasRealSubjectData && data.subjectPerformance.length >= 3) {
     sectionTitle('Subject Performance Overview');
 
     const radarCx = pageW / 2;
@@ -422,9 +427,6 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
     y = (doc as any).lastAutoTable.finalY + 8;
   } else if (data.subjectPerformance && data.subjectPerformance.length > 0) {
     sectionTitle('Subject Performance');
-
-    const radarLabels = data.subjectPerformance.map((s: any) => (s.name || '').substring(0, 12));
-    const radarValues = data.subjectPerformance.map((s: any) => s.percentage || 0);
 
     const barY = y + 5;
     data.subjectPerformance.forEach((s: any, i: number) => {
@@ -604,11 +606,12 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
   if (data.questions && data.questions.length > 0) {
     sectionTitle('Per-Question Analysis');
 
-    const qHead = [['#', 'Subject', 'Topic', 'Result', 'Points']];
+    const qHead = [['#', 'Subject', 'Topic', 'Difficulty', 'Result', 'Points']];
     const qBody = data.questions.map((q: any, idx: number) => [
       `${idx + 1}`,
-      (q.subject || '').substring(0, 14),
-      (q.topic || '').substring(0, 14),
+      (q.subject || '').substring(0, 12),
+      (q.topic || '').substring(0, 12),
+      (q.difficulty_level || 'N/A').substring(0, 10),
       q.is_correct ? 'Correct' : 'Wrong',
       `${q.points_earned || 0}/${q.points || 0}`,
     ]);
@@ -619,17 +622,18 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
       body: qBody,
       theme: 'grid',
       headStyles: { fillColor: [...NAVY], textColor: [...WHITE], fontStyle: 'bold', fontSize: 7 },
-      styles: { fontSize: 7, cellPadding: 1.5 },
+      styles: { fontSize: 6.5, cellPadding: 1.5 },
       columnStyles: {
-        0: { cellWidth: 10, halign: 'center' },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 20, halign: 'center' },
-        4: { cellWidth: 18, halign: 'center' },
+        0: { cellWidth: 8, halign: 'center' },
+        1: { cellWidth: 28 },
+        2: { cellWidth: 28 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 16, halign: 'center' },
+        5: { cellWidth: 16, halign: 'center' },
       },
       margin: { left: marginL },
       didParseCell: (hookData: any) => {
-        if (hookData.section === 'body' && hookData.column.index === 3) {
+        if (hookData.section === 'body' && hookData.column.index === 4) {
           if (hookData.cell.raw === 'Correct') {
             hookData.cell.styles.textColor = [0, 140, 60];
             hookData.cell.styles.fontStyle = 'bold';
@@ -692,8 +696,45 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
   }
 
   if (data.insights) {
-    sectionTitle('Detailed Insights');
+    sectionTitle('Performance Insights & Mastery Analysis');
 
+    // Overall mastery level box
+    checkPage(20);
+    const scorePctForInsight = data.attempt.score;
+    const masteryLevel = scorePctForInsight >= 90 ? 'MASTERY' : scorePctForInsight >= 75 ? 'PROFICIENT' : scorePctForInsight >= 60 ? 'DEVELOPING' : scorePctForInsight >= 40 ? 'BEGINNING' : 'NOT YET BEGINNING';
+    const masteryColor: [number, number, number] =
+      masteryLevel === 'MASTERY' ? [0, 140, 60] :
+      masteryLevel === 'PROFICIENT' ? [30, 120, 200] :
+      masteryLevel === 'DEVELOPING' ? [200, 150, 0] :
+      masteryLevel === 'BEGINNING' ? [220, 100, 0] : [200, 30, 30];
+
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(marginL, y, contentW, 18, 2, 2, 'F');
+    doc.setDrawColor(...masteryColor);
+    doc.setLineWidth(0.8);
+    doc.roundedRect(marginL, y, contentW, 18, 2, 2, 'S');
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...masteryColor);
+    doc.text(`Mastery Level: ${masteryLevel}`, marginL + 4, y + 7);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
+    const masteryDesc = masteryLevel === 'MASTERY'
+      ? 'The student has demonstrated comprehensive understanding and can apply knowledge independently.'
+      : masteryLevel === 'PROFICIENT'
+      ? 'The student shows solid understanding with minor gaps that need targeted practice.'
+      : masteryLevel === 'DEVELOPING'
+      ? 'The student is building understanding but needs consistent practice and support in key areas.'
+      : masteryLevel === 'BEGINNING'
+      ? 'The student is in early stages of understanding and requires significant additional support.'
+      : 'The student needs intensive intervention and foundational skill building.';
+    doc.text(masteryDesc, marginL + 4, y + 13);
+    y += 22;
+
+    // Strengths
     if (data.insights.strengths && data.insights.strengths.length > 0) {
       checkPage(15);
       doc.setFontSize(10);
@@ -705,8 +746,8 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(50, 50, 50);
       data.insights.strengths.forEach((s: string) => {
-        checkPage(8);
-        const lines = wrapText(`\u2713  ${s}`, contentW - 5, 8);
+        checkPage(10);
+        const lines = wrapText(`+  ${s} - performing well above average. Continue reinforcing this area.`, contentW - 5, 8);
         lines.forEach((line: string) => {
           doc.text(line, marginL + 3, y);
           y += 4;
@@ -716,19 +757,20 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
       y += 3;
     }
 
+    // Needs Improvement
     if (data.insights.needsImprovement && data.insights.needsImprovement.length > 0) {
       checkPage(15);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(200, 100, 0);
-      doc.text('Needs Improvement', marginL, y);
+      doc.text('Areas Needing Improvement', marginL, y);
       y += 5;
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(50, 50, 50);
       data.insights.needsImprovement.forEach((s: string) => {
-        checkPage(8);
-        const lines = wrapText(`\u2717  ${s}`, contentW - 5, 8);
+        checkPage(10);
+        const lines = wrapText(`!  ${s} - requires focused attention. Recommend additional practice sessions and targeted review.`, contentW - 5, 8);
         lines.forEach((line: string) => {
           doc.text(line, marginL + 3, y);
           y += 4;
@@ -738,19 +780,20 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
       y += 3;
     }
 
+    // Weak Topics
     if (data.insights.weakTopics && data.insights.weakTopics.length > 0) {
       checkPage(15);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(200, 30, 30);
-      doc.text('Weak Topics', marginL, y);
+      doc.text('Weak Topics Requiring Revision', marginL, y);
       y += 5;
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(50, 50, 50);
       data.insights.weakTopics.forEach((t: string) => {
-        checkPage(8);
-        const lines = wrapText(`\u2022  ${t}`, contentW - 5, 8);
+        checkPage(10);
+        const lines = wrapText(`*  ${t} - below 50% mastery. Priority topic for revision and extra practice.`, contentW - 5, 8);
         lines.forEach((line: string) => {
           doc.text(line, marginL + 3, y);
           y += 4;
@@ -760,52 +803,204 @@ export function generateTestReportPdf(data: ReportData, schoolName?: string): js
       y += 3;
     }
 
+    // Per-Subject Mastery Breakdown with recommendations
     if (data.subjectPerformance && data.subjectPerformance.length > 0) {
-      checkPage(15);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...NAVY);
-      doc.text('Subject Recommendations', marginL, y);
-      y += 5;
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(50, 50, 50);
+      sectionTitle('Subject Mastery Breakdown');
+
       data.subjectPerformance.forEach((s: any) => {
-        checkPage(8);
+        checkPage(25);
         const pct = s.percentage || 0;
-        const assessment = getAssessmentText(pct);
-        const rec = `${s.name || 'Subject'}: ${assessment} (${pct.toFixed(1)}%)`;
-        const lines = wrapText(`\u25B8  ${rec}`, contentW - 5, 8);
-        lines.forEach((line: string) => {
-          doc.text(line, marginL + 3, y);
-          y += 4;
+        const subjMastery = pct >= 90 ? 'MASTERY' : pct >= 75 ? 'PROFICIENT' : pct >= 60 ? 'DEVELOPING' : pct >= 40 ? 'BEGINNING' : 'NOT YET BEGINNING';
+        const subjColor: [number, number, number] =
+          pct >= 70 ? [0, 140, 60] : pct >= 50 ? [200, 150, 0] : [200, 30, 30];
+
+        // Subject name + score bar
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...NAVY);
+        doc.text(`${s.name || 'Subject'}`, marginL, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...subjColor);
+        doc.text(`${pct.toFixed(1)}% - ${subjMastery}`, marginL + 80, y);
+        y += 4;
+        drawHorizontalBar(marginL, y, contentW, 4, pct);
+        y += 7;
+
+        // Find topics for this subject
+        const subjTopics = (data.topicPerformance || []).filter((t: any) => {
+          if (!data.subjectTopicBreakdown) return false;
+          return data.subjectTopicBreakdown.some((st: any) =>
+            st.subject === s.name && st.topics && st.topics.some((tt: any) => tt.name === t.name)
+          );
         });
-        y += 1;
+        const weakSubjTopics = subjTopics.filter((t: any) => t.percentage < 50);
+        const strongSubjTopics = subjTopics.filter((t: any) => t.percentage >= 70);
+
+        // Recommendation text
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        let rec = '';
+        if (pct >= 80) {
+          rec = `Excellent performance. ${strongSubjTopics.length > 0 ? 'Strong in: ' + strongSubjTopics.map((t: any) => t.name).join(', ') + '. ' : ''}Consider exploring advanced topics to further challenge this student.`;
+        } else if (pct >= 60) {
+          rec = `Good progress. ${weakSubjTopics.length > 0 ? 'Focus areas: ' + weakSubjTopics.map((t: any) => t.name).join(', ') + '. ' : ''}With targeted practice, this student can reach proficiency.`;
+        } else if (pct >= 40) {
+          rec = `Below expectations. ${weakSubjTopics.length > 0 ? 'Critical topics: ' + weakSubjTopics.map((t: any) => t.name).join(', ') + '. ' : ''}Recommend structured review sessions and additional exercises.`;
+        } else {
+          rec = `Significant gaps detected. ${weakSubjTopics.length > 0 ? 'Priority topics: ' + weakSubjTopics.map((t: any) => t.name).join(', ') + '. ' : ''}Intensive intervention recommended with focused tutoring.`;
+        }
+        const recLines = wrapText(rec, contentW - 3, 7);
+        recLines.forEach((line: string) => {
+          checkPage(6);
+          doc.text(line, marginL + 2, y);
+          y += 3.5;
+        });
+        y += 5;
+      });
+    }
+
+    // Difficulty-based mastery insights
+    if (data.difficultyBreakdown && data.difficultyBreakdown.length > 0) {
+      checkPage(20);
+      sectionTitle('Difficulty Mastery Analysis');
+
+      data.difficultyBreakdown.forEach((d: any) => {
+        checkPage(12);
+        const pct = d.percentage || 0;
+        const level = (d.level || '').toLowerCase();
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...NAVY);
+        doc.text(`${d.level || 'Unknown'}: `, marginL, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        const diffRec = pct >= 70
+          ? `Strong command (${pct.toFixed(1)}%). Student handles ${level} questions well.`
+          : pct >= 50
+          ? `Developing (${pct.toFixed(1)}%). Some ${level} concepts need reinforcement.`
+          : `Needs support (${pct.toFixed(1)}%). Recommend ${level}-level practice drills and scaffolded exercises.`;
+        const diffLines = wrapText(diffRec, contentW - 25, 7);
+        diffLines.forEach((line: string) => {
+          doc.text(line, marginL + 25, y);
+          y += 3.5;
+        });
+        y += 2;
       });
       y += 3;
     }
+
+    // Time and Security analysis
+    checkPage(15);
+    sectionTitle('Test Execution Analysis');
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+
+    if (data.attempt.time_taken) {
+      const mins = Math.floor(data.attempt.time_taken / 60);
+      const secs = data.attempt.time_taken % 60;
+      const totalSecs = data.attempt.time_taken;
+      const avgPerQ = data.attempt.total_questions > 0 ? Math.round(totalSecs / data.attempt.total_questions) : 0;
+      const durationSecs = (data.test.duration_minutes || 0) * 60;
+      const timeUsedPct = durationSecs > 0 ? Math.round((totalSecs / durationSecs) * 100) : 0;
+
+      doc.text(`Time Taken: ${mins}m ${secs}s`, marginL, y); y += 4;
+      doc.text(`Average per Question: ${avgPerQ}s`, marginL, y); y += 4;
+      doc.text(`Time Utilization: ${timeUsedPct}% of allocated duration`, marginL, y); y += 4;
+
+      if (timeUsedPct < 50) {
+        doc.setTextColor(200, 150, 0);
+        doc.text('Note: Student completed very quickly. Verify thoroughness of answers.', marginL, y); y += 4;
+      } else if (timeUsedPct > 90) {
+        doc.setTextColor(200, 100, 0);
+        doc.text('Note: Student used most of the allocated time. May benefit from time management practice.', marginL, y); y += 4;
+      }
+    }
+
+    const totalSecurityEvents = (data.attempt.tab_switches || 0) + (data.attempt.fullscreen_exits || 0);
+    if (totalSecurityEvents > 0) {
+      doc.setTextColor(60, 60, 60);
+      doc.text(`Security Events: ${data.attempt.tab_switches || 0} tab switch(es), ${data.attempt.fullscreen_exits || 0} fullscreen exit(s)`, marginL, y); y += 4;
+      if (totalSecurityEvents > 5) {
+        doc.setTextColor(200, 30, 30);
+        doc.text('High frequency of security events may indicate distractibility or attempt to navigate away from the test.', marginL, y); y += 4;
+      }
+    }
+    y += 3;
   }
 
   if (data.insights && data.insights.overall) {
-    checkPage(25);
-    sectionTitle('Overall Assessment');
+    checkPage(40);
+    sectionTitle('Overall Assessment & Recommendations');
 
     doc.setFillColor(245, 247, 250);
-    doc.roundedRect(marginL, y, contentW, 20, 2, 2, 'F');
+    doc.roundedRect(marginL, y, contentW, 35, 2, 2, 'F');
     doc.setDrawColor(...GOLD);
     doc.setLineWidth(0.3);
-    doc.roundedRect(marginL, y, contentW, 20, 2, 2, 'S');
+    doc.roundedRect(marginL, y, contentW, 35, 2, 2, 'S');
 
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(50, 50, 50);
-    const overallLines = wrapText(data.insights.overall, contentW - 8, 9);
+
+    // Build comprehensive summary
+    const totalQ = data.attempt.total_questions;
+    const correctQ = data.attempt.correct_answers;
+    const wrongQ = totalQ - correctQ;
+    const weakTopicsList = (data.insights.weakTopics || []).join(', ');
+    const strengthsList = (data.insights.strengths || []).join(', ');
+
+    const summaryParts: string[] = [];
+    summaryParts.push(`Student scored ${data.attempt.score}% (${correctQ}/${totalQ} correct) and ${data.attempt.passed ? 'passed' : 'did not meet'} the passing threshold of ${data.test.passing_score || 50}%.`);
+
+    if (strengthsList) summaryParts.push(`Strengths include: ${strengthsList}.`);
+    if (weakTopicsList) summaryParts.push(`Topics needing attention: ${weakTopicsList}.`);
+
+    // Add difficulty insight summary
+    if (data.difficultyBreakdown && data.difficultyBreakdown.length > 0) {
+      const hardDiff = data.difficultyBreakdown.find((d: any) => (d.level || '').toLowerCase() === 'hard');
+      const easyDiff = data.difficultyBreakdown.find((d: any) => (d.level || '').toLowerCase() === 'easy');
+      if (hardDiff && easyDiff) {
+        summaryParts.push(`Performance gap between easy (${easyDiff.percentage}%) and hard (${hardDiff.percentage}%) questions is ${Math.abs(easyDiff.percentage - hardDiff.percentage)}%.`);
+      }
+    }
+
+    const fullSummary = summaryParts.join(' ');
+    const overallLines = wrapText(fullSummary, contentW - 8, 8);
     overallLines.forEach((line: string, i: number) => {
-      if (i < 3) {
-        doc.text(line, marginL + 4, y + 7 + i * 5);
+      if (i < 6) {
+        doc.text(line, marginL + 4, y + 7 + i * 4.5);
       }
     });
-    y += 24;
+
+    // Next steps
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...NAVY);
+    doc.text('Recommended Next Steps:', marginL + 4, y + 25);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+
+    const nextSteps: string[] = [];
+    if (data.attempt.score < 50) {
+      nextSteps.push('Schedule remedial sessions focusing on weak areas');
+      nextSteps.push('Assign targeted practice exercises');
+    } else if (data.attempt.score < 70) {
+      nextSteps.push('Review topics where marks were lost');
+      nextSteps.push('Provide additional practice problems');
+    } else {
+      nextSteps.push('Challenge with advanced problems');
+      nextSteps.push('Encourage peer tutoring');
+    }
+    if (weakTopicsList) nextSteps.push(`Prioritize revision of: ${weakTopicsList}`);
+
+    nextSteps.slice(0, 3).forEach((step: string, i: number) => {
+      doc.text(`${i + 1}. ${step}`, marginL + 6, y + 29 + i * 3.5);
+    });
+
+    y += 39;
   }
 
   const totalPages = pageCount;
