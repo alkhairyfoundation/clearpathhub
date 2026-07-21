@@ -61,7 +61,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const supabase = await createSupabaseAdminClient();
 
     const body = await request.json();
-    const { first_name, last_name, role, phone, password, teacher_class_ids,
+    const { first_name, last_name, role, phone, password, teacher_class_ids, class_id,
       date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact, admission_number } = body;
 
     const updates: Record<string, any> = {};
