@@ -106,8 +106,8 @@ useEffect(() => {
       }
 
       // Fetch class mastery data
-      if (uniqueClassIds.length > 0 && subjectsRes.data && subjectsRes.data.length > 0) {
-        const subjectIds = subjectsRes.data.map(s => s.id);
+      if (uniqueClassIds.length > 0 && allSubjects && allSubjects.length > 0) {
+        const subjectIds = allSubjects.map(s => s.id);
         const { data: studentsData } = await supabase
           .from('students')
           .select('profile_id, class_id')
@@ -161,10 +161,22 @@ useEffect(() => {
       }
 
       // Calculate performance data for charts
-      if (resultsRes.data) {
+      // Fetch results for students in this teacher's classes
+      const studentIdsForResults = classMastery.length > 0
+        ? Array.from(new Set(classMastery.flatMap((g: any) => Array.from(g.studentSet || []))))
+        : [];
+      let resultsResData: any[] = [];
+      if (studentIdsForResults.length > 0) {
+        const { data: rData } = await supabase
+          .from('results')
+          .select('id, score, grade')
+          .in('student_id', studentIdsForResults);
+        resultsResData = rData || [];
+      }
+      if (resultsResData.length > 0) {
         const distribution = ['A', 'B', 'C', 'D', 'F'].map(grade => ({
           name: grade,
-          value: resultsRes.data.filter((r: any) => r.grade.startsWith(grade)).length
+          value: resultsResData.filter((r: any) => r.grade.startsWith(grade)).length
         }));
         setPerformanceData(distribution);
       }
