@@ -372,6 +372,44 @@ export function generateCompiledReportPdf(data: CompiledData, schoolName?: strin
     y = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 8 : y + 8;
   }
 
+  // Per-Question Breakdown
+  if (data.questionPatterns.length > 0) {
+    sectionTitle('Per-Question Breakdown');
+    const qHead = [['#', 'Question', 'Subject', 'Difficulty', 'Seen', 'Correct', 'Miss Rate']];
+    const qBody = data.questionPatterns.map((q, i) => [
+      `${i + 1}`,
+      q.question.substring(0, 45),
+      q.subject.substring(0, 18),
+      q.difficulty,
+      `${q.timesSeen}`,
+      `${q.timesCorrect}`,
+      `${(q.missRate * 100).toFixed(0)}%`,
+    ]);
+    autoTable(doc, {
+      startY: y, head: qHead, body: qBody, theme: 'grid',
+      headStyles: { fillColor: [...NAVY], textColor: [...WHITE], fontStyle: 'bold', fontSize: 7 },
+      styles: { fontSize: 7, cellPadding: 1.5 },
+      columnStyles: {
+        0: { cellWidth: 8, halign: 'center' },
+        1: { cellWidth: 55 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 14, halign: 'center' },
+        5: { cellWidth: 18, halign: 'center' },
+        6: { cellWidth: 18, halign: 'center' },
+      },
+      margin: { left: marginL },
+      didParseCell: (hookData: any) => {
+        if (hookData.section === 'body' && hookData.column.index === 6) {
+          const val = parseFloat(hookData.cell.raw);
+          hookData.cell.styles.textColor = val > 50 ? [200, 30, 30] : val > 30 ? [200, 150, 0] : [0, 140, 60];
+          hookData.cell.styles.fontStyle = 'bold';
+        }
+      },
+    });
+    y = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 8 : y + 8;
+  }
+
   // Test History
   if (data.attempts.length > 0) {
     sectionTitle('Test History');
@@ -530,8 +568,17 @@ export function generateCompiledReportPdf(data: CompiledData, schoolName?: strin
     y += 3;
   }
 
+  // Remove empty trailing page if last page only has header
+  let totalPages = doc.getNumberOfPages();
+  if (totalPages > 1) {
+    doc.setPage(totalPages);
+    if (y <= 48) {
+      doc.deletePage(totalPages);
+      totalPages--;
+    }
+  }
+
   // Draw footers on all pages
-  const totalPages = pageCount;
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
     const pgH = doc.internal.pageSize.getHeight();
