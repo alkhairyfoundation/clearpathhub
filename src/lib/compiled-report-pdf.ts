@@ -310,10 +310,11 @@ export function generateCompiledReportPdf(data: CompiledData, schoolName?: strin
       margin: { left: marginL },
     });
     const subjTable = (doc as any).lastAutoTable;
-    if (subjTable) {
+    if (subjTable && typeof subjTable.finalY === 'number') {
       const cellH = 7;
+      const stY = typeof subjTable.startY === 'number' ? subjTable.startY : y;
       data.subjectPerformance.forEach((s, i) => {
-        const rowY = subjTable.startY + 9 + i * cellH;
+        const rowY = stY + 9 + i * cellH;
         if (rowY > pageH - 30) return;
         drawHorizontalBar(marginL + 112, rowY, 60, 4, s.percentage);
       });
@@ -339,10 +340,11 @@ export function generateCompiledReportPdf(data: CompiledData, schoolName?: strin
       margin: { left: marginL },
     });
     const topicTable = (doc as any).lastAutoTable;
-    if (topicTable) {
+    if (topicTable && typeof topicTable.finalY === 'number') {
       const cellH = 7;
+      const ttY = typeof topicTable.startY === 'number' ? topicTable.startY : y;
       data.topicPerformance.forEach((t, i) => {
-        const rowY = topicTable.startY + 9 + i * cellH;
+        const rowY = ttY + 9 + i * cellH;
         if (rowY > pageH - 30) return;
         drawHorizontalBar(marginL + 117, rowY, 55, 4, t.percentage);
       });
@@ -367,7 +369,7 @@ export function generateCompiledReportPdf(data: CompiledData, schoolName?: strin
       columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: 35 }, 2: { cellWidth: 35 }, 3: { cellWidth: 75 } },
       margin: { left: marginL },
     });
-    y = (doc as any).lastAutoTable.finalY + 8;
+    y = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 8 : y + 8;
   }
 
   // Test History
@@ -395,7 +397,7 @@ export function generateCompiledReportPdf(data: CompiledData, schoolName?: strin
         }
       },
     });
-    y = (doc as any).lastAutoTable.finalY + 8;
+    y = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 8 : y + 8;
   }
 
   // Insights
