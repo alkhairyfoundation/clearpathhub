@@ -1,63 +1,51 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
-  Plus, Award, Save, ArrowLeft, BarChart3, Users, TrendingUp,
-  AlertTriangle, Download, CheckCircle, XCircle, Loader2, Edit3, Send, GraduationCap, Printer
+  ArrowLeft, Loader2, Download, BarChart3, Users, TrendingUp,
+  TrendingDown, AlertTriangle, CheckCircle, XCircle, Brain, Target,
+  Shield, ChevronDown, Search, Award, Clock
 } from 'lucide-react';
-import type { Subject } from '@/types';
-import SendResultButton from '@/components/SendResultButton';
+import {
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  LineChart, Line, Cell
+} from 'recharts';
 
-type ExamType = 'ca1' | 'ca2' | 'ca3' | 'exam';
-type ScoreCell = { result_id?: string; score: number; grade: string } | null;
+const COLORS = ['#b3922f', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
-interface StudentScoreRow {
-  student_id: string;
-  student_name: string;
-  admission_number?: string;
-  ca1: ScoreCell;
-  ca2: ScoreCell;
-  ca3: ScoreCell;
-  exam: ScoreCell;
-  dirty: boolean;
-}
-
-function buildScoreTypes(config: any): { key: ExamType; label: string; maxScore: number }[] {
-  if (!config) return [{ key: 'ca1', label: 'Mid-Term Test', maxScore: 40 }, { key: 'exam', label: 'Exam', maxScore: 60 }];
-  const types: { key: ExamType; label: string; maxScore: number }[] = [];
-  if (config.ca1_enabled) types.push({ key: 'ca1', label: config.ca1_label || 'Mid-Term Test', maxScore: config.ca1_max || 40 });
-  if (config.ca2_enabled) types.push({ key: 'ca2', label: config.ca2_label || '2nd CA', maxScore: config.ca2_max || 10 });
-  if (config.ca3_enabled) types.push({ key: 'ca3', label: config.ca3_label || '3rd CA', maxScore: config.ca3_max || 10 });
-  if (config.exam_enabled) types.push({ key: 'exam', label: config.exam_label || 'Exam', maxScore: config.exam_max || 60 });
-  return types;
-}
-
-function totalScore(row: StudentScoreRow, config?: any): number {
-  let total = 0;
-  const types = config ? buildScoreTypes(config) : [{ key: 'ca1' as ExamType, maxScore: 40 }, { key: 'exam' as ExamType, maxScore: 60 }];
-  for (const t of types) {
-    total += row[t.key]?.score ?? 0;
-  }
-  return Math.min(100, total);
-}
-
-function calculateGrade(score: number): string {
-  if (score >= 90) return 'A+';
-  if (score >= 80) return 'A';
-  if (score >= 70) return 'B';
-  if (score >= 60) return 'C';
-  if (score >= 50) return 'D';
-  return 'F';
-}
-
-function safeScore(val: string | number): number {
-  const n = typeof val === 'string' ? parseInt(val) : val;
-  if (isNaN(n)) return 0;
-  return Math.max(0, n);
+interface CompiledData {
+  student: { name: string; admission: string; className: string } | null;
+  summary: {
+    totalTests: number;
+    avgScore: number;
+    passRate: number;
+    highestScore: number;
+    lowestScore: number;
+    totalCorrect: number;
+    totalQuestions: number;
+    trendDirection: 'improving' | 'declining' | 'stable';
+  };
+  scoreTrend: { date: string; score: number; testTitle: string; subjectName: string }[];
+  subjectPerformance: { name: string; correct: number; total: number; percentage: number }[];
+  topicPerformance: { name: string; correct: number; total: number; percentage: number }[];
+  subjectTopicBreakdown: { subject: string; topics: { name: string; correct: number; total: number; percentage: number }[] }[];
+  difficultyBreakdown: { level: string; correct: number; total: number; percentage: number }[];
+  questionPatterns: { question: string; subject: string; topic: string; difficulty: string; timesSeen: number; timesCorrect: number; missRate: number }[];
+  securitySummary: { totalTabSwitches: number; totalFullscreenExits: number; totalSecurityEvents: number; testsWithEvents: number };
+  insights: {
+    strengths: string[];
+    needsImprovement: string[];
+    weakTopics: string[];
+    overall: string;
+    subjectRecommendations: { subject: string; score: number; assessment: string; recommendation: string }[];
+    recommendations: string[];
+  };
+  attempts: { id: string; title: string; subjectName: string; score: number; passed: boolean; correctAnswers: number; totalQuestions: number; completedAt: string }[];
 }
 
 export default function AdminResultsPage() {
@@ -65,24 +53,18 @@ export default function AdminResultsPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  const [terms, setTerms] = useState<any[]>([]);
-  const [selectedTerm, setSelectedTerm] = useState<any>(null);
   const [classes, setClasses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [students, setStudents] = useState<{ profile_id: string; name: string; admission_number?: string }[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const [students, setStudents] = useState<{ id: string; profile_id: string; name: string; admission_number?: string }[]>([]);
-  const [rows, setRows] = useState<StudentScoreRow[]>([]);
-  const [allResults, setAllResults] = useState<any[]>([]);
-  const [assessmentConfig, setAssessmentConfig] = useState<any>(null);
-
-  const [showModal, setShowModal] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
-  const [formData, setFormData] = useState({ student_id: '', subject_id: '', exam_type: 'ca1' as ExamType, score: 0, grade: '', remarks: '' });
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [reportData, setReportData] = useState<CompiledData | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [schoolSettings, setSchoolSettings] = useState<any>(null);
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -90,499 +72,655 @@ export default function AdminResultsPage() {
   }, [profile]);
 
   useEffect(() => {
-    if (selectedTerm && selectedClassId && selectedSubjectId) fetchMatrix();
-  }, [selectedTerm, selectedClassId, selectedSubjectId]);
+    if (selectedClassId) fetchSubjectsAndStudents();
+  }, [selectedClassId]);
+
+  useEffect(() => {
+    if (selectedStudentId) fetchReport();
+  }, [selectedStudentId]);
 
   async function fetchInitial() {
     setLoading(true);
     try {
-      const [{ data: termData }, { data: classData }] = await Promise.all([
-        supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
+      const [{ data: classData }, { data: settingsData }] = await Promise.all([
         supabase.from('classes').select('*').order('name'),
+        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
       ]);
-
-      setTerms(termData || []);
-      const current = termData?.find((t: any) => t.is_current) || termData?.[0] || null;
-      setSelectedTerm(current);
-
-      const cls = classData || [];
-      setClasses(cls);
-      const firstClassId = cls.length > 0 ? cls[0].id : '';
-      if (firstClassId) setSelectedClassId(firstClassId);
-
-      const { data: settingsData } = await supabase.from('school_settings').select('assessment_config').limit(1).maybeSingle();
-      setAssessmentConfig(settingsData?.assessment_config || null);
+      setClasses(classData || []);
+      setSchoolSettings(settingsData);
+      if (classData && classData.length > 0) setSelectedClassId(classData[0].id);
     } catch (err: any) { setError(err.message); }
     setLoading(false);
   }
 
-  // Fetch subjects whenever class changes
-  useEffect(() => {
+  async function fetchSubjectsAndStudents() {
     if (!selectedClassId) return;
     setSelectedSubjectId('');
-    supabase.from('subjects').select('*').or(`class_id.eq.${selectedClassId},class_id.is.null`).order('name')
-      .then(({ data }) => {
-        setSubjects(data || []);
-        if (data && data.length > 0) setSelectedSubjectId(data[0].id);
-      });
-  }, [selectedClassId]);
-
-  async function fetchMatrix() {
-    setLoading(true);
+    setSelectedStudentId('');
+    setReportData(null);
     try {
-      const { data: classStudents } = await supabase
-        .from('students')
-        .select('id, profile_id, admission_number, profile:profiles!profile_id(first_name, last_name)')
-        .eq('class_id', selectedClassId)
-        .order('admission_number');
-
-      const studentList = (classStudents || []).map((s: any) => ({
-        id: s.id,
+      const [{ data: subjData }, { data: studData }] = await Promise.all([
+        supabase.from('subjects').select('*').or(`class_id.eq.${selectedClassId},class_id.is.null`).order('name'),
+        supabase.from('students')
+          .select('profile_id, admission_number, profile:profiles!profile_id(first_name, last_name)')
+          .eq('class_id', selectedClassId)
+          .order('admission_number'),
+      ]);
+      setSubjects(subjData || []);
+      const studs = (studData || []).map((s: any) => ({
         profile_id: s.profile_id,
         name: `${s.profile?.first_name || ''} ${s.profile?.last_name || ''}`.trim() || 'Unknown',
         admission_number: s.admission_number,
       }));
-      setStudents(studentList);
-
-      const { data: existing } = await supabase
-        .from('results')
-        .select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)')
-        .eq('subject_id', selectedSubjectId)
-        .eq('term', selectedTerm?.name)
-        .eq('academic_year', selectedTerm?.session?.name || '');
-      setAllResults(existing || []);
-
-      const matrix: StudentScoreRow[] = studentList.map(s => {
-        const studentResults = (existing || []).filter((r: any) => r.student_id === s.profile_id);
-        const getCell = (et: ExamType): ScoreCell => {
-          const r = studentResults.find((res: any) => res.exam_type === et);
-          return r ? { result_id: r.id, score: r.score, grade: r.grade || calculateGrade(r.score) } : null;
-        };
-        const scoreTypes = buildScoreTypes(assessmentConfig);
-        const cellInit: any = {};
-        scoreTypes.forEach(st => { cellInit[st.key] = getCell(st.key); });
-        return { student_id: s.profile_id, student_name: s.name, admission_number: s.admission_number, ...cellInit, dirty: false };
-      });
-      setRows(matrix);
+      setStudents(studs);
     } catch (err: any) { setError(err.message); }
-    setLoading(false);
   }
 
-  function updateCell(rowIdx: number, et: ExamType, value: number) {
-    setRows(prev => {
-      const next = [...prev];
-      const row = { ...next[rowIdx] };
-      const existing = row[et];
-      const clamped = safeScore(value);
-      const cell: ScoreCell = existing
-        ? { ...existing, score: clamped, grade: calculateGrade(clamped) }
-        : { score: clamped, grade: calculateGrade(clamped) };
-      next[rowIdx] = { ...row, [et]: cell, dirty: true };
-      return next;
-    });
-  }
-
-  function cellTotal(row: StudentScoreRow): number {
-    return totalScore(row, assessmentConfig);
-  }
-
-  function cellCount(row: StudentScoreRow): number {
-    const types = assessmentConfig ? buildScoreTypes(assessmentConfig) : [{ key: 'ca1' as ExamType }, { key: 'exam' as ExamType }];
-    return types.filter(t => row[t.key]).length;
-  }
-
-  async function saveRow(row: StudentScoreRow) {
-    const ops: PromiseLike<any>[] = [];
-    const term = selectedTerm?.name || '';
-    const academicYear = selectedTerm?.session?.name || '';
-
-    const scoreTypes = buildScoreTypes(assessmentConfig);
-    for (const et of scoreTypes.map(st => st.key)) {
-      const cell = row[et];
-      if (!cell) continue;
-      if (cell.result_id) {
-        ops.push(
-          supabase.from('results').update({ score: cell.score, grade: cell.grade }).eq('id', cell.result_id).then(r => r)
-        );
-      } else {
-        ops.push(
-          supabase.from('results').insert({
-            student_id: row.student_id,
-            subject_id: selectedSubjectId,
-            exam_type: et,
-            score: cell.score,
-            grade: cell.grade,
-            term,
-            academic_year: academicYear,
-            entered_by: profile?.id,
-          }).select().then(r => r)
-        );
-      }
-    }
-    const res = await Promise.all(ops);
-    for (const r of res) {
-      if (r.error) throw new Error(r.error.message);
-    }
-    const newIds: string[] = [];
-    for (const r of res) {
-      if (r.data) newIds.push(r.data[0]?.id);
-    }
-    return newIds;
-  }
-
-  async function handleSaveAll() {
-    const dirty = rows.filter(r => r.dirty);
-    if (dirty.length === 0) { setError('No changes to save'); return; }
-    setSaving(true); setError(''); setSuccess('');
+  const fetchReport = useCallback(async () => {
+    if (!selectedStudentId) return;
+    setReportLoading(true);
+    setError('');
     try {
-      for (const row of dirty) { await saveRow(row); }
-      setSuccess(`Saved ${dirty.length} student(s) successfully`);
-      await fetchMatrix();
-    } catch (err: any) { setError(err.message); }
-    setSaving(false);
-  }
+      const params = new URLSearchParams({ studentId: selectedStudentId });
+      if (selectedClassId) params.set('classId', selectedClassId);
+      const res = await fetch(`/api/tests/compiled-report?${params.toString()}`);
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || 'Failed to load report');
+      setReportData(result.data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setReportLoading(false);
+    }
+  }, [selectedStudentId, selectedClassId]);
 
-  async function handleSaveSingle(row: StudentScoreRow) {
-    setSaving(true); setError(''); setSuccess('');
+  async function handleDownloadPdf() {
+    if (!reportData) return;
     try {
-      await saveRow(row);
-      setSuccess(`Saved ${row.student_name}'s scores`);
-      await fetchMatrix();
-    } catch (err: any) { setError(err.message); }
-    setSaving(false);
+      const { generateCompiledReportPdf } = await import('@/lib/compiled-report-pdf');
+      const doc = generateCompiledReportPdf(reportData, schoolSettings?.school_name);
+      doc.save(`Compiled_Report_${reportData.student?.name?.replace(/\s+/g, '_') || 'student'}_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (err: any) {
+      console.error('PDF error:', err);
+      alert('Failed to generate PDF: ' + err.message);
+    }
   }
 
-  async function handleModalSave() {
-    if (!formData.student_id || !formData.subject_id) { setError('Student and subject are required'); return; }
-    setError(''); setSuccess('');
-    const score = safeScore(formData.score);
-    const grade = calculateGrade(score);
-    try {
-      const term = selectedTerm?.name || '';
-      const academicYear = selectedTerm?.session?.name || '';
-      const { error: err } = await supabase.from('results').insert({
-        student_id: formData.student_id,
-        subject_id: formData.subject_id,
-        exam_type: formData.exam_type,
-        score,
-        grade,
-        remarks: formData.remarks,
-        term,
-        academic_year: academicYear,
-        entered_by: profile?.id,
-      });
-      if (err) throw new Error(err.message);
-      setSuccess('Result saved');
-      setTimeout(() => {
-        setShowModal(false);
-        setFormData({ student_id: '', subject_id: '', exam_type: 'ca1', score: 0, grade: '', remarks: '' });
-        fetchMatrix();
-      }, 1000);
-    } catch (err: any) { setError(err.message); }
-  }
+  const filteredStudents = students.filter(s =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.admission_number || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  function exportCSV() {
-    if (allResults.length === 0) { setError('No results to export'); return; }
-    const headers = 'Student,Admission,Subject,Exam Type,Score,Grade,Term,Date';
-    const csvRows = allResults.map((r: any) =>
-      `"${r.student?.first_name || ''} ${r.student?.last_name || ''}","${students.find(s => s.profile_id === r.student_id)?.admission_number || ''}","${r.subject?.name || ''}","${r.exam_type}","${r.score}","${r.grade || ''}","${r.term || ''}","${new Date(r.created_at).toLocaleDateString()}"`
-    ).join('\n');
-    const blob = new Blob([`${headers}\n${csvRows}`], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'results_export.csv'; a.click();
-    URL.revokeObjectURL(url);
-  }
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'subjects', label: 'Subjects' },
+    { id: 'topics', label: 'Topics' },
+    { id: 'difficulty', label: 'Difficulty' },
+    { id: 'questions', label: 'Questions' },
+    { id: 'insights', label: 'Insights' },
+  ];
 
-  const allScores = allResults.map((r: any) => r.score);
-  const avgScore = allScores.length > 0 ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
-  const passRate = allScores.length > 0 ? Math.round((allScores.filter((s: number) => s >= 50).length / allScores.length) * 100) : 0;
-  const atRisk = rows.filter(r => { const t = cellTotal(r); return cellCount(r) > 0 && t < 50; });
-  const gradeDist = ['A+', 'A', 'B', 'C', 'D', 'F'].map(g => ({ grade: g, count: allResults.filter((r: any) => r.grade === g).length }));
-  const hasChanges = rows.some(r => r.dirty);
-  const currentSubject = subjects.find(s => s.id === selectedSubjectId);
+  const data = reportData;
+  const s = data?.summary;
 
-  const scoreTypes = buildScoreTypes(assessmentConfig);
   return (
-    <DashboardLayout title="Score Declaration" subtitle="Admin - Enter CA and Exam scores per student per term">
+    <DashboardLayout title="Results & Analytics" subtitle="Admin - Compiled test performance analytics per student">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
-            <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Score Declaration</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">Admin - Enter CA and Exam scores per student per term</p></div>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Results & Analytics</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Compiled cross-test performance report</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowSummary(!showSummary)} className="btn-outline flex items-center gap-2 text-sm"><BarChart3 size={16} />{showSummary ? 'Hide' : 'Summary'}</button>
-            <button onClick={exportCSV} className="btn-outline flex items-center gap-2 text-sm"><Download size={16} />CSV</button>
-            <button onClick={() => setShowModal(true)} className="btn-outline flex items-center gap-2 text-sm"><Plus size={16} />Quick Entry</button>
-            {hasChanges && (
-              <button onClick={handleSaveAll} disabled={saving} className="btn-primary flex items-center gap-2 text-sm">
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                {saving ? 'Saving...' : `Save All (${rows.filter(r => r.dirty).length})`}
-              </button>
-            )}
-          </div>
+          {data && (
+            <button onClick={handleDownloadPdf} className="btn-outline flex items-center gap-2 text-sm">
+              <Download size={16} /> Download PDF
+            </button>
+          )}
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium block mb-1">Term</label>
-            <select value={selectedTerm?.id || ''} onChange={e => setSelectedTerm(terms.find(t => t.id === e.target.value) || null)} className="input py-1.5 text-sm w-auto min-w-[160px]">
-              {terms.map(t => <option key={t.id} value={t.id}>{t.name} {t.session?.name || ''}{t.is_current ? ' (Current)' : ''}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium block mb-1">Class</label>
+            <label className="text-xs text-slate-500 dark:text-slate-400 font-medium block mb-1">Class</label>
             <select value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)} className="input py-1.5 text-sm w-auto min-w-[160px]">
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium block mb-1">Subject</label>
-            <select value={selectedSubjectId} onChange={e => setSelectedSubjectId(e.target.value)} className="input py-1.5 text-sm w-auto min-w-[160px]">
-              {subjects.filter(s => !selectedClassId || !s.class_id || s.class_id === selectedClassId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            <label className="text-xs text-slate-500 dark:text-slate-400 font-medium block mb-1">Student</label>
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search student..."
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); }}
+                className="input py-1.5 text-sm pl-8 min-w-[200px]"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500 dark:text-slate-400 font-medium block mb-1">Select Student</label>
+            <select
+              value={selectedStudentId}
+              onChange={e => { setSelectedStudentId(e.target.value); setSearchQuery(''); }}
+              className="input py-1.5 text-sm w-auto min-w-[200px]"
+            >
+              <option value="">Choose a student...</option>
+              {filteredStudents.map(s => (
+                <option key={s.profile_id} value={s.profile_id}>{s.name} ({s.admission_number || 'N/A'})</option>
+              ))}
             </select>
           </div>
         </div>
 
-        {/* Term info banner */}
-        {selectedTerm && (
-          <div className="bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40 rounded-xl px-4 py-3 flex items-center gap-3 text-sm text-primary-800 dark:text-primary-200 dark:text-primary-200">
-            <GraduationCap size={18} />
-            <span>Declaring scores for <strong>{selectedTerm.name}</strong> — {selectedTerm.session?.name || ''} ({new Date(selectedTerm.start_date).toLocaleDateString()} to {new Date(selectedTerm.end_date).toLocaleDateString()})</span>
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm flex items-center gap-2">
+            <XCircle size={16} />{error}
           </div>
         )}
 
-        {/* Error + Success */}
-        {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm flex items-center gap-2"><XCircle size={16} />{error}</div>}
-        {success && <div className="bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 rounded-lg p-3 text-green-700 dark:text-green-300 dark:text-green-300 text-sm flex items-center gap-2"><CheckCircle size={16} />{success}</div>}
-
-        {loading ? (
-          <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent" /></div>
+        {/* Loading */}
+        {reportLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            <p className="text-sm text-slate-500">Loading compiled analytics...</p>
+          </div>
+        ) : !data ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <BarChart3 size={48} className="mb-3 opacity-50" />
+            <p className="text-lg font-medium">Select a student to view analytics</p>
+            <p className="text-sm">Choose a class and student above to generate a compiled performance report.</p>
+          </div>
+        ) : !data.student ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <Users size={48} className="mb-3 opacity-50" />
+            <p className="text-lg font-medium">No test data found</p>
+            <p className="text-sm">This student has not completed any tests yet.</p>
+          </div>
         ) : (
           <>
-            {/* Summary Panel */}
-            {showSummary && (
-              <div className="space-y-4 animate-scale-in">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Entries</p><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{allResults.length}</p></div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Average Score</p><p className={`text-2xl font-bold ${avgScore >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : avgScore >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{avgScore}%</p></div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Pass Rate</p><p className={`text-2xl font-bold ${passRate >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : passRate >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{passRate}%</p></div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Students</p><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{rows.length}</p></div>
+            {/* Student Info */}
+            <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-xl p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">{data.student.name}</h2>
+                  <p className="text-primary-200 text-sm">Admission #: {data.student.admission || 'N/A'} | Class: {data.student.className || 'N/A'}</p>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5">
-                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3 text-sm">Grade Distribution</h3>
-                    {gradeDist.filter(g => g.count > 0).length === 0 ? <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500">No data</p> : (
-                      <div className="space-y-2">{gradeDist.filter(g => g.count > 0).map(g => {
-                        const pct = Math.round((g.count / allResults.length) * 100);
-                        return (<div key={g.grade} className="flex items-center gap-3"><span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-700 dark:text-slate-300 dark:text-slate-300">{g.grade}</span><div className="flex-1 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full h-3"><div className="h-3 rounded-full bg-primary-500 transition-all" style={{ width: `${pct}%` }} /></div><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 w-8 text-right">{g.count}</span></div>);
-                      })}</div>
-                    )}
+                <div className="text-right">
+                  <p className="text-3xl font-bold">{s?.avgScore || 0}%</p>
+                  <p className="text-primary-200 text-sm">Average Score</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Summary Cards */}
+            {s && (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Total Tests</p>
+                  <p className="text-2xl font-bold text-slate-800 dark:text-white">{s.totalTests}</p>
+                </div>
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Avg Score</p>
+                  <p className={`text-2xl font-bold ${s.avgScore >= 70 ? 'text-green-600' : s.avgScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{s.avgScore}%</p>
+                </div>
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Pass Rate</p>
+                  <p className={`text-2xl font-bold ${s.passRate >= 70 ? 'text-green-600' : s.passRate >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{s.passRate}%</p>
+                </div>
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Correct</p>
+                  <p className="text-2xl font-bold text-blue-600">{s.totalCorrect}/{s.totalQuestions}</p>
+                </div>
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Trend</p>
+                  <p className={`text-2xl font-bold flex items-center justify-center gap-1 ${s.trendDirection === 'improving' ? 'text-green-600' : s.trendDirection === 'declining' ? 'text-red-600' : 'text-slate-600'}`}>
+                    {s.trendDirection === 'improving' ? <TrendingUp size={20} /> : s.trendDirection === 'declining' ? <TrendingDown size={20} /> : <span className="text-lg">=</span>}
+                    {s.trendDirection.charAt(0).toUpperCase() + s.trendDirection.slice(1)}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-primary-600 text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                {/* Radar Chart */}
+                {data.subjectPerformance.length >= 3 && (
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Subject Performance Radar</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RadarChart data={data.subjectPerformance}>
+                        <PolarGrid stroke="#e2e8f0" />
+                        <PolarAngleAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                        <Radar name="Score" dataKey="percentage" stroke="#b3922f" fill="#b3922f" fillOpacity={0.2} />
+                      </RadarChart>
+                    </ResponsiveContainer>
                   </div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5">
-                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3 text-sm">Subject Summary</h3>
-                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg"><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Subject</span><span className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{currentSubject?.name || 'N/A'}</span></div>
-                    <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg mt-2"><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Class</span><span className="text-sm font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{classes.find(c => c.id === selectedClassId)?.name || 'N/A'}</span></div>
+                )}
+
+                {/* Score Trend */}
+                {data.scoreTrend.length >= 2 && (
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Score Trend Over Time</h3>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={data.scoreTrend.map(t => ({ name: t.testTitle.substring(0, 20), score: t.score, subject: t.subjectName }))}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="score" stroke="#b3922f" strokeWidth={2} dot={{ fill: '#b3922f', r: 4 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* Subject Bars + Summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Subject Scores</h3>
+                    <div className="space-y-3">
+                      {data.subjectPerformance.map((sub, i) => (
+                        <div key={sub.name}>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-slate-700 dark:text-slate-300">{sub.name}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{sub.correct}/{sub.total} ({sub.percentage}%)</span>
+                          </div>
+                          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                            <div className="h-2.5 rounded-full transition-all" style={{ width: `${sub.percentage}%`, backgroundColor: COLORS[i % COLORS.length] }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-3">Summary</h3>
+                    <div className="grid grid-cols-1 gap-3 text-sm">
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <p className="font-semibold text-green-700 dark:text-green-400">Strengths ({data.insights.strengths.length})</p>
+                        {data.insights.strengths.length > 0 ? (
+                          <ul className="mt-1 space-y-1">{data.insights.strengths.map((st: string) => <li key={st} className="text-green-600 dark:text-green-300">✓ {st}</li>)}</ul>
+                        ) : <p className="text-green-500 mt-1">None identified</p>}
+                      </div>
+                      <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <p className="font-semibold text-red-700 dark:text-red-400">Needs Improvement ({data.insights.needsImprovement.length})</p>
+                        {data.insights.needsImprovement.length > 0 ? (
+                          <ul className="mt-1 space-y-1">{data.insights.needsImprovement.map((st: string) => <li key={st} className="text-red-600 dark:text-red-300">✗ {st}</li>)}</ul>
+                        ) : <p className="text-red-500 mt-1">All subjects performing well!</p>}
+                      </div>
+                      <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                        <p className="font-semibold text-amber-700 dark:text-amber-400">Weak Topics ({data.insights.weakTopics.length})</p>
+                        {data.insights.weakTopics.length > 0 ? (
+                          <ul className="mt-1 space-y-1">{data.insights.weakTopics.slice(0, 5).map((t: string) => <li key={t} className="text-amber-600 dark:text-amber-300">• {t}</li>)}</ul>
+                        ) : <p className="text-amber-500 mt-1">No weak topics!</p>}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {atRisk.length > 0 && (
-                  <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-xl p-4">
-                    <h3 className="font-semibold text-red-800 dark:text-red-300 dark:text-red-300 mb-2 text-sm flex items-center gap-2"><AlertTriangle size={16} />At-Risk Students (Avg &lt; 50%)</h3>
-                    <div className="flex flex-wrap gap-2">{atRisk.map(r => <span key={r.student_id} className="px-3 py-1 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400 rounded-lg text-xs font-medium">{r.student_name} (avg {cellTotal(r)}%)</span>)}</div>
+              </div>
+            )}
+
+            {activeTab === 'subjects' && (
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                  <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Subject Performance Details</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-700">
+                          <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Subject</th>
+                          <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Correct</th>
+                          <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Total</th>
+                          <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Score</th>
+                          <th className="py-3 px-2 w-1/3"><span className="sr-only">Bar</span></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.subjectPerformance.map((sub, i) => (
+                          <tr key={sub.name} className="border-b border-slate-100 dark:border-slate-700/50">
+                            <td className="py-3 px-2 text-slate-800 dark:text-slate-200 font-medium">{sub.name}</td>
+                            <td className="py-3 px-2 text-center text-slate-600 dark:text-slate-400">{sub.correct}</td>
+                            <td className="py-3 px-2 text-center text-slate-600 dark:text-slate-400">{sub.total}</td>
+                            <td className="py-3 px-2 text-center font-semibold" style={{ color: COLORS[i % COLORS.length] }}>{sub.percentage}%</td>
+                            <td className="py-3 px-2">
+                              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                                <div className="h-3 rounded-full" style={{ width: `${sub.percentage}%`, backgroundColor: COLORS[i % COLORS.length] }} />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Subject Recommendations */}
+                {data.insights.subjectRecommendations.length > 0 && (
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Subject Recommendations</h3>
+                    <div className="space-y-4">
+                      {data.insights.subjectRecommendations.map(rec => (
+                        <div key={rec.subject} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-slate-800 dark:text-white">{rec.subject}</h4>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              rec.score >= 70 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : rec.score >= 50 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            }`}>{rec.assessment}</span>
+                          </div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">{rec.recommendation}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Score Declaration Matrix */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden">
-              <div className="p-4 border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
-                <h2 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 flex items-center gap-2">
-                  <Edit3 size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
-                  Score Matrix — <span className="text-primary-600 dark:text-primary-400 dark:text-primary-400">{currentSubject?.name}</span>
-                </h2>
-                <div className="flex items-center gap-2">
-                  {hasChanges && (
-                    <button onClick={handleSaveAll} disabled={saving} className="btn-primary text-xs flex items-center gap-1.5 px-3 py-1.5">
-                      {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                      Save All
-                    </button>
-                  )}
+            {activeTab === 'topics' && (
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                  <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Topic Performance</h3>
+                  <div className="space-y-3">
+                    {data.topicPerformance.map(t => (
+                      <div key={t.name}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-slate-700 dark:text-slate-300">{t.name}</span>
+                          <span className="text-slate-500 dark:text-slate-400">{t.correct}/{t.total} ({t.percentage}%)</span>
+                        </div>
+                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                          <div className={`h-2.5 rounded-full ${t.percentage >= 70 ? 'bg-green-500' : t.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${t.percentage}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-left">
-                      <th className="py-3 px-4 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 sticky left-0 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 z-10 min-w-[180px]">Student</th>
-                      {scoreTypes.map(st => (
-                        <th key={st.key} className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center min-w-[100px]">{st.label}<br /><span className="text-[10px] font-normal text-slate-400 dark:text-slate-500 dark:text-slate-500">(/{st.maxScore})</span></th>
-                      ))}
-                      <th className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center min-w-[60px]">Total</th>
-                      <th className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center min-w-[60px]">Grade</th>
-                      <th className="py-3 px-3 font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400 text-center min-w-[120px]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.length === 0 ? (
-                      <tr><td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-500 dark:text-slate-500">No students in this class</td></tr>
-                    ) : rows.map((row, ri) => {
-                      const total = cellTotal(row);
-                      const filled = cellCount(row);
-                      const grade = filled > 0 ? calculateGrade(total) : '-';
-                      const gradeColor = total >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : total >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400';
-                      return (
-                        <tr key={row.student_id} className={`border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800/50 transition-colors ${row.dirty ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20/50' : ''}`}>
-                          <td className="py-2.5 px-4 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 sticky left-0 bg-white z-10">
-                            <div className="flex items-center gap-2">
-                              {row.student_name}
-                              {row.dirty && <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Unsaved changes" />}
+
+                {data.subjectTopicBreakdown.length > 0 && (
+                  <div className="space-y-4">
+                    {data.subjectTopicBreakdown.map(st => (
+                      <div key={st.subject} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                        <h3 className="font-semibold text-slate-800 dark:text-white mb-1">{st.subject}</h3>
+                        <p className="text-xs text-slate-500 mb-4">Topic-level breakdown</p>
+                        <div className="space-y-3">
+                          {st.topics.map(t => (
+                            <div key={t.name}>
+                              <div className="flex justify-between text-sm mb-1">
+                                <span className="text-slate-700 dark:text-slate-300">{t.name}</span>
+                                <span className="text-slate-500 dark:text-slate-400">{t.correct}/{t.total} ({t.percentage}%)</span>
+                              </div>
+                              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                                <div className={`h-2.5 rounded-full ${t.percentage >= 70 ? 'bg-green-500' : t.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${t.percentage}%` }} />
+                              </div>
+                              {t.percentage < 50 && <p className="text-xs text-red-500 mt-0.5">Needs revision</p>}
                             </div>
-                          </td>
-                          {scoreTypes.map(st => {
-                             const cell = row[st.key];
-                            return (
-                              <td key={st.key} className="py-2.5 px-3 text-center">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={st.maxScore}
-                                  value={cell?.score ?? ''}
-                                  onChange={e => updateCell(ri, st.key, e.target.value === '' ? 0 : Math.min(st.maxScore, Math.max(0, parseInt(e.target.value) || 0)))}
-                                  className={`w-20 text-center text-sm font-bold py-1.5 rounded-lg border transition-colors ${
-                                    cell ? 'bg-white border-slate-200 dark:border-slate-700 dark:border-slate-700 focus:border-primary-500 focus:ring-1 focus:ring-primary-500' : 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-dashed border-slate-300 dark:border-slate-600 dark:border-slate-600 text-slate-400 dark:text-slate-500 dark:text-slate-500'
-                                  }`}
-                                  placeholder="-"
-                                />
-                              </td>
-                            );
-                          })}
-                          <td className={`py-2.5 px-3 text-center font-bold ${filled > 0 ? gradeColor : 'text-slate-300'}`}>{filled > 0 ? `${total}%` : '-'}</td>
-                          <td className={`py-2.5 px-3 text-center font-bold ${gradeColor}`}>{grade}</td>
-                          <td className="py-2.5 px-3 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              {row.dirty && (
-                                <button onClick={() => handleSaveSingle(row)} disabled={saving} className="p-1.5 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300 rounded-lg hover:bg-primary-200 transition-colors" title="Save this student">
-                                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                                </button>
-                              )}
-                              {filled > 0 && (
-                                <SendResultButton
-                                  studentId={row.student_id}
-                                  studentName={row.student_name}
-                                  results={scoreTypes
-                                    .filter(st => row[st.key])
-                                    .map(st => ({
-                                      subject_name: currentSubject?.name || 'Subject',
-                                      exam_type: st.label,
-                                      score: row[st.key]!.score,
-                                      grade: row[st.key]!.grade,
-                                    }))}
-                                />
-                              )}
-                              {filled > 0 && (
-                                <button
-                                  onClick={() => router.push(`/teacher/report-card?student=${row.student_id}&term=${selectedTerm?.id}`)}
-                                  className="p-1.5 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 rounded-lg hover:bg-slate-200 transition-colors"
-                                  title="View Report Card"
-                                >
-                                  <Printer size={14} />
-                                </button>
-                              )}
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'difficulty' && data.difficultyBreakdown.length > 0 && (
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Difficulty Breakdown</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-700">
+                        <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Level</th>
+                        <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Correct</th>
+                        <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Total</th>
+                        <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Score</th>
+                        <th className="py-3 px-2 w-1/3"><span className="sr-only">Bar</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.difficultyBreakdown.map(d => (
+                        <tr key={d.level} className="border-b border-slate-100 dark:border-slate-700/50">
+                          <td className="py-3 px-2 text-slate-800 dark:text-slate-200 font-medium capitalize">{d.level}</td>
+                          <td className="py-3 px-2 text-center text-slate-600 dark:text-slate-400">{d.correct}</td>
+                          <td className="py-3 px-2 text-center text-slate-600 dark:text-slate-400">{d.total}</td>
+                          <td className="py-3 px-2 text-center font-semibold text-primary-600">{d.percentage}%</td>
+                          <td className="py-3 px-2">
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                              <div className="h-3 rounded-full bg-primary-600" style={{ width: `${d.percentage}%` }} />
                             </div>
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              {rows.length > 0 && (
-                <div className="p-3 border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 flex justify-between">
-                  <span>{rows.length} student(s) &middot; {allResults.length} entries</span>
-                  {hasChanges && <span className="text-amber-600 dark:text-amber-400 dark:text-amber-400 font-medium">{rows.filter(r => r.dirty).length} unsaved</span>}
-                </div>
-              )}
-            </div>
-
-            {/* All Entries Table */}
-            {allResults.length > 0 && (
-              <div className="card">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><Award size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />All Entries</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead><tr className="text-left text-slate-500 dark:text-slate-400 dark:text-slate-400 border-b"><th className="py-2 pr-4">Student</th><th className="py-2 pr-4">Subject</th><th className="py-2 pr-4">Exam</th><th className="py-2 pr-4">Score</th><th className="py-2 pr-4">Grade</th><th className="py-2 pr-4">Term</th></tr></thead>
-                    <tbody>{allResults.map((r: any) => (
-                      <tr key={r.id} className="border-b last:border-0 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
-                        <td className="py-2 pr-4 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{r.student?.first_name} {r.student?.last_name}</td>
-                        <td className="py-2 pr-4 text-slate-600 dark:text-slate-400 dark:text-slate-400">{r.subject?.name || '-'}</td>
-                        <td className="py-2 pr-4 capitalize text-slate-600 dark:text-slate-400 dark:text-slate-400">{r.exam_type}</td>
-                        <td className="py-2 pr-4 font-bold">{r.score}</td>
-                        <td className="py-2 pr-4"><span className={`px-2 py-0.5 rounded text-xs font-medium ${r.grade?.includes('A') ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : r.grade?.includes('F') ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}>{r.grade}</span></td>
-                        <td className="py-2 pr-4 text-slate-400 dark:text-slate-500 dark:text-slate-500 text-xs">{r.term || '-'}</td>
-                      </tr>
-                    ))}</tbody>
+                      ))}
+                    </tbody>
                   </table>
                 </div>
               </div>
             )}
-          </>
-        )}
 
-        {/* Quick Entry Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-              <div className="p-5 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Quick Result Entry</h2></div>
-              <div className="p-5 space-y-4">
-                <div><label className="label">Student</label>
-                  <select value={formData.student_id} onChange={e => setFormData({ ...formData, student_id: e.target.value })} className="input">
-                    <option value="">Select Student</option>
-                    {students.map(s => <option key={s.profile_id} value={s.profile_id}>{s.name}</option>)}
-                  </select>
+            {activeTab === 'questions' && (
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Most Frequently Missed Questions</h3>
+                {data.questionPatterns.length === 0 ? (
+                  <p className="text-slate-500 text-sm">No question pattern data available.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-700">
+                          <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Question</th>
+                          <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Subject</th>
+                          <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Topic</th>
+                          <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Difficulty</th>
+                          <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Seen</th>
+                          <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Correct</th>
+                          <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Miss Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.questionPatterns.slice(0, 20).map((q, i) => (
+                          <tr key={i} className={`border-b border-slate-100 dark:border-slate-700/50 ${q.missRate > 50 ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
+                            <td className="py-3 px-2 text-slate-800 dark:text-slate-200 max-w-xs truncate">{q.question}</td>
+                            <td className="py-3 px-2 text-slate-600 dark:text-slate-400">{q.subject}</td>
+                            <td className="py-3 px-2 text-slate-600 dark:text-slate-400">{q.topic}</td>
+                            <td className="py-3 px-2 text-center text-slate-600 dark:text-slate-400 capitalize">{q.difficulty}</td>
+                            <td className="py-3 px-2 text-center text-slate-600 dark:text-slate-400">{q.timesSeen}</td>
+                            <td className="py-3 px-2 text-center text-slate-600 dark:text-slate-400">{q.timesCorrect}</td>
+                            <td className="py-3 px-2 text-center">
+                              <span className={`font-semibold ${q.missRate > 50 ? 'text-red-600' : q.missRate > 25 ? 'text-amber-600' : 'text-green-600'}`}>{q.missRate}%</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'insights' && (
+              <div className="space-y-6">
+                {/* Mastery Level */}
+                {s && (
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h3 className="font-semibold text-slate-800 dark:text-white mb-3">Overall Mastery Level</h3>
+                    <div className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${
+                      s.avgScore >= 90 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                      : s.avgScore >= 75 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                      : s.avgScore >= 60 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      : s.avgScore >= 40 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>
+                      {s.avgScore >= 90 ? 'MASTERY' : s.avgScore >= 75 ? 'PROFICIENT' : s.avgScore >= 60 ? 'DEVELOPING' : s.avgScore >= 40 ? 'BEGINNING' : 'NOT YET BEGINNING'}
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-2">{data.insights.overall}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {data.insights.strengths.length > 0 && (
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                      <h4 className="font-semibold text-green-700 dark:text-green-400 flex items-center gap-2 mb-3">
+                        <TrendingUp size={18} /> Strengths
+                      </h4>
+                      <ul className="space-y-2">
+                        {data.insights.strengths.map(s => (
+                          <li key={s} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                            <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                            <span>{s} — performing well above average.</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {data.insights.needsImprovement.length > 0 && (
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                      <h4 className="font-semibold text-red-700 dark:text-red-400 flex items-center gap-2 mb-3">
+                        <TrendingDown size={18} /> Needs Improvement
+                      </h4>
+                      <ul className="space-y-2">
+                        {data.insights.needsImprovement.map(s => (
+                          <li key={s} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                            <XCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+                            <span>{s} — needs focused attention.</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-                <div><label className="label">Subject</label>
-                  <select value={formData.subject_id} onChange={e => setFormData({ ...formData, subject_id: e.target.value })} className="input">
-                    <option value="">Select Subject</option>
-                    {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-                <div><label className="label">Assessment Type</label>
-                  <select value={formData.exam_type} onChange={e => {
-                    const st = scoreTypes.find(s => s.key === e.target.value);
-                    const max = st?.maxScore || 100;
-                    setFormData({ ...formData, exam_type: e.target.value as ExamType, score: Math.min(formData.score, max) });
-                  }} className="input">
-                    {scoreTypes.map(st => (
-                      <option key={st.key} value={st.key}>{st.label} (/{st.maxScore})</option>
+
+                {data.insights.weakTopics.length > 0 && (
+                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                    <h4 className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2 mb-3">
+                      <Target size={18} /> Topics to Focus On
+                    </h4>
+                    <ul className="space-y-2">
+                      {data.insights.weakTopics.slice(0, 8).map(t => (
+                        <li key={t} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <AlertTriangle size={16} className="text-amber-500 mt-0.5 flex-shrink-0" />
+                          <span>{t}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+                  <h4 className="font-semibold text-primary-700 dark:text-primary-400 flex items-center gap-2 mb-3">
+                    <Brain size={18} /> Recommendations
+                  </h4>
+                  <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                    {data.insights.recommendations.map((r, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-primary-600 font-bold">•</span>
+                        <span>{r}</span>
+                      </li>
                     ))}
-                  </select>
+                  </ul>
                 </div>
-                <div>
-                  <label className="label">Score</label>
-                  <input type="number" min={0} max={scoreTypes.find(st => st.key === formData.exam_type)?.maxScore || 100}
-                    value={formData.score ?? ''}
-                    onChange={e => {
-                      const raw = e.target.value;
-                      const max = scoreTypes.find(st => st.key === formData.exam_type)?.maxScore || 100;
-                      const score = raw === '' ? 0 : Math.min(max, Math.max(0, parseInt(raw) || 0));
-                      setFormData({ ...formData, score, grade: calculateGrade(score) });
-                    }}
-                    className="input" />
+              </div>
+            )}
+
+            {/* Test History */}
+            {data.attempts.length > 0 && (
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mt-6">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                  <Clock size={18} /> Test History ({data.attempts.length} tests)
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-700">
+                        <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">#</th>
+                        <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Test</th>
+                        <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Subject</th>
+                        <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Score</th>
+                        <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Result</th>
+                        <th className="text-center py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Correct</th>
+                        <th className="text-left py-3 px-2 text-slate-600 dark:text-slate-400 font-semibold">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.attempts.map((a, i) => (
+                        <tr key={a.id} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                          <td className="py-3 px-2 text-slate-500 dark:text-slate-400">{i + 1}</td>
+                          <td className="py-3 px-2 text-slate-800 dark:text-slate-200 font-medium">{a.title}</td>
+                          <td className="py-3 px-2 text-slate-600 dark:text-slate-400">{a.subjectName}</td>
+                          <td className="py-3 px-2 text-center">
+                            <span className={`font-bold ${a.score >= 70 ? 'text-green-600' : a.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{a.score}%</span>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${a.passed ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                              {a.passed ? 'Pass' : 'Fail'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 text-center text-slate-600 dark:text-slate-400">{a.correctAnswers}/{a.totalQuestions}</td>
+                          <td className="py-3 px-2 text-slate-500 dark:text-slate-400 text-xs">
+                            {new Date(a.completedAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div><label className="label">Grade</label><input type="text" value={formData.grade || calculateGrade(safeScore(formData.score))} disabled className="input bg-slate-50 dark:bg-slate-800 dark:bg-slate-800" /></div>
-                <div><label className="label">Remarks (optional)</label><input type="text" value={formData.remarks} onChange={e => setFormData({ ...formData, remarks: e.target.value })} className="input" /></div>
-                {selectedTerm && <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">Term: {selectedTerm.name} &middot; {selectedTerm.session?.name || ''}</p>}
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t">
-                <button onClick={() => setShowModal(false)} className="btn-ghost">Cancel</button>
-                <button onClick={handleModalSave} className="btn-primary flex items-center gap-2"><Save size={16} />Save</button>
+            )}
+
+            {/* Security Summary */}
+            {data.securitySummary.totalSecurityEvents > 0 && (
+              <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 mt-6">
+                <h3 className="font-semibold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+                  <Shield size={18} /> Security Summary
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                    <p className="text-slate-500 dark:text-slate-400">Tab Switches</p>
+                    <p className="text-lg font-bold text-slate-800 dark:text-white">{data.securitySummary.totalTabSwitches}</p>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                    <p className="text-slate-500 dark:text-slate-400">Fullscreen Exits</p>
+                    <p className="text-lg font-bold text-slate-800 dark:text-white">{data.securitySummary.totalFullscreenExits}</p>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                    <p className="text-slate-500 dark:text-slate-400">Total Events</p>
+                    <p className="text-lg font-bold text-slate-800 dark:text-white">{data.securitySummary.totalSecurityEvents}</p>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                    <p className="text-slate-500 dark:text-slate-400">Tests w/ Events</p>
+                    <p className="text-lg font-bold text-slate-800 dark:text-white">{data.securitySummary.testsWithEvents}/{data.summary.totalTests}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            )}
+          </>
         )}
       </div>
     </DashboardLayout>
