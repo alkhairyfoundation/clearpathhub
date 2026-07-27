@@ -3,24 +3,32 @@ import { getToken } from 'next-auth/jwt';
 
 function gradeQuestion(question: any, answer: any): boolean {
   if (answer === undefined || answer === null) return false;
+  const ca = question.correct_answer;
   switch (question.question_type) {
     case 'multiple_choice':
     case 'true_false':
-      return answer === question.correct_answer;
+      return Number(answer) === Number(ca);
     case 'fill_blank': {
-      const correct = question.options?.[question.correct_answer];
+      const correct = question.options?.[Number(ca)];
       if (!correct) return false;
       return answer.toString().toLowerCase().trim() === correct.toString().toLowerCase().trim();
     }
     case 'multiple_selection': {
       const a = Array.isArray(answer) ? [...answer].sort() : [];
-      const c = Array.isArray(question.correct_answer) ? [...question.correct_answer].sort() : [];
+      let c: number[] = [];
+      if (Array.isArray(ca)) {
+        c = ca.map(Number).sort((x: number, y: number) => x - y);
+      } else if (typeof ca === 'number') {
+        for (let i = 0; i < 32; i++) {
+          if (ca & (1 << i)) c.push(i);
+        }
+      }
       return JSON.stringify(a) === JSON.stringify(c);
     }
     case 'short_answer':
       return false;
     default:
-      return answer === question.correct_answer;
+      return Number(answer) === Number(ca);
   }
 }
 

@@ -7,21 +7,29 @@ function gradeQuestion(question: any, answer: any): boolean {
   switch (question.question_type) {
     case 'multiple_choice':
     case 'true_false':
-      return String(answer) === String(ca);
+      return Number(answer) === Number(ca);
     case 'fill_blank': {
-      const correct = question.options?.[ca];
+      const correct = question.options?.[Number(ca)];
       if (!correct) return false;
       return answer.toString().toLowerCase().trim() === correct.toString().toLowerCase().trim();
     }
     case 'multiple_selection': {
       const a = Array.isArray(answer) ? [...answer].sort() : [];
-      const c = Array.isArray(ca) ? [...ca].sort() : [];
+      let c: number[] = [];
+      if (Array.isArray(ca)) {
+        c = ca.map(Number).sort((x: number, y: number) => x - y);
+      } else if (typeof ca === 'number') {
+        const bits = Number(ca);
+        for (let i = 0; i < 32; i++) {
+          if (bits & (1 << i)) c.push(i);
+        }
+      }
       return JSON.stringify(a) === JSON.stringify(c);
     }
     case 'short_answer':
       return false;
     default:
-      return String(answer) === String(ca);
+      return Number(answer) === Number(ca);
   }
 }
 

@@ -10,6 +10,7 @@ import {
   TrendingDown, AlertTriangle, CheckCircle, XCircle, Brain, Target,
   Shield, Search, Clock
 } from 'lucide-react';
+import JSZip from 'jszip';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip
@@ -64,6 +65,8 @@ export default function TeacherResultsPage() {
   const [reportData, setReportData] = useState<CompiledData | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
+  const [bulkExporting, setBulkExporting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     if (!profile || profile.role !== 'teacher') { router.push('/login'); return; }
@@ -153,6 +156,49 @@ export default function TeacherResultsPage() {
     }
   }
 
+  async function handleBulkExportAllPdf() {
+    if (!selectedClassId || students.length === 0) return;
+    setBulkExporting(true);
+    setBulkProgress({ current: 0, total: students.length });
+    try {
+      const zip = new JSZip();
+      const className = classes.find(c => c.id === selectedClassId)?.name || 'Class';
+      const folder = zip.folder(`${className}_Compiled_Reports`);
+      if (!folder) return;
+      const { generateCompiledReportPdf } = await import('@/lib/compiled-report-pdf');
+
+      for (let i = 0; i < students.length; i++) {
+        const student = students[i];
+        setBulkProgress({ current: i + 1, total: students.length });
+        try {
+          const params = new URLSearchParams({ studentId: student.profile_id, classId: selectedClassId });
+          const res = await fetch(`/api/tests/compiled-report?${params.toString()}`);
+          const result = await res.json();
+          if (result.success && result.data) {
+            const doc = generateCompiledReportPdf(result.data, schoolSettings?.school_name);
+            const name = (student.name || 'Student').replace(/\s+/g, '_');
+            folder.file(`${name}_CompiledReport.pdf`, doc.output('blob'));
+          }
+        } catch (err) {
+          console.error(`Failed for student ${student.name}:`, err);
+        }
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${className}_All_Compiled_Reports.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError('Bulk export failed: ' + err.message);
+    } finally {
+      setBulkExporting(false);
+      setBulkProgress({ current: 0, total: 0 });
+    }
+  }
+
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (s.admission_number || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -187,6 +233,15 @@ export default function TeacherResultsPage() {
           {data && (
             <button onClick={handleDownloadPdf} className="btn-outline flex items-center gap-2 text-sm">
               <Download size={16} /> Download PDF
+            </button>
+          )}
+          {selectedClassId && students.length > 0 && (
+            <button onClick={handleBulkExportAllPdf} disabled={bulkExporting} className="btn-outline flex items-center gap-2 text-sm disabled:opacity-50">
+              {bulkExporting ? (
+                <><Loader2 size={14} className="animate-spin" /> Generating {bulkProgress.current}/{bulkProgress.total}...</>
+              ) : (
+                <><Download size={14} /> Bulk Export All PDFs</>
+              )}
             </button>
           )}
         </div>
