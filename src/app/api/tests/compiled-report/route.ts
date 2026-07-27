@@ -3,24 +3,25 @@ import { getToken } from 'next-auth/jwt';
 
 function gradeQuestion(question: any, answer: any): boolean {
   if (answer === undefined || answer === null) return false;
+  const ca = question.correct_answer;
   switch (question.question_type) {
     case 'multiple_choice':
     case 'true_false':
-      return answer === question.correct_answer;
+      return String(answer) === String(ca);
     case 'fill_blank': {
-      const correct = question.options?.[question.correct_answer];
+      const correct = question.options?.[ca];
       if (!correct) return false;
       return answer.toString().toLowerCase().trim() === correct.toString().toLowerCase().trim();
     }
     case 'multiple_selection': {
       const a = Array.isArray(answer) ? [...answer].sort() : [];
-      const c = Array.isArray(question.correct_answer) ? [...question.correct_answer].sort() : [];
+      const c = Array.isArray(ca) ? [...ca].sort() : [];
       return JSON.stringify(a) === JSON.stringify(c);
     }
     case 'short_answer':
       return false;
     default:
-      return answer === question.correct_answer;
+      return String(answer) === String(ca);
   }
 }
 
@@ -150,7 +151,14 @@ export async function GET(req: NextRequest) {
         [attempt.test_id]
       );
       const questions = questionsRes.rows;
-      const answersObj = typeof attempt.answers === 'object' && attempt.answers ? attempt.answers : {};
+      let answersObj: Record<string, any> = {};
+      if (attempt.answers) {
+        if (typeof attempt.answers === 'string') {
+          try { answersObj = JSON.parse(attempt.answers); } catch { answersObj = {}; }
+        } else if (typeof attempt.answers === 'object') {
+          answersObj = attempt.answers;
+        }
+      }
 
       let attemptCorrect = 0;
       const testSubjectName = attempt.subject_name || '';
@@ -289,8 +297,7 @@ export async function GET(req: NextRequest) {
         ...q,
         missRate: q.timesSeen > 0 ? Math.round(((q.timesSeen - q.timesCorrect) / q.timesSeen) * 100) : 0,
       }))
-      .sort((a, b) => b.missRate - a.missRate)
-      .slice(0, 50);
+      .sort((a, b) => b.missRate - a.missRate);
 
     // Insights
     const strengths = subjectPerformance.filter(s => s.percentage >= 70).map(s => s.name);

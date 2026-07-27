@@ -383,7 +383,7 @@ export function generateCompiledReportPdf(data: CompiledData, schoolName?: strin
       q.difficulty,
       `${q.timesSeen}`,
       `${q.timesCorrect}`,
-      `${(q.missRate * 100).toFixed(0)}%`,
+      `${q.missRate}%`,
     ]);
     autoTable(doc, {
       startY: y, head: qHead, body: qBody, theme: 'grid',

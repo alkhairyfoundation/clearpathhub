@@ -548,7 +548,7 @@ export default function TeacherResultsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.questionPatterns.slice(0, 20).map((q, i) => (
+                        {data.questionPatterns.map((q, i) => (
                           <tr key={i} className={`border-b border-slate-100 dark:border-slate-700/50 ${q.missRate > 50 ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
                             <td className="py-3 px-2 text-slate-800 dark:text-slate-200 max-w-xs truncate">{q.question}</td>
                             <td className="py-3 px-2 text-slate-600 dark:text-slate-400">{q.subject}</td>
