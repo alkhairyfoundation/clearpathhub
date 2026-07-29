@@ -246,41 +246,42 @@ export default function AdminMockExamReportPage() {
     <DashboardLayout title="Mock Exam Report" subtitle={`${exam?.title || ''} — ${student?.first_name || ''} ${student?.last_name || ''}`}>
       <div className="space-y-6" ref={printRef}>
         {/* Header actions */}
-        <div className="flex items-center justify-between print:hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
           <div className="flex items-center gap-4">
-            <Link href="/admin/mock-exams" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg">
+            <Link href="/admin/mock-exams" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
             </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Mock Exam Report</h1>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">{exam?.title} — {student?.first_name} {student?.last_name}</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white truncate">Mock Exam Report</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm truncate">{exam?.title} — {student?.first_name} {student?.last_name}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={downloadPDF} disabled={downloading} className="btn-primary flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
+            <button onClick={downloadPDF} disabled={downloading} className="btn-primary flex items-center gap-2 text-sm sm:text-base">
               {downloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-              Download PDF
+              <span className="hidden sm:inline">Download PDF</span>
+              <span className="sm:hidden">PDF</span>
             </button>
-            <button onClick={handlePrint} className="btn-outline flex items-center gap-2">
-              <Printer size={16} /> Print
+            <button onClick={handlePrint} className="btn-outline flex items-center gap-2 text-sm sm:text-base">
+              <Printer size={16} /> <span className="hidden sm:inline">Print</span>
             </button>
           </div>
         </div>
 
         {/* Score Overview */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-primary-200 text-sm">Exam Score — {exam?.exam_type === 'JSS3_BECE' ? 'JSS3 BECE' : 'SS3 WAEC'}</p>
-              <p className="text-5xl font-bold">{score}%</p>
-              <p className="text-primary-200 text-sm mt-1">{exam?.title}</p>
-              <p className="text-primary-200 text-xs mt-1">{student?.first_name} {student?.last_name} — Attempt #{attempt?.attempt_number}</p>
+        <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-xl p-4 sm:p-6 text-white">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-primary-200 text-xs sm:text-sm">Exam Score — {exam?.exam_type === 'JSS3_BECE' ? 'JSS3 BECE' : 'SS3 WAEC'}</p>
+              <p className="text-4xl sm:text-5xl font-bold">{score}%</p>
+              <p className="text-primary-200 text-xs sm:text-sm mt-1 truncate">{exam?.title}</p>
+              <p className="text-primary-200 text-xs mt-1 truncate">{student?.first_name} {student?.last_name} — Attempt #{attempt?.attempt_number}</p>
             </div>
-            <div className="text-right">
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-2 ${passed ? 'bg-green-500/30' : 'bg-red-500/30'}`}>
-                {passed ? <Check size={40} className="text-green-300" /> : <X size={40} className="text-red-300" />}
+            <div className="text-center sm:text-right shrink-0 self-center sm:self-auto">
+              <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-1 sm:mb-2 ${passed ? 'bg-green-500/30' : 'bg-red-500/30'}`}>
+                {passed ? <Check size={32} className="text-green-300" /> : <X size={32} className="text-red-300" />}
               </div>
-              <p className="text-sm font-semibold">{passed ? 'PASSED' : 'FAILED'}</p>
+              <p className="text-xs sm:text-sm font-semibold">{passed ? 'PASSED' : 'FAILED'}</p>
             </div>
           </div>
         </div>

@@ -607,7 +607,7 @@ export default function AdminMockExamsPage() {
     <DashboardLayout title="Mock Exams" subtitle="BECE & WAEC Preparation Management">
       <div className="space-y-6">
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 pb-2">
+        <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 pb-2">
           {(['exams', 'questions', 'students', 'analytics'] as const).map(tab => (
             <button
               key={tab}
@@ -705,7 +705,7 @@ export default function AdminMockExamsPage() {
                       <label className="block text-sm font-medium mb-1">Description</label>
                       <textarea className="input-field w-full" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={2} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Exam Type</label>
                         <select className="input-field w-full" value={formData.exam_type} onChange={e => setFormData({ ...formData, exam_type: e.target.value as any })}>
@@ -718,7 +718,7 @@ export default function AdminMockExamsPage() {
                         <input className="input-field w-full" value={formData.academic_year} onChange={e => setFormData({ ...formData, academic_year: e.target.value })} />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
                         <input type="number" className="input-field w-full" value={formData.duration_minutes} onChange={e => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) || 60 })} />
@@ -728,7 +728,7 @@ export default function AdminMockExamsPage() {
                         <input type="number" className="input-field w-full" value={formData.passing_score} onChange={e => setFormData({ ...formData, passing_score: parseInt(e.target.value) || 50 })} />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Total Questions</label>
                         <input type="number" className="input-field w-full" value={formData.total_questions} onChange={e => setFormData({ ...formData, total_questions: parseInt(e.target.value) || 60 })} />
@@ -779,7 +779,7 @@ export default function AdminMockExamsPage() {
                       <label className="block text-sm font-medium mb-1">Description</label>
                       <textarea className="input-field w-full" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={2} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
                         <input type="number" className="input-field w-full" value={formData.duration_minutes} onChange={e => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) || 60 })} />
@@ -789,7 +789,7 @@ export default function AdminMockExamsPage() {
                         <input type="number" className="input-field w-full" value={formData.passing_score} onChange={e => setFormData({ ...formData, passing_score: parseInt(e.target.value) || 50 })} />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Total Questions</label>
                         <input type="number" className="input-field w-full" value={formData.total_questions} onChange={e => setFormData({ ...formData, total_questions: parseInt(e.target.value) || 60 })} />
@@ -1121,7 +1121,7 @@ export default function AdminMockExamsPage() {
                       <label className="block text-sm font-medium mb-1">Question Text</label>
                       <textarea className="input-field w-full" value={bankQuestionData.question} onChange={e => setBankQuestionData({ ...bankQuestionData, question: e.target.value })} rows={3} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Class Level</label>
                         <select className="input-field w-full" value={bankQuestionData.level} onChange={e => {
@@ -1141,7 +1141,7 @@ export default function AdminMockExamsPage() {
                         </select>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Difficulty</label>
                         <select className="input-field w-full" value={bankQuestionData.difficulty_level} onChange={e => setBankQuestionData({ ...bankQuestionData, difficulty_level: e.target.value })}>
@@ -1199,7 +1199,7 @@ export default function AdminMockExamsPage() {
                       <label className="block text-sm font-medium mb-1">Question</label>
                       <textarea className="input-field w-full" value={mockQForm.question} onChange={e => setMockQForm({ ...mockQForm, question: e.target.value })} rows={3} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Subject</label>
                         <select className="input-field w-full" value={mockQForm.subject} onChange={e => setMockQForm({ ...mockQForm, subject: e.target.value })}>
