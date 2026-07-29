@@ -16,6 +16,8 @@ import {
   ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Cell, PieChart, Pie, Legend, LineChart, Line
 } from 'recharts';
+import JSZip from 'jszip';
+import { generateMockReportPdf } from '@/lib/mock-report-pdf';
 
 export default function AdminMockExamsPage() {
   const { profile } = useAuth();
@@ -90,6 +92,8 @@ export default function AdminMockExamsPage() {
 
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentDetail, setStudentDetail] = useState<any>(null);
+  const [bulkExporting, setBulkExporting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
   async function getExamCapacity(eId: string): Promise<{ remaining: number; total: number; current: number }> {
     const { data: exam } = await supabase.from('mock_exams').select('total_questions').eq('id', eId).single();
@@ -109,7 +113,7 @@ export default function AdminMockExamsPage() {
       fetchBankQuestions();
       if (selectedExam) fetchQuestions();
     }
-    if (activeTab === 'analytics') fetchAnalytics();
+    if (activeTab === 'analytics' || activeTab === 'students') fetchAnalytics();
   }, [activeTab]);
 
   useEffect(() => {
@@ -551,6 +555,53 @@ export default function AdminMockExamsPage() {
   }
 
   const availableSubjects = (level: string) => level === 'SS3' ? SS3_SUBJECTS : SUBJECTS;
+
+  async function handleBulkExportZip() {
+    const allStudents = allAttemptsAnalytics;
+    if (allStudents.length === 0) { setError('No student data to export'); return; }
+    setBulkExporting(true);
+    setBulkProgress({ current: 0, total: allStudents.length });
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder('Mock_Exam_Reports');
+      if (!folder) return;
+
+      for (let i = 0; i < allStudents.length; i++) {
+        const s = allStudents[i];
+        setBulkProgress({ current: i + 1, total: allStudents.length });
+        try {
+          const att = s.attempts?.[0];
+          if (!att?.id) continue;
+          const res = await fetch('/api/mock-attempts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get_attempt', id: att.id }),
+          });
+          const result = await res.json();
+          if (result.success && result.attempt) {
+            const doc = generateMockReportPdf(result.attempt);
+            const name = `${s.student?.first_name || 'Student'}_${s.student?.last_name || ''}_MockReport.pdf`;
+            folder.file(name, doc.output('blob'));
+          }
+        } catch (err) {
+          console.error(`Failed to generate PDF for ${s.student?.first_name}:`, err);
+        }
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Mock_Exam_All_Reports.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError('Bulk export failed: ' + err.message);
+    } finally {
+      setBulkExporting(false);
+      setBulkProgress({ current: 0, total: 0 });
+    }
+  }
 
   return (
     <DashboardLayout title="Mock Exams" subtitle="BECE & WAEC Preparation Management">
@@ -1198,7 +1249,22 @@ export default function AdminMockExamsPage() {
         {/* ═══════════════ STUDENTS TAB ═══════════════ */}
         {activeTab === 'students' && (
           <>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Students Performance</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Students Performance</h2>
+              {allAttemptsAnalytics.length > 0 && (
+                <button
+                  onClick={handleBulkExportZip}
+                  disabled={bulkExporting}
+                  className="btn-primary flex items-center gap-2 text-sm"
+                >
+                  {bulkExporting ? (
+                    <>{<Loader2 size={14} className="animate-spin" />} Exporting {bulkProgress.current}/{bulkProgress.total}...</>
+                  ) : (
+                    <><Download size={14} /> Export All Reports (ZIP)</>
+                  )}
+                </button>
+              )}
+            </div>
             {allAttemptsAnalytics.length === 0 ? (
               <div className="card text-center py-16">
                 <Users size={48} className="mx-auto text-slate-300 mb-4" />
@@ -1222,7 +1288,7 @@ export default function AdminMockExamsPage() {
                         </td>
                         <td className="p-3 text-center">
                           <a
-                            href={`/student/mock-exams/report/${s.attempts[0]?.id}`}
+                            href={`/admin/mock-exams/report/${s.attempts[0]?.id}`}
                             target="_blank"
                             className="btn-outline text-xs py-1 px-2"
                           >

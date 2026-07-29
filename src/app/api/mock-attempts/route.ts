@@ -243,7 +243,9 @@ export async function POST(request: Request) {
       case 'get_attempt': {
         const { id } = params;
         if (!id) return NextResponse.json({ success: false, error: 'Attempt ID required' }, { status: 400 });
-        const { data, error } = await adminClient.from('mock_attempts').select('*, exam:mock_exams(*)').eq('id', id).single();
+        const { data, error } = await adminClient.from('mock_attempts')
+          .select('*, exam:mock_exams(*), student:profiles!student_id(first_name, last_name, email, id)')
+          .eq('id', id).single();
         if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
         return NextResponse.json({ success: true, attempt: data });
       }
