@@ -41,16 +41,20 @@ export async function GET(req: NextRequest) {
     const testsResult = await pool.query(query, params);
 
     const attemptsResult = await pool.query(
-      'SELECT * FROM test_attempts WHERE student_id = $1',
+      'SELECT * FROM test_attempts WHERE student_id = $1 ORDER BY completed_at DESC',
       [studentId]
     );
 
     await pool.end();
 
     const attemptsMap: Record<string, any> = {};
-    attemptsResult.rows.forEach((a: any) => { attemptsMap[a.test_id] = a; });
+    const attemptsCount: Record<string, number> = {};
+    attemptsResult.rows.forEach((a: any) => {
+      if (!attemptsMap[a.test_id]) attemptsMap[a.test_id] = a;
+      attemptsCount[a.test_id] = (attemptsCount[a.test_id] || 0) + 1;
+    });
 
-    return NextResponse.json({ tests: testsResult.rows, attempts: attemptsMap });
+    return NextResponse.json({ tests: testsResult.rows, attempts: attemptsMap, attemptsCount });
   } catch (error: any) {
     console.error('Error fetching student tests:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

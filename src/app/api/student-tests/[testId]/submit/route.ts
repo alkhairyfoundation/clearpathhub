@@ -65,14 +65,20 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
 
     const test = testResult.rows[0];
 
-    const existingAttempt = await pool.query(
-      'SELECT id FROM test_attempts WHERE test_id = $1 AND student_id = $2 AND completed_at IS NOT NULL LIMIT 1',
+    const maxAttempts = test.max_attempts ?? 0;
+
+    const existingCountRes = await pool.query(
+      'SELECT COUNT(*) as count FROM test_attempts WHERE test_id = $1 AND student_id = $2 AND completed_at IS NOT NULL',
       [testId, student_id]
     );
-    if (existingAttempt.rows.length > 0) {
+    const attemptsCount = parseInt(existingCountRes.rows[0]?.count || '0', 10);
+
+    if (maxAttempts > 0 && attemptsCount >= maxAttempts) {
       await pool.end();
-      return NextResponse.json({ error: 'You have already taken this test. Retakes are not allowed.', attempt: existingAttempt.rows[0] }, { status: 409 });
+      return NextResponse.json({ error: 'Maximum attempts reached for this test.' }, { status: 409 });
     }
+
+    const attemptNumber = attemptsCount + 1;
 
     const questionsResult = await pool.query(
       'SELECT * FROM test_questions WHERE test_id = $1 ORDER BY order_index',
@@ -89,13 +95,13 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
     const passed = finalScore >= (test.passing_score || 50);
 
     const attemptResult = await pool.query(
-      `INSERT INTO test_attempts (test_id, student_id, answers, score, passed, tab_switches, fullscreen_exits, time_taken, started_at, completed_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+      `INSERT INTO test_attempts (test_id, student_id, answers, score, passed, tab_switches, fullscreen_exits, time_taken, started_at, completed_at, attempt_number)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10)
        RETURNING *`,
       [
         testId, student_id, JSON.stringify(answersArr), finalScore, passed,
         tab_switches || 0, fullscreen_exits || 0,
-        time_taken || 0, started_at || new Date().toISOString(),
+        time_taken || 0, started_at || new Date().toISOString(), attemptNumber,
       ]
     );
 

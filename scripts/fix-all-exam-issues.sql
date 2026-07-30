@@ -119,7 +119,14 @@ END;
 $$;
 
 -- ============================================================================
--- PART 5: Verify the fix
+-- PART 5: Add retry support for tests (max_attempts, attempt_number)
+-- ============================================================================
+
+ALTER TABLE tests ADD COLUMN IF NOT EXISTS max_attempts INTEGER DEFAULT 0;
+ALTER TABLE test_attempts ADD COLUMN IF NOT EXISTS attempt_number INTEGER DEFAULT 1;
+
+-- ============================================================================
+-- PART 6: Verify the fix
 -- ============================================================================
 
 SELECT tablename, rowsecurity FROM pg_tables 

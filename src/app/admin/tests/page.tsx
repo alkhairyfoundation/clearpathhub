@@ -27,7 +27,7 @@ export default function AdminTestsPage() {
   const [formData, setFormData] = useState({
     title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test',
     exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50,
-    total_questions: 10,
+    total_questions: 10, max_attempts: 0,
     shuffle_questions: false, shuffle_options: false, require_fullscreen: true,
     prevent_tab_switch: true, max_tab_switches: 3,
   });
@@ -98,7 +98,7 @@ export default function AdminTestsPage() {
       setFormData({
         title: test.title, description: test.description || '', subject_id: test.subject_id || '', class_id: test.class_id || '',
         test_type: test.test_type, exam_date: test.exam_date || '', duration_minutes: test.duration_minutes || 30,
-        total_marks: test.total_marks || 100, total_questions: test.total_questions || 10, passing_score: test.passing_score || 50,
+        total_marks: test.total_marks || 100, total_questions: test.total_questions || 10, passing_score: test.passing_score || 50, max_attempts: test.max_attempts ?? 0,
         shuffle_questions: test.shuffle_questions || false, shuffle_options: test.shuffle_options || false,
         require_fullscreen: test.require_fullscreen || false, prevent_tab_switch: test.prevent_tab_switch || false,
         max_tab_switches: test.max_tab_switches || 3,
@@ -106,7 +106,7 @@ export default function AdminTestsPage() {
     } else {
       setEditingTest(null);
       setFormData({ title: '', description: '', subject_id: '', class_id: '', test_type: 'class_test',
-        exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50, total_questions: 10,
+        exam_date: '', duration_minutes: 30, total_marks: 100, passing_score: 50, total_questions: 10, max_attempts: 0,
         shuffle_questions: false, shuffle_options: false, require_fullscreen: true,
         prevent_tab_switch: true, max_tab_switches: 3,
       });
@@ -496,7 +496,7 @@ export default function AdminTestsPage() {
               <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="e.g., Mathematics Mid-Term" /></div>
               <div className="grid grid-cols-2 gap-4"><div><label className="label">Subject</label><select value={formData.subject_id} onChange={(e) => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div><div><label className="label">Class</label><select value={formData.class_id} onChange={(e) => setFormData({ ...formData, class_id: e.target.value })} className="input"><option value="">Select</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div></div>
               <div className="grid grid-cols-2 gap-4"><div><label className="label">Type</label>                    <select value={formData.test_type} onChange={(e) => setFormData({ ...formData, test_type: e.target.value })} className="input"><option value="class_test">Class Test</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="term">Term</option><option value="practice">Practice</option></select></div><div><label className="label">Date</label><input type="date" value={formData.exam_date} onChange={(e) => setFormData({ ...formData, exam_date: e.target.value })} className="input" /></div></div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3"><div><label className="label">Duration (min)</label><input type="number" value={formData.duration_minutes} onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Total Marks</label><input type="number" value={formData.total_marks} onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Questions</label><input type="number" value={formData.total_questions} onChange={(e) => setFormData({ ...formData, total_questions: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Pass %</label><input type="number" value={formData.passing_score} onChange={(e) => setFormData({ ...formData, passing_score: parseInt(e.target.value) })} className="input" /></div></div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3"><div><label className="label">Duration (min)</label><input type="number" value={formData.duration_minutes} onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Total Marks</label><input type="number" value={formData.total_marks} onChange={(e) => setFormData({ ...formData, total_marks: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Questions</label><input type="number" value={formData.total_questions} onChange={(e) => setFormData({ ...formData, total_questions: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Pass %</label><input type="number" value={formData.passing_score} onChange={(e) => setFormData({ ...formData, passing_score: parseInt(e.target.value) })} className="input" /></div><div><label className="label">Max Attempts</label><input type="number" value={formData.max_attempts} onChange={(e) => setFormData({ ...formData, max_attempts: parseInt(e.target.value) || 0 })} className="input" min={0} title="0 = unlimited" /></div></div>
               <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={2} /></div>
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3 text-sm">Security Settings</h4>

@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         }
 
         case 'create_test': {
-          const { title, description, subject_id, class_id, exam_date, test_type, duration_minutes, passing_score, total_marks, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, created_by } = body;
+          const { title, description, subject_id, class_id, exam_date, test_type, duration_minutes, passing_score, total_marks, max_attempts, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, created_by } = body;
           if (!subject_id) {
             return NextResponse.json({ error: 'Subject is required' }, { status: 400 });
           }
@@ -44,15 +44,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: `Subject not found` }, { status: 400 });
           }
           const result = await pool.query(
-            `INSERT INTO tests (title, description, subject_id, class_id, exam_date, test_type, duration_minutes, passing_score, total_marks, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, created_by, is_published)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, true) RETURNING *`,
-            [title, description || '', subject_id, class_id || null, exam_date || null, test_type || 'class_test', duration_minutes || 30, passing_score || 50, total_marks || 0, shuffle_questions || false, shuffle_options || false, require_fullscreen || false, prevent_tab_switch || false, max_tab_switches || 3, created_by]
+            `INSERT INTO tests (title, description, subject_id, class_id, exam_date, test_type, duration_minutes, passing_score, total_marks, max_attempts, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, created_by, is_published)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, true) RETURNING *`,
+            [title, description || '', subject_id, class_id || null, exam_date || null, test_type || 'class_test', duration_minutes || 30, passing_score || 50, total_marks || 0, max_attempts ?? 0, shuffle_questions || false, shuffle_options || false, require_fullscreen || false, prevent_tab_switch || false, max_tab_switches || 3, created_by]
           );
           return NextResponse.json({ test: result.rows[0] }, { status: 201 });
         }
 
         case 'update_test': {
-          const { id, title, description, subject_id, class_id, exam_date, test_type, duration_minutes, passing_score, total_marks, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, is_published } = body;
+          const { id, title, description, subject_id, class_id, exam_date, test_type, duration_minutes, passing_score, total_marks, max_attempts, shuffle_questions, shuffle_options, require_fullscreen, prevent_tab_switch, max_tab_switches, is_published } = body;
           if (subject_id && subject_id !== '') {
             const subExists = await pool.query('SELECT id FROM subjects WHERE id = $1', [subject_id]);
             if (subExists.rows.length === 0) {
@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
           if (require_fullscreen !== undefined) { sets.push(`require_fullscreen = $${idx++}`); params.push(require_fullscreen); }
           if (prevent_tab_switch !== undefined) { sets.push(`prevent_tab_switch = $${idx++}`); params.push(prevent_tab_switch); }
           if (max_tab_switches !== undefined) { sets.push(`max_tab_switches = $${idx++}`); params.push(max_tab_switches); }
+          if (max_attempts !== undefined) { sets.push(`max_attempts = $${idx++}`); params.push(max_attempts); }
           if (is_published !== undefined) { sets.push(`is_published = $${idx++}`); params.push(is_published); }
           params.push(id);
           const result = await pool.query(

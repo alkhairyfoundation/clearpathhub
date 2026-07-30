@@ -199,12 +199,20 @@ export default function StudentTakeTestPage() {
       if (!testRes.ok) throw new Error(data.error || 'Test not found');
 
       const attemptData = await attemptRes.json();
-      if (attemptData.attempt) {
-        router.replace(`/student/tests/report/${attemptData.attempt.id}`);
-        return;
-      }
 
       if (data.test) {
+        const maxAttempts = attemptData.maxAttempts ?? data.test.max_attempts ?? 0;
+        const attemptsCount = attemptData.attemptsCount ?? 0;
+
+        if (maxAttempts > 0 && attemptsCount >= maxAttempts) {
+          if (attemptData.attempt) {
+            router.replace(`/student/tests/report/${attemptData.attempt.id}`);
+          } else {
+            setError('You have no remaining attempts for this test.');
+          }
+          return;
+        }
+
         setTest(data.test);
         setTimeLeft((data.test.duration_minutes || 30) * 60);
       }

@@ -13,6 +13,7 @@ export default function StudentTestsPage() {
   const router = useRouter();
   const [tests, setTests] = useState<any[]>([]);
   const [attempts, setAttempts] = useState<Record<string, any>>({});
+  const [attemptsCount, setAttemptsCount] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function StudentTestsPage() {
     
     if (data.tests) setTests(data.tests);
     if (data.attempts) setAttempts(data.attempts);
+    if (data.attemptsCount) setAttemptsCount(data.attemptsCount);
     setLoading(false);
   }
 
@@ -73,14 +75,21 @@ export default function StudentTestsPage() {
                   </div>
                   {attempt ? (
                     <div className="flex items-center justify-between pt-3 border-t">
-                      <span className="text-sm font-bold">{attempt.score}%</span>
+                      <div>
+                        <span className="text-sm font-bold">{attempt.score}%</span>
+                        {attemptsCount[test.id] > 1 && (
+                          <span className="text-xs text-slate-400 ml-2">Attempt #{attemptsCount[test.id]}</span>
+                        )}
+                      </div>
                       <div className="flex gap-2">
                         <Link href={`/student/tests/report/${attempt.id}`} className="btn-ghost text-sm py-1.5 px-3 flex items-center gap-1">
                           Report
                         </Link>
-                        <Link href={`/student/tests/${test.id}`} className="btn-outline text-sm py-1.5 px-3 flex items-center gap-1">
-                          Retry <ArrowRight size={14} />
-                        </Link>
+                        {test.max_attempts !== 1 && (test.max_attempts === 0 || (attemptsCount[test.id] || 0) < test.max_attempts) ? (
+                          <Link href={`/student/tests/${test.id}`} className="btn-outline text-sm py-1.5 px-3 flex items-center gap-1">
+                            Retry{test.max_attempts > 0 ? ` (${attemptsCount[test.id] || 0}/${test.max_attempts})` : ''} <ArrowRight size={14} />
+                          </Link>
+                        ) : null}
                       </div>
                     </div>
                   ) : (
