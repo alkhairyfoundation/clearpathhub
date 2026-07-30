@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS tests (
   prevent_tab_switch BOOLEAN DEFAULT false,
   max_tab_switches INTEGER DEFAULT 3,
   allow_camera BOOLEAN DEFAULT false,
+  max_attempts INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -59,7 +60,8 @@ CREATE TABLE IF NOT EXISTS test_attempts (
   fullscreen_exits INTEGER DEFAULT 0,
   ip_address TEXT,
   user_agent TEXT,
-  device_info TEXT
+  device_info TEXT,
+  attempt_number INTEGER DEFAULT 1
 );
 
 -- ============================================================================
