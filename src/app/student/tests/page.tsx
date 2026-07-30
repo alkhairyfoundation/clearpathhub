@@ -85,9 +85,9 @@ export default function StudentTestsPage() {
                         <Link href={`/student/tests/report/${attempt.id}`} className="btn-ghost text-sm py-1.5 px-3 flex items-center gap-1">
                           Report
                         </Link>
-                        {test.max_attempts !== 1 && (test.max_attempts === 0 || (attemptsCount[test.id] || 0) < test.max_attempts) ? (
+                        {test.max_attempts !== 1 && ((test.max_attempts ?? 0) === 0 || (attemptsCount[test.id] || 0) < (test.max_attempts ?? 0)) ? (
                           <Link href={`/student/tests/${test.id}`} className="btn-outline text-sm py-1.5 px-3 flex items-center gap-1">
-                            Retry{test.max_attempts > 0 ? ` (${attemptsCount[test.id] || 0}/${test.max_attempts})` : ''} <ArrowRight size={14} />
+                            Retry{(test.max_attempts ?? 0) > 0 ? ` (${attemptsCount[test.id] || 0}/${test.max_attempts})` : ''} <ArrowRight size={14} />
                           </Link>
                         ) : null}
                       </div>
