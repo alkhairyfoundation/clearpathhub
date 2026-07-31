@@ -94,16 +94,32 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
     const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
     const passed = finalScore >= (test.passing_score || 50);
 
-    const attemptResult = await pool.query(
-      `INSERT INTO test_attempts (test_id, student_id, answers, score, passed, tab_switches, fullscreen_exits, time_taken, started_at, completed_at, attempt_number)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10)
-       RETURNING *`,
-      [
-        testId, student_id, JSON.stringify(answersArr), finalScore, passed,
-        tab_switches || 0, fullscreen_exits || 0,
-        time_taken || 0, started_at || new Date().toISOString(), attemptNumber,
-      ]
+    const hasAttemptNumberCol = await pool.query(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_name = 'test_attempts' AND column_name = 'attempt_number'`
     );
+
+    const attemptResult = hasAttemptNumberCol.rows.length > 0
+      ? await pool.query(
+          `INSERT INTO test_attempts (test_id, student_id, answers, score, passed, tab_switches, fullscreen_exits, time_taken, started_at, completed_at, attempt_number)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10)
+           RETURNING *`,
+          [
+            testId, student_id, JSON.stringify(answersArr), finalScore, passed,
+            tab_switches || 0, fullscreen_exits || 0,
+            time_taken || 0, started_at || new Date().toISOString(), attemptNumber,
+          ]
+        )
+      : await pool.query(
+          `INSERT INTO test_attempts (test_id, student_id, answers, score, passed, tab_switches, fullscreen_exits, time_taken, started_at, completed_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+           RETURNING *`,
+          [
+            testId, student_id, JSON.stringify(answersArr), finalScore, passed,
+            tab_switches || 0, fullscreen_exits || 0,
+            time_taken || 0, started_at || new Date().toISOString(),
+          ]
+        );
 
     const attempt = attemptResult.rows[0];
 
