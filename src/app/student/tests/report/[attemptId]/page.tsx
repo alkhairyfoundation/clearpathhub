@@ -72,7 +72,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
       const subjLines = data.subjectPerformance.map((s: any) =>
         `  ${s.name}: ${s.correct}/${s.total} (${s.percentage}%)`
       ).join('\n');
-      const studentDisplay = data.student?.name || `${profile?.first_name} ${profile?.last_name}`;
+      const studentDisplay = data.student?.name || 'Student';
       const message = `*Test Report*\n\nStudent: ${studentDisplay}\nTest: ${data.test.title}\nClass: ${data.test.class_name}\nScore: ${data.attempt.score}% (${data.attempt.passed ? '✅ Passed' : '❌ Failed'})\n\n*Subject Breakdown:*\n${subjLines}\n\nView full report: ${window.location.href}`;
 
       const mode = window.confirm('Send via WhatsApp? OK = WhatsApp, Cancel = Email');
@@ -122,7 +122,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
       pdfHeader();
       doc.setFontSize(11);
       doc.setTextColor(0, 0, 0);
-      const studentDisplay = data.student?.name || `${profile?.first_name} ${profile?.last_name}`;
+      const studentDisplay = data.student?.name || 'Student';
       doc.text(`Student: ${studentDisplay}`, 15, y); y += 6;
       doc.text(`Test: ${data.test.title}`, 15, y); y += 6;
       doc.text(`Class: ${data.test.class_name} | Subject: ${data.test.subject_name}`, 15, y); y += 6;
@@ -329,7 +329,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
           <div>
             <p className="text-xs text-slate-500 dark:text-slate-400">Student</p>
             <p className="font-semibold text-slate-800 dark:text-white">
-              {profile?.first_name} {profile?.last_name}
+              {data.student?.name || 'Student'}
             </p>
           </div>
           <div>

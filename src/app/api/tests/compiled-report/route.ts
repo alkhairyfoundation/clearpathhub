@@ -92,7 +92,22 @@ export async function GET(req: NextRequest) {
     const attemptsRes = await pool.query(attemptQuery, attemptParams);
     const attempts = attemptsRes.rows;
 
-    if (attempts.length === 0) {
+    // When a student retries a test, only the most recently completed attempt
+    // should be reported. Older attempts for the same test are superseded.
+    const latestAttempts: any[] = [];
+    {
+      const seenTests = new Set<string>();
+      for (let i = attempts.length - 1; i >= 0; i--) {
+        const a = attempts[i];
+        if (!seenTests.has(a.test_id)) {
+          seenTests.add(a.test_id);
+          latestAttempts.push(a);
+        }
+      }
+      latestAttempts.reverse();
+    }
+
+    if (latestAttempts.length === 0) {
       await pool.end();
       return NextResponse.json({
         success: true,
@@ -153,7 +168,7 @@ export async function GET(req: NextRequest) {
 
     const processedAttempts = [];
 
-    for (const attempt of attempts) {
+    for (const attempt of latestAttempts) {
       const questionsRes = await pool.query(
         'SELECT * FROM test_questions WHERE test_id = $1 ORDER BY order_index',
         [attempt.test_id]
