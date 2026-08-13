@@ -1,10 +1,11 @@
 ﻿'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
+import { useLearningPresence } from '@/hooks/useLearningPresence';
 import { Play, FileText, Clock, CheckCircle, XCircle, HelpCircle, BookOpen, Pause, PlayCircle, Lock, AlertCircle, ArrowRight, Search } from 'lucide-react';
 
 interface CheckpointQuestion {
@@ -51,6 +52,37 @@ export default function StudentSessionsPage() {
   const checkpointAnswersRef = useRef<Record<string, boolean>>({});
   const checkpointActiveRef = useRef(false);
   const checkpointsRef = useRef<CheckpointQuestion[]>([]);
+  const reportedCpsRef = useRef<Set<string>>(new Set());
+
+  const getPresencePlayerState = useCallback((): any => {
+    const p = playerRef.current;
+    if (!p || typeof p.getPlayerState !== 'function') return null;
+    const YTS = (window as any).YT?.PlayerState;
+    const st = p.getPlayerState();
+    if (st === YTS?.PLAYING) return 'playing';
+    if (st === YTS?.PAUSED || st === YTS?.ENDED) return 'paused';
+    if (st === YTS?.BUFFERING) return 'buffering';
+    return 'unavailable';
+  }, []);
+
+  const getPresenceProgress = useCallback((): number | null => {
+    const p = playerRef.current;
+    if (!p || typeof p.getDuration !== 'function' || typeof p.getCurrentTime !== 'function') return null;
+    const duration = p.getDuration();
+    const current = p.getCurrentTime();
+    if (!duration || !Number.isFinite(current)) return null;
+    return (current / duration) * 100;
+  }, []);
+
+  const { reportCheckpoint } = useLearningPresence({
+    active: showVideo && !!selectedSession,
+    userId: profile?.id,
+    activityType: 'video',
+    contentId: selectedSession?.id || null,
+    contentTitle: selectedSession?.title || null,
+    getProgress: getPresenceProgress,
+    getPlayerState: getPresencePlayerState,
+  });
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
@@ -213,6 +245,7 @@ export default function StudentSessionsPage() {
 
     const checkpoints = getCheckpoints(session);
     checkpointsRef.current = checkpoints;
+    reportedCpsRef.current = new Set();
     if (checkpoints.length > 0 && session.video_type === 'youtube') {
       const youtubeId = extractYouTubeId(session.video_url || '');
       if (youtubeId) setTimeout(() => initYouTubePlayer(youtubeId), 500);
@@ -225,6 +258,10 @@ export default function StudentSessionsPage() {
       const cp = checkpointsRef.current.find(c => Math.abs(c.timestamp_seconds - currentTime) <= 3 && !checkpointAnswersRef.current[c.id]);
       if (cp) {
         playerRef.current.pauseVideo();
+        if (!reportedCpsRef.current.has(cp.id)) {
+          reportedCpsRef.current.add(cp.id);
+          reportCheckpoint('Checkpoint question shown');
+        }
         setCurrentCheckpoint(cp);
         setCheckpointActive(true);
       }
@@ -238,6 +275,10 @@ export default function StudentSessionsPage() {
     const cp = checkpoints.find(c => Math.abs(c.timestamp_seconds - currentTime) <= 3 && !checkpointAnswers[c.id]);
     if (cp) {
       e.currentTarget.pause();
+      if (!reportedCpsRef.current.has(cp.id)) {
+        reportedCpsRef.current.add(cp.id);
+        reportCheckpoint('Checkpoint question shown');
+      }
       setCurrentCheckpoint(cp);
       setCheckpointActive(true);
     }

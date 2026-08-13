@@ -1,10 +1,11 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
+import { useLearningPresence } from '@/hooks/useLearningPresence';
 import { FileText, Download, Eye, Paperclip, ArrowLeft, Loader2, HelpCircle, CheckCircle, XCircle, Search } from 'lucide-react';
 
 const PAGE_SIZE = 9;
@@ -33,6 +34,25 @@ export default function StudentLessonsPage() {
   const [quizResults, setQuizResults] = useState<{ correct: number; total: number } | null>(null);
   const [quizFinished, setQuizFinished] = useState(false);
   const [submittingQuiz, setSubmittingQuiz] = useState(false);
+
+  const notesModalRef = useRef<HTMLDivElement | null>(null);
+
+  const getNotesProgress = useCallback((): number | null => {
+    const el = notesModalRef.current;
+    if (!el) return null;
+    const max = el.scrollHeight - el.clientHeight;
+    if (max <= 0) return 100;
+    return (el.scrollTop / max) * 100;
+  }, []);
+
+  useLearningPresence({
+    active: !!selectedLesson,
+    userId: profile?.id,
+    activityType: 'notes',
+    contentId: selectedLesson?.id || null,
+    contentTitle: selectedLesson?.title || null,
+    getProgress: getNotesProgress,
+  });
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
@@ -272,7 +292,7 @@ export default function StudentLessonsPage() {
         {/* Lesson Detail Modal (with inline quiz) */}
         {selectedLesson && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedLesson(null)}>
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div ref={notesModalRef} className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="p-6 border-b sticky top-0 bg-white z-10 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">{selectedLesson.title}</h2>
