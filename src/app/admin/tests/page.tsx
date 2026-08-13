@@ -413,7 +413,7 @@ export default function AdminTestsPage() {
     <DashboardLayout title="Tests & Exams" subtitle="Manage assessments and track student performance">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Tests & Exams</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage assessments and track student performance</p>
@@ -481,7 +481,7 @@ export default function AdminTestsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden sm:table-cell">Test</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Score</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden md:table-cell">Date</th></tr></thead>
-              <tbody className="divide-y divide-slate-100">{attempts.slice(0, 10).map(a => (<tr key={a.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800"><td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{a.student?.first_name} {a.student?.last_name}</td><td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden sm:table-cell">{a.test?.title}</td><td className="py-3 px-4"><span className={`font-semibold ${a.score >= 50 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{a.score}%</span></td><td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{formatDate(a.completed_at)}</td></tr>))}</tbody>
+              <tbody className="divide-y divide-slate-100">{attempts.slice(0, 10).map(a => (<tr key={a.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700"><td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{a.student?.first_name} {a.student?.last_name}</td><td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden sm:table-cell">{a.test?.title}</td><td className="py-3 px-4"><span className={`font-semibold ${a.score >= 50 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{a.score}%</span></td><td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{formatDate(a.completed_at)}</td></tr>))}</tbody>
             </table>
           </div>
         </div>
@@ -489,8 +489,8 @@ export default function AdminTestsPage() {
 
       {showTestModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{editingTest ? 'Edit Test' : 'Create Test'}</h3><button onClick={() => setShowTestModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button></div>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800"><h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{editingTest ? 'Edit Test' : 'Create Test'}</h3><button onClick={() => setShowTestModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button></div>
             <div className="p-5 space-y-4">
               {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
               <div><label className="label">Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="e.g., Mathematics Mid-Term" /></div>
@@ -509,7 +509,7 @@ export default function AdminTestsPage() {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white sticky bottom-0"><button onClick={() => setShowTestModal(false)} className="btn-ghost">Cancel</button><button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving...' : editingTest ? 'Update' : 'Create'}</button></div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 bg-white sticky bottom-0 dark:bg-slate-800"><button onClick={() => setShowTestModal(false)} className="btn-ghost">Cancel</button><button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving...' : editingTest ? 'Update' : 'Create'}</button></div>
           </div>
         </div>
         )}
@@ -517,10 +517,10 @@ export default function AdminTestsPage() {
       {/* Question Management Modal */}
       {showQuestionModal && selectedTest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Questions — {selectedTest.title}</h3>
-              <button onClick={() => setShowQuestionModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+              <button onClick={() => setShowQuestionModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center justify-between">
@@ -613,10 +613,10 @@ export default function AdminTestsPage() {
       {/* Question Bank Select Modal */}
       {showBankSelect && selectedTest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Add from Question Bank</h3>
-              <button onClick={() => setShowBankSelect(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+              <button onClick={() => setShowBankSelect(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
             </div>
             <div className="p-5 space-y-4">
               <div className="relative">
@@ -628,7 +628,7 @@ export default function AdminTestsPage() {
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {bankFiltered.map((q: any) => (
-                    <label key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${selectedBankIds.has(q.id) ? 'border-primary-300 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800'}`}>
+                    <label key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${selectedBankIds.has(q.id) ? 'border-primary-300 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700'}`}>
                       <input type="checkbox" checked={selectedBankIds.has(q.id)} onChange={() => toggleBankSelect(q.id)} className="w-4 h-4 mt-0.5 text-primary-600 dark:text-primary-400 dark:text-primary-400 rounded" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</p>
@@ -653,10 +653,10 @@ export default function AdminTestsPage() {
       {/* Analysis Modal */}
       {showAnalysis && analysisTest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Analysis — {analysisTest.title}</h3>
-              <button onClick={() => setShowAnalysis(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+              <button onClick={() => setShowAnalysis(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
             </div>
             <div className="p-5 space-y-6">
               {analysisLoading ? (
@@ -690,7 +690,7 @@ export default function AdminTestsPage() {
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                               {analysisData.map((q: any, i: number) => (
-                                <tr key={q.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                                <tr key={q.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                                   <td className="py-2 px-3 text-slate-400 dark:text-slate-500 dark:text-slate-500">{i + 1}</td>
                                   <td className="py-2 px-3 font-medium text-slate-900 dark:text-white dark:text-white max-w-xs truncate">{q.question}</td>
                                   <td className="py-2 px-3 text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">{q.subject || 'N/A'}</td>
@@ -742,7 +742,7 @@ export default function AdminTestsPage() {
                           </thead>
                           <tbody className="divide-y divide-slate-100">
                             {analysisAttempts.map((a: any) => (
-                              <tr key={a.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                              <tr key={a.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                                 <td className="py-2 px-3 font-medium text-slate-900 dark:text-white dark:text-white">{a.student?.first_name} {a.student?.last_name}</td>
                                 <td className={`py-2 px-3 text-center font-semibold ${a.score >= (analysisTest.passing_score || 50) ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{a.score}%</td>
                                 <td className="py-2 px-3 text-center">{a.passed ? <Check size={16} className="text-green-500 inline" /> : <X size={16} className="text-red-500 dark:text-red-400 dark:text-red-400 inline" />}</td>

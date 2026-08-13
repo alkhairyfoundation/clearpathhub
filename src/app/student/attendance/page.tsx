@@ -46,7 +46,7 @@ export default function StudentAttendancePage() {
     <DashboardLayout title="My Attendance" subtitle="View your attendance record">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
@@ -56,14 +56,14 @@ export default function StudentAttendancePage() {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Attendance Rate</span><UserCheck className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={18} /></div><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.rate}%</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Present</span><CheckCircle className="text-green-600 dark:text-green-400 dark:text-green-400" size={18} /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{stats.present}</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Absent</span><XCircle className="text-red-600 dark:text-red-400 dark:text-red-400" size={18} /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{stats.absent}</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Late</span><Clock className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400" size={18} /></div><p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 dark:text-yellow-400">{stats.late}</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Excused</span><AlertCircle className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={18} /></div><p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{stats.excused}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Attendance Rate</span><UserCheck className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={18} /></div><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{stats.rate}%</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Present</span><CheckCircle className="text-green-600 dark:text-green-400 dark:text-green-400" size={18} /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{stats.present}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Absent</span><XCircle className="text-red-600 dark:text-red-400 dark:text-red-400" size={18} /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{stats.absent}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Late</span><Clock className="text-yellow-600 dark:text-yellow-400 dark:text-yellow-400" size={18} /></div><p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 dark:text-yellow-400">{stats.late}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Excused</span><AlertCircle className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={18} /></div><p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{stats.excused}</p></div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
           {attendance.length === 0 ? (
             <div className="text-center py-12 text-slate-500 dark:text-slate-400 dark:text-slate-400"><UserCheck size={48} className="mx-auto mb-4 opacity-50" /><p>No attendance records</p></div>
           ) : (

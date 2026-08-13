@@ -230,7 +230,7 @@ export default function TeacherStudentsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
@@ -312,7 +312,7 @@ export default function TeacherStudentsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredStudents.map((student) => (
-                  <tr key={student.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
+                  <tr key={student.id} className="hover:bg-slate-50 dark:bg-slate-800 transition-colors dark:hover:bg-slate-700">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
@@ -358,12 +358,12 @@ export default function TeacherStudentsPage() {
       {/* Create/Edit Student Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">
                 {editingStudent ? 'Edit Student' : 'Add New Student'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                 <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
@@ -515,7 +515,7 @@ export default function TeacherStudentsPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-2">
+              <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-2 dark:bg-slate-800">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-ghost flex-1">Cancel</button>
                 <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50">
                   {saving ? <><Loader2 size={16} className="animate-spin" />Saving...</> : editingStudent ? 'Update Student' : 'Create Student'}
@@ -532,7 +532,7 @@ export default function TeacherStudentsPage() {
       {/* Credentials Modal */}
       {showCredentialsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in dark:bg-slate-800">
             <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Student Created Successfully</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Please save these login credentials</p>

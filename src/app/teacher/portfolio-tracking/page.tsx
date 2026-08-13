@@ -141,7 +141,7 @@ export default function TeacherPortfolioTrackingPage() {
     <DashboardLayout title="Portfolio Tracking" subtitle="Track and update student skill rubrics">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
@@ -202,7 +202,7 @@ export default function TeacherPortfolioTrackingPage() {
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                             (rubricUpdates[gs.skill_id] || '') === level
                               ? `${RUBRIC_COLORS[level as keyof typeof RUBRIC_COLORS]} text-white`
-                              : 'bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'
+                              : 'bg-white border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800'
                           }`}
                         >
                           {RUBRIC_LABELS[level as keyof typeof RUBRIC_LABELS]}
@@ -245,10 +245,10 @@ export default function TeacherPortfolioTrackingPage() {
 
       {showEvidenceModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full dark:bg-slate-800">
             <div className="p-5 border-b flex items-center justify-between">
               <h3 className="text-lg font-bold">Add Evidence Note</h3>
-              <button onClick={() => setShowEvidenceModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+              <button onClick={() => setShowEvidenceModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
             </div>
             <div className="p-5 space-y-4">
               <div>

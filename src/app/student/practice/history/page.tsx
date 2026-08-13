@@ -65,7 +65,7 @@ export default function PracticeHistoryPage() {
     <DashboardLayout title="Practice History" subtitle="Track your daily practice journey">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student/practice" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student/practice" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Practice History</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Track your daily practice journey</p>
@@ -107,7 +107,7 @@ export default function PracticeHistoryPage() {
                     {sessions.slice(0, 10).map(s => (
                       <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.status === 'completed' ? (s.score && s.score >= 70 ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30') : 'bg-slate-200'}`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${s.status === 'completed' ? (s.score && s.score >= 70 ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30') : 'bg-slate-200 dark:bg-slate-600'}`}>
                             {s.status === 'completed' ? <CheckCircle size={16} className={s.score && s.score >= 70 ? 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400 dark:text-amber-400'} /> : <Clock size={16} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />}
                           </div>
                           <div>

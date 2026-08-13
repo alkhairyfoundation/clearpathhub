@@ -123,7 +123,7 @@ export default function AICoachPage() {
     <DashboardLayout title="AI Coach" subtitle="Your personal learning assistant">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
               <Bot size={20} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
@@ -230,7 +230,7 @@ export default function AICoachPage() {
               key={action.type}
               onClick={() => sendMessage(action.type)}
               disabled={loading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 transition-all disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 hover:border-slate-300 dark:border-slate-600 transition-all disabled:opacity-50 dark:hover:bg-slate-700"
             >
               {action.icon} {action.label}
             </button>

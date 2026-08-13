@@ -125,7 +125,7 @@ export default function GrowthMapPage() {
     <DashboardLayout title="Growth Map" subtitle="Your learning journey visualized">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Growth Map</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Your progression through subjects and topics</p>

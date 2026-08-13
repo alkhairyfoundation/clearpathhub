@@ -162,10 +162,10 @@ export default function StaffScanQRPage() {
 
       {showCamera && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden dark:bg-slate-800">
             <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">QR Scanner</h3>
-              <button onClick={stopCamera} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+              <button onClick={stopCamera} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
             </div>
             <div className="relative bg-black">
               <video ref={videoRef} className="w-full h-64 object-cover" playsInline />

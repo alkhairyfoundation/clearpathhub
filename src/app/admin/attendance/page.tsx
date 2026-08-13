@@ -99,7 +99,7 @@ export default function AdminAttendancePage() {
   return (
     <DashboardLayout title="Attendance" subtitle="Track and manage student attendance">
       <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Attendance</h1>
           <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Track and manage student attendance</p>
@@ -147,7 +147,7 @@ export default function AdminAttendancePage() {
                 <div className="flex gap-1.5">
                   {(['present', 'late', 'absent', 'excused'] as const).map((status) => (
                     <button key={status} onClick={() => markAttendance(record.student_id, status)} disabled={saving === record.student_id}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all capitalize disabled:opacity-50 ${record.status === status ? statusColors[status] : 'bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700'}`}>
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all capitalize disabled:opacity-50 ${record.status === status ? statusColors[status] : 'bg-white border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-700'}`}>
                       {status}
                     </button>
                   ))}

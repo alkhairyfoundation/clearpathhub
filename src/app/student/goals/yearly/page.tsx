@@ -118,7 +118,7 @@ export default function YearlyGoalsPage() {
     <DashboardLayout title="Year Goals" subtitle={sessionName}>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Year Goals</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Your big picture targets for {sessionName}</p>
@@ -137,7 +137,7 @@ export default function YearlyGoalsPage() {
             <span className="text-white/70">overall progress</span>
           </div>
           <div className="w-full bg-white/20 rounded-full h-2.5">
-            <div className="bg-white h-2.5 rounded-full transition-all" style={{ width: `${stats.overallProgress}%` }} />
+            <div className="bg-white h-2.5 rounded-full transition-all dark:bg-slate-800" style={{ width: `${stats.overallProgress}%` }} />
           </div>
           <div className="flex gap-4 mt-4 text-sm text-white/80">
             <span>{stats.completed} completed</span>
@@ -179,7 +179,7 @@ export default function YearlyGoalsPage() {
                     </div>
                   </div>
                   {dimGoal.target_value != null && dimGoal.target_value > 0 && (
-                    <div className="w-full bg-slate-200 rounded-full h-2 mt-3">
+                    <div className="w-full bg-slate-200 rounded-full h-2 mt-3 dark:bg-slate-600">
                       <div
                         className="bg-primary-500 h-2 rounded-full"
                         style={{ width: `${Math.min((dimGoal.achieved_value ?? 0) / dimGoal.target_value * 100, 100)}%` }}

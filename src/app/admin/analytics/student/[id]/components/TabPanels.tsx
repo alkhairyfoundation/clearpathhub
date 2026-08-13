@@ -24,7 +24,7 @@ export function MetricCard({ label, value, icon, color }: { label: string; value
         </div>
         <div>
           <p className="text-[10px] text-slate-500 uppercase tracking-wider">{label}</p>
-          <p className="text-lg font-bold text-slate-900">{value ?? 'N/A'}</p>
+          <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{value ?? 'N/A'}</p>
         </div>
       </div>
     </div>
@@ -52,7 +52,7 @@ export function TabOverview({ data }: { data: any }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="card lg:col-span-2">
-          <h3 className="font-bold text-slate-900 mb-3">Subject Performance Radar</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Subject Performance Radar</h3>
           {radarSubjects.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <RadarChart data={radarSubjects}>
@@ -65,12 +65,12 @@ export function TabOverview({ data }: { data: any }) {
           ) : <p className="text-sm text-slate-400 text-center py-8">No subject data available</p>}
         </div>
         <div className="card space-y-3">
-          <h3 className="font-bold text-slate-900 flex items-center gap-2"><Brain size={16} className="text-primary-500" /> Insights</h3>
+          <h3 className="font-bold text-slate-900 flex items-center gap-2 dark:text-slate-100"><Brain size={16} className="text-primary-500" /> Insights</h3>
           {insights?.strengths?.length > 0 && (
             <div>
               <p className="text-[10px] text-emerald-600 uppercase font-bold mb-1 flex items-center gap-1"><CheckCircle size={12} /> Strengths</p>
               <ul className="space-y-1">{insights.strengths.map((s: string, i: number) => (
-                <li key={i} className="text-[11px] text-slate-600 bg-emerald-50 rounded-lg px-2 py-1">{s}</li>
+                <li key={i} className="text-[11px] text-slate-600 bg-emerald-50 rounded-lg px-2 py-1 dark:text-slate-400">{s}</li>
               ))}</ul>
             </div>
           )}
@@ -78,7 +78,7 @@ export function TabOverview({ data }: { data: any }) {
             <div>
               <p className="text-[10px] text-red-600 uppercase font-bold mb-1 flex items-center gap-1"><XCircle size={12} /> Weaknesses</p>
               <ul className="space-y-1">{insights.weaknesses.map((s: string, i: number) => (
-                <li key={i} className="text-[11px] text-slate-600 bg-red-50 rounded-lg px-2 py-1">{s}</li>
+                <li key={i} className="text-[11px] text-slate-600 bg-red-50 rounded-lg px-2 py-1 dark:text-slate-400">{s}</li>
               ))}</ul>
             </div>
           )}
@@ -86,7 +86,7 @@ export function TabOverview({ data }: { data: any }) {
             <div>
               <p className="text-[10px] text-primary-600 uppercase font-bold mb-1 flex items-center gap-1"><Target size={12} /> Recommendations</p>
               <ul className="space-y-1">{insights.recommendations.map((s: string, i: number) => (
-                <li key={i} className="text-[11px] text-slate-600 bg-blue-50 rounded-lg px-2 py-1">{s}</li>
+                <li key={i} className="text-[11px] text-slate-600 bg-blue-50 rounded-lg px-2 py-1 dark:text-slate-400">{s}</li>
               ))}</ul>
             </div>
           )}
@@ -95,7 +95,7 @@ export function TabOverview({ data }: { data: any }) {
       </div>
       {academicData?.scores_over_time?.length > 0 && (
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Score Trend</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Score Trend</h3>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={academicData.scores_over_time.sort((a: any, b: any) => a.date?.localeCompare(b.date))}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -108,10 +108,10 @@ export function TabOverview({ data }: { data: any }) {
         </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="card"><p className="text-xs text-slate-500">Total Practice Sessions</p><p className="text-xl font-bold text-slate-900">{practiceData?.summary?.total_sessions || 0}</p></div>
-        <div className="card"><p className="text-xs text-slate-500">Homework Completion</p><p className="text-xl font-bold text-slate-900">{homeworkData?.summary?.completion_rate != null ? homeworkData.summary.completion_rate + '%' : 'N/A'}</p></div>
-        <div className="card"><p className="text-xs text-slate-500">Goal Completion</p><p className="text-xl font-bold text-slate-900">{goalsData?.summary?.completion_rate != null ? goalsData.summary.completion_rate + '%' : 'N/A'}</p></div>
-        <div className="card"><p className="text-xs text-slate-500">Islamic Perfect Days</p><p className="text-xl font-bold text-slate-900">{islamicData?.summary?.perfect_days || 0}</p></div>
+        <div className="card"><p className="text-xs text-slate-500">Total Practice Sessions</p><p className="text-xl font-bold text-slate-900 dark:text-slate-100">{practiceData?.summary?.total_sessions || 0}</p></div>
+        <div className="card"><p className="text-xs text-slate-500">Homework Completion</p><p className="text-xl font-bold text-slate-900 dark:text-slate-100">{homeworkData?.summary?.completion_rate != null ? homeworkData.summary.completion_rate + '%' : 'N/A'}</p></div>
+        <div className="card"><p className="text-xs text-slate-500">Goal Completion</p><p className="text-xl font-bold text-slate-900 dark:text-slate-100">{goalsData?.summary?.completion_rate != null ? goalsData.summary.completion_rate + '%' : 'N/A'}</p></div>
+        <div className="card"><p className="text-xs text-slate-500">Islamic Perfect Days</p><p className="text-xl font-bold text-slate-900 dark:text-slate-100">{islamicData?.summary?.perfect_days || 0}</p></div>
       </div>
     </div>
   );
@@ -126,11 +126,11 @@ export function TabAcademic({ data }: { data: any }) {
   return (
     <div className="space-y-6">
       <div className="card">
-        <h3 className="font-bold text-slate-900 mb-3">Subject Scores Breakdown</h3>
+        <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Subject Scores Breakdown</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-200">
+              <tr className="border-b border-slate-200 dark:border-slate-700">
                 <th className="text-left py-2 px-2 text-slate-500">Subject</th>
                 <th className="text-center py-2 px-2 text-slate-500">CA1</th><th className="text-center py-2 px-2 text-slate-500">CA2</th>
                 <th className="text-center py-2 px-2 text-slate-500">CA3</th><th className="text-center py-2 px-2 text-slate-500">Exam</th>
@@ -140,8 +140,8 @@ export function TabAcademic({ data }: { data: any }) {
             </thead>
             <tbody>
               {subjects.map((s: any) => (
-                <tr key={s.subject_id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-2 px-2 font-medium text-slate-800">{s.subject_name}</td>
+                <tr key={s.subject_id} className="border-b border-slate-100 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700">
+                  <td className="py-2 px-2 font-medium text-slate-800 dark:text-slate-200">{s.subject_name}</td>
                   <td className="text-center py-2 px-2">{s.ca1 ?? '-'}</td>
                   <td className="text-center py-2 px-2">{s.ca2 ?? '-'}</td>
                   <td className="text-center py-2 px-2">{s.ca3 ?? '-'}</td>
@@ -153,7 +153,7 @@ export function TabAcademic({ data }: { data: any }) {
                       s.grade === 'B' ? 'bg-blue-100 text-blue-700' :
                       s.grade === 'C' ? 'bg-amber-100 text-amber-700' :
                       s.grade === 'D' ? 'bg-orange-100 text-orange-700' :
-                      s.grade === 'F' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
+                      s.grade === 'F' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'
                     )}>{s.grade || '-'}</span>
                   </td>
                 </tr>
@@ -164,7 +164,7 @@ export function TabAcademic({ data }: { data: any }) {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Subject Totals</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Subject Totals</h3>
           {validSubjects.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={validSubjects}>
@@ -182,7 +182,7 @@ export function TabAcademic({ data }: { data: any }) {
           ) : <p className="text-sm text-slate-400 text-center py-8">No data</p>}
         </div>
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Grade Distribution</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Grade Distribution</h3>
           {gradeDist.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -210,7 +210,7 @@ export function TabMastery({ data }: { data: any }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="card py-2 px-3 text-center">
           <p className="text-xs text-slate-500">Avg Mastery</p>
-          <p className="text-lg font-bold text-slate-800">{masteryData?.summary?.avg_mastery_score != null ? masteryData.summary.avg_mastery_score + '%' : 'N/A'}</p>
+          <p className="text-lg font-bold text-slate-800 dark:text-slate-200">{masteryData?.summary?.avg_mastery_score != null ? masteryData.summary.avg_mastery_score + '%' : 'N/A'}</p>
         </div>
         <div className="card py-2 px-3 text-center">
           <p className="text-xs text-slate-500">Mastered (80%+)</p>
@@ -226,14 +226,14 @@ export function TabMastery({ data }: { data: any }) {
         </div>
       </div>
       <div className="card">
-        <h3 className="font-bold text-slate-900 mb-3">Topic-Level Mastery Scores</h3>
+        <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Topic-Level Mastery Scores</h3>
         {topics.length > 0 ? (
           <div className="space-y-1 max-h-[400px] overflow-y-auto">
             {topics.map((t: any, i: number) => (
               <div key={i} className="flex items-center gap-2 py-1">
-                <span className="text-[11px] text-slate-600 w-24 truncate shrink-0" title={t.subject_name + ': ' + t.topic}>{t.topic}</span>
+                <span className="text-[11px] text-slate-600 w-24 truncate shrink-0 dark:text-slate-400" title={t.subject_name + ': ' + t.topic}>{t.topic}</span>
                 <span className="text-[10px] text-slate-400 w-20 truncate">{t.subject_name}</span>
-                <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden dark:bg-slate-700">
                   <div className="h-full rounded-full" style={{ width: (t.mastery_score || 0) + '%', backgroundColor: (t.mastery_score || 0) >= 80 ? '#10b981' : (t.mastery_score || 0) >= 60 ? '#f59e0b' : '#ef4444' }} />
                 </div>
                 <span className="text-[11px] font-bold w-10 text-right" style={{ color: (t.mastery_score || 0) >= 80 ? '#059669' : (t.mastery_score || 0) >= 60 ? '#d97706' : '#dc2626' }}>{Math.round(t.mastery_score || 0)}%</span>
@@ -244,7 +244,7 @@ export function TabMastery({ data }: { data: any }) {
       </div>
       {topics.length > 0 && (
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Mastery Components</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Mastery Components</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={topics.slice(0, 15)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -274,21 +274,21 @@ export function TabPractice({ data }: { data: any }) {
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Sessions</p><p className="text-lg font-bold text-slate-800">{practiceData?.summary?.total_sessions || 0}</p>
+          <p className="text-xs text-slate-500">Sessions</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{practiceData?.summary?.total_sessions || 0}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Avg Score</p><p className="text-lg font-bold text-slate-800">{practiceData?.summary?.avg_score != null ? practiceData.summary.avg_score + '%' : 'N/A'}</p>
+          <p className="text-xs text-slate-500">Avg Score</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{practiceData?.summary?.avg_score != null ? practiceData.summary.avg_score + '%' : 'N/A'}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Questions</p><p className="text-lg font-bold text-slate-800">{practiceData?.summary?.total_questions || 0}</p>
+          <p className="text-xs text-slate-500">Questions</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{practiceData?.summary?.total_questions || 0}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Homework Rate</p><p className="text-lg font-bold text-slate-800">{homeworkData?.summary?.completion_rate != null ? homeworkData.summary.completion_rate + '%' : 'N/A'}</p>
+          <p className="text-xs text-slate-500">Homework Rate</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{homeworkData?.summary?.completion_rate != null ? homeworkData.summary.completion_rate + '%' : 'N/A'}</p>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Practice Score Trend</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Practice Score Trend</h3>
           {trend.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={trend}>
@@ -302,7 +302,7 @@ export function TabPractice({ data }: { data: any }) {
           ) : <p className="text-sm text-slate-400 text-center py-8">No practice data</p>}
         </div>
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Difficulty Distribution</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Difficulty Distribution</h3>
           {diffDist.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={diffDist}>
@@ -320,15 +320,15 @@ export function TabPractice({ data }: { data: any }) {
       </div>
       {topicAcc.length > 0 && (
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Topic Accuracy</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Topic Accuracy</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {topicAcc.map((t: any, i: number) => (
-              <div key={i} className="bg-slate-50 rounded-lg p-2">
+              <div key={i} className="bg-slate-50 rounded-lg p-2 dark:bg-slate-800">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-[11px] font-medium text-slate-700">{t.topic}</span>
+                  <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300">{t.topic}</span>
                   <span className="text-[11px] font-bold" style={{ color: t.accuracy >= 70 ? '#059669' : t.accuracy >= 50 ? '#d97706' : '#dc2626' }}>{t.accuracy}%</span>
                 </div>
-                <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-600">
                   <div className="h-full rounded-full" style={{ width: t.accuracy + '%', backgroundColor: t.accuracy >= 70 ? '#10b981' : t.accuracy >= 50 ? '#f59e0b' : '#ef4444' }} />
                 </div>
                 <p className="text-[9px] text-slate-400 mt-0.5">{t.attempts} attempts, {t.correct} correct</p>
@@ -352,21 +352,21 @@ export function TabEngagement({ data }: { data: any }) {
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Attendance</p><p className="text-lg font-bold text-slate-800">{attendanceData?.summary?.rate != null ? attendanceData.summary.rate + '%' : 'N/A'}</p>
+          <p className="text-xs text-slate-500">Attendance</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{attendanceData?.summary?.rate != null ? attendanceData.summary.rate + '%' : 'N/A'}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Behavior (Avg)</p><p className="text-lg font-bold text-slate-800">{behaviorData?.summary?.avg_rating != null ? behaviorData.summary.avg_rating + '/5' : 'N/A'}</p>
+          <p className="text-xs text-slate-500">Behavior (Avg)</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{behaviorData?.summary?.avg_rating != null ? behaviorData.summary.avg_rating + '/5' : 'N/A'}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Accountability</p><p className="text-lg font-bold text-slate-800">{accountabilityData?.summary?.avg_score != null ? accountabilityData.summary.avg_score + '%' : 'N/A'}</p>
+          <p className="text-xs text-slate-500">Accountability</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{accountabilityData?.summary?.avg_score != null ? accountabilityData.summary.avg_score + '%' : 'N/A'}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Goals Rate</p><p className="text-lg font-bold text-slate-800">{goalsData?.summary?.completion_rate != null ? goalsData.summary.completion_rate + '%' : 'N/A'}</p>
+          <p className="text-xs text-slate-500">Goals Rate</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{goalsData?.summary?.completion_rate != null ? goalsData.summary.completion_rate + '%' : 'N/A'}</p>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Attendance Trend (Monthly)</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Attendance Trend (Monthly)</h3>
           {attendanceData?.monthly_trend?.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={attendanceData.monthly_trend}>
@@ -380,7 +380,7 @@ export function TabEngagement({ data }: { data: any }) {
           ) : <p className="text-sm text-slate-400 text-center py-8">No attendance data</p>}
         </div>
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Behavioral Rating Trend</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Behavioral Rating Trend</h3>
           {behaviorData?.weekly_trend?.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={behaviorData.weekly_trend.slice(0, 12)}>
@@ -399,7 +399,7 @@ export function TabEngagement({ data }: { data: any }) {
       </div>
       {accTrend.length > 0 && (
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Daily Accountability Score Trend</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Daily Accountability Score Trend</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={accTrend.slice(0, 30).reverse()}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -435,27 +435,27 @@ export function TabHolistic({ data }: { data: any }) {
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Islamic Days</p><p className="text-lg font-bold text-slate-800">{islamicData?.summary?.days_tracked || 0}</p>
+          <p className="text-xs text-slate-500">Islamic Days</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{islamicData?.summary?.days_tracked || 0}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Salah Consistency</p><p className="text-lg font-bold text-slate-800">{islamicData?.summary?.salah_consistency != null ? islamicData.summary.salah_consistency + '%' : 'N/A'}</p>
+          <p className="text-xs text-slate-500">Salah Consistency</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{islamicData?.summary?.salah_consistency != null ? islamicData.summary.salah_consistency + '%' : 'N/A'}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Ayahs Memorized</p><p className="text-lg font-bold text-slate-800">{islamicData?.summary?.total_ayahs_memorized || 0}</p>
+          <p className="text-xs text-slate-500">Ayahs Memorized</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{islamicData?.summary?.total_ayahs_memorized || 0}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Perfect Days</p><p className="text-lg font-bold text-slate-800">{islamicData?.summary?.perfect_days || 0}</p>
+          <p className="text-xs text-slate-500">Perfect Days</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{islamicData?.summary?.perfect_days || 0}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Skills Activities</p><p className="text-lg font-bold text-slate-800">{skillsData?.summary?.total_activities || 0}</p>
+          <p className="text-xs text-slate-500">Skills Activities</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{skillsData?.summary?.total_activities || 0}</p>
         </div>
         <div className="card py-2 px-3 text-center">
-          <p className="text-xs text-slate-500">Avg Skill Rating</p><p className="text-lg font-bold text-slate-800">{skillsData?.summary?.avg_rating != null ? skillsData.summary.avg_rating + '/5' : 'N/A'}</p>
+          <p className="text-xs text-slate-500">Avg Skill Rating</p><p className="text-lg font-bold text-slate-800 dark:text-slate-200">{skillsData?.summary?.avg_rating != null ? skillsData.summary.avg_rating + '/5' : 'N/A'}</p>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Salah Performance</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Salah Performance</h3>
           {salahData.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={salahData}>
@@ -471,7 +471,7 @@ export function TabHolistic({ data }: { data: any }) {
           ) : <p className="text-sm text-slate-400 text-center py-8">No salah data</p>}
         </div>
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Skills Activities Breakdown</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Skills Activities Breakdown</h3>
           {skillsData?.by_skill?.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
@@ -508,10 +508,10 @@ export function TabRisk({ data }: { data: any }) {
   return (
     <div className="space-y-6">
       <div className="card">
-        <h3 className="font-bold text-slate-900 mb-3">Risk Assessment</h3>
+        <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Risk Assessment</h3>
         {riskData?.current ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl">
+            <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl dark:bg-slate-800">
               <div className="w-20 h-20 rounded-full flex items-center justify-center mb-2" style={{ backgroundColor: (RISK_COLORS[riskData.current.risk_level] || '#94a3b8') + '20' }}>
                 <span className="text-xl font-bold" style={{ color: RISK_COLORS[riskData.current.risk_level] || '#94a3b8' }}>{riskData.current.risk_score || '?'}</span>
               </div>
@@ -521,11 +521,11 @@ export function TabRisk({ data }: { data: any }) {
             <div className="lg:col-span-2 space-y-2">
               {riskData.current.contributing_factors && typeof riskData.current.contributing_factors === 'object' && (
                 <div>
-                  <p className="text-xs font-bold text-slate-700 mb-1">Contributing Factors</p>
+                  <p className="text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Contributing Factors</p>
                   {Object.entries(riskData.current.contributing_factors).map(([factor, weight]: [string, any]) => (
                     <div key={factor} className="flex items-center gap-2 py-0.5">
-                      <span className="text-[11px] text-slate-600 capitalize w-32">{factor.replace(/_/g, ' ')}</span>
-                      <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <span className="text-[11px] text-slate-600 capitalize w-32 dark:text-slate-400">{factor.replace(/_/g, ' ')}</span>
+                      <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden dark:bg-slate-600">
                         <div className="h-full rounded-full bg-red-400" style={{ width: (weight * 100) + '%' }} />
                       </div>
                       <span className="text-[10px] text-slate-500 w-8 text-right">{Math.round(weight * 100)}%</span>
@@ -545,7 +545,7 @@ export function TabRisk({ data }: { data: any }) {
       </div>
       {riskData?.history?.length > 1 && (
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-3">Risk Score History</h3>
+          <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Risk Score History</h3>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={riskData.history}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -558,17 +558,17 @@ export function TabRisk({ data }: { data: any }) {
         </div>
       )}
       <div className="card">
-        <h3 className="font-bold text-slate-900 mb-3">Promotion Readiness</h3>
+        <h3 className="font-bold text-slate-900 mb-3 dark:text-slate-100">Promotion Readiness</h3>
         {promotionData ? (
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center bg-slate-50">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-800">
                 <span className="text-2xl font-bold" style={{ color: promotionData.overall_score >= 75 ? '#059669' : promotionData.overall_score >= 50 ? '#d97706' : '#dc2626' }}>
                   {Math.round(promotionData.overall_score)}%
                 </span>
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900">Status: <span className={'px-2 py-0.5 rounded-full text-xs ' + (
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Status: <span className={'px-2 py-0.5 rounded-full text-xs ' + (
                   promotionData.promotion_status === 'ready' ? 'bg-emerald-100 text-emerald-700' :
                   promotionData.promotion_status === 'conditional' ? 'bg-amber-100 text-amber-700' :
                   promotionData.promotion_status === 'needs_intervention' ? 'bg-orange-100 text-orange-700' :
@@ -600,13 +600,13 @@ export function TabRisk({ data }: { data: any }) {
       </div>
       {learningPathData?.summary?.intervention_needed > 0 && (
         <div className="card bg-red-50 border-red-200">
-          <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
+          <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2 dark:text-slate-100">
             <AlertTriangle size={16} className="text-red-500" /> Topics Requiring Intervention ({learningPathData.summary.intervention_needed})
           </h3>
           <div className="space-y-1">
             {learningPathData.subjects?.map((sub: any, si: number) =>
               sub.stages?.filter((st: any) => st.intervention).map((st: any, ti: number) => (
-                <div key={si + '-' + ti} className="text-xs text-slate-700 bg-white rounded-lg px-3 py-1.5">
+                <div key={si + '-' + ti} className="text-xs text-slate-700 bg-white rounded-lg px-3 py-1.5 dark:text-slate-300 dark:bg-slate-800">
                   {sub.subject_name}: {st.topic} (Stage: {st.stage}, {st.attempts} attempts)
                 </div>
               ))
@@ -616,11 +616,11 @@ export function TabRisk({ data }: { data: any }) {
       )}
       {retentionData?.summary?.total_checks > 0 && (
         <div className="card">
-          <h3 className="font-bold text-slate-900 mb-2">Knowledge Retention</h3>
+          <h3 className="font-bold text-slate-900 mb-2 dark:text-slate-100">Knowledge Retention</h3>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-emerald-50 rounded-lg p-2"><p className="text-lg font-bold text-emerald-600">{retentionData.summary.passed}</p><p className="text-[10px] text-slate-500">Passed</p></div>
             <div className="bg-red-50 rounded-lg p-2"><p className="text-lg font-bold text-red-600">{retentionData.summary.failed}</p><p className="text-[10px] text-slate-500">Failed</p></div>
-            <div className="bg-slate-50 rounded-lg p-2"><p className="text-lg font-bold text-slate-600">{retentionData.summary.pending}</p><p className="text-[10px] text-slate-500">Pending</p></div>
+            <div className="bg-slate-50 rounded-lg p-2 dark:bg-slate-800"><p className="text-lg font-bold text-slate-600 dark:text-slate-400">{retentionData.summary.pending}</p><p className="text-[10px] text-slate-500">Pending</p></div>
           </div>
         </div>
       )}

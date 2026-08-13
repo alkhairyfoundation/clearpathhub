@@ -123,7 +123,7 @@ export default function ImportExportPage() {
     <DashboardLayout title="Import / Export" subtitle="Bulk data operations and report generation">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Import / Export</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Bulk data operations and report generation</p>

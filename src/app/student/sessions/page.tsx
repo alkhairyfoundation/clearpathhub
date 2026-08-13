@@ -450,12 +450,12 @@ export default function StudentSessionsPage() {
             const checkpoints = getCheckpoints(session);
             const postQuiz = getPostVideoQuiz(session);
             return (
-              <div key={session.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handlePlaySession(session)}>
+              <div key={session.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer dark:bg-slate-800" onClick={() => handlePlaySession(session)}>
                 {youtubeId ? (
                   <div className="relative pt-[56.25%] bg-gray-900">
                     <img src={`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`} alt={session.title} className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors">
-                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center"><Play className="text-red-600 dark:text-red-400 dark:text-red-400 ml-1" size={32} /></div>
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center dark:bg-slate-800"><Play className="text-red-600 dark:text-red-400 dark:text-red-400 ml-1" size={32} /></div>
                     </div>
                   </div>
                 ) : (
@@ -493,7 +493,7 @@ export default function StudentSessionsPage() {
             
             {checkpointActive && currentCheckpoint && (
               <div className="absolute inset-0 bg-black/80 flex items-center justify-center p-8">
-                <div className="bg-white rounded-xl max-w-xl w-full p-6">
+                <div className="bg-white rounded-xl max-w-xl w-full p-6 dark:bg-slate-800">
                   <div className="flex items-center gap-2 mb-4"><Lock className="text-amber-500 dark:text-amber-400 dark:text-amber-400" size={24} /><span className="text-amber-600 dark:text-amber-400 dark:text-amber-400 font-medium">Checkpoint Required</span></div>
                   <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4">{currentCheckpoint.question}</h3>
 
@@ -578,7 +578,7 @@ export default function StudentSessionsPage() {
             <button onClick={handleCloseVideo} className="absolute top-4 left-4 z-10 p-2 bg-white/90 rounded-lg hover:bg-white dark:bg-slate-800"><XCircle size={20} /></button>
 
             {videoEnded && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-white rounded-xl px-6 py-4 shadow-lg">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-white rounded-xl px-6 py-4 shadow-lg dark:bg-slate-800">
                 <div className="flex items-center gap-4">
                   <CheckCircle size={24} className="text-green-600 dark:text-green-400 dark:text-green-400" />
                   <div className="flex-1">
@@ -601,7 +601,7 @@ export default function StudentSessionsPage() {
             const quiz = getPostVideoQuiz(selectedSession);
             return (
               <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
-                <div className="bg-white rounded-xl max-w-lg w-full p-8 mx-4">
+                <div className="bg-white rounded-xl max-w-lg w-full p-8 mx-4 dark:bg-slate-800">
                   <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><FileText size={32} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" /></div>
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white text-center mb-2">Post-Video Quiz</h2>
                   <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-center mb-6">Test your understanding with this short quiz based on the lesson.</p>

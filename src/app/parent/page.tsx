@@ -192,7 +192,7 @@ useEffect(() => {
               ) : (
                 <div className="space-y-2">
                   {recentActivity.map((a, i) => (
-                    <Link key={i} href={a.href} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
+                    <Link key={i} href={a.href} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800 transition-colors dark:hover:bg-slate-700">
                       <div className={`w-8 h-8 ${activityBg(a.icon)} rounded-lg flex items-center justify-center flex-shrink-0`}>{activityIcon(a.icon)}</div>
                       <div className="flex-1 min-w-0"><p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 truncate">{a.label}</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{new Date(a.time).toLocaleDateString()}</p></div>
                       <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />

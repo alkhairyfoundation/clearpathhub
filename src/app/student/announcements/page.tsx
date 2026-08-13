@@ -75,7 +75,7 @@ export default function StudentAnnouncementsPage() {
     <DashboardLayout title="Announcements" subtitle="School updates and important notices">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Announcements</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">School updates and important notices</p>
@@ -84,20 +84,20 @@ export default function StudentAnnouncementsPage() {
 
         <div className="flex flex-wrap gap-2">
           {['all', 'urgent', 'high', 'normal'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${filter === f ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>{f}</button>
+            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${filter === f ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:hover:bg-slate-700'}`}>{f}</button>
           ))}
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent" /></div>
         ) : filtered.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 text-center"><Bell className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No announcements found</p></div>
+          <div className="bg-white rounded-xl p-12 text-center dark:bg-slate-800"><Bell className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No announcements found</p></div>
         ) : (
           <div className="space-y-4">
             {filtered.map(ann => {
               const short = ann.content && ann.content.length > 120;
               return (
-                <div key={ann.id} className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
+                <div key={ann.id} className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow dark:bg-slate-800">
                   <div className="p-5">
                     <div className="flex items-start gap-4">
                       <div className="shrink-0 mt-1">{getIcon(ann.priority || 'normal')}</div>
@@ -143,7 +143,7 @@ export default function StudentAnnouncementsPage() {
         {/* Full Message Modal */}
         {selectedAnn && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedAnn(null)}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col dark:bg-slate-800" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between p-5 border-b shrink-0">
                 <div className="flex items-center gap-3">
                   {getIcon(selectedAnn.priority || 'normal')}
@@ -154,7 +154,7 @@ export default function StudentAnnouncementsPage() {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => setSelectedAnn(null)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg shrink-0"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                <button onClick={() => setSelectedAnn(null)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0 dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-6 overflow-y-auto">
                 {selectedAnn.content && (

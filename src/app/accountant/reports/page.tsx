@@ -87,7 +87,7 @@ export default function AccountantReportsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
             <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Financial Reports</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Comprehensive financial analytics and export</p></div>
           </div>
           <button onClick={downloadPDF} className="btn-outline flex items-center gap-2"><Download size={16} />Export PDF</button>
@@ -130,7 +130,7 @@ export default function AccountantReportsPage() {
                 <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden sm:table-cell">Description</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Amount</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden md:table-cell">Due Date</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Status</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {invoices.map(inv => (
-                    <tr key={inv.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                    <tr key={inv.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                       <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{inv.student?.first_name} {inv.student?.last_name}</td>
                       <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden sm:table-cell">{inv.description || 'School Fees'}</td>
                       <td className="py-3 px-4 font-semibold">&#8358;{inv.amount?.toLocaleString()}</td>
@@ -154,7 +154,7 @@ export default function AccountantReportsPage() {
                 <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Description</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Amount</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden sm:table-cell">Method</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Date</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {transactions.map(tx => (
-                    <tr key={tx.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                    <tr key={tx.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                       <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{tx.description || 'Payment'}</td>
                       <td className="py-3 px-4 font-semibold text-green-600 dark:text-green-400 dark:text-green-400">+&#8358;{tx.amount?.toLocaleString()}</td>
                       <td className="py-3 px-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 hidden sm:table-cell capitalize">{tx.payment_method || 'cash'}</td>

@@ -82,11 +82,11 @@ export default function StudentAnalyticsPage({ params }: { params: { id: string 
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4 flex-wrap">
-          <Link href="/admin/analytics" className="p-2 hover:bg-slate-100 rounded-lg"><ArrowLeft size={20} className="text-slate-600" /></Link>
+          <Link href="/admin/analytics" className="p-2 hover:bg-slate-100 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" /></Link>
           <div className="flex items-center gap-3 flex-1">
             <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center"><User size={20} className="text-primary-600" /></div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">{p.first_name} {p.last_name}</h1>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{p.first_name} {p.last_name}</h1>
               <p className="text-xs text-slate-500">{p.class_name || 'No class'} &middot; {p.admission_number || 'No ID'} &middot; Level {p.level} &middot; {p.total_xp} XP</p>
             </div>
           </div>
@@ -117,12 +117,12 @@ export default function StudentAnalyticsPage({ params }: { params: { id: string 
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto">
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl overflow-x-auto dark:bg-slate-700">
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ' + (activeTab === tab.id ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-600 hover:text-slate-800')}
+              className={'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ' + (activeTab === tab.id ? 'bg-white text-primary-600 shadow-sm dark:bg-slate-800' : 'text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200')}
             >{<tab.icon size={14} />} {tab.label}</button>
           ))}
         </div>

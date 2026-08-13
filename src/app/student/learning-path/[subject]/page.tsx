@@ -91,11 +91,11 @@ export default function SubjectLearningPathPage() {
     <DashboardLayout title={subject?.name || 'Subject'} subtitle={`${subject?.class?.name || ''} • Learning Path`}>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student/learning-path" className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <Link href="/student/learning-path" className="p-2 hover:bg-slate-100 rounded-lg dark:hover:bg-slate-700">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{subject?.name}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{subject?.name}</h1>
             <p className="text-slate-500 mt-1">{subject?.code} • {subject?.class?.name} • {topics.length} topics</p>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function SubjectLearningPathPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-slate-900 truncate">{topicName}</h3>
+                      <h3 className="font-bold text-slate-900 truncate dark:text-slate-100">{topicName}</h3>
                       {progress.isFullyMastered && <CheckCircle size={16} className="text-emerald-500 shrink-0" />}
                       {progress.needsIntervention && <AlertCircle size={16} className="text-red-500 shrink-0" />}
                     </div>
@@ -149,7 +149,7 @@ export default function SubjectLearningPathPage() {
                               isCompleted ? 'bg-emerald-100' :
                               needsIntervention ? 'bg-red-100' :
                               isUnlocked ? 'bg-amber-100' :
-                              'bg-slate-100'
+                              'bg-slate-100 dark:bg-slate-700'
                             }`}
                           >
                             {isCompleted ? <CheckCircle size={12} className="text-emerald-600" /> :
@@ -172,7 +172,7 @@ export default function SubjectLearningPathPage() {
                 </div>
 
                 {/* Progress bar */}
-                <div className="w-full bg-slate-100 rounded-full h-1 mt-3">
+                <div className="w-full bg-slate-100 rounded-full h-1 mt-3 dark:bg-slate-700">
                   <div
                     className="bg-primary-500 h-1 rounded-full transition-all"
                     style={{ width: `${(progress.completedStages / progress.totalStages) * 100}%` }}

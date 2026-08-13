@@ -119,7 +119,7 @@ export default function TeacherAttendancePage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
@@ -130,22 +130,22 @@ export default function TeacherAttendancePage() {
         </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
           <label className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2 block">Date</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
           <label className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2 block">Class</label>
           <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="input">
             <option value="">Select Class</option>
             {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
           <label className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2 block">Students</label>
           <div className="flex items-center gap-2"><Users size={20} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /><span className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{students.length}</span></div>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
           <label className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2 block">Present</label>
           <div className="flex items-center gap-2"><CheckCircle size={20} className="text-green-600 dark:text-green-400 dark:text-green-400" /><span className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{presentCount}</span></div>
         </div>
@@ -154,7 +154,7 @@ export default function TeacherAttendancePage() {
       {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
       {selectedClass && (
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">
               {classes.find(c => c.id === selectedClass)?.name} - {new Date(date).toLocaleDateString()}
@@ -201,7 +201,7 @@ export default function TeacherAttendancePage() {
                               ? s === 'present' ? 'bg-green-600 text-white'
                               : s === 'absent' ? 'bg-red-600 text-white'
                               : 'bg-yellow-500 text-white'
-                              : 'bg-gray-200 text-gray-600 dark:text-slate-400 dark:text-slate-400 hover:bg-gray-300'
+                              : 'bg-gray-200 text-gray-600 dark:text-slate-400 hover:bg-gray-300 dark:bg-slate-600'
                           }`}
                         >
                           {s === 'present' ? 'Present' : s === 'late' ? 'Late' : 'Absent'}

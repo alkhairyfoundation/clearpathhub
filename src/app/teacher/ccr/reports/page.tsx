@@ -62,7 +62,7 @@ export default function TeacherCcrReports() {
           <Link
             key={s.id}
             href={`/parent/ccr/report?child=${s.profile_id}`}
-            className="block bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4 hover:border-primary-300 transition-all"
+            className="block bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:border-primary-300 transition-all dark:bg-slate-800"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 flex items-center justify-center">

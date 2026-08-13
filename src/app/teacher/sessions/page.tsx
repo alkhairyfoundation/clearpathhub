@@ -414,13 +414,13 @@ export default function TeacherSessionsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+            <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse dark:bg-slate-800">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4 dark:bg-slate-600"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/3 dark:bg-slate-600"></div>
             </div>
           ))
         ) : filtered.length === 0 ? (
-          <div className="col-span-full bg-white rounded-xl shadow-md p-12 text-center">
+          <div className="col-span-full bg-white rounded-xl shadow-md p-12 text-center dark:bg-slate-800">
             <FileVideo className="mx-auto text-gray-400 mb-4" size={48} />
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No video lessons found</p>
             <button onClick={() => setShowModal(true)} className="btn-primary mt-4">Add First Lesson</button>
@@ -430,7 +430,7 @@ export default function TeacherSessionsPage() {
             const youtubeId = session.video_type === 'youtube' ? extractYouTubeId(session.video_url || '') : null;
             const hasCheckpoint = session.quiz && session.quiz.length > 0;
             return (
-              <div key={session.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={session.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow dark:bg-slate-800">
                 {youtubeId ? (
                   <div className="relative pt-[56.25%] bg-gray-900">
                     <img
@@ -460,10 +460,10 @@ export default function TeacherSessionsPage() {
                     )}
                   </div>
                   <div className="flex gap-1 mt-3">
-                    <button onClick={() => openEditModal(session)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                    <button onClick={() => openEditModal(session)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                       <Edit size={16} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
                     </button>
-                    <button onClick={() => handleDelete(session.id)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                    <button onClick={() => handleDelete(session.id)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                       <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />
                     </button>
                   </div>
@@ -478,10 +478,10 @@ export default function TeacherSessionsPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10 dark:bg-slate-800">
               <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">{editingSession ? 'Edit' : 'New'} Video Lesson</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
             </div>
             <div className="p-6 space-y-6">
               <div>
@@ -641,7 +641,7 @@ export default function TeacherSessionsPage() {
                               className="input"
                               placeholder="e.g., photosynthesis"
                             />
-                            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Use <code className="bg-slate-200 px-1 rounded">___</code> in the question text to mark the blank.</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Use <code className="bg-slate-200 px-1 rounded dark:bg-slate-600">___</code> in the question text to mark the blank.</p>
                           </div>
                         )}
 

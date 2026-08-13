@@ -675,12 +675,12 @@ export default function TestReportPage({ params }: { params: { attemptId: string
                   <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${
                     evt.severity === 'high' ? 'bg-red-50 border border-red-200' :
                     evt.severity === 'medium' ? 'bg-amber-50 border border-amber-200' :
-                    'bg-slate-50 border border-slate-200'
+                    'bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700'
                   }`}>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       evt.severity === 'high' ? 'bg-red-200' :
                       evt.severity === 'medium' ? 'bg-amber-200' :
-                      'bg-slate-200'
+                      'bg-slate-200 dark:bg-slate-600'
                     }`}>
                       {evt.event_type === 'tab_switch' ? <AlertTriangle size={16} /> :
                        evt.event_type === 'fullscreen_exit' ? <XCircle size={16} /> :
@@ -694,7 +694,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
                       <p className={`text-sm font-medium ${
                         evt.severity === 'high' ? 'text-red-700' :
                         evt.severity === 'medium' ? 'text-amber-700' :
-                        'text-slate-700'
+                        'text-slate-700 dark:text-slate-300'
                       }`}>
                         {evt.event_type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
                       </p>
@@ -707,7 +707,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
                     <span className={`text-xs font-medium px-2 py-0.5 rounded ${
                       evt.severity === 'high' ? 'bg-red-200 text-red-700' :
                       evt.severity === 'medium' ? 'bg-amber-200 text-amber-700' :
-                      'bg-slate-200 text-slate-600'
+                      'bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-400'
                     }`}>
                       {evt.severity}
                     </span>
@@ -718,7 +718,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
             <div className="mt-4 flex items-center gap-4 text-xs text-slate-400">
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-100 inline-block"></span> High severity</span>
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-100 inline-block"></span> Medium severity</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-slate-100 inline-block"></span> Low severity</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-slate-100 inline-block dark:bg-slate-700"></span> Low severity</span>
             </div>
           </div>
         )}

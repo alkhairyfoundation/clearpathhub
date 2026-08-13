@@ -115,7 +115,7 @@ export default function AdminEvaluationPage() {
     <DashboardLayout title="Teacher Evaluation" subtitle="Assign tasks, evaluate performance, and track progress">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Teacher Evaluation</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Assign tasks, evaluate performance, and track progress</p>
@@ -139,7 +139,7 @@ export default function AdminEvaluationPage() {
       <div className="card">
         <div className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg p-1">
           {(['tasks', 'evaluations', 'leaderboard'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-primary-600 dark:text-primary-400 dark:text-primary-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}>
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-primary-600 dark:text-primary-400 shadow-sm dark:bg-slate-800' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-300'}`}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
@@ -202,9 +202,9 @@ export default function AdminEvaluationPage() {
             </div>
             {teacherScores.length === 0 ? <p className="text-center text-slate-500 dark:text-slate-400 dark:text-slate-400 py-8">No task data available</p> :
             teacherScores.map((teacher, index) => (
-              <div key={teacher.id} className={`flex items-center justify-between p-4 rounded-xl border ${index === 0 ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40' : index === 1 ? 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-slate-200 dark:border-slate-700 dark:border-slate-700' : index === 2 ? 'bg-orange-50 dark:bg-orange-900/20 dark:bg-orange-900/20 border-orange-200' : 'bg-white border-slate-100 dark:border-slate-700 dark:border-slate-700'}`}>
+              <div key={teacher.id} className={`flex items-center justify-between p-4 rounded-xl border ${index === 0 ? 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40' : index === 1 ? 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-slate-200 dark:border-slate-700 dark:border-slate-700' : index === 2 ? 'bg-orange-50 dark:bg-orange-900/20 dark:bg-orange-900/20 border-orange-200' : 'bg-white border-slate-100 dark:border-slate-700 dark:bg-slate-800'}`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-amber-400 text-white' : index === 1 ? 'bg-slate-400 text-white' : index === 2 ? 'bg-orange-400 text-white' : 'bg-slate-200 text-slate-600 dark:text-slate-400 dark:text-slate-400'}`}>{index + 1}</div>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-amber-400 text-white' : index === 1 ? 'bg-slate-400 text-white' : index === 2 ? 'bg-orange-400 text-white' : 'bg-slate-200 text-slate-600 dark:text-slate-400 dark:bg-slate-600'}`}>{index + 1}</div>
                   <div><p className="font-semibold text-slate-900 dark:text-white dark:text-white">{teacher.name}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{teacher.tasksCompleted}/{teacher.totalTasks} tasks graded</p></div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -223,8 +223,8 @@ export default function AdminEvaluationPage() {
 
       {showTaskModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Assign Task</h3><button onClick={() => setShowTaskModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button></div>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800"><h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Assign Task</h3><button onClick={() => setShowTaskModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button></div>
             <div className="p-5 space-y-4">
               <div><label className="label">Teacher</label><select value={formData.teacher_id} onChange={(e) => setFormData({ ...formData, teacher_id: e.target.value })} className="input"><option value="">Select Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
               <div><label className="label">Task Type</label><select value={formData.task_type} onChange={(e) => setFormData({ ...formData, task_type: e.target.value })} className="input"><option value="reading">Reading</option><option value="study">Study</option><option value="project">Project</option><option value="research">Research</option><option value="other">Other</option></select></div>
@@ -232,19 +232,19 @@ export default function AdminEvaluationPage() {
               <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={3} /></div>
               <div><label className="label">Due Date</label><input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} className="input" /></div>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white sticky bottom-0"><button onClick={() => setShowTaskModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateTask} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Assigning...' : 'Assign Task'}</button></div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 bg-white sticky bottom-0 dark:bg-slate-800"><button onClick={() => setShowTaskModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateTask} disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Assigning...' : 'Assign Task'}</button></div>
           </div>
         </div>
       )}
 
       {showEvalModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">New Evaluation</h3><button onClick={() => setShowEvalModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button></div>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800"><h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">New Evaluation</h3><button onClick={() => setShowEvalModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button></div>
             <div className="p-5 space-y-4">
               <div><label className="label">Teacher</label><select value={selectedTeacher?.id || ''} onChange={(e) => setSelectedTeacher(teachers.find(t => t.id === e.target.value))} className="input"><option value="">Select Teacher</option>{teachers.map(t => <option key={t.id} value={t.id}>{t.first_name} {t.last_name}</option>)}</select></div>
             </div>
-            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white sticky bottom-0"><button onClick={() => setShowEvalModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateEvaluation} disabled={saving || !selectedTeacher} className="btn-primary disabled:opacity-50">{saving ? 'Creating...' : 'Create Evaluation'}</button></div>
+            <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 bg-white sticky bottom-0 dark:bg-slate-800"><button onClick={() => setShowEvalModal(false)} className="btn-ghost">Cancel</button><button onClick={handleCreateEvaluation} disabled={saving || !selectedTeacher} className="btn-primary disabled:opacity-50">{saving ? 'Creating...' : 'Create Evaluation'}</button></div>
           </div>
         </div>
         )}

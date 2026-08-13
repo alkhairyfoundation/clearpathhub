@@ -165,7 +165,7 @@ export default function AdminGrowthFrameworksPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
@@ -206,7 +206,7 @@ export default function AdminGrowthFrameworksPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {frameworks.map((fw: any) => (
-                  <tr key={fw.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                  <tr key={fw.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                     <td className="py-3 px-4 text-sm font-medium text-slate-900 dark:text-white dark:text-white">{fw.class_level}</td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{fw.session?.name || '—'}</td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{fw.term?.name || '—'}</td>
@@ -224,10 +224,10 @@ export default function AdminGrowthFrameworksPage() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-5 border-b flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+            <div className="p-5 border-b flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
               <h3 className="text-lg font-bold">{editing ? 'Edit Framework' : 'Create Framework'}</h3>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
             </div>
             <div className="p-5 space-y-6">
               <div className="grid grid-cols-3 gap-4">

@@ -64,7 +64,7 @@ export default function LeaderboardPage() {
     <DashboardLayout title="Leaderboard" subtitle="Compete and grow with your peers">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
               <Trophy size={20} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" />
@@ -83,7 +83,7 @@ export default function LeaderboardPage() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                activeTab === tab.id ? 'bg-white text-primary-600 dark:text-primary-400 dark:text-primary-400 shadow-sm' : 'text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 dark:text-slate-200'
+                activeTab === tab.id ? 'bg-white text-primary-600 dark:text-primary-400 shadow-sm dark:bg-slate-800' : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 dark:hover:text-slate-200'
               }`}
             >
               {tab.icon} {tab.label}
@@ -142,7 +142,7 @@ export default function LeaderboardPage() {
                 <div className="flex items-center gap-3">
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                     i === 0 ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300' :
-                    i === 1 ? 'bg-slate-200 text-slate-600 dark:text-slate-400 dark:text-slate-400' :
+                    i === 1 ? 'bg-slate-200 text-slate-600 dark:text-slate-400 dark:bg-slate-600' :
                     i === 2 ? 'bg-orange-100 text-orange-700' :
                     'text-slate-400 dark:text-slate-500 dark:text-slate-500'
                   }`}>{i + 1}</span>

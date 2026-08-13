@@ -98,7 +98,7 @@ export default function StudentPortfolioPage() {
     <DashboardLayout title="My Portfolio" subtitle="Your growth journey this term">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
@@ -137,7 +137,7 @@ export default function StudentPortfolioPage() {
                 const levelKey = level as keyof typeof RUBRIC_COLORS;
                 return (
                   <div key={gs.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
-                    <div className={`w-2 h-2 rounded-full ${level ? RUBRIC_COLORS[levelKey] || 'bg-slate-300' : 'bg-slate-300'}`} />
+                    <div className={`w-2 h-2 rounded-full ${level ? RUBRIC_COLORS[levelKey] || 'bg-slate-300 dark:bg-slate-500' : 'bg-slate-300 dark:bg-slate-500'}`} />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{gs.skill?.name || 'Skill'}</p>
                     </div>

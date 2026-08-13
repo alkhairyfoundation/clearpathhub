@@ -69,7 +69,7 @@ export default function RetentionPage() {
     <DashboardLayout title="Knowledge Retention" subtitle="Long-term learning verification">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Knowledge Retention</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Rechecks at 3, 7, 14, and 30 days after mastery</p>
@@ -103,7 +103,7 @@ export default function RetentionPage() {
           {(['all', 'due', 'passed', 'failed'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize ${
-                filter === f ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
+                filter === f ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
               }`}>
               {f}
               {f === 'due' && stats.due > 0 && <span className="ml-1">({stats.due})</span>}
@@ -175,7 +175,7 @@ export default function RetentionPage() {
 
                   {/* Progress bar for retention */}
                   <div className="mt-3 flex items-center gap-2">
-                    <div className="flex-1 bg-slate-200 rounded-full h-1.5">
+                    <div className="flex-1 bg-slate-200 rounded-full h-1.5 dark:bg-slate-600">
                       <div
                         className={`h-1.5 rounded-full ${check.passed === true ? 'bg-emerald-500' : check.passed === false ? 'bg-red-500' : 'bg-blue-500'}`}
                         style={{ width: `${Math.min(check.check_days / 30 * 100, 100)}%` }}
@@ -202,7 +202,7 @@ export default function RetentionPage() {
               { days: 14, label: 'Extended', desc: 'Two-week knowledge check' },
               { days: 30, label: 'Long-term', desc: 'Month-long memory verification' },
             ].map(item => (
-              <div key={item.days} className="text-center p-3 bg-white rounded-lg">
+              <div key={item.days} className="text-center p-3 bg-white rounded-lg dark:bg-slate-800">
                 <div className="w-8 h-8 mx-auto bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center mb-1">
                   <span className="text-sm font-bold text-primary-700 dark:text-primary-300 dark:text-primary-300">{item.days}d</span>
                 </div>
@@ -211,7 +211,7 @@ export default function RetentionPage() {
               </div>
             ))}
           </div>
-          <div className="mt-3 p-3 bg-white bg-opacity-50 rounded-lg text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">
+          <div className="mt-3 p-3 bg-white bg-opacity-50 rounded-lg text-xs text-slate-600 dark:text-slate-400 dark:bg-slate-800">
             <p className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">If you score below 80% on a retention check:</p>
             <ul className="list-disc list-inside mt-1 space-y-0.5">
               <li>The topic becomes active for reinforcement</li>

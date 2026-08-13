@@ -1489,7 +1489,7 @@ async function viewAnalyticsDetails(record: any) {
     <DashboardLayout title="Entrance Exams" subtitle="Manage entrance exams and admissions">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div className="flex-1">
@@ -1517,7 +1517,7 @@ async function viewAnalyticsDetails(record: any) {
     <button 
       key={tab} 
       onClick={() => setActiveTab(tab)} 
-      className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-primary-600 dark:text-primary-400 dark:text-primary-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}
+      className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-primary-600 dark:text-primary-400 shadow-sm dark:bg-slate-800' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-300'}`}
     >
       {tab === 'questionBank' ? 'Question Bank' : tab === 'analytics' ? 'Analytics' : tab.charAt(0).toUpperCase() + tab.slice(1)}
     </button>
@@ -1539,7 +1539,7 @@ async function viewAnalyticsDetails(record: any) {
               ) : (
                 <div className="space-y-3">
                   {filteredApps.map(app => (
-                    <div key={app.id} className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 transition-colors">
+                    <div key={app.id} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:bg-slate-700 transition-colors dark:hover:bg-slate-700">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
@@ -1557,7 +1557,7 @@ async function viewAnalyticsDetails(record: any) {
                           <button onClick={() => openApplicationModal(app)} className="btn-outline text-sm py-2">Review</button>
                           <div className="flex gap-1">
                             <button onClick={() => handleDeleteApplication(app.id)} disabled={deleting === app.id} className="p-2 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg text-red-500 dark:text-red-400 dark:text-red-400 disabled:opacity-50" title="Delete Application">{deleting === app.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
-                            {app.status !== 'banned' && <button onClick={() => handleBanApplication(app.id, app.email)} disabled={deleting === app.id} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 dark:text-slate-400 disabled:opacity-50" title="Ban Applicant"><XCircle size={14} /></button>}
+                            {app.status !== 'banned' && <button onClick={() => handleBanApplication(app.id, app.email)} disabled={deleting === app.id} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg text-slate-500 dark:text-slate-400 disabled:opacity-50 dark:hover:bg-slate-700" title="Ban Applicant"><XCircle size={14} /></button>}
                           </div>
                         </div>
                       </div>
@@ -1581,9 +1581,9 @@ async function viewAnalyticsDetails(record: any) {
                       <div><h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{exam.title}</h3><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{exam.level} • {exam.academic_year}</p></div>
                       <div className="flex gap-1">
                         {(!exam.questions || exam.questions.length === 0) && <button onClick={() => handlePopulateQuestions(exam)} className="p-2 hover:bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 rounded-lg text-amber-600 dark:text-amber-400 dark:text-amber-400" title="Auto-populate from Question Bank"><Download size={16} /></button>}
-                        <button onClick={() => { setSelectedExam(exam); setShowQuestionModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title="Add Questions"><Hash size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
-                        <button onClick={() => { setSelectedExam(exam); setShowCodeModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title="Generate Codes"><QrCode size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
-                        <button onClick={() => handleDeleteExam(exam.id)} disabled={deleting === exam.id} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">{deleting === exam.id ? <Loader2 size={16} className="animate-spin text-red-500 dark:text-red-400 dark:text-red-400" /> : <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />}</button>
+                        <button onClick={() => { setSelectedExam(exam); setShowQuestionModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700" title="Add Questions"><Hash size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                        <button onClick={() => { setSelectedExam(exam); setShowCodeModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700" title="Generate Codes"><QrCode size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                        <button onClick={() => handleDeleteExam(exam.id)} disabled={deleting === exam.id} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">{deleting === exam.id ? <Loader2 size={16} className="animate-spin text-red-500 dark:text-red-400 dark:text-red-400" /> : <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />}</button>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">
@@ -1627,7 +1627,7 @@ async function viewAnalyticsDetails(record: any) {
                    <div className="space-y-3">
                      {filteredQuestionBank.map(q => (
                        <div key={q.id} className="p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg border-l-4 border-primary-500">
-                         <div className="flex items-start justify-between mb-2"><div className="flex-1"><h3 className="text-lg font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</h3><div className="flex items-center gap-3 mt-1 text-sm"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 dark:text-primary-200">{q.subject}</span><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 dark:text-primary-200">{q.level}</span><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${q.difficulty_level === 'VERY_HARD' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-800 dark:text-red-300 dark:text-red-300' : q.difficulty_level === 'HARD' ? 'bg-orange-100 text-orange-800' : q.difficulty_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-800'}`}>{q.difficulty_level}</span></div></div><div className="flex items-center gap-2"><button onClick={() => editQuestion(q)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button><button onClick={() => deleteQuestion(q.id)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button></div></div>
+                         <div className="flex items-start justify-between mb-2"><div className="flex-1"><h3 className="text-lg font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</h3><div className="flex items-center gap-3 mt-1 text-sm"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 dark:text-primary-200">{q.subject}</span><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 dark:text-primary-200">{q.level}</span><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${q.difficulty_level === 'VERY_HARD' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-800 dark:text-red-300 dark:text-red-300' : q.difficulty_level === 'HARD' ? 'bg-orange-100 text-orange-800' : q.difficulty_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-800'}`}>{q.difficulty_level}</span></div></div><div className="flex items-center gap-2"><button onClick={() => editQuestion(q)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button><button onClick={() => deleteQuestion(q.id)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button></div></div>
                          {q.options && q.question_type === 'MCQ' && <div className="mt-3 space-y-2">{q.options.map((opt: string, i: number) => (<div key={i} className="flex items-center gap-2 text-sm"><span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 flex items-center justify-center font-semibold text-sm">{String.fromCharCode(65 + i)}</span><span>{opt}</span>{q.correct_answer === i && <span className="ml-2 text-xs font-medium bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 dark:text-primary-200 rounded-full px-1.5">Correct</span>}</div>))}</div>}
                        </div>
                      ))}
@@ -1647,7 +1647,7 @@ async function viewAnalyticsDetails(record: any) {
                    <div className="card"><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Mastered</p><p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{analyticsSummary.masteredCount}</p></div>
                  </div>
                  {analyticsLoading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : analyticsData.length === 0 ? <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">No analytics data available</div> : (
-                   <div className="overflow-x-auto"><table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 dark:divide-slate-700"><thead><tr className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800"><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Subject</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Score</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Level</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Actions</th></tr></thead><tbody className="divide-y divide-slate-200 dark:divide-slate-700 dark:divide-slate-700">{analyticsData.map(record => (<tr key={record.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800"><td className="px-6 py-4 whitespace-nowrap"><p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{record.student_name}</p></td><td className="px-6 py-4 whitespace-nowrap text-sm">{record.subject}</td><td className="px-6 py-4 whitespace-nowrap"><p className={`text-sm font-medium ${record.score >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{record.score}%</p></td><td className="px-6 py-4 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30">{record.mastery_level}</span></td><td className="px-6 py-4 whitespace-nowrap text-sm"><div className="flex space-x-2"><button onClick={() => viewAnalyticsDetails(record)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Eye size={16} /></button><button onClick={() => downloadAnalyticsReport(record.id)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Download size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></button></div></td></tr>))}</tbody></table></div>
+                   <div className="overflow-x-auto"><table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700 dark:divide-slate-700"><thead><tr className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800"><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Student</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Subject</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Score</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Level</th><th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Actions</th></tr></thead><tbody className="divide-y divide-slate-200 dark:divide-slate-700 dark:divide-slate-700">{analyticsData.map(record => (<tr key={record.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700"><td className="px-6 py-4 whitespace-nowrap"><p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{record.student_name}</p></td><td className="px-6 py-4 whitespace-nowrap text-sm">{record.subject}</td><td className="px-6 py-4 whitespace-nowrap"><p className={`text-sm font-medium ${record.score >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{record.score}%</p></td><td className="px-6 py-4 whitespace-nowrap"><span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30">{record.mastery_level}</span></td><td className="px-6 py-4 whitespace-nowrap text-sm"><div className="flex space-x-2"><button onClick={() => viewAnalyticsDetails(record)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><Eye size={16} /></button><button onClick={() => downloadAnalyticsReport(record.id)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><Download size={16} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></button></div></td></tr>))}</tbody></table></div>
                  )}
                </div>
              </div>
@@ -1657,7 +1657,7 @@ async function viewAnalyticsDetails(record: any) {
          {/* Create Exam Modal */}
          {showExamModal && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800">
                <div className="p-5 border-b flex items-center justify-between"><h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Create Exam</h3><button onClick={() => setShowExamModal(false)}><X size={20} /></button></div>
                <div className="p-5 space-y-4">
                 <div><label className="label">Title</label><input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="input" /></div>
@@ -1674,7 +1674,7 @@ async function viewAnalyticsDetails(record: any) {
         {/* Question Modal */}
         {showQuestionModal && selectedExam && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800">
               <div className="p-5 border-b flex items-center justify-between"><h3>Questions — {selectedExam.title}</h3><button onClick={() => setShowQuestionModal(false)}><X size={20} /></button></div>
               <div className="p-5 space-y-4">
                 <select value={questionData.question_type} onChange={e => resetQuestionDefaults(e.target.value)} className="input"><option value="MCQ">Multiple Choice</option><option value="TRUE_FALSE">True/False</option><option value="FILL_IN_THE_GAP">Fill Blank</option></select>
@@ -1698,14 +1698,14 @@ async function viewAnalyticsDetails(record: any) {
         {/* Code Modal */}
         {showCodeModal && selectedExam && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"><div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3>Codes — {selectedExam.title}</h3><button onClick={() => setShowCodeModal(false)}><X size={20} /></button></div><div className="p-5"><button onClick={handleGenerateCode} disabled={saving} className="btn-primary w-full mb-4">Generate Code</button>{codes.filter(c => c.exam_id === selectedExam.id).map(c => (<div key={c.id} className="flex justify-between p-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 mt-1"><code className="font-bold">{c.code}</code><span>{c.used_count}/{c.max_uses}</span></div>))}</div></div>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800"><div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800"><h3>Codes — {selectedExam.title}</h3><button onClick={() => setShowCodeModal(false)}><X size={20} /></button></div><div className="p-5"><button onClick={handleGenerateCode} disabled={saving} className="btn-primary w-full mb-4">Generate Code</button>{codes.filter(c => c.exam_id === selectedExam.id).map(c => (<div key={c.id} className="flex justify-between p-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 mt-1"><code className="font-bold">{c.code}</code><span>{c.used_count}/{c.max_uses}</span></div>))}</div></div>
           </div>
         )}
 
         {/* Bank Select Modal */}
         {showBankSelectModal && selectedExam && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800">
               <div className="p-5 border-b flex justify-between"><h3>Select from Bank</h3><button onClick={() => setShowBankSelectModal(false)}><X size={20} /></button></div>
               <div className="p-5 space-y-4"><input type="text" placeholder="Search..." value={bankSelectSearch} onChange={e => filterBankSelect(e.target.value)} className="input" />{bankSelectFiltered.map(q => (<label key={q.id} className="flex gap-2 p-2 border mt-1"><input type="checkbox" checked={selectedBankIds.has(q.id)} onChange={() => toggleBankSelect(q.id)} /><span>{q.question} ({q.level})</span></label>))}</div>
               <div className="p-5 border-t flex justify-between"><button onClick={() => setShowBankSelectModal(false)}>Cancel</button><button onClick={async () => {await handleAddQuestionsFromBank(selectedExam.id, Array.from(selectedBankIds)); setShowBankSelectModal(false);}} className="btn-primary">Add {selectedBankIds.size}</button></div>
@@ -1716,7 +1716,7 @@ async function viewAnalyticsDetails(record: any) {
          {/* Application Modal */}
          {showApplicationModal && selectedApplication && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800">
                <div className="p-5 border-b flex justify-between"><h3>Review Application</h3><button onClick={() => setShowApplicationModal(false)}><X size={20} /></button></div>
                <div className="p-5 space-y-4">
                  <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-3"><strong>{selectedApplication.first_name} {selectedApplication.last_name}</strong><br/>{selectedApplication.email} | {selectedApplication.applied_class}</div>
@@ -1733,8 +1733,8 @@ async function viewAnalyticsDetails(record: any) {
          {/* Question Bank Modal */}
          {showQuestionBankModal && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-               <div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl"><h3>{editingQuestion ? 'Edit' : 'Add'} Question</h3><button onClick={() => setShowQuestionBankModal(false)}><X size={20} /></button></div>
+             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+               <div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800"><h3>{editingQuestion ? 'Edit' : 'Add'} Question</h3><button onClick={() => setShowQuestionBankModal(false)}><X size={20} /></button></div>
                 <div className="p-5 space-y-4">
                   <textarea value={questionData.question} onChange={e => setQuestionData({...questionData, question: e.target.value})} className="input" placeholder="Question" />
                   <div className="grid grid-cols-2 gap-3">
@@ -1754,7 +1754,7 @@ async function viewAnalyticsDetails(record: any) {
                   ))}
                 </div>
                 {questionBankError && <p className="px-5 text-sm text-red-600 dark:text-red-400 dark:text-red-400 font-medium">{questionBankError}</p>}
-                <div className="p-5 border-t flex justify-end gap-2 bg-white sticky bottom-0"><button onClick={() => setShowQuestionBankModal(false)}>Cancel</button><button onClick={() => { if (!questionData.subject) { setQuestionBankError('Please select a subject'); return; } if (!questionData.topic.trim()) { setQuestionBankError('Please enter a topic'); return; } setQuestionBankError(''); addQuestionToBank(questionData); }} className="btn-primary">Save</button></div>
+                <div className="p-5 border-t flex justify-end gap-2 bg-white sticky bottom-0 dark:bg-slate-800"><button onClick={() => setShowQuestionBankModal(false)}>Cancel</button><button onClick={() => { if (!questionData.subject) { setQuestionBankError('Please select a subject'); return; } if (!questionData.topic.trim()) { setQuestionBankError('Please enter a topic'); return; } setQuestionBankError(''); addQuestionToBank(questionData); }} className="btn-primary">Save</button></div>
              </div>
            </div>
          )}
@@ -1962,8 +1962,8 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
 
                return (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-                  <div className="p-5 border-b flex justify-between items-center shrink-0 bg-white z-10 rounded-t-2xl">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col dark:bg-slate-800">
+                  <div className="p-5 border-b flex justify-between items-center shrink-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
                     <h3 className="text-lg font-bold">Analytics Details</h3>
                     <div className="flex items-center gap-2">
                       <button onClick={previewReport} className="btn-outline text-xs py-1 px-3"><FileText size={14} /> Preview</button>
@@ -1971,14 +1971,14 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                       <button onClick={() => downloadAnalyticsReport(selectedAnalytics.id)} disabled={downloadingReport === selectedAnalytics.id} className="btn-primary text-xs py-1 px-3 flex items-center gap-1">
                         {downloadingReport === selectedAnalytics.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} PDF
                       </button>
-                      <button onClick={() => setShowAnalyticsDetailModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+                      <button onClick={() => setShowAnalyticsDetailModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
                     </div>
                   </div>
 
                   {/* Tabs */}
                   <div className="flex border-b shrink-0 px-5 bg-white dark:bg-slate-800">
                     {tabs.map(tab => (
-                      <button key={tab.key} onClick={() => setAnalyticsTab(tab.key)} className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${analyticsTab === tab.key ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:text-primary-400' : 'border-transparent text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}>{tab.label}</button>
+                      <button key={tab.key} onClick={() => setAnalyticsTab(tab.key)} className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${analyticsTab === tab.key ? 'border-primary-600 text-primary-600 dark:text-primary-400 dark:text-primary-400' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-300'}`}>{tab.label}</button>
                     ))}
                   </div>
 
@@ -1991,15 +1991,15 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                           <div className="text-center"><div className={`text-3xl font-bold ${passed ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{score}%</div><p className={`text-xs font-semibold ${passed ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{passed ? 'PASSED' : 'FAILED'}</p></div>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Total Q</p><p className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{totalQ}</p></div>
-                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Correct</p><p className="text-xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{correctQ}</p></div>
-                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Wrong</p><p className="text-xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{wrongQ}</p></div>
-                          <div className="bg-white border rounded-xl p-4 text-center"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Accuracy</p><p className={`text-xl font-bold ${accuracy >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : accuracy >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{accuracy}%</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center dark:bg-slate-800"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Total Q</p><p className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{totalQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center dark:bg-slate-800"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Correct</p><p className="text-xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{correctQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center dark:bg-slate-800"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Wrong</p><p className="text-xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{wrongQ}</p></div>
+                          <div className="bg-white border rounded-xl p-4 text-center dark:bg-slate-800"><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Accuracy</p><p className={`text-xl font-bold ${accuracy >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : accuracy >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{accuracy}%</p></div>
                         </div>
-                        <div className="bg-white border rounded-xl p-4"><p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Exam Info</p>
+                        <div className="bg-white border rounded-xl p-4 dark:bg-slate-800"><p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">Exam Info</p>
                           <div className="grid grid-cols-2 gap-2 text-sm"><div><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Exam:</span> <span className="font-medium">{exam?.title || 'N/A'}</span></div><div><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Level:</span> <span className="font-medium">{exam?.level || 'N/A'}</span></div><div><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Mastery:</span> <span className="font-medium">{selectedAnalytics.mastery_level || 'N/A'}</span></div><div><span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Passing:</span> <span className="font-medium">{passingScore}%</span></div></div>
                         </div>
-                        <div className="bg-white border rounded-xl p-4"><p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Performance Insights</p>
+                        <div className="bg-white border rounded-xl p-4 dark:bg-slate-800"><p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Performance Insights</p>
                           {(() => {
                             const sorted = subjectEntries.map(([n, d]) => ({ n, p: d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0 })).filter(s => s.p > 0).sort((a, b) => b.p - a.p);
                             const weak = sorted.filter(s => s.p < 40);
@@ -2017,7 +2017,7 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                       <>
                         {subjectEntries.length > 0 ? (
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                            <div className="bg-white border rounded-xl p-4">
+                            <div className="bg-white border rounded-xl p-4 dark:bg-slate-800">
                               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-4">Subject Performance</p>
                               <div className="space-y-3">
                                 {subjectEntries.map(([subj, d]) => {
@@ -2026,14 +2026,14 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                                 })}
                               </div>
                             </div>
-                            <div className="bg-white border rounded-xl p-4">
+                            <div className="bg-white border rounded-xl p-4 dark:bg-slate-800">
                               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-4">Subject Radar</p>
                               {radarData.length >= 3 ? <ResponsiveContainer width="100%" height={280}><RadarChart data={radarData}><PolarGrid stroke="#e2e8f0" /><PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} /><Radar name="Score" dataKey="score" stroke="#1e3a5f" fill="#1e3a5f" fillOpacity={0.2} /><Tooltip formatter={(value: number) => [`${value}%`, 'Score']} /></RadarChart></ResponsiveContainer> : <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm py-8 text-center">Need 3+ subjects for radar chart</p>}
                             </div>
                           </div>
                         ) : <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm py-8 text-center">No subject data available</p>}
                         {subjectEntries.length > 0 && (
-                          <div className="bg-white border rounded-xl p-4">
+                          <div className="bg-white border rounded-xl p-4 dark:bg-slate-800">
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Subject Breakdown Table</p>
                             <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Subject</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Assessment</th></tr></thead>
                             <tbody className="divide-y divide-slate-100">{subjectEntries.map(([subj, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={subj}><td className="p-3 font-medium">{subj}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>; })}</tbody></table></div>
@@ -2046,14 +2046,14 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                     {analyticsTab === 'difficulty' && (
                       <>
                         {difficultyEntries.length > 0 && (
-                          <div className="bg-white border rounded-xl p-4">
+                          <div className="bg-white border rounded-xl p-4 dark:bg-slate-800">
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Difficulty Breakdown</p>
                             <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Difficulty</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Verdict</th></tr></thead>
                             <tbody className="divide-y divide-slate-100">{difficultyEntries.map(([diff, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={diff}><td className="p-3 font-medium">{diff}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td></tr>; })}</tbody></table></div>
                           </div>
                         )}
                         {topicEntries.length > 0 && (
-                          <div className="bg-white border rounded-xl p-4">
+                          <div className="bg-white border rounded-xl p-4 dark:bg-slate-800">
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Topic Performance</p>
                             <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Topic</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-400">Status</th></tr></thead>
                             <tbody className="divide-y divide-slate-100">{topicEntries.map(([top, d]) => { const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0; return <tr key={top}><td className="p-3 font-medium">{top}</td><td className="p-3 text-center">{d.correct}</td><td className="p-3 text-center">{d.total}</td><td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td><td className="p-3"><div className="w-20 h-2 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td><td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Strong' : pct >= 40 ? 'Moderate' : 'Weak'}</td></tr>; })}</tbody></table></div>
@@ -2067,7 +2067,7 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                     {analyticsTab === 'questions' && (
                       <>
                         {questions.length > 0 ? (
-                          <div className="bg-white border rounded-xl overflow-hidden">
+                          <div className="bg-white border rounded-xl overflow-hidden dark:bg-slate-800">
                             <div className="overflow-x-auto max-h-96 overflow-y-auto">
                               <table className="w-full text-xs">
                                 <thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 sticky top-0"><th className="p-2 text-center">#</th><th className="p-2 text-left">Subject</th><th className="p-2 text-left">Question</th><th className="p-2 text-center">Diff</th><th className="p-2 text-center">Pts</th><th className="p-2 text-center">Result</th></tr></thead>
@@ -2078,7 +2078,7 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                                       <td className="p-2 text-slate-600 dark:text-slate-400 dark:text-slate-400">{q.subject || '—'}</td>
                                       <td className="p-2 max-w-[250px]" title={q.question}><span className="truncate block">{q.question?.length > 60 ? q.question.substring(0, 57) + '...' : q.question}</span></td>
                                       <td className="p-2 text-center text-slate-500 dark:text-slate-400 dark:text-slate-400">{q.difficulty_level || '—'}</td>
-                                      <td className="p-2 text-center"><span className="inline-flex items-center gap-0.5">{Array.from({ length: q.points || 1 }).map((_, di) => <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200'}`} />)}<span className="ml-1 text-slate-400 dark:text-slate-500 dark:text-slate-500">{(q.points_earned || 0)}/{(q.points || 1)}</span></span></td>
+                                      <td className="p-2 text-center"><span className="inline-flex items-center gap-0.5">{Array.from({ length: q.points || 1 }).map((_, di) => <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200 dark:bg-slate-600'}`} />)}<span className="ml-1 text-slate-400 dark:text-slate-500 dark:text-slate-500">{(q.points_earned || 0)}/{(q.points || 1)}</span></span></td>
                                       <td className="p-2 text-center">{q.is_correct ? <Check size={14} className="text-green-500 inline" /> : <X size={14} className="text-red-500 dark:text-red-400 dark:text-red-400 inline" />}</td>
                                     </tr>
                                   ))}
@@ -2098,7 +2098,7 @@ ${pathwayBars?`<div class="section-title">Recommended Academic Pathways</div>${p
                           <p className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 leading-relaxed">{buildRecsText()}</p>
                         </div>
                         {pathwayRecs.length > 0 && (
-                          <div className="bg-white border rounded-xl p-4">
+                          <div className="bg-white border rounded-xl p-4 dark:bg-slate-800">
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-3">Recommended Academic Pathways</p>
                             <div className="space-y-3">
                               {pathwayRecs.map((pr, i) => (

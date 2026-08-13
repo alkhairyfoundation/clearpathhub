@@ -89,7 +89,7 @@ export default function AdminStaffAttendanceDashboard() {
     <DashboardLayout title="Staff Attendance Records" subtitle="View and manage staff attendance by date">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
@@ -132,7 +132,7 @@ export default function AdminStaffAttendanceDashboard() {
               {filteredStaff.length === 0 ? (
                 <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400"><UserCheck size={32} className="mx-auto mb-2 opacity-50" /><p>No staff found</p></div>
               ) : filteredStaff.map(s => (
-                <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 transition-colors">
+                <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:bg-slate-700 transition-colors dark:hover:bg-slate-700">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0 bg-gradient-to-br from-primary-600 to-primary-700">
                       {s.first_name?.[0]}{s.last_name?.[0]}
@@ -159,7 +159,7 @@ export default function AdminStaffAttendanceDashboard() {
                             ? st === 'present' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 border-green-300'
                               : st === 'late' ? 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300 border-amber-300'
                               : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400 border-red-300'
-                            : 'bg-white text-slate-400 dark:text-slate-500 dark:text-slate-500 border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600'
+                            : 'bg-white text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800'
                         } ${updating === s.id ? 'opacity-50' : ''}`}
                       >
                         {updating === s.id ? <Loader2 size={12} className="animate-spin" /> : st}

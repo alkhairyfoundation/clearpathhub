@@ -123,12 +123,12 @@ export default function ParentPaymentsPage() {
     <DashboardLayout title="Payments & Fees" subtitle="Track school fees and payment history">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div className="flex-1"><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Payments & Fees</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Track school fees and payment history</p></div>
         </div>
 
         {children.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 text-center"><DollarSign className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
+          <div className="bg-white rounded-xl p-12 text-center dark:bg-slate-800"><DollarSign className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -255,10 +255,10 @@ export default function ParentPaymentsPage() {
 
         {uploadModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
               <div className="flex items-center justify-between p-6 border-b">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Upload Payment Receipt</h2>
-                <button onClick={() => { setUploadModal(null); setUploadFile_(null); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+                <button onClick={() => { setUploadModal(null); setUploadFile_(null); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
                 <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
@@ -302,10 +302,10 @@ export default function ParentPaymentsPage() {
 
         {previewUrl && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setPreviewUrl(null)}>
-            <div className="bg-white rounded-xl max-w-2xl max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-xl max-w-2xl max-h-[90vh] overflow-auto dark:bg-slate-800" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="font-semibold">Receipt Preview</h3>
-                <button onClick={() => setPreviewUrl(null)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
+                <button onClick={() => setPreviewUrl(null)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><X size={20} /></button>
               </div>
               <img src={previewUrl} alt="Receipt" className="w-full" />
             </div>

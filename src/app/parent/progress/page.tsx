@@ -302,7 +302,7 @@ function ProgressContent() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
             <div>
               <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Analytics</h1>
               <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">Comprehensive performance analysis</p>
@@ -326,15 +326,15 @@ function ProgressContent() {
         </div>
 
         {!child ? (
-          <div className="bg-white rounded-xl p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
+          <div className="bg-white rounded-xl p-12 text-center dark:bg-slate-800"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
         ) : (
           <>
             {/* Time Period Selector */}
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={() => setSelectedPeriod('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'all' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>All Time</button>
-              <button onClick={() => setSelectedPeriod('current_term')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'current_term' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>This Term</button>
-              <button onClick={() => setSelectedPeriod('last_term')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'last_term' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>Last Term</button>
-              <button onClick={() => setSelectedPeriod('custom')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'custom' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:border-slate-700'}`}>Custom Range</button>
+              <button onClick={() => setSelectedPeriod('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'all' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:hover:bg-slate-700'}`}>All Time</button>
+              <button onClick={() => setSelectedPeriod('current_term')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'current_term' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:hover:bg-slate-700'}`}>This Term</button>
+              <button onClick={() => setSelectedPeriod('last_term')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'last_term' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:hover:bg-slate-700'}`}>Last Term</button>
+              <button onClick={() => setSelectedPeriod('custom')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedPeriod === 'custom' ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 dark:hover:bg-slate-700'}`}>Custom Range</button>
               {selectedPeriod === 'custom' && (
                 <div className="flex items-center gap-2">
                   <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="input py-1.5 text-sm" />
@@ -552,7 +552,7 @@ function ProgressContent() {
                         <div>
                           <p className="text-sm font-semibold text-amber-800 mb-2">Exam Monitoring Alerts</p>
                           <div className="space-y-2">{suspiciousAttempts.slice(0, 5).map(a => (
-                            <div key={a.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40">
+                            <div key={a.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-amber-200 dark:border-amber-900/40 dark:bg-slate-800">
                               <div><p className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">{a.test?.title || 'Test'}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(a.completed_at || a.started_at).toLocaleDateString()}</p></div>
                               <div className="flex gap-2 text-xs">
                                 {a.tab_switches > 0 && <span className="text-amber-700 dark:text-amber-300 dark:text-amber-300">{a.tab_switches} tab switches</span>}

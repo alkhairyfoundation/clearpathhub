@@ -370,7 +370,7 @@ export default function StudentPracticePage() {
 
           <div className="flex gap-3 justify-center">
             <button onClick={restartPractice} className="btn-primary flex items-center gap-2"><RotateCcw size={16} /> Practice Again</button>
-            <Link href="/student/practice/history" className="px-4 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-2"><BarChart3 size={16} /> History</Link>
+            <Link href="/student/practice/history" className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 flex items-center gap-2 dark:hover:bg-slate-700"><BarChart3 size={16} /> History</Link>
           </div>
         </div>
 
@@ -407,13 +407,13 @@ export default function StudentPracticePage() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Progress Bar */}
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400">Progress</span>
               <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{Math.round((currentIdx / questions.length) * 100)}%</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-2">
+            <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600">
               <div className="bg-primary-600 h-2 rounded-full transition-all" style={{ width: `${(currentIdx / questions.length) * 100}%` }} />
             </div>
           </div>

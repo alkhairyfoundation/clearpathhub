@@ -70,7 +70,7 @@ export default function AccountabilityPage() {
     <DashboardLayout title="Accountability" subtitle="Daily accountability score">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">Daily Accountability</h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Track your daily performance across all dimensions</p>
@@ -165,7 +165,7 @@ export default function AccountabilityPage() {
           ) : (
             <div className="space-y-1">
               {history.map((day: any) => (
-                <div key={day.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                <div key={day.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                   <div className="flex items-center gap-2">
                     {getTrendIcon(day.total_score)}
                     <span className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">
@@ -173,7 +173,7 @@ export default function AccountabilityPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-20 h-1.5 bg-slate-200 rounded-full">
+                    <div className="w-20 h-1.5 bg-slate-200 rounded-full dark:bg-slate-600">
                       <div
                         className="h-1.5 rounded-full"
                         style={{ width: `${day.total_score}%`, backgroundColor: getAccountabilityColor(day.total_score).hex }}

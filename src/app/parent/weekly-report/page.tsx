@@ -151,16 +151,16 @@ function WeeklyReportContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Weekly Report</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{child ? `${child.profile?.first_name} ${child.profile?.last_name}` : ''}</p></div>
         </div>
         {report && <button onClick={downloadPDF} className="btn-outline flex items-center gap-2"><Download size={16} />Download PDF</button>}
       </div>
 
       {!child ? (
-        <div className="bg-white rounded-xl p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
+        <div className="bg-white rounded-xl p-12 text-center dark:bg-slate-800"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
       ) : !report ? (
-        <div className="bg-white rounded-xl p-12 text-center"><Calendar className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No report available for this week</p></div>
+        <div className="bg-white rounded-xl p-12 text-center dark:bg-slate-800"><Calendar className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No report available for this week</p></div>
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

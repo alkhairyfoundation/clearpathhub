@@ -266,10 +266,10 @@ export default function PaymentUploadsPage() {
 
         {previewUrl && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setPreviewUrl(null)}>
-            <div className="bg-white rounded-xl max-w-2xl max-h-[90vh] overflow-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-xl max-w-2xl max-h-[90vh] overflow-auto dark:bg-slate-800" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="font-semibold">Receipt Preview</h3>
-                <button onClick={() => setPreviewUrl(null)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><XCircle size={20} /></button>
+                <button onClick={() => setPreviewUrl(null)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><XCircle size={20} /></button>
               </div>
               <img src={previewUrl} alt="Payment Receipt" className="w-full" />
             </div>
@@ -278,10 +278,10 @@ export default function PaymentUploadsPage() {
 
         {paymentModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
               <div className="flex items-center justify-between p-6 border-b">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Verify Payment</h2>
-                <button onClick={() => setPaymentModal(null)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><XCircle size={20} /></button>
+                <button onClick={() => setPaymentModal(null)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><XCircle size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
                 <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Payment amount from upload: <span className="font-bold text-slate-900 dark:text-white dark:text-white">{formatCurrency(paymentModal.amount)}</span></p>
@@ -345,10 +345,10 @@ export default function PaymentUploadsPage() {
 
         {rejectModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
               <div className="flex items-center justify-between p-6 border-b">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Reject Payment</h2>
-                <button onClick={() => setRejectModal(null)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><XCircle size={20} /></button>
+                <button onClick={() => setRejectModal(null)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><XCircle size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
                 <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Provide a reason for rejection. The parent will see this and can re-upload a corrected receipt.</p>

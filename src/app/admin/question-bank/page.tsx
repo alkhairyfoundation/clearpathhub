@@ -184,14 +184,14 @@ export default function AdminQuestionBankPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Question Bank (Admin)</h1>
               <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Review, approve, and manage all questions</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-sm flex-wrap">
-            <button onClick={() => setShowImport(true)} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-1.5">
+            <button onClick={() => setShowImport(true)} className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 flex items-center gap-1.5 dark:hover:bg-slate-700">
               <Upload size={14} /> Import
             </button>
             <button onClick={openCreate} className="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium flex items-center gap-1.5 shadow-sm active:scale-95">
@@ -303,10 +303,10 @@ export default function AdminQuestionBankPage() {
         {/* Create/Edit Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-            <div className="bg-white rounded-xl p-6 max-w-2xl w-full shadow-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-xl p-6 max-w-2xl w-full shadow-xl max-h-[90vh] overflow-y-auto dark:bg-slate-800" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">{editing ? 'Edit Question' : 'New Question'}</h2>
-                <button onClick={() => setShowModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
+                <button onClick={() => setShowModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><X size={20} /></button>
               </div>
 
               <div className="space-y-4">
@@ -404,7 +404,7 @@ export default function AdminQuestionBankPage() {
               </div>
 
               <div className="flex gap-3 mt-6">
-                <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">Cancel</button>
+                <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">Cancel</button>
                 <button onClick={handleSave} disabled={saving}
                   className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 flex items-center justify-center gap-2">
                   {saving && <Loader2 size={18} className="animate-spin" />}
@@ -418,10 +418,10 @@ export default function AdminQuestionBankPage() {
         {/* Import Modal */}
         {showImport && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowImport(false)}>
-            <div className="bg-white rounded-xl p-6 max-w-xl w-full shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-xl p-6 max-w-xl w-full shadow-xl dark:bg-slate-800" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold">Import Questions</h2>
-                <button onClick={() => setShowImport(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
+                <button onClick={() => setShowImport(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><X size={20} /></button>
               </div>
               <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">
                 <p className="font-medium mb-1">Format (one question per line, pipe-separated):</p>
@@ -430,7 +430,7 @@ export default function AdminQuestionBankPage() {
               <textarea value={importText} onChange={e => setImportText(e.target.value)} rows={10} placeholder="Paste questions here..."
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono" />
               <div className="flex gap-3 mt-4">
-                <button onClick={() => setShowImport(false)} className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">Cancel</button>
+                <button onClick={() => setShowImport(false)} className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">Cancel</button>
                 <button onClick={handleImport} disabled={saving}
                   className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 flex items-center justify-center gap-2">
                   {saving && <Loader2 size={18} className="animate-spin" />}

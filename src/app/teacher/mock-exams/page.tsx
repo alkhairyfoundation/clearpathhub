@@ -143,7 +143,7 @@ export default function TeacherMockExamsPage() {
         {view === 'analytics' && selectedExam && !selectedStudent && (
           <>
             <div className="flex items-center gap-4 mb-4">
-              <button onClick={() => { setView('exams'); setSelectedExam(null); }} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <button onClick={() => { setView('exams'); setSelectedExam(null); }} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                 <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
               </button>
               <div>
@@ -201,7 +201,7 @@ export default function TeacherMockExamsPage() {
         {view === 'analytics' && selectedStudent && (
           <>
             <div className="flex items-center gap-4 mb-4">
-              <button onClick={() => { setSelectedStudent(null); }} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <button onClick={() => { setSelectedStudent(null); }} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                 <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
               </button>
               <div>

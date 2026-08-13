@@ -216,7 +216,7 @@ export default function AdminAnalyticsPage() {
                   <tr><td colSpan={9} className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500">No students found</td></tr>
                 )}
                 {students.map((s: any) => (
-                  <tr key={s.id} className="border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                  <tr key={s.id} className="border-t border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                     <td className="py-2 px-3">
                       <Link href={`/admin/analytics/student/${s.id}`} className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 hover:text-primary-600 dark:text-primary-400 dark:text-primary-400">
                         {s.name}

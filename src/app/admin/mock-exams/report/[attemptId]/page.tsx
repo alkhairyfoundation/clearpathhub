@@ -248,7 +248,7 @@ export default function AdminMockExamReportPage() {
         {/* Header actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
           <div className="flex items-center gap-4">
-            <Link href="/admin/mock-exams" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0">
+            <Link href="/admin/mock-exams" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg shrink-0 dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
             </Link>
             <div className="min-w-0">

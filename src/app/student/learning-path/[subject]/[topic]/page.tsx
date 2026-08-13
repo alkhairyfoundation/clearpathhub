@@ -160,11 +160,11 @@ export default function TopicLearningPathPage() {
     <DashboardLayout title={topicName} subtitle={`${subject?.name || 'Subject'} • Learning Path`}>
       <div className="space-y-6 max-w-3xl mx-auto">
         <div className="flex items-center gap-4">
-          <Link href={`/student/learning-path/${subjectId}`} className="p-2 hover:bg-slate-100 rounded-lg">
-            <ArrowLeft size={20} className="text-slate-600" />
+          <Link href={`/student/learning-path/${subjectId}`} className="p-2 hover:bg-slate-100 rounded-lg dark:hover:bg-slate-700">
+            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{topicName}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{topicName}</h1>
             <p className="text-slate-500 mt-1">{subject?.name} • {subject?.class?.name}</p>
           </div>
           {masteryScore && (
@@ -180,7 +180,7 @@ export default function TopicLearningPathPage() {
 
         {/* Stage Progression Timeline */}
         <div className="card">
-          <h2 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <h2 className="font-bold text-slate-900 mb-6 flex items-center gap-2 dark:text-slate-100">
             <BookMarked size={18} className="text-primary-600" />
             Mastery Progression
           </h2>
@@ -199,7 +199,7 @@ export default function TopicLearningPathPage() {
                   {/* Connection line */}
                   {idx < STAGES.length - 1 && (
                     <div className={`absolute left-[19px] top-10 w-0.5 h-full ${
-                      isCompleted ? 'bg-emerald-300' : 'bg-slate-200'
+                      isCompleted ? 'bg-emerald-300' : 'bg-slate-200 dark:bg-slate-600'
                     }`} />
                   )}
 
@@ -207,7 +207,7 @@ export default function TopicLearningPathPage() {
                   <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                     isCompleted ? 'bg-emerald-100' :
                     needsIntervention ? 'bg-red-100' :
-                    isLocked ? 'bg-slate-100' :
+                    isLocked ? 'bg-slate-100 dark:bg-slate-700' :
                     'bg-amber-100'
                   }`}>
                     {isCompleted ? <CheckCircle size={20} className="text-emerald-600" /> :
@@ -219,7 +219,7 @@ export default function TopicLearningPathPage() {
                   {/* Stage content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className={`font-bold text-lg ${isCompleted ? 'text-emerald-700' : isLocked ? 'text-slate-400' : 'text-slate-900'}`}>
+                      <h3 className={`font-bold text-lg ${isCompleted ? 'text-emerald-700' : isLocked ? 'text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>
                         {stage.label}
                       </h3>
                       {stageData && (
@@ -303,16 +303,16 @@ export default function TopicLearningPathPage() {
         {/* Available Lessons */}
         {lessons.length > 0 && (
           <div className="card">
-            <h2 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <h2 className="font-bold text-slate-900 mb-4 flex items-center gap-2 dark:text-slate-100">
               <FileText size={18} className="text-slate-400" />
               Available Lessons
             </h2>
             <div className="space-y-2">
               {lessons.map(lesson => (
-                <div key={lesson.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                <div key={lesson.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg dark:bg-slate-800">
                   <FileText size={16} className="text-primary-600" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">{lesson.title}</p>
+                    <p className="text-sm font-medium text-slate-900 truncate dark:text-slate-100">{lesson.title}</p>
                   </div>
                   <Link href={`/student/lessons/${lesson.id}`} className="text-xs text-primary-600 font-medium hover:underline">
                     View
@@ -326,7 +326,7 @@ export default function TopicLearningPathPage() {
         {/* Mastery Score Detail */}
         {masteryScore && (
           <div className="card">
-            <h2 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <h2 className="font-bold text-slate-900 mb-3 flex items-center gap-2 dark:text-slate-100">
               <Award size={18} className="text-slate-400" />
               Mastery Score Detail
             </h2>
@@ -339,11 +339,11 @@ export default function TopicLearningPathPage() {
               ].map((comp, i) => {
                 const color = getScoreColorClasses(comp.value);
                 return (
-                  <div key={i} className="text-center p-3 bg-slate-50 rounded-lg">
-                    <p className="text-xl font-bold text-slate-900">{comp.value}%</p>
+                  <div key={i} className="text-center p-3 bg-slate-50 rounded-lg dark:bg-slate-800">
+                    <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{comp.value}%</p>
                     <p className="text-xs text-slate-500">{comp.label}</p>
                     <p className="text-[10px] text-slate-400">Weight: {comp.weight}</p>
-                    <div className="w-full bg-slate-200 rounded-full h-1 mt-2">
+                    <div className="w-full bg-slate-200 rounded-full h-1 mt-2 dark:bg-slate-600">
                       <div className="h-1 rounded-full" style={{ width: `${comp.value}%`, backgroundColor: color.bar }} />
                     </div>
                   </div>

@@ -613,7 +613,7 @@ export default function AdminMockExamsPage() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700'
+                activeTab === tab ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-700'
               }`}
             >
               {tab === 'exams' && <><FileText size={14} className="inline mr-1" /> Exams</>}
@@ -656,10 +656,10 @@ export default function AdminMockExamsPage() {
                         </span>
                       </div>
                       <div className="flex gap-1">
-                        <button onClick={() => openEditExam(exam)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title="Edit Exam">
+                        <button onClick={() => openEditExam(exam)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700" title="Edit Exam">
                           <Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                         </button>
-                        <button onClick={() => { setSelectedExam(exam); setActiveTab('questions'); }} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title="Manage Questions">
+                        <button onClick={() => { setSelectedExam(exam); setActiveTab('questions'); }} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700" title="Manage Questions">
                           <BookOpen size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                         </button>
                         <button onClick={() => handleDeleteExam(exam.id)} className="p-1.5 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded-lg" title="Delete Exam">
@@ -691,10 +691,10 @@ export default function AdminMockExamsPage() {
             {/* Create Exam Modal */}
             {showExamModal && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowExamModal(false)}>
-                <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 dark:bg-slate-800" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Create Mock Exam</h3>
-                    <button onClick={() => setShowExamModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowExamModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>
@@ -765,10 +765,10 @@ export default function AdminMockExamsPage() {
             {/* Edit Exam Modal */}
             {showEditExamModal && editingExam && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditExamModal(false)}>
-                <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 dark:bg-slate-800" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Edit Exam</h3>
-                    <button onClick={() => setShowEditExamModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowEditExamModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>
@@ -825,10 +825,10 @@ export default function AdminMockExamsPage() {
             {/* Add from Bank Modal */}
             {showBankSelectModal && selectedExam && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowBankSelectModal(false)}>
-                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 dark:bg-slate-800" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Add Questions from Bank — {selectedExam.title}</h3>
-                    <button onClick={() => setShowBankSelectModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowBankSelectModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><X size={20} /></button>
                   </div>
                   {bankQuestions.length === 0 ? (
                     <div className="text-center py-8">
@@ -934,7 +934,7 @@ export default function AdminMockExamsPage() {
                           </div>
                         </div>
                         <div className="flex gap-1 shrink-0">
-                          <button onClick={() => handleEditMockQ(q)} className="p-1 hover:bg-slate-200 rounded" title="Edit">
+                          <button onClick={() => handleEditMockQ(q)} className="p-1 hover:bg-slate-200 rounded dark:hover:bg-slate-600" title="Edit">
                             <Edit size={14} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                           </button>
                           <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded" title="Remove from exam">
@@ -1061,7 +1061,7 @@ export default function AdminMockExamsPage() {
                         <div className="flex items-start justify-between gap-2">
                           <p className="font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</p>
                           <div className="flex gap-1 shrink-0">
-                            <button onClick={() => openEditBankQuestion(q)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><Edit size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
+                            <button onClick={() => openEditBankQuestion(q)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><Edit size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
                             <button onClick={() => handleDeleteBankQuestion(q.id)} className="p-1 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded"><Trash2 size={14} className="text-red-400" /></button>
                           </div>
                         </div>
@@ -1105,10 +1105,10 @@ export default function AdminMockExamsPage() {
             {/* Bank Question Modal (Add/Edit) */}
             {showBankQuestionModal && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowBankQuestionModal(false)}>
-                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 dark:bg-slate-800" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">{editingBankQuestion ? 'Edit' : 'Add'} Question to Bank</h3>
-                    <button onClick={() => setShowBankQuestionModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowBankQuestionModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>
@@ -1189,10 +1189,10 @@ export default function AdminMockExamsPage() {
             {/* Edit Mock Question Modal */}
             {showEditMockQModal && editingMockQ && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditMockQModal(false)}>
-                <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+                <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 dark:bg-slate-800" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold">Edit Exam Question</h3>
-                    <button onClick={() => setShowEditMockQModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded"><X size={20} /></button>
+                    <button onClick={() => setShowEditMockQModal(false)} className="p-1 hover:bg-slate-100 dark:bg-slate-700 rounded dark:hover:bg-slate-700"><X size={20} /></button>
                   </div>
                   <div className="space-y-4">
                     <div>

@@ -160,7 +160,7 @@ useEffect(() => {
                     <span className="text-white/70">/ {todayGoal.target_questions}</span>
                   </div>
                   <div className="w-full bg-white/20 rounded-full h-1.5 mt-2">
-                    <div className="bg-white h-1.5 rounded-full" style={{ width: `${Math.min((todayGoal.completed_questions || 0) / todayGoal.target_questions * 100, 100)}%` }} />
+                    <div className="bg-white h-1.5 rounded-full dark:bg-slate-800" style={{ width: `${Math.min((todayGoal.completed_questions || 0) / todayGoal.target_questions * 100, 100)}%` }} />
                   </div>
                   <p className="text-xs text-white/70 mt-2">
                     {todayGoal.status === 'completed' ? 'Goal completed!' : todayGoal.status === 'missed' ? 'Missed yesterday, try again!' : 'Complete your daily goal'}
@@ -169,7 +169,7 @@ useEffect(() => {
               ) : (
                 <>
                   <div className="flex items-baseline gap-2"><span className="text-3xl font-bold">0</span><span className="text-white/70">/ 10</span></div>
-                  <div className="w-full bg-white/20 rounded-full h-1.5 mt-2"><div className="bg-white h-1.5 rounded-full" style={{ width: '0%' }} /></div>
+                  <div className="w-full bg-white/20 rounded-full h-1.5 mt-2"><div className="bg-white h-1.5 rounded-full dark:bg-slate-800" style={{ width: '0%' }} /></div>
                   <p className="text-xs text-white/70 mt-2">Start your first practice session</p>
                 </>
               )}
@@ -283,7 +283,7 @@ useEffect(() => {
                 ].map((item, i) => (
                   <div key={i}>
                     <div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{item.label}</span><span className={`font-bold ${item.color}`}>{item.value}</span></div>
-                    <div className="w-full bg-slate-200 rounded-full h-2"><div className={`${item.bg} h-2 rounded-full transition-all`} style={{ width: item.value.includes('%') ? item.value : `${item.value}%` }}></div></div>
+                    <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600"><div className={`${item.bg} h-2 rounded-full transition-all`} style={{ width: item.value.includes('%') ? item.value : `${item.value}%` }}></div></div>
                   </div>
                 ))}
               </div>

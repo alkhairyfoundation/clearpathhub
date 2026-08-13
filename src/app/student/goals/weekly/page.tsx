@@ -75,7 +75,7 @@ export default function WeeklyGoalsPage() {
     <DashboardLayout title="Weekly Goals" subtitle="This week's learning targets">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Weekly Goals</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Derived from your daily achievements</p>
@@ -112,7 +112,7 @@ export default function WeeklyGoalsPage() {
                   </div>
                   <div className="space-y-2">
                     {dimGoals.map(goal => (
-                      <div key={goal.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100 dark:border-slate-700 dark:border-slate-700">
+                      <div key={goal.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100 dark:border-slate-700 dark:bg-slate-800">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 truncate">{goal.goal_text}</p>
                           <div className="flex items-center gap-2 mt-1">
@@ -128,7 +128,7 @@ export default function WeeklyGoalsPage() {
                         </div>
                         {goal.target_value != null && goal.target_value > 0 && (
                           <div className="w-20 ml-3">
-                            <div className="w-full bg-slate-200 rounded-full h-2">
+                            <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600">
                               <div className="bg-primary-500 h-2 rounded-full" style={{ width: `${Math.min((goal.achieved_value ?? 0) / goal.target_value * 100, 100)}%` }} />
                             </div>
                           </div>

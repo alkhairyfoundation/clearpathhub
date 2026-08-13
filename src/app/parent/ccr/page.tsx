@@ -86,7 +86,7 @@ export default function ParentCcrDashboard() {
           const fatherSub = getStatus(child.profile_id, 'father');
           const motherSub = getStatus(child.profile_id, 'mother');
           return (
-            <div key={child.id} className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-6">
+            <div key={child.id} className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-6 dark:bg-slate-800">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">

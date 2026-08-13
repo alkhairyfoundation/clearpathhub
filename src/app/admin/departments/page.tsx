@@ -88,7 +88,7 @@ export default function AdminDepartmentsPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
@@ -108,7 +108,7 @@ export default function AdminDepartmentsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="card animate-pulse">
-                <div className="h-4 bg-slate-200 rounded w-1/2 mb-3"></div>
+                <div className="h-4 bg-slate-200 rounded w-1/2 mb-3 dark:bg-slate-600"></div>
                 <div className="h-3 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded w-1/3"></div>
               </div>
             ))}
@@ -146,17 +146,17 @@ export default function AdminDepartmentsPage() {
 
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{editingDepartment ? 'Edit' : 'Add'} Department</h3>
-                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X className="text-slate-500 dark:text-slate-400 dark:text-slate-400" size={20} /></button>
+                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X className="text-slate-500 dark:text-slate-400 dark:text-slate-400" size={20} /></button>
               </div>
               <div className="p-5 space-y-4">
                 {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
                 <div><label className="label">Department Name</label><input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="input" placeholder="e.g., Science Department" /></div>
                 <div><label className="label">Department Code</label><input type="text" value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="input" placeholder="e.g., SCI" /></div>
               </div>
-              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700 bg-white sticky bottom-0">
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 bg-white sticky bottom-0 dark:bg-slate-800">
                 <button onClick={() => { setShowModal(false); setError(''); }} className="btn-ghost">Cancel</button>
                 <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2 disabled:opacity-50">
                   {saving && <Loader2 size={16} className="animate-spin" />}

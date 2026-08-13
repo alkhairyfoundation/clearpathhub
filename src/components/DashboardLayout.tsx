@@ -150,7 +150,7 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
                   {theme === 'dark' ? (
                     <Sun size={20} className="text-amber-400" />
                   ) : (
-                    <Moon size={20} className="text-slate-600" />
+                    <Moon size={20} className="text-slate-600 dark:text-slate-400" />
                   )}
                 </button>
               )}

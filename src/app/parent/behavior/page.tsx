@@ -69,7 +69,7 @@ function BehaviorContent() {
     <DashboardLayout title="Behavior Reports" subtitle={`${child ? `${child.profile?.first_name} ${child.profile?.last_name}` : ''}`}>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Behavior Reports</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">View behavior and exam security events</p>
@@ -94,7 +94,7 @@ function BehaviorContent() {
         </div>
 
       {!child ? (
-        <div className="bg-white rounded-xl p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
+        <div className="bg-white rounded-xl p-12 text-center dark:bg-slate-800"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p></div>
       ) : (
         <>
           {examActivityLogs.length > 0 && (

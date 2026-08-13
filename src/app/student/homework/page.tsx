@@ -142,7 +142,7 @@ export default function StudentHomeworkPage() {
     <DashboardLayout title="Homework" subtitle="View and submit homework assignments">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
@@ -161,7 +161,7 @@ export default function StudentHomeworkPage() {
           <div className="space-y-6">
             <div className="space-y-4">
               {homework.length === 0 ? (
-                <div className="bg-white rounded-xl p-12 text-center">
+                <div className="bg-white rounded-xl p-12 text-center dark:bg-slate-800">
                   <FileText className="mx-auto text-gray-400 mb-4" size={48} />
                   <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No homework assigned</p>
                 </div>
@@ -173,7 +173,7 @@ export default function StudentHomeworkPage() {
                   const isExpanded = expandedHw === hw.id;
                   return (
                     <div key={hw.id} className={`bg-white rounded-xl shadow-md overflow-hidden transition-all ${overdue ? 'border-l-4 border-red-500' : ''}`}>
-                      <div className="p-6 cursor-pointer hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors" onClick={() => setExpandedHw(isExpanded ? null : hw.id)}>
+                      <div className="p-6 cursor-pointer hover:bg-slate-50 dark:bg-slate-800 transition-colors dark:hover:bg-slate-700" onClick={() => setExpandedHw(isExpanded ? null : hw.id)}>
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{hw.title}</h3>
@@ -202,7 +202,7 @@ export default function StudentHomeworkPage() {
                               <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">Attachments</h4>
                               <div className="flex flex-wrap gap-2">
                                 {attachments.map((url: string, i: number) => (
-                                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
+                                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-white border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:bg-slate-800 transition-colors dark:hover:bg-slate-700">
                                     {getFileIcon(url)}
                                     <span className="text-sm truncate max-w-[150px]">{url.split('/').pop()}</span>
                                     <ExternalLink size={12} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
@@ -234,7 +234,7 @@ export default function StudentHomeworkPage() {
                                       <ExternalLink size={14} /> View My Submission
                                     </a>
                                   ) : (
-                                    <div className="text-sm text-green-700 dark:text-green-300 dark:text-green-300 bg-white p-3 rounded-lg border border-green-200 dark:border-green-900/40 dark:border-green-900/40 whitespace-pre-wrap">
+                                    <div className="text-sm text-green-700 dark:text-green-300 bg-white p-3 rounded-lg border border-green-200 dark:border-green-900/40 whitespace-pre-wrap dark:bg-slate-800">
                                       {submitted.submission_url}
                                     </div>
                                   )}
@@ -242,7 +242,7 @@ export default function StudentHomeworkPage() {
                               )}
                             </div>
                           ) : (
-                            <div className="space-y-4 bg-white p-4 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 shadow-inner">
+                            <div className="space-y-4 bg-white p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-inner dark:bg-slate-800">
                               <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Your Submission</h4>
                               <div className="space-y-3">
                                 <textarea

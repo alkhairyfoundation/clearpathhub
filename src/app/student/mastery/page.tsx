@@ -94,14 +94,14 @@ export default function StudentMasteryPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+            <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Mastery Dashboard</h1>
               <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Track your learning progress topic by topic</p>
             </div>
           </div>
           <button onClick={recalculate} disabled={recalculating}
-            className="px-4 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-2 text-sm">
+            className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 flex items-center gap-2 text-sm dark:hover:bg-slate-700">
             <RefreshCw size={14} className={recalculating ? 'animate-spin' : ''} />
             Recalculate
           </button>
@@ -129,7 +129,7 @@ export default function StudentMasteryPage() {
                 <span className="text-white/70">average across {subjectScores.length} subjects</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2.5">
-                <div className="bg-white h-2.5 rounded-full transition-all" style={{ width: `${overallAvg}%` }} />
+                <div className="bg-white h-2.5 rounded-full transition-all dark:bg-slate-800" style={{ width: `${overallAvg}%` }} />
               </div>
             </div>
 
@@ -140,7 +140,7 @@ export default function StudentMasteryPage() {
               return (
                 <div key={subj.id} className="card overflow-hidden">
                   <button onClick={() => setExpandedSubject(isExpanded ? null : subj.id)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
+                    className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:bg-slate-800 transition-colors dark:hover:bg-slate-700">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${level.bg}`}>
                         <Brain size={20} className={level.color} />
@@ -171,7 +171,7 @@ export default function StudentMasteryPage() {
                               { label: 'Recency', value: Math.round(subj.topicScores.reduce((s: number, t: any) => s + t.recency, 0) / subj.topicScores.length), icon: <Clock size={16} />, weight: '15%' },
                               { label: 'Difficulty', value: Math.round(subj.topicScores.reduce((s: number, t: any) => s + t.difficulty_progress, 0) / subj.topicScores.length), icon: <BarChart3 size={16} />, weight: '15%' },
                             ].map((comp, i) => (
-                              <div key={i} className="bg-white rounded-lg p-3 text-center">
+                              <div key={i} className="bg-white rounded-lg p-3 text-center dark:bg-slate-800">
                                 <div className="flex items-center justify-center gap-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-1">{comp.icon} {comp.label}</div>
                                 <p className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{comp.value}%</p>
                                 <p className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">Weight: {comp.weight}</p>
@@ -184,7 +184,7 @@ export default function StudentMasteryPage() {
                       {/* Topic list */}
                       <div className="divide-y divide-slate-100">
                         {subj.topicScores.map((ts: any) => (
-                          <div key={ts.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                          <div key={ts.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
                                 <p className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{ts.topic}</p>
@@ -201,7 +201,7 @@ export default function StudentMasteryPage() {
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-sm font-bold text-slate-900 dark:text-white dark:text-white">{Math.round(ts.mastery_score)}%</span>
                               </div>
-                              <div className="w-full bg-slate-200 rounded-full h-2">
+                              <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600">
                                 <div className={`h-2 rounded-full ${LEVEL_COLORS[ts.level] || 'bg-slate-400'}`}
                                   style={{ width: `${ts.mastery_score}%` }} />
                               </div>

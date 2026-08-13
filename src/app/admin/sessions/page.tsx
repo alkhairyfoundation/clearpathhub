@@ -241,7 +241,7 @@ export default function AdminSessionsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
@@ -321,10 +321,10 @@ export default function AdminSessionsPage() {
         {/* Create Session Modal */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 dark:bg-slate-800">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Add Video Lesson</h3>
-                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
                 <div><label className="label">Title *</label><input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Lesson title" /></div>
@@ -400,10 +400,10 @@ export default function AdminSessionsPage() {
         {/* Checkpoints Modal */}
         {showCheckpointModal && selectedSession && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 dark:bg-slate-800">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Checkpoints — {selectedSession.title}</h3>
-                <button onClick={() => setShowCheckpointModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                <button onClick={() => setShowCheckpointModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
                 <div className="p-4 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40 rounded-lg text-sm text-primary-700 dark:text-primary-300 dark:text-primary-300">
@@ -448,7 +448,7 @@ export default function AdminSessionsPage() {
                     <h4 className="font-semibold text-slate-700 dark:text-slate-300 dark:text-slate-300 mb-2">{checkpoints.length} Checkpoints</h4>
                     <div className="space-y-2">
                       {checkpoints.map((cp, i) => (
-                        <div key={cp.id} className="p-3 bg-white rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+                        <div key={cp.id} className="p-3 bg-white rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between dark:bg-slate-800">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300 rounded-full text-xs font-semibold">

@@ -62,18 +62,18 @@ function SubjectTeacherCcrContent() {
         <Link href="/teacher/ccr" className="text-sm text-primary-600 hover:underline flex items-center gap-1 mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to students
         </Link>
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Select Subject</h3>
+        <div className="bg-white rounded-xl border border-slate-200 p-6 dark:bg-slate-800 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 dark:text-slate-200">Select Subject</h3>
           <div className="space-y-2">
             {subjects.map(subj => (
               <button
                 key={subj.id}
                 onClick={() => setSelectedSubject(subj.id)}
-                className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all flex items-center gap-3"
+                className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-primary-300 hover:bg-primary-50 transition-all flex items-center gap-3 dark:border-slate-700"
               >
                 <BookOpen className="w-5 h-5 text-primary-600" />
                 <div>
-                  <p className="font-medium text-slate-700">{subj.name}</p>
+                  <p className="font-medium text-slate-700 dark:text-slate-300">{subj.name}</p>
                   <p className="text-xs text-slate-400">{subj.code}</p>
                 </div>
               </button>

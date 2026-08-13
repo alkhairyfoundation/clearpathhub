@@ -56,7 +56,7 @@ export default function AdminCcrReports() {
           <Link
             key={s.id}
             href={`/parent/ccr/report?child=${s.profile_id}`}
-            className="block bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4 hover:border-primary-300 transition-all"
+            className="block bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:border-primary-300 transition-all dark:bg-slate-800"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">

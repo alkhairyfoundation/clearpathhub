@@ -75,7 +75,7 @@ export default function MonthlyGoalsPage() {
     <DashboardLayout title="Monthly Goals" subtitle={monthName}>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Monthly Goals</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Generated from your weekly achievements</p>
@@ -93,7 +93,7 @@ export default function MonthlyGoalsPage() {
             <div className="flex items-baseline gap-2">
               <p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{stats.progress}%</p>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+            <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2 dark:bg-slate-600">
               <div className="bg-primary-500 h-1.5 rounded-full" style={{ width: `${stats.progress}%` }} />
             </div>
           </div>

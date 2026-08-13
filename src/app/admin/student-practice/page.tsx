@@ -101,7 +101,7 @@ export default function AdminStudentPracticePage() {
     <DashboardLayout title="Student Practice" subtitle="Track student daily practice, streaks, and performance">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
@@ -141,7 +141,7 @@ export default function AdminStudentPracticePage() {
             </select>
             <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg p-1">
               {(['streak', 'score', 'sessions'] as const).map(s => (
-                <button key={s} onClick={() => setSortBy(s)} className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize ${sortBy === s ? 'bg-white text-primary-600 dark:text-primary-400 dark:text-primary-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}>{s}</button>
+                <button key={s} onClick={() => setSortBy(s)} className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize ${sortBy === s ? 'bg-white text-primary-600 dark:text-primary-400 shadow-sm dark:bg-slate-800' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}>{s}</button>
               ))}
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function AdminStudentPracticePage() {
                 </thead>
                 <tbody>
                   {filtered.map((s) => (
-                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-xs font-bold text-primary-700 dark:text-primary-300 dark:text-primary-300">

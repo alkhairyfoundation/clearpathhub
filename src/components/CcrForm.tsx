@@ -148,7 +148,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
                 type="button"
                 onClick={() => handleResponse(q.id, n)}
                 className={`w-12 h-12 rounded-full text-sm font-medium transition-all ${
-                  val === n ? 'bg-primary-600 text-white ring-2 ring-primary-300 scale-110' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
+                  val === n ? 'bg-primary-600 text-white ring-2 ring-primary-300 scale-110' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
                 {n}
@@ -277,7 +277,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
           <span>Progress</span>
           <span>{Math.round(progress)}%</span>
         </div>
-        <div className="w-full bg-slate-200 rounded-full h-2">
+        <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600">
           <div className="bg-primary-600 h-2 rounded-full transition-all" style={{ width: `${progress}%` }} />
         </div>
       </div>
@@ -304,7 +304,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
               key={d.key}
               onClick={() => setCurrentDomainIdx(i)}
               className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                i === currentDomainIdx ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
+                i === currentDomainIdx ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
               }`}
             >
               {d.label.split('(')[0].trim()}
@@ -315,7 +315,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
       </div>
 
       {currentDomain && (
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-6 mb-6 dark:bg-slate-800">
           <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{currentDomain.label}</h3>
           <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mb-6">Domain {currentDomainIdx + 1} of {domains.length}</p>
           {domainQuestions.map(renderQuestion)}

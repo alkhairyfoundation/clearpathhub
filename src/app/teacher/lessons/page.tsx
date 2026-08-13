@@ -150,7 +150,7 @@ export default function TeacherLessonsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
             <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Lesson Notes</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{lessons.length} lessons</p></div>
           </div>
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Add Lesson</button>
@@ -174,15 +174,15 @@ export default function TeacherLessonsPage() {
         {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse"><div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div></div>) :
-          filtered.length === 0 ? <div className="col-span-full bg-white rounded-xl p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No lessons yet</p></div> :
+          {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse dark:bg-slate-800"><div className="h-4 bg-gray-200 rounded w-1/2 mb-4 dark:bg-slate-600"></div></div>) :
+          filtered.length === 0 ? <div className="col-span-full bg-white rounded-xl p-12 text-center dark:bg-slate-800"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No lessons yet</p></div> :
           filtered.map(lesson => (
-            <div key={lesson.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+            <div key={lesson.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow dark:bg-slate-800">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center"><FileText className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" size={24} /></div>
                 <div className="flex gap-1">
                   <button onClick={() => openQuizManager(lesson)} className="p-2 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg" title="Manage Quiz"><HelpCircle size={16} className="text-primary-500" /></button>
-                  <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button>
+                  <button onClick={() => handleDelete(lesson.id)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button>
                 </div>
               </div>
               <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{lesson.title}</h3>
@@ -198,8 +198,8 @@ export default function TeacherLessonsPage() {
         {/* Create Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Add Lesson</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button></div>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Add Lesson</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button></div>
               <div className="p-6 space-y-4">
                 <div><label className="label">Title *</label><input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Lesson title" /></div>
                 <div><label className="label">Subject</label><select value={formData.subject_id} onChange={e => setFormData({ ...formData, subject_id: e.target.value })} className="input"><option value="">Select Subject</option>{subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
@@ -251,10 +251,10 @@ export default function TeacherLessonsPage() {
         {/* Quiz Modal */}
         {showQuizModal && selectedLesson && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+              <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10 dark:bg-slate-800">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Quiz — {selectedLesson.title}</h2>
-                <button onClick={() => setShowQuizModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+                <button onClick={() => setShowQuizModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
                 <div className="space-y-3 p-4 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl">
@@ -275,7 +275,7 @@ export default function TeacherLessonsPage() {
                 {quizQuestions.length > 0 && (
                   <div className="space-y-2">
                     {quizQuestions.map((q, i) => (
-                      <div key={q.id} className="p-3 bg-white rounded-lg border flex items-center justify-between">
+                      <div key={q.id} className="p-3 bg-white rounded-lg border flex items-center justify-between dark:bg-slate-800">
                         <div><p className="text-sm font-medium">Q{i + 1}: {q.question}</p><p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{q.options?.length} options · {q.points} pts</p></div>
                         <button onClick={() => deleteQuizQuestion(q.id)} className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg"><Trash2 size={14} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button>
                       </div>

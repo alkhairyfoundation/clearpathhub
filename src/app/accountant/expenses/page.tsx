@@ -107,22 +107,22 @@ export default function AccountantExpensesPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
             <div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Expenses</span><TrendingDown className="text-red-600 dark:text-red-400 dark:text-red-400" size={18} /></div>
             <p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{formatCurrency(stats.totalExpenses)}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
             <div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">This Month</span><Calendar className="text-amber-600 dark:text-amber-400 dark:text-amber-400" size={18} /></div>
             <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{formatCurrency(stats.thisMonth)}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
             <div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Categories</span><Filter className="text-blue-600 dark:text-blue-400 dark:text-blue-400" size={18} /></div>
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{Object.keys(stats.categoryBreakdown).length}</p>
           </div>
         </div>
 
         {Object.keys(stats.categoryBreakdown).length > 0 && (
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4">Expense by Category</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {Object.entries(stats.categoryBreakdown)
@@ -138,7 +138,7 @@ export default function AccountantExpensesPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} /><input type="text" placeholder="Search expenses..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input pl-10" /></div>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="input w-auto">
@@ -164,7 +164,7 @@ export default function AccountantExpensesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filtered.map((t: any) => (
-                    <tr key={t.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                    <tr key={t.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                       <td className="py-3 px-4 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{t.category}</td>
                       <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{t.description || '-'}</td>
                       <td className="py-3 px-4 font-semibold text-red-600 dark:text-red-400 dark:text-red-400">{formatCurrency(t.amount)}</td>
@@ -183,8 +183,8 @@ export default function AccountantExpensesPage() {
 
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Add Expense</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button></div>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
+              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Add Expense</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button></div>
               <div className="p-6 space-y-4">
                 <div>
                   <label className="label">Category</label>

@@ -74,7 +74,7 @@ export default function CompareStudentsPage() {
     <DashboardLayout title="Compare Students" subtitle="Side-by-side student comparison">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/admin/analytics" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/admin/analytics" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">Compare Students</h1>
         </div>
 
@@ -109,7 +109,7 @@ export default function CompareStudentsPage() {
                 <button
                   key={s.id}
                   onClick={() => { setSelectedIds(prev => [...prev, s.id]); setSearch(''); }}
-                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-2"
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-50 dark:bg-slate-800 flex items-center gap-2 dark:hover:bg-slate-700"
                 >
                   <Plus size={12} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />
                   <span className="font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">{s.name}</span>
@@ -162,7 +162,7 @@ export default function CompareStudentsPage() {
                     const vals = compareData.students.map((s: any) => s[dim.key]);
                     const maxVal = Math.max(...vals.filter((v: any) => v != null));
                     return (
-                      <tr key={dim.key} className="border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                      <tr key={dim.key} className="border-t border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                         <td className="py-2 px-3 font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300 capitalize">{dim.label}</td>
                         {compareData.students.map((s: any, i: number) => {
                           const val = s[dim.key];

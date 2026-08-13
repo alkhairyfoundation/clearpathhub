@@ -97,7 +97,7 @@ export default function TeacherCcrPage() {
           const classSub = getStatus(student.profile_id, 'teacher');
           const subjectSub = getStatus(student.profile_id, 'subject_teacher');
           return (
-            <div key={student.id} className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4 flex items-center justify-between">
+            <div key={student.id} className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between dark:bg-slate-800">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 flex items-center justify-center">
                   <Users className="w-5 h-5 text-primary-600 dark:text-primary-400 dark:text-primary-400" />

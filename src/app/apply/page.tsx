@@ -300,7 +300,7 @@ function ApplyPageContent() {
               <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Edu Hub</p>
             </div>
           </Link>
-          <Link href="/" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white transition-colors">
+          <Link href="/" className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors dark:hover:text-slate-100">
             <ArrowLeft size={16} />
             Back to Home
           </Link>
@@ -321,7 +321,7 @@ function ApplyPageContent() {
         )}
 
         {step === 'info' && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8 dark:bg-slate-800">
             {!codeValid && !exam ? (
               <div className="space-y-6">
                 <div className="text-center">
@@ -387,7 +387,7 @@ function ApplyPageContent() {
         )}
 
         {step === 'form' && exam && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8 dark:bg-slate-800">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-6">Application Form</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -413,7 +413,7 @@ function ApplyPageContent() {
         )}
 
         {step === 'exam' && exam && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8 dark:bg-slate-800">
             <div className="flex items-center justify-between mb-6">
               <span className="font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400">Question {currentQuestion + 1} of {questions.length}</span>
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${timeRemaining <= 5 ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' : 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300'}`}>
@@ -442,7 +442,7 @@ function ApplyPageContent() {
                       className={`w-full p-4 rounded-xl text-left border-2 transition-all ${
                         answers[currentQuestion] === i
                           ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 shadow-sm'
-                          : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700'
                       }`}
                     >
                       <span className="font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 mr-2">{String.fromCharCode(65 + i)}.</span>
@@ -485,7 +485,7 @@ function ApplyPageContent() {
                           ? 'bg-primary-600 text-white'
                           : answers[i] !== undefined
                           ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 border border-green-300'
-                          : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                       }`}
                     >
                       {i + 1}
@@ -498,7 +498,7 @@ function ApplyPageContent() {
         )}
 
         {step === 'result' && exam && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8 text-center">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700/60 p-8 text-center dark:bg-slate-800">
             <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center ${examScore >= exam.passing_score ? 'bg-gradient-to-br from-green-100 to-green-200' : 'bg-gradient-to-br from-red-100 to-red-200'}`}>
               {examScore >= exam.passing_score ? <Check className="text-green-600 dark:text-green-400 dark:text-green-400" size={48} /> : <X className="text-red-600 dark:text-red-400 dark:text-red-400" size={48} />}
             </div>
@@ -527,7 +527,7 @@ function ApplyPageContent() {
       {/* Fullscreen Blocking Overlay */}
       {fullscreenBlocked && (
         <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in dark:bg-slate-800">
             <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShieldAlert size={40} className="text-red-600 dark:text-red-400 dark:text-red-400" />
             </div>

@@ -248,7 +248,7 @@ export default function StudentIDCardPage() {
 
         {/* Front Card */}
         <div className="flex justify-center">
-          <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
+          <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg dark:bg-slate-800">
             <div className="bg-blue-600 text-white p-4 text-center">
               <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
               <h3 className="text-lg font-bold">STUDENT ID CARD</h3>
@@ -259,7 +259,7 @@ export default function StudentIDCardPage() {
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Photo" className="w-20 h-20 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 dark:border-slate-700" />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400 dark:text-slate-500 dark:text-slate-500">
+                  <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400 dark:text-slate-500 dark:bg-slate-600">
                     {initials}
                   </div>
                 )}
@@ -278,7 +278,7 @@ export default function StudentIDCardPage() {
 
               <div className="flex justify-center mb-2">
                 {qrFrontUrl ? (
-                  <div className="bg-white p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700">
+                  <div className="bg-white p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 dark:bg-slate-800">
                     <img src={qrFrontUrl} alt="QR Code" className="w-28 h-28" />
                   </div>
                 ) : (
@@ -297,7 +297,7 @@ export default function StudentIDCardPage() {
           <div className="flex justify-center">
             <button
               onClick={() => setShowBack(!showBack)}
-              className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 dark:text-slate-200"
+              className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 dark:hover:text-slate-200"
             >
               {showBack ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               {showBack ? 'Hide' : 'Show'} Back of Card
@@ -307,7 +307,7 @@ export default function StudentIDCardPage() {
 
         {showBack && student && (
           <div className="flex justify-center">
-            <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
+            <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg dark:bg-slate-800">
               <div className="bg-slate-600 text-white p-4 text-center">
                 <h3 className="text-lg font-bold">ID CARD RULES</h3>
               </div>
@@ -319,7 +319,7 @@ export default function StudentIDCardPage() {
               <div className="p-4 text-center border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
                 {qrBackUrl ? (
                   <div className="flex justify-center mb-2">
-                    <div className="bg-white p-2 rounded-lg border">
+                    <div className="bg-white p-2 rounded-lg border dark:bg-slate-800">
                       <img src={qrBackUrl} alt="Verification QR" className="w-20 h-20" />
                     </div>
                   </div>

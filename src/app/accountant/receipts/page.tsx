@@ -56,7 +56,7 @@ export default function AccountantReceiptsPage() {
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Receipt</button>
         </div>
       
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl shadow-md overflow-hidden dark:bg-slate-800">
           {loading ? (
             <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
           ) : receipts.length === 0 ? (
@@ -76,7 +76,7 @@ export default function AccountantReceiptsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {receipts.map(r => (
-                    <tr key={r.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                    <tr key={r.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                       <td className="py-3 px-4 font-mono text-sm">{r.id.slice(0, 8)}</td>
                       <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{r.student?.first_name} {r.student?.last_name}</td>
                       <td className="py-3 px-4 font-semibold">₦{r.amount?.toLocaleString()}</td>
@@ -93,8 +93,8 @@ export default function AccountantReceiptsPage() {
 
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Create Receipt</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button></div>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
+              <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Create Receipt</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button></div>
               <div className="p-6 space-y-4">
                 <div><label className="label">Title</label><input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="input" placeholder="Receipt title" /></div>
                 <div><label className="label">Amount</label><input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: parseFloat(e.target.value)})} className="input" /></div>

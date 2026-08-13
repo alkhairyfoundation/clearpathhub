@@ -187,7 +187,7 @@ export default function TeacherQuizzesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
@@ -199,13 +199,13 @@ export default function TeacherQuizzesPage() {
         </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse"><div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div></div>) :
-        quizzes.length === 0 ? <div className="col-span-full bg-white rounded-xl p-12 text-center"><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No quizzes yet</p></div> :
+        {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse dark:bg-slate-800"><div className="h-4 bg-gray-200 rounded w-1/2 mb-4 dark:bg-slate-600"></div></div>) :
+        quizzes.length === 0 ? <div className="col-span-full bg-white rounded-xl p-12 text-center dark:bg-slate-800"><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No quizzes yet</p></div> :
         quizzes.map((quiz) => (
-          <div key={quiz.id} className="bg-white rounded-xl shadow-md p-6">
+          <div key={quiz.id} className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 rounded-lg flex items-center justify-center"><Users className="text-purple-600 dark:text-purple-400 dark:text-purple-400" size={24} /></div>
-              <button onClick={() => handleDelete(quiz.id)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button>
+              <button onClick={() => handleDelete(quiz.id)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" /></button>
             </div>
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-1">{quiz.title}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-3">{quiz.session?.title}</p>
@@ -222,8 +222,8 @@ export default function TeacherQuizzesPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white dark:bg-slate-800"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Create Quiz</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button></div>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white dark:bg-slate-800"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Create Quiz</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button></div>
             <div className="p-6 space-y-4">
               <div><label className="label">Quiz Title</label><input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="input" placeholder="Quiz title" /></div>
               <div><label className="label">Description</label><textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={2} placeholder="Description" /></div>
@@ -247,7 +247,7 @@ export default function TeacherQuizzesPage() {
                     <div className="mb-3">
                       <div className="flex items-center gap-2">
                         <input type="text" value={q.question} onChange={(e) => updateQuestion(i, 'question', e.target.value)} className="input flex-1" placeholder="Enter question" />
-                        <button onClick={() => addQuestionImage(i)} className="p-2 hover:bg-slate-200 rounded-lg" title="Add image">
+                        <button onClick={() => addQuestionImage(i)} className="p-2 hover:bg-slate-200 rounded-lg dark:hover:bg-slate-600" title="Add image">
                           <ImageIcon size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                         </button>
                       </div>
@@ -288,7 +288,7 @@ export default function TeacherQuizzesPage() {
                           <div key={j} className="flex items-center gap-2">
                             <input type="radio" name={`mc-${i}`} checked={q.correct_answer === j} onChange={() => updateQuestion(i, 'correct_answer', j)} className="w-4 h-4 flex-shrink-0" />
                             <input type="text" value={opt} onChange={(e) => updateOption(i, j, e.target.value)} className="input flex-1" placeholder={`Option ${String.fromCharCode(65 + j)}`} />
-                            <button onClick={() => addOptionImage(i, j)} className="p-1.5 hover:bg-slate-200 rounded-lg flex-shrink-0" title="Add option image"><ImageIcon size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
+                            <button onClick={() => addOptionImage(i, j)} className="p-1.5 hover:bg-slate-200 rounded-lg flex-shrink-0 dark:hover:bg-slate-600" title="Add option image"><ImageIcon size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
                             {q.option_images?.[j] && <span className="text-xs text-green-600 dark:text-green-400 dark:text-green-400">img</span>}
                           </div>
                         ))}
@@ -303,7 +303,7 @@ export default function TeacherQuizzesPage() {
                             <div key={j} className="flex items-center gap-2">
                               <input type="checkbox" checked={selected} onChange={() => toggleMultipleSelection(i, j)} className="w-4 h-4 flex-shrink-0" />
                               <input type="text" value={opt} onChange={(e) => updateOption(i, j, e.target.value)} className="input flex-1" placeholder={`Option ${String.fromCharCode(65 + j)}`} />
-                              <button onClick={() => addOptionImage(i, j)} className="p-1.5 hover:bg-slate-200 rounded-lg flex-shrink-0"><ImageIcon size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
+                              <button onClick={() => addOptionImage(i, j)} className="p-1.5 hover:bg-slate-200 rounded-lg flex-shrink-0 dark:hover:bg-slate-600"><ImageIcon size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
                             </div>
                           );
                         })}

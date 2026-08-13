@@ -257,7 +257,7 @@ useEffect(() => {
               <div className="grid grid-cols-2 gap-3">
                 {quickActions.map((action, i) => (
                   <Link key={i} href={action.href} className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-transparent hover:border-slate-100 dark:border-slate-700 dark:border-slate-700 transition-all text-center ${action.color.split(' ').filter(c => !c.includes('hover')).join(' ')} hover:shadow-sm`}>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm mb-1">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm mb-1 dark:bg-slate-800">
                       {action.icon}
                     </div>
                     <p className="text-xs font-semibold">{action.label}</p>
@@ -287,7 +287,7 @@ useEffect(() => {
                           {item.filledWeeks}/{item.totalWeeks} weeks ({pct}%)
                         </span>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600">
                         <div className={`h-2 rounded-full transition-all ${pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
                           style={{ width: `${pct}%` }} />
                       </div>

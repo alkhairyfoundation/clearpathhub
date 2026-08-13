@@ -56,7 +56,7 @@ export default function AccountantInvoicesPage() {
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2"><Plus size={20} />Create Invoice</button>
         </div>
 
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="bg-white rounded-xl shadow-md overflow-hidden dark:bg-slate-800">
         {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div> : invoices.length === 0 ? <div className="p-12 text-center"><FileText className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No invoices yet</p></div> : (
           <table className="w-full">
             <thead><tr className="border-b"><th className="text-left py-3 px-4 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Invoice #</th><th className="text-left py-3 px-4 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Student</th><th className="text-left py-3 px-4 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Amount</th><th className="text-left py-3 px-4 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Due Date</th><th className="text-left py-3 px-4 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Status</th><th className="text-right py-3 px-4 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Actions</th></tr></thead>
@@ -67,8 +67,8 @@ export default function AccountantInvoicesPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Create Invoice</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button></div>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
+            <div className="flex items-center justify-between p-6 border-b"><h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Create Invoice</h2><button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button></div>
             <div className="p-6 space-y-4">
               <div><label className="label">Student</label><select value={formData.student_id} onChange={(e) => setFormData({ ...formData, student_id: e.target.value })} className="input"><option value="">Select Student</option>{students.map(s => <option key={s.id} value={s.id}>{s.first_name} {s.last_name}</option>)}</select></div>
               <div><label className="label">Amount</label><input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })} className="input" /></div>

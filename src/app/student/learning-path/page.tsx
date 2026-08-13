@@ -85,7 +85,7 @@ export default function LearningPathPage() {
     <DashboardLayout title="Learning Path" subtitle="Master each topic step by step">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Learning Path</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Study → Practice → Challenge → Master → Advance</p>
@@ -133,7 +133,7 @@ export default function LearningPathPage() {
                       <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-2">
                         <span>Topics: {agg.completed}/{agg.topics} mastered</span>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-1.5 mb-3">
+                      <div className="w-full bg-slate-200 rounded-full h-1.5 mb-3 dark:bg-slate-600">
                         <div className="bg-primary-500 h-1.5 rounded-full" style={{ width: `${agg.topics > 0 ? (agg.completed / agg.topics) * 100 : 0}%` }} />
                       </div>
 
@@ -156,7 +156,7 @@ export default function LearningPathPage() {
                               }`}>
                                 {completedCount === stageItems.length && stageItems.length > 0 ? <CheckCircle size={12} /> : STAGE_ICONS[stage]}
                               </div>
-                              {i < 4 && <div className="w-3 h-0.5 bg-slate-200" />}
+                              {i < 4 && <div className="w-3 h-0.5 bg-slate-200 dark:bg-slate-600" />}
                             </div>
                           );
                         })}

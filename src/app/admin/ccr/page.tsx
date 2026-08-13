@@ -63,7 +63,7 @@ export default function AdminCcrPage() {
     <DashboardLayout
       title="CCR Administration"
       subtitle="ClearPath Child Review - System Overview"><div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 dark:bg-slate-800">
           <div className="flex items-center gap-3">
             <Users className="w-8 h-8 text-primary-600 dark:text-primary-400 dark:text-primary-400" />
             <div>
@@ -72,7 +72,7 @@ export default function AdminCcrPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 dark:bg-slate-800">
           <div className="flex items-center gap-3">
             <FileText className="w-8 h-8 text-blue-500 dark:text-blue-400 dark:text-blue-400" />
             <div>
@@ -81,7 +81,7 @@ export default function AdminCcrPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 dark:bg-slate-800">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-8 h-8 text-green-500" />
             <div>
@@ -90,7 +90,7 @@ export default function AdminCcrPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 dark:bg-slate-800">
           <div className="flex items-center gap-3">
             <TrendingUp className="w-8 h-8 text-amber-500 dark:text-amber-400 dark:text-amber-400" />
             <div>
@@ -102,7 +102,7 @@ export default function AdminCcrPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-6">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-6 dark:bg-slate-800">
           <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4">By Respondent Type</h3>
           <div className="space-y-3">
             {Object.entries(byType).map(([type, data]) => {
@@ -113,7 +113,7 @@ export default function AdminCcrPage() {
                     <span className="capitalize font-medium text-slate-700 dark:text-slate-300 dark:text-slate-300">{type.replace('_', ' ')}</span>
                     <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{data.submitted}/{data.total}</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
+                  <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600">
                     <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${rate}%` }} />
                   </div>
                 </div>
@@ -122,7 +122,7 @@ export default function AdminCcrPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-6">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-6 dark:bg-slate-800">
           <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4">Recent Submissions</h3>
           {recentSubmissions.length === 0 ? (
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">No submissions yet.</p>

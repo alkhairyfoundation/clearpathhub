@@ -510,7 +510,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                 key={role}
                 onClick={() => setSelectedRole(role)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  selectedRole === role ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
+                  selectedRole === role ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
                 {role === 'all' ? 'All' : roleConfig[role]?.label || role}
@@ -576,7 +576,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
+                  <tr key={user.id} className="hover:bg-slate-50 dark:bg-slate-800 transition-colors dark:hover:bg-slate-700">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
@@ -612,7 +612,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setViewingUser(user)}
-                          className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg transition-colors"
+                          className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg transition-colors dark:hover:bg-slate-700"
                           title="View Details"
                         >
                           <Eye size={15} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
@@ -659,12 +659,12 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {/* Create/Edit User Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">
                 {editingUser ? 'Edit User' : `Create ${roleConfig[formData.role]?.label || 'User'}`}
               </h3>
-              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                 <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
@@ -756,7 +756,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                         <p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 p-2">No classes found. Create classes first in the Classes page.</p>
                       )}
                       {classes.map(c => (
-                        <label key={c.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded cursor-pointer">
+                        <label key={c.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 dark:bg-slate-800 rounded cursor-pointer dark:hover:bg-slate-700">
                           <input type="checkbox" checked={teacherClassIds.includes(c.id)} onChange={(e) => {
                             if (e.target.checked) {
                               setTeacherClassIds([...teacherClassIds, c.id]);
@@ -847,7 +847,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                 </>
               )}
 
-              <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-2">
+              <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-2 dark:bg-slate-800">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-ghost flex-1">Cancel</button>
                 <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50">
                   {saving ? <><Loader2 size={16} className="animate-spin" />Saving...</> : editingUser ? 'Update User' : 'Create User'}
@@ -861,10 +861,10 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {/* User Detail View Modal */}
       {viewingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setViewingUser(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">User Details</h3>
-              <button onClick={() => setViewingUser(null)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <button onClick={() => setViewingUser(null)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                 <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
@@ -1017,10 +1017,10 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {/* Link Students to Parent Modal */}
       {showLinkModal && linkingParent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
             <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Link Students to {linkingParent.first_name}</h3>
-              <button onClick={() => setShowLinkModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+              <button onClick={() => setShowLinkModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                 <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
@@ -1076,7 +1076,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                         <label
                           key={student.id}
                           className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                            isSelected ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800'
+                            isSelected ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700'
                           }`}
                         >
                           <input
@@ -1132,7 +1132,7 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
       {/* Credentials Modal */}
       {showCredentialsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in dark:bg-slate-800">
             <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">User Created Successfully</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Please save these login credentials</p>

@@ -93,7 +93,7 @@ export default function ParentChildrenPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
@@ -104,13 +104,13 @@ export default function ParentChildrenPage() {
         </div>
 
       {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"></div></div> : children.length === 0 ? (
-        <div className="bg-white rounded-xl p-12 text-center"><Users className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p><p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Contact the school admin to link your children</p></div>
+        <div className="bg-white rounded-xl p-12 text-center dark:bg-slate-800"><Users className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No children linked to your account</p><p className="text-sm text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Contact the school admin to link your children</p></div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {children.map((child) => {
             const stats = childStats[child.id] || { avgScore: 0, attendanceRate: 0 };
             return (
-              <div key={child.id} className="bg-white rounded-xl shadow-md p-6">
+              <div key={child.id} className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 dark:text-primary-400 text-xl font-bold">{child.profile?.first_name?.[0]}{child.profile?.last_name?.[0]}</div>
                   <div><h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-lg">{child.profile?.first_name} {child.profile?.last_name}</h3><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{child.admission_number} &bull; {child.class?.name}</p></div>

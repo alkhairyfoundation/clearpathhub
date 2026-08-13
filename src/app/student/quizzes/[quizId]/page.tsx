@@ -177,9 +177,9 @@ export default function StudentTakeQuizPage() {
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${score !== null && score >= (quiz.passing_score || 50) ? 'bg-green-100' : 'bg-red-100'}`}>
           {score !== null && score >= (quiz.passing_score || 50) ? <Check size={40} className="text-green-600" /> : <AlertTriangle size={40} className="text-red-600" />}
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Quiz Complete!</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2 dark:text-slate-100">Quiz Complete!</h1>
         <p className="text-slate-500 mb-6">{score !== null && score >= (quiz.passing_score || 50) ? 'Great job!' : 'Keep practicing!'}</p>
-        <div className="bg-slate-50 rounded-xl p-6 mb-6">
+        <div className="bg-slate-50 rounded-xl p-6 mb-6 dark:bg-slate-800">
           <p className="text-sm text-slate-500 mb-1">Your Score</p>
           <p className={`text-5xl font-bold ${score !== null && score >= (quiz.passing_score || 50) ? 'text-green-600' : 'text-red-600'}`}>{score}%</p>
           <p className="text-sm text-slate-500 mt-2">Passing: {quiz.passing_score || 50}%</p>
@@ -196,21 +196,21 @@ export default function StudentTakeQuizPage() {
   if (!started) return (
     <DashboardLayout title={quiz.title}>
       <div className="max-w-2xl mx-auto card">
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">{quiz.title}</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-2 dark:text-slate-100">{quiz.title}</h1>
         <p className="text-slate-500 mb-4">{quiz.description}</p>
         {quiz.session && <p className="text-sm text-slate-500 mb-4">Lesson: {quiz.session.title}</p>}
         {previousAttempt && (
-          <div className="bg-slate-50 rounded-lg p-4 mb-6 flex items-center gap-3">
+          <div className="bg-slate-50 rounded-lg p-4 mb-6 flex items-center gap-3 dark:bg-slate-800">
             <Award size={24} className="text-purple-600" />
             <div>
-              <p className="font-medium text-slate-700">Previous Attempt</p>
+              <p className="font-medium text-slate-700 dark:text-slate-300">Previous Attempt</p>
               <p className={`text-lg font-bold ${previousAttempt.passed ? 'text-green-600' : 'text-red-600'}`}>{previousAttempt.score}%</p>
             </div>
           </div>
         )}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-50 rounded-lg p-4 text-center"><Clock size={24} className="mx-auto text-primary-600 mb-2" /><p className="text-lg font-bold">{quiz.time_limit} min</p><p className="text-xs text-slate-500">Duration</p></div>
-          <div className="bg-slate-50 rounded-lg p-4 text-center"><Award size={24} className="mx-auto text-purple-600 mb-2" /><p className="text-lg font-bold">{questions.length}</p><p className="text-xs text-slate-500">Questions</p></div>
+          <div className="bg-slate-50 rounded-lg p-4 text-center dark:bg-slate-800"><Clock size={24} className="mx-auto text-primary-600 mb-2" /><p className="text-lg font-bold">{quiz.time_limit} min</p><p className="text-xs text-slate-500">Duration</p></div>
+          <div className="bg-slate-50 rounded-lg p-4 text-center dark:bg-slate-800"><Award size={24} className="mx-auto text-purple-600 mb-2" /><p className="text-lg font-bold">{questions.length}</p><p className="text-xs text-slate-500">Questions</p></div>
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-amber-800"><strong>Instructions:</strong> Timer starts when you begin. Flag questions to review. Auto-submit when time runs out.</p>
@@ -228,10 +228,10 @@ export default function StudentTakeQuizPage() {
     <DashboardLayout title={quiz.title}>
       <div className="space-y-4 max-w-3xl mx-auto">
         <div className="flex items-center justify-between">
-          <button onClick={() => { if (confirm('Leave quiz? Progress will be lost.')) router.push('/student/quizzes'); }} className="flex items-center gap-2 text-slate-600 hover:text-slate-800 text-sm">
+          <button onClick={() => { if (confirm('Leave quiz? Progress will be lost.')) router.push('/student/quizzes'); }} className="flex items-center gap-2 text-slate-600 hover:text-slate-800 text-sm dark:text-slate-400 dark:hover:text-slate-200">
             Exit
           </button>
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono font-bold ${timeLeft < 60 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-800'}`}>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-mono font-bold ${timeLeft < 60 ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200'}`}>
             <Clock size={16} />{formatTime(timeLeft)}
           </div>
         </div>
@@ -244,7 +244,7 @@ export default function StudentTakeQuizPage() {
             </button>
           </div>
 
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">{question.question}</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4 dark:text-slate-100">{question.question}</h2>
 
           {question.question_image && (
             <div className="mb-4"><img src={question.question_image} alt="Question" className="max-h-64 rounded-lg border object-contain" /></div>
@@ -253,9 +253,9 @@ export default function StudentTakeQuizPage() {
           {question.question_type === 'multiple_choice' && question.options && (
             <div className="space-y-3">
               {question.options.map((opt: string, i: number) => (
-                <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${answers[currentQ] === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${answers[currentQ] === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300 dark:border-slate-700'}`}>
                   <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-semibold text-sm flex-shrink-0">{String.fromCharCode(65 + i)}</span>
+                    <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-semibold text-sm flex-shrink-0 dark:bg-slate-700">{String.fromCharCode(65 + i)}</span>
                     <span className="flex-1">{opt}</span>
                   </div>
                 </button>
@@ -266,7 +266,7 @@ export default function StudentTakeQuizPage() {
           {question.question_type === 'true_false' && (
             <div className="grid grid-cols-2 gap-3">
               {['True', 'False'].map((opt, i) => (
-                <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`p-6 rounded-xl text-center font-semibold border-2 transition-all ${answers[currentQ] === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'}`}>{opt}</button>
+                <button key={i} onClick={() => handleAnswer(currentQ, i)} className={`p-6 rounded-xl text-center font-semibold border-2 transition-all ${answers[currentQ] === i ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300 dark:border-slate-700'}`}>{opt}</button>
               ))}
             </div>
           )}
@@ -290,9 +290,9 @@ export default function StudentTakeQuizPage() {
               {question.options.map((opt: string, i: number) => {
                 const selected = Array.isArray(answers[currentQ]) && answers[currentQ].includes(i);
                 return (
-                  <button key={i} onClick={() => handleMultipleSelection(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${selected ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                  <button key={i} onClick={() => handleMultipleSelection(currentQ, i)} className={`w-full p-4 rounded-xl text-left border-2 transition-all ${selected ? 'border-primary-500 bg-primary-50' : 'border-slate-200 hover:border-slate-300 dark:border-slate-700'}`}>
                     <div className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'border-primary-500 bg-primary-500' : 'border-slate-300'}`}>
+                      <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'border-primary-500 bg-primary-500' : 'border-slate-300 dark:border-slate-600'}`}>
                         {selected && <Check size={14} className="text-white" />}
                       </div>
                       <span className="flex-1">{opt}</span>
@@ -318,10 +318,10 @@ export default function StudentTakeQuizPage() {
         </div>
 
         <div className="card">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Question Navigator</h3>
+          <h3 className="text-sm font-semibold text-slate-900 mb-3 dark:text-slate-100">Question Navigator</h3>
           <div className="flex flex-wrap gap-2">
             {questions.map((_, i) => (
-              <button key={i} onClick={() => setCurrentQ(i)} className={`w-10 h-10 rounded-lg text-sm font-semibold transition-all ${i === currentQ ? 'bg-primary-600 text-white' : answers[i] !== undefined ? 'bg-green-100 text-green-700' : flagged.has(i) ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{i + 1}</button>
+              <button key={i} onClick={() => setCurrentQ(i)} className={`w-10 h-10 rounded-lg text-sm font-semibold transition-all ${i === currentQ ? 'bg-primary-600 text-white' : answers[i] !== undefined ? 'bg-green-100 text-green-700' : flagged.has(i) ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}`}>{i + 1}</button>
             ))}
           </div>
         </div>

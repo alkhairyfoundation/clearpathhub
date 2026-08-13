@@ -192,7 +192,7 @@ export default function AdminDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsCards.map((card, index) => (
-          <Link key={index} href={card.href} className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5 hover:shadow-md transition-all hover:border-slate-300 dark:border-slate-600 dark:border-slate-600 relative overflow-hidden group">
+          <Link key={index} href={card.href} className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-all hover:border-slate-300 dark:border-slate-600 relative overflow-hidden group dark:bg-slate-800">
             <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-[0.03] group-hover:opacity-[0.06] transition-opacity ${card.iconBg}`} />
             <div className="flex items-center justify-between mb-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${card.iconBg}`}>
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
       {/* Secondary Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {secondaryStats.map((stat, i) => (
-          <Link key={i} href={stat.href} className="bg-white p-4 rounded-xl border border-slate-100 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 transition-colors">
+          <Link key={i} href={stat.href} className="bg-white p-4 rounded-xl border border-slate-100 dark:border-slate-700 flex items-center justify-between hover:bg-slate-50 dark:bg-slate-800 transition-colors dark:hover:bg-slate-700">
             <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{stat.label}</span>
             <span className={`font-bold ${stat.color || 'text-slate-700 dark:text-slate-300 dark:text-slate-300'}`}>{stat.value}</span>
           </Link>
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
               { label: 'Analytics', href: '/admin/analytics', icon: <BarChart3 size={18} />, color: 'text-rose-600 dark:text-rose-400 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 dark:bg-rose-900/20' },
               { label: 'Settings', href: '/admin/settings', icon: <Settings size={18} />, color: 'text-slate-600 dark:text-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800' },
             ].map((action, index) => (
-              <Link key={index} href={action.href} className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border border-transparent hover:border-slate-100 dark:border-slate-700 dark:border-slate-700 transition-all text-center">
+              <Link key={index} href={action.href} className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 dark:bg-slate-800 border border-transparent hover:border-slate-100 dark:border-slate-700 transition-all text-center dark:hover:bg-slate-700">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${action.color}`}>
                   {action.icon}
                 </div>

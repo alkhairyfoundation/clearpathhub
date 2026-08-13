@@ -253,7 +253,7 @@ export default function StudentResultsPage() {
     <DashboardLayout title="My Results" subtitle="View your academic performance">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div className="flex-1">
@@ -267,15 +267,15 @@ export default function StudentResultsPage() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Average</span><Award className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={18} /></div><p className={`text-2xl font-bold ${avg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : avg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{avg}%</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Highest</span><TrendingUp className="text-green-600 dark:text-green-400 dark:text-green-400" size={18} /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{highest}%</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Lowest</span><BookOpen className="text-red-600 dark:text-red-400 dark:text-red-400" size={18} /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{lowest}%</p></div>
-          <div className="bg-white rounded-xl shadow-md p-6"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Assessments</span><Calendar className="text-purple-600 dark:text-purple-400 dark:text-purple-400" size={18} /></div><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{allScores.length}</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Average</span><Award className="text-primary-600 dark:text-primary-400 dark:text-primary-400" size={18} /></div><p className={`text-2xl font-bold ${avg >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : avg >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{avg}%</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Highest</span><TrendingUp className="text-green-600 dark:text-green-400 dark:text-green-400" size={18} /></div><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{highest}%</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Lowest</span><BookOpen className="text-red-600 dark:text-red-400 dark:text-red-400" size={18} /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{lowest}%</p></div>
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800"><div className="flex items-center justify-between mb-2"><span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Assessments</span><Calendar className="text-purple-600 dark:text-purple-400 dark:text-purple-400" size={18} /></div><p className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">{allScores.length}</p></div>
         </div>
 
         {subjectBreakdown.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
               <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />Per-Subject Performance</h3>
               <div className="space-y-3">
                 {subjectBreakdown.map(s => (
@@ -289,7 +289,7 @@ export default function StudentResultsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
               <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />Subject Radar</h3>
               {radarData.length >= 3 && (
                 <ResponsiveContainer width="100%" height={280}>
@@ -305,7 +305,7 @@ export default function StudentResultsPage() {
               {radarData.length < 3 && <p className="text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm py-8 text-center">Add more subjects to see radar</p>}
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
               <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><PieChart size={18} className="text-purple-600 dark:text-purple-400 dark:text-purple-400" />Grade Distribution</h3>
               <div className="space-y-2">
                 {Object.entries(gradeDist).sort(([a], [b]) => a.localeCompare(b)).map(([grade, count]) => {
@@ -326,7 +326,7 @@ export default function StudentResultsPage() {
         )}
 
         {subjectBreakdown.length > 0 && (
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3 flex items-center gap-2"><Award size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />Performance Insights</h3>
             <p className="text-slate-600 dark:text-slate-400 dark:text-slate-400 text-sm leading-relaxed">{buildPerformanceText()}</p>
           </div>
@@ -343,7 +343,7 @@ export default function StudentResultsPage() {
         )}
 
         {examTypeAvgs.length > 0 && (
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-green-600 dark:text-green-400 dark:text-green-400" />Performance by Assessment Type</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {examTypeAvgs.map(e => (
@@ -358,7 +358,7 @@ export default function StudentResultsPage() {
         )}
 
         {sortedResults.length > 3 && (
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-white rounded-xl shadow-md p-6 dark:bg-slate-800">
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4 flex items-center gap-2"><TrendingUp size={18} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />Score Trend</h3>
             <div className="flex items-end gap-1 h-32">
               {sortedResults.slice(-20).map((r, i) => (
@@ -371,7 +371,7 @@ export default function StudentResultsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl shadow-md overflow-hidden dark:bg-slate-800">
           {loading ? <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div> : allScores.length === 0 ? <div className="p-12 text-center"><Award className="mx-auto text-gray-400 mb-4" size={48} /><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No results yet</p></div> : (
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-slate-800 dark:bg-slate-800"><tr><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Assessment</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Type</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Score</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Grade</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Date</th><th className="text-left py-3 px-6 text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-400">Details</th></tr></thead>
@@ -380,7 +380,7 @@ export default function StudentResultsPage() {
                 const tp = r.topic_performance;
                 const subjKeys = tp?.by_subject ? Object.keys(tp.by_subject) : [];
                 return (
-                <tr key={`${r.type}-${r.id}`} className="border-t hover:bg-gray-50 dark:bg-slate-800 dark:bg-slate-800">
+                <tr key={`${r.type}-${r.id}`} className="border-t hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                   <td className="py-4 px-6 font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{r.label}</td>
                   <td className="py-4 px-6"><span className={`capitalize text-xs font-semibold px-2 py-0.5 rounded-full ${r.type === 'exam' ? 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 dark:text-primary-300' : r.type === 'test' ? 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700' : 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 dark:text-amber-300'}`}>{r.type}</span></td>
                   <td className="py-4 px-6"><span className={`font-bold ${r.score >= 70 ? 'text-green-600 dark:text-green-400 dark:text-green-400' : r.score >= 50 ? 'text-amber-600 dark:text-amber-400 dark:text-amber-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}`}>{r.score}</span></td>

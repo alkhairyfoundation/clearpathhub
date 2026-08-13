@@ -79,7 +79,7 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
             </div>
           </div>
           <div className="w-full bg-white/20 rounded-full h-2 mt-3">
-            <div className="bg-white h-2 rounded-full transition-all" style={{ width: `${calculateChainProgress()}%` }} />
+            <div className="bg-white h-2 rounded-full transition-all dark:bg-slate-800" style={{ width: `${calculateChainProgress()}%` }} />
           </div>
         </div>
       )}
@@ -99,7 +99,7 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
                 className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
                   expandedDimension === dim
                     ? 'bg-primary-600 text-white'
-                    : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                 }`}
               >
                 {DIMENSION_LABELS[dim]}
@@ -182,7 +182,7 @@ export default function GoalVisualizer({ goals, studentId, compact }: GoalVisual
                     </div>
                     <div className="ml-3 text-right shrink-0">
                       {goal.target_value != null && goal.target_value > 0 && (
-                        <div className="w-16 bg-slate-200 rounded-full h-1.5">
+                        <div className="w-16 bg-slate-200 rounded-full h-1.5 dark:bg-slate-600">
                           <div
                             className="bg-primary-500 h-1.5 rounded-full"
                             style={{ width: `${Math.min((goal.achieved_value ?? 0) / goal.target_value * 100, 100)}%` }}

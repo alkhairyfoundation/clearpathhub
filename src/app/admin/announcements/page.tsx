@@ -154,7 +154,7 @@ export default function AdminAnnouncementsPage() {
                 const isScheduled = ann.scheduled_at && new Date(ann.scheduled_at) > new Date();
                 const isExpired = ann.expires_at && new Date(ann.expires_at) < new Date();
                 return (
-                  <div key={ann.id} className={`p-4 rounded-xl border ${ann.is_active === false || isExpired ? 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-slate-200 dark:border-slate-700 dark:border-slate-700 opacity-70' : 'bg-white border-slate-100 dark:border-slate-700 dark:border-slate-700'} ${ann.priority === 'urgent' ? 'border-l-4 border-l-red-500' : ann.priority === 'high' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-blue-500'}`}>
+                  <div key={ann.id} className={`p-4 rounded-xl border ${ann.is_active === false || isExpired ? 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-slate-200 dark:border-slate-700 dark:border-slate-700 opacity-70' : 'bg-white border-slate-100 dark:border-slate-700 dark:bg-slate-800'} ${ann.priority === 'urgent' ? 'border-l-4 border-l-red-500' : ann.priority === 'high' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-blue-500'}`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-start gap-3 flex-1">
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><Megaphone size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></div>
@@ -174,7 +174,7 @@ export default function AdminAnnouncementsPage() {
                         {isScheduled && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30 text-purple-700 flex items-center gap-1"><Clock size={10} />Scheduled</span>}
                         {isExpired && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400">Expired</span>}
                         {ann.is_active !== false && !isExpired && !isScheduled && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300 flex items-center gap-1"><Eye size={10} />Active</span>}
-                        <button onClick={() => toggleActive(ann)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg" title={ann.is_active === false ? 'Activate' : 'Deactivate'}>{ann.is_active === false ? <CheckCircle size={15} className="text-green-600 dark:text-green-400 dark:text-green-400" /> : <Eye size={15} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />}</button>
+                        <button onClick={() => toggleActive(ann)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700" title={ann.is_active === false ? 'Activate' : 'Deactivate'}>{ann.is_active === false ? <CheckCircle size={15} className="text-green-600 dark:text-green-400 dark:text-green-400" /> : <Eye size={15} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />}</button>
                         <button onClick={() => openModal(ann)} className="p-1.5 hover:bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-lg"><Edit size={15} className="text-blue-600 dark:text-blue-400 dark:text-blue-400" /></button>
                         <button onClick={() => handleDelete(ann.id)} className="p-1.5 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg"><Trash2 size={15} className="text-red-600 dark:text-red-400 dark:text-red-400" /></button>
                       </div>
@@ -188,10 +188,10 @@ export default function AdminAnnouncementsPage() {
 
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in">
-              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 dark:bg-slate-800">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{editingAnn ? 'Edit' : 'New'} Announcement</h3>
-                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
               </div>
               <div className="p-5 space-y-4">
                 {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}

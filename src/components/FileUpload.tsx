@@ -93,7 +93,7 @@ export default function FileUpload({
           uploading ? 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-slate-300 dark:border-slate-600 dark:border-slate-600' :
           error ? 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border-red-200 dark:border-red-900/40 dark:border-red-900/40' :
           success ? 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40' :
-          'bg-white border-slate-200 dark:border-slate-700 dark:border-slate-700 hover:border-cp-gold/50'
+          'bg-white border-slate-200 dark:border-slate-700 hover:border-cp-gold/50 dark:bg-slate-800'
         }`}
       >
         <input
@@ -124,7 +124,7 @@ export default function FileUpload({
           ) : (
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="w-12 h-12 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full flex items-center justify-center mb-3 cursor-pointer hover:bg-slate-200 transition-colors"
+              className="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-3 cursor-pointer hover:bg-slate-200 transition-colors dark:hover:bg-slate-600"
             >
               <Upload className="text-slate-400 dark:text-slate-500 dark:text-slate-500" size={20} />
             </div>

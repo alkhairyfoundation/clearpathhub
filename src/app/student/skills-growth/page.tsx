@@ -99,7 +99,7 @@ export default function SkillsGrowthPage() {
     <DashboardLayout title="Skills Growth" subtitle="Track your life skills development">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Skills Growth</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Track and develop your life skills</p>

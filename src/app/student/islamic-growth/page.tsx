@@ -120,7 +120,7 @@ export default function IslamicGrowthPage() {
     <DashboardLayout title="Islamic Growth" subtitle="Track your Islamic character development">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Islamic Growth</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Salah, Quran, Adab, and character tracking</p>
@@ -163,7 +163,7 @@ export default function IslamicGrowthPage() {
                 </h3>
                 <div className="space-y-2">
                   {salahNames.map(s => (
-                    <label key={s.key} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700">
+                    <label key={s.key} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg cursor-pointer hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-700">
                       <div>
                         <p className="text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200">{s.label}</p>
                         <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{s.time}</p>
@@ -214,7 +214,7 @@ export default function IslamicGrowthPage() {
                           className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${
                             form.adab_rating === r
                               ? 'bg-primary-600 text-white'
-                              : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-200'
+                              : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                           }`}>
                           {r}
                         </button>
@@ -268,7 +268,7 @@ export default function IslamicGrowthPage() {
                       <div key={day.id} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg">
                         <div className="flex items-center gap-2">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                            isPerfect ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:text-slate-400 dark:text-slate-400'
+                            isPerfect ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:text-slate-400 dark:bg-slate-600'
                           }`}>
                             {isPerfect ? <CheckCircle size={14} /> : completedSalah}
                           </div>

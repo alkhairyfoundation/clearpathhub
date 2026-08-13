@@ -126,7 +126,7 @@ export default function AccountantPaymentsPage() {
             </div>
             <div className="space-y-2">
               {pendingUploads.slice(0, 5).map((u: any) => (
-                <div key={u.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-100">
+                <div key={u.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-100 dark:bg-slate-800">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 rounded-full flex items-center justify-center"><AlertCircle size={14} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" /></div>
                     <div>
@@ -173,7 +173,7 @@ export default function AccountantPaymentsPage() {
                     const totalPaid = relatedReceipts.reduce((s: number, r: any) => s + (r.amount_paid || 0), 0);
                     const balance = Math.max(0, (inv.amount || 0) - totalPaid);
                     return (
-                      <tr key={inv.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                      <tr key={inv.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                         <td className="py-3 px-4 font-mono text-sm font-medium">{inv.invoice_number}</td>
                         <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white">{inv.student?.first_name} {inv.student?.last_name}</td>
                         <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">{inv.description || 'School Fees'}</td>
@@ -204,10 +204,10 @@ export default function AccountantPaymentsPage() {
 
         {showReceiptModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
               <div className="flex items-center justify-between p-6 border-b">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Record Payment</h2>
-                <button onClick={() => setShowReceiptModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+                <button onClick={() => setShowReceiptModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
               </div>
               <div className="p-6 space-y-4">
                 <div>

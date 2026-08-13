@@ -60,7 +60,7 @@ export default function Calculator() {
     setWaiting(false);
   }
 
-  const btn = 'bg-white border border-slate-200 dark:border-slate-700 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 active:bg-slate-200 transition-all py-2.5';
+  const btn = 'bg-white border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:bg-slate-700 active:bg-slate-200 transition-all py-2.5 dark:hover:bg-slate-700';
   const opBtn = 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-900/40 dark:border-primary-900/40 rounded-lg text-sm font-bold text-primary-700 dark:text-primary-300 dark:text-primary-300 hover:bg-primary-200 active:bg-primary-300 transition-all py-2.5';
   const eqBtn = 'bg-primary-600 border border-primary-600 rounded-lg text-sm font-bold text-white hover:bg-primary-700 active:bg-primary-800 transition-all py-2.5';
 
@@ -75,13 +75,13 @@ export default function Calculator() {
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden animate-scale-in">
+        <div className="fixed bottom-24 right-6 z-50 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-scale-in dark:bg-slate-800">
           <div className="flex items-center justify-between px-4 py-3 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 flex items-center gap-1.5"><CalcIcon size={14} />Calculator</span>
-            <button onClick={() => setOpen(false)} className="p-0.5 hover:bg-slate-200 rounded"><X size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
+            <button onClick={() => setOpen(false)} className="p-0.5 hover:bg-slate-200 rounded dark:hover:bg-slate-600"><X size={14} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" /></button>
           </div>
 
-          <div className="px-4 py-3 bg-white border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 text-right">
+          <div className="px-4 py-3 bg-white border-b border-slate-100 dark:border-slate-700 text-right dark:bg-slate-800">
             <div className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white font-mono truncate">{display}</div>
           </div>
 

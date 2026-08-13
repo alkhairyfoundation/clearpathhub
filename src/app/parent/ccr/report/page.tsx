@@ -118,19 +118,19 @@ function ParentCcrReportContent() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4 text-center">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center dark:bg-slate-800">
           <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Foundation</p>
           <p className="text-2xl font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400">{sgi.foundation}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4 text-center">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center dark:bg-slate-800">
           <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Performance</p>
           <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">{sgi.performance}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4 text-center">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center dark:bg-slate-800">
           <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Environment</p>
           <p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{sgi.environment}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-4 text-center">
+        <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center dark:bg-slate-800">
           <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Aspiration</p>
           <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 dark:text-amber-400">{sgi.aspiration}</p>
         </div>
@@ -150,7 +150,7 @@ function ParentCcrReportContent() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-6 dark:bg-slate-800">
         <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-4">Domain Scores</h3>
         <div className="space-y-3">
           {Object.entries(sgi.domainScores).map(([key, ds]) => (
@@ -159,7 +159,7 @@ function ParentCcrReportContent() {
                 <span className="capitalize text-slate-700 dark:text-slate-300 dark:text-slate-300">{key}</span>
                 <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{ds.combined}/100</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
+              <div className="w-full bg-slate-200 rounded-full h-2 dark:bg-slate-600">
                 <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${ds.combined}%` }} />
               </div>
             </div>

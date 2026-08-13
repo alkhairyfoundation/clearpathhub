@@ -80,7 +80,7 @@ export default function PromotionPage() {
     <DashboardLayout title="Promotion" subtitle="Promotion readiness assessment">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">Promotion Readiness</h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{data.academic_year} • {data.term} • {data.current_class_name || 'Current Class'}</p>

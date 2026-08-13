@@ -1222,7 +1222,7 @@ function ReportCardContent() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></button>
             <div><h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">Official Report Card</h1><p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 text-sm">Generate and download comprehensive student report cards</p></div>
           </div>
           <div className="flex items-center gap-2">
@@ -1254,7 +1254,7 @@ function ReportCardContent() {
         {loading ? (
           <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent" /></div>
         ) : !selectedStudent ? (
-          <div className="bg-white rounded-xl p-12 text-center text-slate-500 dark:text-slate-400 dark:text-slate-400"><User size={48} className="mx-auto mb-4 opacity-30" /><p>No student selected</p></div>
+          <div className="bg-white rounded-xl p-12 text-center text-slate-500 dark:text-slate-400 dark:bg-slate-800"><User size={48} className="mx-auto mb-4 opacity-30" /><p>No student selected</p></div>
         ) : (
           <>
             {/* School & Student Info Card */}
@@ -1282,7 +1282,7 @@ function ReportCardContent() {
             </div>
 
             {/* Scores Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden dark:bg-slate-800">
               <div className="p-4 border-b bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center justify-between">
                 <h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm flex items-center gap-2"><Award size={16} />Score Sheet</h3>
                 <div className="flex items-center gap-2">
@@ -1351,8 +1351,8 @@ function ReportCardContent() {
 
             {/* Remarks Editor */}
             {showRemarksEditor && (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5 space-y-4">
-                <div className="flex items-center justify-between"><h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">Remarks</h3><button onClick={() => setShowRemarksEditor(false)} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400"><X size={18} /></button></div>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 space-y-4 dark:bg-slate-800">
+                <div className="flex items-center justify-between"><h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">Remarks</h3><button onClick={() => setShowRemarksEditor(false)} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-400"><X size={18} /></button></div>
                 <div><label className="label">Teacher's Remark</label><textarea value={reportRemarks.teacher_remarks || ''} onChange={e => setReportRemarks({ ...reportRemarks, teacher_remarks: e.target.value })} className="input" rows={3} placeholder="Enter teacher's comment..." /></div>
                 <div><label className="label">Principal's Remark</label><textarea value={reportRemarks.principal_remarks || ''} onChange={e => setReportRemarks({ ...reportRemarks, principal_remarks: e.target.value })} className="input" rows={3} placeholder="Enter principal's comment..." /></div>
                 <div><label className="label">Next Term Begins</label><input type="date" value={reportRemarks.next_term_begins || ''} onChange={e => setReportRemarks({ ...reportRemarks, next_term_begins: e.target.value })} className="input" /></div>
@@ -1364,8 +1364,8 @@ function ReportCardContent() {
 
             {/* Domain Grades Editor */}
             {showDomainEditor && (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 p-5 space-y-5">
-                <div className="flex items-center justify-between"><h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">Domain Assessment (1-5)</h3><button onClick={() => setShowDomainEditor(false)} className="text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400"><X size={18} /></button></div>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 space-y-5 dark:bg-slate-800">
+                <div className="flex items-center justify-between"><h3 className="font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-sm">Domain Assessment (1-5)</h3><button onClick={() => setShowDomainEditor(false)} className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-400"><X size={18} /></button></div>
                 {[
                   { title: 'Cognitive Domain', fields: COGNITIVE_FIELDS, color: 'bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/40 dark:border-blue-900/40' },
                   { title: 'Affective Domain', fields: AFFECTIVE_FIELDS, color: 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border-green-200 dark:border-green-900/40 dark:border-green-900/40' },
@@ -1380,7 +1380,7 @@ function ReportCardContent() {
                           <div className="flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map(star => (
                               <button key={star} type="button" onClick={() => setDomainGrades({ ...domainGrades, [f.key]: star })}
-                                className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${(domainGrades[f.key] || 0) >= star ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:bg-slate-200'}`}>{star}</button>
+                                className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${(domainGrades[f.key] || 0) >= star ? 'bg-primary-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600'}`}>{star}</button>
                             ))}
                           </div>
                         </div>

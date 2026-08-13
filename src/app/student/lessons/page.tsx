@@ -203,7 +203,7 @@ export default function StudentLessonsPage() {
     <DashboardLayout title="Lesson Notes" subtitle="Download and view lesson materials">
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
@@ -241,13 +241,13 @@ export default function StudentLessonsPage() {
                   return matchSearch && matchSubject;
                 });
                 return filtered.length === 0 ? (
-                <div className="col-span-full bg-white rounded-xl p-12 text-center">
+                <div className="col-span-full bg-white rounded-xl p-12 text-center dark:bg-slate-800">
                   <FileText className="mx-auto text-gray-400 mb-4" size={48} />
                   <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No lessons available</p>
                 </div>
               ) : (
                 filtered.map((lesson) => (
-                  <div key={lesson.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => openLesson(lesson)}>
+                  <div key={lesson.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer dark:bg-slate-800" onClick={() => openLesson(lesson)}>
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
                         <FileText className="text-emerald-600 dark:text-emerald-400 dark:text-emerald-400" size={24} />
@@ -292,13 +292,13 @@ export default function StudentLessonsPage() {
         {/* Lesson Detail Modal (with inline quiz) */}
         {selectedLesson && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedLesson(null)}>
-            <div ref={notesModalRef} className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 border-b sticky top-0 bg-white z-10 flex items-center justify-between">
+            <div ref={notesModalRef} className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-slate-800" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 border-b sticky top-0 bg-white z-10 flex items-center justify-between dark:bg-slate-800">
                 <div>
                   <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">{selectedLesson.title}</h2>
                   <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{selectedLesson.subject?.name}</p>
                 </div>
-                <button onClick={() => setSelectedLesson(null)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full">
+                <button onClick={() => setSelectedLesson(null)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-full dark:hover:bg-slate-700">
                   <ArrowLeft size={20} className="rotate-90 text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
@@ -310,7 +310,7 @@ export default function StudentLessonsPage() {
                   <h3 className="font-medium text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-3">Attachments</h3>
                   <div className="space-y-2">
                     {selectedLesson.attachments.map((url: string, i: number) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 transition-colors"><Download size={16} /><span className="truncate">{url.split('/').pop()}</span></a>
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-slate-800 rounded-lg hover:bg-gray-100 dark:bg-slate-700 transition-colors dark:hover:bg-slate-700"><Download size={16} /><span className="truncate">{url.split('/').pop()}</span></a>
                     ))}
                   </div>
                 </div>
@@ -338,7 +338,7 @@ export default function StudentLessonsPage() {
                     <h3 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Lesson Quiz</h3>
                     <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">Question {quizIdx + 1} of {quizQuestions.length}</span>
                   </div>
-                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 dark:bg-slate-600">
                     <div className="bg-primary-600 h-1.5 rounded-full transition-all" style={{ width: `${((quizIdx + 1) / quizQuestions.length) * 100}%` }} />
                   </div>
                   <h4 className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 text-lg">{quizQuestions[quizIdx].question}</h4>

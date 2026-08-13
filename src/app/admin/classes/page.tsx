@@ -97,7 +97,7 @@ export default function AdminClassesPage() {
     <DashboardLayout title="Classes" subtitle="Manage school classes and class teachers">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
           </button>
           <div>
@@ -139,15 +139,15 @@ export default function AdminClassesPage() {
                 const dept = departments.find(d => d.id === cls.department_id);
                 const teacher = teachers.find(t => t.id === cls.class_teacher_id);
                 return (
-                  <tr key={cls.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                  <tr key={cls.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                     <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white dark:text-white">{cls.name}</td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Level {cls.level}</td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{dept?.name || '-'}</td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden lg:table-cell">{teacher ? `${teacher.first_name} ${teacher.last_name}` : '-'}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => openModal(cls)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
-                        <button onClick={() => handleDelete(cls.id)} disabled={deleting === cls.id} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                        <button onClick={() => openModal(cls)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                        <button onClick={() => handleDelete(cls.id)} disabled={deleting === cls.id} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                           {deleting === cls.id ? <Loader2 size={16} className="animate-spin text-red-500 dark:text-red-400 dark:text-red-400" /> : <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />}
                         </button>
                       </div>
@@ -162,10 +162,10 @@ export default function AdminClassesPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">{editing ? 'Edit Class' : 'Add Class'}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><X size={20} /></button>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
             </div>
             <div className="p-6 space-y-4">
               {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}

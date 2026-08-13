@@ -9,7 +9,7 @@ import { Mail, Lock, Eye, EyeOff, GraduationCap, ArrowLeft, BookOpen, Shield, Gr
 function BismillahPopup({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in dark:bg-slate-800">
         <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/25">
           <BookOpen className="text-white" size={28} />
         </div>
@@ -142,12 +142,12 @@ function LoginPageContent() {
       {/* Right Panel - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <Link href="/" className="flex items-center gap-2 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white mb-8 transition-colors lg:hidden">
+          <Link href="/" className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white mb-8 transition-colors lg:hidden dark:hover:text-slate-100">
             <ArrowLeft size={18} />
             <span className="text-sm font-medium">Back to Home</span>
           </Link>
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 dark:border-slate-700">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-700 dark:bg-slate-800">
             <div className="text-center mb-8">
               <div className="w-14 h-14 bg-gradient-to-br from-cp-gold to-cp-gold-light rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cp-gold/25">
                 <GraduationCap className="text-white" size={24} />
@@ -192,7 +192,7 @@ function LoginPageContent() {
                     placeholder="Enter your password"
                     required
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:text-slate-400">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-400">
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>

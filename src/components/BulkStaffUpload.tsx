@@ -153,13 +153,13 @@ export default function BulkStaffUpload({ isOpen, onClose, onSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-scale-in">
-        <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col animate-scale-in dark:bg-slate-800">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800">
           <div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Bulk Import Staff</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Upload a CSV file to create multiple teachers, accountants, or admins at once</p>
           </div>
-          <button onClick={handleClose} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+          <button onClick={handleClose} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
             <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
           </button>
         </div>
@@ -179,7 +179,7 @@ export default function BulkStaffUpload({ isOpen, onClose, onSuccess }: Props) {
                 </p>
               </div>
 
-              <button onClick={downloadTemplate} className="px-4 py-2 border border-slate-300 dark:border-slate-600 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 flex items-center gap-2 text-sm">
+              <button onClick={downloadTemplate} className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 flex items-center gap-2 text-sm dark:hover:bg-slate-700">
                 <Download size={16} /> Download CSV Template
               </button>
 

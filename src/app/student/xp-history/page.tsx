@@ -77,7 +77,7 @@ export default function XPHistoryPage() {
     <DashboardLayout title="XP & Levels" subtitle="Track your gamification progress">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
+          <Link href="/student" className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" /></Link>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
               <Zap size={20} className="text-amber-600 dark:text-amber-400 dark:text-amber-400" />
@@ -170,13 +170,13 @@ export default function XPHistoryPage() {
           <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 p-0.5 rounded-lg">
             <button
               onClick={() => setFilter('all')}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${filter === 'all' ? 'bg-white shadow-sm text-slate-800 dark:text-slate-200 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}
+              className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${filter === 'all' ? 'bg-white shadow-sm text-slate-800 dark:text-slate-200 dark:bg-slate-800' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}
             >All</button>
             {xpTypes.map(type => (
               <button
                 key={type}
                 onClick={() => setFilter(type)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${filter === type ? 'bg-white shadow-sm text-slate-800 dark:text-slate-200 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-medium ${filter === type ? 'bg-white shadow-sm text-slate-800 dark:text-slate-200 dark:bg-slate-800' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`}
               >{type.replace(/_/g, ' ')}</button>
             ))}
           </div>
@@ -193,7 +193,7 @@ export default function XPHistoryPage() {
             const isPositive = tx.xp_amount > 0;
             const isMultiplied = tx.multiplier > 1;
             return (
-              <div key={tx.id} className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+              <div key={tx.id} className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     isPositive ? 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30'

@@ -116,7 +116,7 @@ export default function TeacherBehaviorPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
             </button>
             <div>
@@ -129,7 +129,7 @@ export default function TeacherBehaviorPage() {
           </button>
         </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden dark:bg-slate-800">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -158,7 +158,7 @@ export default function TeacherBehaviorPage() {
                     report.severity === 'critical' ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400' :
                     report.severity === 'high' ? 'bg-orange-100 text-orange-700' :
                     report.severity === 'medium' ? 'bg-blue-100 dark:bg-blue-900/30 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 dark:text-blue-300' :
-                    'bg-slate-200 text-slate-600 dark:text-slate-400 dark:text-slate-400'
+                    'bg-slate-200 text-slate-600 dark:text-slate-400 dark:bg-slate-600'
                   }`}>
                     {report.severity}
                   </span>
@@ -167,19 +167,19 @@ export default function TeacherBehaviorPage() {
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200 mb-2">{report.title || 'Weekly Report'}</p>
 
                 <div className="grid grid-cols-4 gap-2 mb-4 text-center">
-                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <div className="p-2 bg-white rounded-lg shadow-sm dark:bg-slate-800">
                     <div className="text-sm font-bold text-yellow-500 dark:text-yellow-400 dark:text-yellow-400">{report.rating}★</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">Rating</div>
                   </div>
-                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <div className="p-2 bg-white rounded-lg shadow-sm dark:bg-slate-800">
                     <div className="text-sm font-bold text-blue-500 dark:text-blue-400 dark:text-blue-400">{report.punctuality}</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">Punctual</div>
                   </div>
-                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <div className="p-2 bg-white rounded-lg shadow-sm dark:bg-slate-800">
                     <div className="text-sm font-bold text-emerald-500">{report.class_participation}</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">Class</div>
                   </div>
-                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <div className="p-2 bg-white rounded-lg shadow-sm dark:bg-slate-800">
                     <div className="text-sm font-bold text-purple-500 dark:text-purple-400 dark:text-purple-400">{report.homework_completion}</div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">H.Work</div>
                   </div>
@@ -195,10 +195,10 @@ export default function TeacherBehaviorPage() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800">
+            <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10 dark:bg-slate-800">
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">New Behavior Report</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-full transition-colors">
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-full transition-colors dark:hover:bg-slate-700">
                 <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
               </button>
             </div>
@@ -266,17 +266,17 @@ export default function TeacherBehaviorPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div>
                     <label className="label text-xs">Punctuality</label>
-                    <input type="range" min="1" max="5" value={formData.punctuality} onChange={(e) => setFormData({ ...formData, punctuality: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600" />
+                    <input type="range" min="1" max="5" value={formData.punctuality} onChange={(e) => setFormData({ ...formData, punctuality: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600 dark:bg-slate-600" />
                     <div className="text-center font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">{formData.punctuality}</div>
                   </div>
                   <div>
                     <label className="label text-xs">Participation</label>
-                    <input type="range" min="1" max="5" value={formData.class_participation} onChange={(e) => setFormData({ ...formData, class_participation: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600" />
+                    <input type="range" min="1" max="5" value={formData.class_participation} onChange={(e) => setFormData({ ...formData, class_participation: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600 dark:bg-slate-600" />
                     <div className="text-center font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">{formData.class_participation}</div>
                   </div>
                   <div>
                     <label className="label text-xs">H.Work Completion</label>
-                    <input type="range" min="1" max="5" value={formData.homework_completion} onChange={(e) => setFormData({ ...formData, homework_completion: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600" />
+                    <input type="range" min="1" max="5" value={formData.homework_completion} onChange={(e) => setFormData({ ...formData, homework_completion: parseInt(e.target.value) })} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600 dark:bg-slate-600" />
                     <div className="text-center font-bold text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">{formData.homework_completion}</div>
                   </div>
                 </div>

@@ -24,16 +24,16 @@ export default function Home() {
               </div>
             </Link>
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white transition-colors">Features</a>
-              <a href="#why" className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white transition-colors">Why Us</a>
-              <a href="#process" className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white transition-colors">How It Works</a>
+              <a href="#features" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors dark:hover:text-slate-100">Features</a>
+              <a href="#why" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors dark:hover:text-slate-100">Why Us</a>
+              <a href="#process" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors dark:hover:text-slate-100">How It Works</a>
               <Link href="/apply" className="text-sm font-medium text-cp-gold hover:text-cp-gold-light transition-colors flex items-center gap-1">
                 <FileText size={14} />
                 Entrance Exam
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              <Link href="/login" className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-slate-600 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:text-white dark:text-white font-medium transition-colors">
+              <Link href="/login" className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white font-medium transition-colors dark:hover:text-slate-100">
                 Sign In
               </Link>
               <Link href="/login" className="btn-gold flex items-center gap-2 shadow-lg shadow-cp-gold/25">
@@ -276,7 +276,7 @@ export default function Home() {
       </section>
 
       {/* Why Us Section */}
-      <section id="why" className="py-24 bg-white relative overflow-hidden">
+      <section id="why" className="py-24 bg-white relative overflow-hidden dark:bg-slate-800">
         <div className="absolute inset-0 bg-gradient-to-br from-cp-cream via-white to-emerald-50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">

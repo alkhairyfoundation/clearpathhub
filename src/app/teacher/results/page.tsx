@@ -222,7 +222,7 @@ export default function TeacherResultsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
               <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
             </button>
             <div>
@@ -344,7 +344,7 @@ export default function TeacherResultsPage() {
                 </div>
                 <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Trend</p>
-                  <p className={`text-2xl font-bold flex items-center justify-center gap-1 ${s.trendDirection === 'improving' ? 'text-green-600' : s.trendDirection === 'declining' ? 'text-red-600' : 'text-slate-600'}`}>
+                  <p className={`text-2xl font-bold flex items-center justify-center gap-1 ${s.trendDirection === 'improving' ? 'text-green-600' : s.trendDirection === 'declining' ? 'text-red-600' : 'text-slate-600 dark:text-slate-400'}`}>
                     {s.trendDirection === 'improving' ? <TrendingUp size={20} /> : s.trendDirection === 'declining' ? <TrendingDown size={20} /> : <span className="text-lg">=</span>}
                     {s.trendDirection.charAt(0).toUpperCase() + s.trendDirection.slice(1)}
                   </p>

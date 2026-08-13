@@ -242,7 +242,7 @@ export default function StudentTakeMockExamPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center dark:bg-slate-800">
         <Loader2 size={32} className="animate-spin text-primary-600" />
       </div>
     );
@@ -250,10 +250,10 @@ export default function StudentTakeMockExamPage() {
 
   if (!attempt) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center dark:bg-slate-800">
         <div className="text-center">
           <AlertTriangle size={48} className="mx-auto text-red-400 mb-4" />
-          <h2 className="text-xl font-bold text-slate-800 mb-2">Attempt Not Found</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-2 dark:text-slate-200">Attempt Not Found</h2>
           <button onClick={() => router.push('/student/mock-exams')} className="btn-primary mt-4">Back to Exams</button>
         </div>
       </div>
@@ -262,12 +262,12 @@ export default function StudentTakeMockExamPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center dark:bg-slate-800">
         <div className="card max-w-md w-full text-center p-8">
           <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${(score || 0) >= (exam?.passing_score || 50) ? 'bg-green-100' : 'bg-red-100'}`}>
             {(score || 0) >= (exam?.passing_score || 50) ? <Check size={40} className="text-green-600" /> : <AlertTriangle size={40} className="text-red-600" />}
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Exam Submitted!</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2 dark:text-slate-100">Exam Submitted!</h2>
           <p className="text-5xl font-bold mb-2">{(score || 0)}%</p>
           <p className="text-slate-500 mb-6">Your score has been recorded.</p>
           <div className="flex gap-3 justify-center">
@@ -283,24 +283,24 @@ export default function StudentTakeMockExamPage() {
 
   if (!started) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center dark:bg-slate-800">
         <div className="card max-w-2xl w-full p-8">
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">{exam?.title}</h1>
-          {exam?.description && <p className="text-slate-600 mb-6">{exam.description}</p>}
+          <h1 className="text-2xl font-bold text-slate-900 mb-4 dark:text-slate-100">{exam?.title}</h1>
+          {exam?.description && <p className="text-slate-600 mb-6 dark:text-slate-400">{exam.description}</p>}
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-slate-50 p-4 rounded-lg">
+            <div className="bg-slate-50 p-4 rounded-lg dark:bg-slate-800">
               <p className="text-sm text-slate-500">Questions</p>
               <p className="text-xl font-bold">{questions.length}</p>
             </div>
-            <div className="bg-slate-50 p-4 rounded-lg">
+            <div className="bg-slate-50 p-4 rounded-lg dark:bg-slate-800">
               <p className="text-sm text-slate-500">Duration</p>
               <p className="text-xl font-bold">{exam?.duration_minutes} minutes</p>
             </div>
-            <div className="bg-slate-50 p-4 rounded-lg">
+            <div className="bg-slate-50 p-4 rounded-lg dark:bg-slate-800">
               <p className="text-sm text-slate-500">Passing Score</p>
               <p className="text-xl font-bold">{exam?.passing_score}%</p>
             </div>
-            <div className="bg-slate-50 p-4 rounded-lg">
+            <div className="bg-slate-50 p-4 rounded-lg dark:bg-slate-800">
               <p className="text-sm text-slate-500">Attempt</p>
               <p className="text-xl font-bold">#{attempt?.attempt_number}</p>
             </div>
@@ -332,13 +332,13 @@ export default function StudentTakeMockExamPage() {
   const seconds = timeLeft % 60;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-800">
       {fullscreenBlocked && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-8 max-w-md text-center">
+          <div className="bg-white rounded-xl p-8 max-w-md text-center dark:bg-slate-800">
             <AlertTriangle size={48} className="mx-auto text-red-500 mb-4" />
             <h2 className="text-xl font-bold mb-2">Fullscreen Required</h2>
-            <p className="text-slate-600 mb-4">You exited fullscreen mode. Please re-enter fullscreen to continue the exam.</p>
+            <p className="text-slate-600 mb-4 dark:text-slate-400">You exited fullscreen mode. Please re-enter fullscreen to continue the exam.</p>
             <button onClick={handleRejoinFullscreen} className="btn-primary">Re-enter Fullscreen</button>
           </div>
         </div>
@@ -350,14 +350,14 @@ export default function StudentTakeMockExamPage() {
         </div>
       )}
 
-      <div className="bg-white border-b border-slate-200 px-4 py-3">
+      <div className="bg-white border-b border-slate-200 px-4 py-3 dark:bg-slate-800 dark:border-slate-700">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-sm font-bold text-slate-800">{exam?.title}</h1>
+            <h1 className="text-sm font-bold text-slate-800 dark:text-slate-200">{exam?.title}</h1>
             <span className="text-xs text-slate-500">Question {currentQ + 1} of {totalQuestions}</span>
           </div>
           <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-1 text-sm font-bold ${timeLeft < 300 ? 'text-red-600 animate-pulse' : 'text-slate-600'}`}>
+            <div className={`flex items-center gap-1 text-sm font-bold ${timeLeft < 300 ? 'text-red-600 animate-pulse' : 'text-slate-600 dark:text-slate-400'}`}>
               <Clock size={16} />
               {hours > 0 && <span>{hours}h </span>}
               <span>{minutes.toString().padStart(2, '0')}m {seconds.toString().padStart(2, '0')}s</span>
@@ -368,7 +368,7 @@ export default function StudentTakeMockExamPage() {
           </div>
         </div>
         <div className="max-w-5xl mx-auto mt-2">
-          <div className="w-full bg-slate-200 rounded-full h-1.5">
+          <div className="w-full bg-slate-200 rounded-full h-1.5 dark:bg-slate-600">
             <div className="bg-primary-600 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
           </div>
         </div>
@@ -377,7 +377,7 @@ export default function StudentTakeMockExamPage() {
       <div className="max-w-5xl mx-auto p-4">
         <div className="flex gap-4">
           <div className="flex-1">
-            <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="bg-white rounded-xl p-6 shadow-sm dark:bg-slate-800">
               {question && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -386,13 +386,13 @@ export default function StudentTakeMockExamPage() {
                     </span>
                     <button
                       onClick={() => toggleFlag(currentQ)}
-                      className={`p-1.5 rounded-lg ${flagged.has(currentQ) ? 'bg-amber-100 text-amber-600' : 'text-slate-400 hover:bg-slate-100'}`}
+                      className={`p-1.5 rounded-lg ${flagged.has(currentQ) ? 'bg-amber-100 text-amber-600' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                     >
                       <Flag size={18} />
                     </button>
                   </div>
 
-                  <p className="text-lg font-medium text-slate-900 mb-6">{question.question}</p>
+                  <p className="text-lg font-medium text-slate-900 mb-6 dark:text-slate-100">{question.question}</p>
 
                   <div className="space-y-3">
                     {question.options?.map((opt: string, optIndex: number) => {
@@ -402,7 +402,7 @@ export default function StudentTakeMockExamPage() {
                           key={optIndex}
                           onClick={() => selectAnswer(currentQ, optIndex)}
                           className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                            isSelected ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                            isSelected ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 hover:border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300'
                           }`}
                         >
                           <span className="font-semibold">{String.fromCharCode(65 + optIndex)}.</span> {opt}
@@ -416,7 +416,7 @@ export default function StudentTakeMockExamPage() {
           </div>
 
           <div className="w-48 shrink-0">
-            <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="bg-white rounded-xl p-4 shadow-sm dark:bg-slate-800">
               <h3 className="text-xs font-bold text-slate-500 uppercase mb-3">Progress</h3>
               <div className="grid grid-cols-5 gap-1.5">
                 {questions.map((_, i) => {
@@ -428,7 +428,7 @@ export default function StudentTakeMockExamPage() {
                   if (isAnswered && isFlagged) cls += 'bg-amber-400 text-white';
                   else if (isAnswered) cls += 'bg-primary-600 text-white';
                   else if (isFlagged) cls += 'border-2 border-amber-400 text-amber-600';
-                  else cls += 'bg-slate-100 text-slate-500 hover:bg-slate-200';
+                  else cls += 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600';
                   return (
                     <button key={i} onClick={() => setCurrentQ(i)} className={cls}>
                       {i + 1}
@@ -455,7 +455,7 @@ export default function StudentTakeMockExamPage() {
                 </button>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 flex gap-2">
+              <div className="mt-4 pt-3 border-t border-slate-100 flex gap-2 dark:border-slate-700">
                 <span className="flex items-center gap-1 text-xs text-slate-500">
                   <span className="w-2.5 h-2.5 rounded bg-primary-600 inline-block" /> Answered
                 </span>

@@ -100,7 +100,7 @@ export default function AccountantDashboard() {
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Welcome, {profile?.first_name} {profile?.last_name}</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 bg-white px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 dark:border-slate-700">
+            <div className="hidden sm:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 bg-white px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 dark:bg-slate-800">
               <Calendar size={16} />
               <span>{currentDate}</span>
             </div>
@@ -167,7 +167,7 @@ export default function AccountantDashboard() {
                   <thead className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700"><tr><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Description</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden sm:table-cell">Student</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Type</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Amount</th><th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden md:table-cell">Date</th></tr></thead>
                   <tbody className="divide-y divide-slate-100">
                     {recentTransactions.map(t => (
-                      <tr key={t.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800">
+                      <tr key={t.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                         <td className="py-3 px-4 font-medium text-slate-900 dark:text-white dark:text-white text-sm">{t.description || t.category || '—'}</td>
                         <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden sm:table-cell">{t.student ? `${t.student.first_name} ${t.student.last_name}` : '—'}</td>
                         <td className="py-3 px-4"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${t.type === 'income' ? 'bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 text-red-700 dark:text-red-400 dark:text-red-400'}`}>{t.type}</span></td>

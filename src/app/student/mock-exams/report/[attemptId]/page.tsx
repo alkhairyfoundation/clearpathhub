@@ -713,11 +713,11 @@ export default function StudentMockExamReportPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/student/mock-exams" className="p-2 hover:bg-slate-100 rounded-lg">
-              <ArrowLeft size={20} className="text-slate-600" />
+            <Link href="/student/mock-exams" className="p-2 hover:bg-slate-100 rounded-lg dark:hover:bg-slate-700">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Mock Exam Report</h1>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Mock Exam Report</h1>
               <p className="text-slate-500 text-sm">{exam?.title} — Attempt #{attempt?.attempt_number}</p>
             </div>
           </div>
@@ -777,7 +777,7 @@ export default function StudentMockExamReportPage() {
         {/* Progress Over Time (if multiple attempts) */}
         {progressData.length > 1 && (
           <div className="card">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><TrendingUp size={16} /> Progress Over Attempts</h3>
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-200"><TrendingUp size={16} /> Progress Over Attempts</h3>
             <div className="w-full max-w-lg mx-auto">
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={progressData}>
@@ -799,7 +799,7 @@ export default function StudentMockExamReportPage() {
         {/* Mastery Distribution Pie */}
         {masteryDistData.length > 1 && (
           <div className="card">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Award size={16} /> Mastery Distribution (All Attempts)</h3>
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-200"><Award size={16} /> Mastery Distribution (All Attempts)</h3>
             <div className="w-full max-w-xs mx-auto">
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
@@ -819,7 +819,7 @@ export default function StudentMockExamReportPage() {
         {/* Subject Radar Chart */}
         {(radarData.length >= 3 || topicEntries.length >= 3) && (
           <div className="card">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={16} /> {radarData.length >= 3 ? 'Subject Performance Radar' : 'Topic Performance Radar'}</h3>
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-200"><BarChart3 size={16} /> {radarData.length >= 3 ? 'Subject Performance Radar' : 'Topic Performance Radar'}</h3>
             <div className="w-full max-w-md mx-auto">
               <ResponsiveContainer width="100%" height={300}>
                 {radarData.length >= 3 ? (
@@ -847,10 +847,10 @@ export default function StudentMockExamReportPage() {
         {/* Subject Performance */}
         {subjectEntries.length > 0 && (
           <div className="card">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><BookOpen size={16} /> Subject Performance</h3>
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-200"><BookOpen size={16} /> Subject Performance</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Subject</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Grade</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Assessment</th></tr></thead>
+                <thead><tr className="bg-slate-100 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400">Subject</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Grade</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Assessment</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {subjectEntries.map(([subj, d]: [string, any]) => {
                     const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
@@ -861,7 +861,7 @@ export default function StudentMockExamReportPage() {
                         <td className="p-3 text-center">{d.total}</td>
                         <td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td>
                         <td className="p-3 text-center"><span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getLetterGradeColor(pct)}`}>{getLetterGrade(pct)}</span></td>
-                        <td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td>
+                        <td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden dark:bg-slate-700"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td>
                         <td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td>
                       </tr>
                     );
@@ -879,8 +879,8 @@ export default function StudentMockExamReportPage() {
                       const barColor = item.p >= 70 ? 'bg-green-500' : item.p >= 40 ? 'bg-amber-500' : 'bg-red-500';
                       return (
                         <div key={item.n} className="flex items-center gap-3">
-                          <span className="w-24 text-xs text-slate-700 text-right truncate shrink-0">{item.n}</span>
-                          <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                          <span className="w-24 text-xs text-slate-700 text-right truncate shrink-0 dark:text-slate-300">{item.n}</span>
+                          <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden dark:bg-slate-700">
                             <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${item.p}%` }} />
                           </div>
                           <span className={`w-10 text-xs font-bold text-right ${getGradeColor(item.p)}`}>{item.p}%</span>
@@ -897,10 +897,10 @@ export default function StudentMockExamReportPage() {
         {/* Difficulty Breakdown */}
         {difficultyEntries.length > 0 && (
           <div className="card">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Award size={16} /> Difficulty Breakdown</h3>
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-200"><Award size={16} /> Difficulty Breakdown</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Difficulty</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Verdict</th></tr></thead>
+                <thead><tr className="bg-slate-100 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400">Difficulty</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Verdict</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {difficultyEntries.map(([diff, d]: [string, any]) => {
                     const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
@@ -910,7 +910,7 @@ export default function StudentMockExamReportPage() {
                         <td className="p-3 text-center">{d.correct}</td>
                         <td className="p-3 text-center">{d.total}</td>
                         <td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td>
-                        <td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td>
+                        <td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden dark:bg-slate-700"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td>
                         <td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 70 ? 'Good' : pct >= 40 ? 'Fair' : 'Weak'}</td>
                       </tr>
                     );
@@ -930,7 +930,7 @@ export default function StudentMockExamReportPage() {
           if (sorted.length === 0 && weakDiff.length === 0 && weakTop.length === 0) return null;
           return (
             <div className="card">
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><BarChart3 size={16} /> Performance Insights</h3>
+              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-200"><BarChart3 size={16} /> Performance Insights</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {sorted.length >= 2 && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -963,22 +963,22 @@ export default function StudentMockExamReportPage() {
         {/* Pathway Recommendation */}
         {cumulativeAnalytics?.recommended_pathway && (
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6">
-            <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><Lightbulb size={16} className="text-blue-600" /> Pathway Recommendation</h3>
+            <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2 dark:text-slate-200"><Lightbulb size={16} className="text-blue-600" /> Pathway Recommendation</h3>
             <div className="flex items-center gap-3 mb-2">
               <span className="text-lg font-bold text-primary-700">{cumulativeAnalytics.recommended_pathway}</span>
               <span className="text-sm text-slate-500">Track</span>
             </div>
-            <p className="text-sm text-slate-700">{cumulativeAnalytics.pathway_reasoning}</p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">{cumulativeAnalytics.pathway_reasoning}</p>
           </div>
         )}
 
         {/* Per-Question Analysis */}
         {questionsData.length > 0 && (
           <div className="card">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><FileText size={16} /> Per-Question Analysis</h3>
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-200"><FileText size={16} /> Per-Question Analysis</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-100"><th className="p-2 text-center font-semibold text-slate-600 text-xs">#</th><th className="p-2 text-left font-semibold text-slate-600 text-xs">Subject</th><th className="p-2 text-left font-semibold text-slate-600 text-xs">Question</th><th className="p-2 text-center font-semibold text-slate-600 text-xs">Diff</th><th className="p-2 text-left font-semibold text-slate-600 text-xs">Correct Answer</th><th className="p-2 text-left font-semibold text-slate-600 text-xs">Your Answer</th><th className="p-2 text-center font-semibold text-slate-600 text-xs">Result</th><th className="p-2 text-center font-semibold text-slate-600 text-xs">Pts</th></tr></thead>
+                <thead><tr className="bg-slate-100 dark:bg-slate-700"><th className="p-2 text-center font-semibold text-slate-600 text-xs dark:text-slate-400">#</th><th className="p-2 text-left font-semibold text-slate-600 text-xs dark:text-slate-400">Subject</th><th className="p-2 text-left font-semibold text-slate-600 text-xs dark:text-slate-400">Question</th><th className="p-2 text-center font-semibold text-slate-600 text-xs dark:text-slate-400">Diff</th><th className="p-2 text-left font-semibold text-slate-600 text-xs dark:text-slate-400">Correct Answer</th><th className="p-2 text-left font-semibold text-slate-600 text-xs dark:text-slate-400">Your Answer</th><th className="p-2 text-center font-semibold text-slate-600 text-xs dark:text-slate-400">Result</th><th className="p-2 text-center font-semibold text-slate-600 text-xs dark:text-slate-400">Pts</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {questionsData.map((q, i) => (
                     <tr key={i} className={q.is_correct ? '' : 'bg-red-50'}>
@@ -992,7 +992,7 @@ export default function StudentMockExamReportPage() {
                       <td className="p-2 text-center text-xs">
                         <span className="inline-flex items-center gap-0.5">
                           {Array.from({ length: q.points || 1 }).map((_, di) => (
-                            <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200'}`} />
+                            <span key={di} className={`w-2 h-2 rounded-full inline-block ${di < (q.points_earned || 0) ? 'bg-green-500' : 'bg-slate-200 dark:bg-slate-600'}`} />
                           ))}
                           <span className="ml-1 text-slate-400">{(q.points_earned || 0)}/{(q.points || 1)}</span>
                         </span>
@@ -1008,10 +1008,10 @@ export default function StudentMockExamReportPage() {
         {/* Topic Performance */}
         {topicEntries.length > 0 && (
           <div className="card">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><GraduationCap size={16} /> Topic Performance</h3>
+            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 dark:text-slate-200"><GraduationCap size={16} /> Topic Performance</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="bg-slate-100"><th className="p-3 text-left font-semibold text-slate-600">Topic</th><th className="p-3 text-center font-semibold text-slate-600">Correct</th><th className="p-3 text-center font-semibold text-slate-600">Total</th><th className="p-3 text-center font-semibold text-slate-600">Score</th><th className="p-3 text-center font-semibold text-slate-600">Bar</th><th className="p-3 text-center font-semibold text-slate-600">Status</th></tr></thead>
+                <thead><tr className="bg-slate-100 dark:bg-slate-700"><th className="p-3 text-left font-semibold text-slate-600 dark:text-slate-400">Topic</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Correct</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Total</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Score</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Bar</th><th className="p-3 text-center font-semibold text-slate-600 dark:text-slate-400">Status</th></tr></thead>
                 <tbody className="divide-y divide-slate-100">
                   {topicEntries.map(([topic, d]: [string, any]) => {
                     const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
@@ -1021,7 +1021,7 @@ export default function StudentMockExamReportPage() {
                         <td className="p-3 text-center">{d.correct}</td>
                         <td className="p-3 text-center">{d.total}</td>
                         <td className={`p-3 text-center font-bold ${getGradeColor(pct)}`}>{pct}%</td>
-                        <td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td>
+                        <td className="p-3"><div className="w-20 h-2 bg-slate-100 rounded-full mx-auto overflow-hidden dark:bg-slate-700"><div className={`h-full rounded-full ${getBarColor(pct)}`} style={{ width: `${pct}%` }} /></div></td>
                         <td className={`p-3 text-center font-semibold ${getGradeColor(pct)}`}>{pct >= 80 ? 'Mastered' : pct >= 60 ? 'Good' : pct >= 40 ? 'Developing' : 'Needs Work'}</td>
                       </tr>
                     );
@@ -1034,8 +1034,8 @@ export default function StudentMockExamReportPage() {
 
         {/* Recommendations */}
         <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
-          <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2"><AlertCircle size={16} className="text-orange-600" /> Recommendations for Improvement</h3>
-          <div className="text-sm text-slate-700 space-y-2">
+          <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2 dark:text-slate-200"><AlertCircle size={16} className="text-orange-600" /> Recommendations for Improvement</h3>
+          <div className="text-sm text-slate-700 space-y-2 dark:text-slate-300">
             {buildRecommendationsText().split('. ').filter(s => s.trim()).map((sentence, i) => (
               <p key={i} className="flex gap-2"><span className="text-orange-500 font-bold mt-0.5">•</span><span>{sentence}.</span></p>
             ))}
