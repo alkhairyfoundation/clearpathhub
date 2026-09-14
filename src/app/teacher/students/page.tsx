@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Edit, Trash2, X, Loader2, AlertCircle, Check, 
@@ -56,25 +57,24 @@ export default function TeacherStudentsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      // First get classes where teacher has access via teacher_classes
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
-      
-      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+      // Resolve teacher's class IDs with all fallbacks merged
+      const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
       const [studentsRes, classesRes] = await Promise.all([
-        supabase
-          .from('students')
-          .select('*, profile:profiles!profile_id(first_name, last_name, email, phone), class:classes!class_id(name)')
-          .in('class_id', teacherClassIds)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('classes')
-          .select('id, name, level')
-          .in('id', teacherClassIds)
-          .order('level'),
+        teacherClassIds.length > 0
+          ? supabase
+              .from('students')
+              .select('*, profile:profiles!profile_id(first_name, last_name, email, phone), class:classes!class_id(name)')
+              .in('class_id', teacherClassIds)
+              .order('created_at', { ascending: false })
+          : { data: [], error: null },
+        teacherClassIds.length > 0
+          ? supabase
+              .from('classes')
+              .select('id, name, level')
+              .in('id', teacherClassIds)
+              .order('level')
+          : { data: [], error: null },
       ]);
       if (studentsRes.error) throw new Error(studentsRes.error.message);
       if (studentsRes.data) setStudents(studentsRes.data);
@@ -208,6 +208,11 @@ export default function TeacherStudentsPage() {
     try {
       const { error: deleteError } = await supabase.from('students').delete().eq('id', student.id);
       if (deleteError) throw new Error(deleteError.message);
+
+      if (student.profile_id) {
+        await supabase.from('profiles').delete().eq('id', student.profile_id);
+      }
+
       setStudents(students.filter(s => s.id !== student.id));
     } catch (err: any) {
       setError(err.message);

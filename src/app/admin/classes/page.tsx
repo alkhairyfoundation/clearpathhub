@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit, Trash2, X, GraduationCap, Loader2, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, X, GraduationCap, Loader2, ArrowLeft, ArrowUpCircle, ArrowDownCircle, AlertTriangle, CheckCircle } from 'lucide-react';
 import type { Class } from '@/types';
 
 export default function AdminClassesPage() {
@@ -18,15 +18,23 @@ export default function AdminClassesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Class | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: '', level: 1, department_id: '', class_teacher_id: '' });
+const [formData, setFormData] = useState({ name: '', level: 1, department_id: '', class_teacher_id: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [promoteOpen, setPromoteOpen] = useState(false);
+  const [promoteLoading, setPromoteLoading] = useState(false);
+  const [promoteResult, setPromoteResult] = useState<any>(null);
+  const [classData, setClassData] = useState<any[]>([]);
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchData();
   }, [profile]);
+
+  useEffect(() => {
+    if (promoteOpen) fetchClassData();
+  }, [promoteOpen]);
 
   async function fetchData() {
     setLoading(true);
@@ -39,6 +47,21 @@ export default function AdminClassesPage() {
     if (deptsRes.data) setDepartments(deptsRes.data);
     if (teachersRes.data) setTeachers(teachersRes.data);
     setLoading(false);
+  }
+
+  async function fetchClassData() {
+    const { data, error } = await supabase
+      .from('classes')
+      .select(`
+        id, name, level, next_class_id,
+        next_class:next_class_id(name, level),
+        students:students!class_id(id)
+      `)
+      .order('level')
+      .order('name');
+    if (!error && data) {
+      setClassData(data);
+    }
   }
 
   function openModal(cls?: Class) {
@@ -93,22 +116,48 @@ export default function AdminClassesPage() {
     }
   }
 
+  async function handlePromoteAll() {
+    setPromoteLoading(true);
+    setPromoteResult(null);
+    try {
+      const res = await fetch('/api/admin/promote-students', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const data = await res.json();
+      if (data.success) {
+        setPromoteResult(data);
+        setSuccess(`${data.promoted_count} student(s) promoted successfully!`);
+        setTimeout(() => setSuccess(''), 5000);
+      } else {
+        setError(data.error || 'Promotion failed');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to promote students');
+    } finally {
+      setPromoteLoading(false);
+      fetchData();
+    }
+  }
+
   return (
     <DashboardLayout title="Classes" subtitle="Manage school classes and class teachers">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
-            <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Classes</h1>
-            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage school classes and class teachers</p>
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
+              <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400 dark:text-slate-400" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">Classes</h1>
+              <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">Manage school classes and class teachers</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
+              <Plus size={18} /> Add Class
+            </button>
+            <button onClick={() => setPromoteOpen(true)} className="btn-accent flex items-center gap-2">
+              <ArrowUpCircle size={18} /> Promote All Students
+            </button>
           </div>
         </div>
-        <button onClick={() => openModal()} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Add Class
-        </button>
-      </div>
 
       {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
       {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
@@ -180,6 +229,101 @@ export default function AdminClassesPage() {
                 {saving && <Loader2 size={16} className="animate-spin" />}
                 {editing ? 'Update' : 'Create'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {promoteOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Promote All Students</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Move every student to their class&rsquo;s next level</p>
+              </div>
+              <button onClick={() => { setPromoteOpen(false); setPromoteResult(null); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-4 flex items-start gap-3">
+                <AlertTriangle className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" size={20} />
+                <div>
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">This action cannot be undone</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    All students will be moved to the next class level based on their current class&rsquo;s configured next_class_id. Students at the highest level (no next class) will be skipped. You can manually adjust assignments afterwards on the User Management page.
+                  </p>
+                </div>
+              </div>
+
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Class Hierarchy Preview</h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {classData.map((cls: any, i: number) => (
+                  <div key={cls.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-100 dark:border-slate-600">
+                    <div className="flex-1">
+                      <span className="font-medium text-slate-900 dark:text-white text-sm">{cls.name}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">Level {cls.level}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {cls.next_class ? (
+                        <>
+                          <ArrowDownCircle size={16} className="text-primary-600" />
+                          <span className="text-xs text-primary-600 dark:text-primary-400">→ {cls.next_class.name}</span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-slate-400">— (highest level)</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {cls.students?.length || 0} student(s)
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-6 border-t">
+              <button onClick={() => { setPromoteOpen(false); setPromoteResult(null); }} disabled={promoteLoading} className="btn-outline">Cancel</button>
+              <button onClick={handlePromoteAll} disabled={promoteLoading} className="btn-accent flex items-center gap-2">
+                {promoteLoading ? <Loader2 size={16} className="animate-spin" /> : <ArrowUpCircle size={18} />}
+                {promoteLoading ? 'Promoting...' : 'Confirm Promote All'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {promoteResult && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg dark:bg-slate-800">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Promotion Complete</h2>
+              <button onClick={() => setPromoteResult(null)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-900/40">
+                  <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{promoteResult.promoted_count}</p>
+                  <p className="text-sm text-emerald-600 dark:text-emerald-300">Students Promoted</p>
+                </div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600">
+                  <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">{promoteResult.total_eligible}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Total Eligible</p>
+                </div>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-900/40">
+                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{promoteResult.skipped_no_next_class}</p>
+                  <p className="text-sm text-amber-600 dark:text-amber-300">Skipped (Highest Level)</p>
+                </div>
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-900/40">
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{promoteResult.total_eligible - promoteResult.promoted_count}</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-300">Total Not Promoted</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="text-emerald-600" size={18} />
+                <span className="text-sm text-emerald-700 dark:text-emerald-300">Manual adjustments can be made on the User Management page</span>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-6 border-t">
+              <button onClick={() => { setPromoteResult(null); fetchData(); }} className="btn-primary">Close</button>
             </div>
           </div>
         </div>

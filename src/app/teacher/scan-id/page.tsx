@@ -34,7 +34,6 @@ export default function TeacherScanIDPage() {
       .from('attendance')
       .select('*, student:profiles!student_id(first_name, last_name)')
       .eq('date', today)
-      .eq('scan_method', 'qr_scan')
       .order('marked_at', { ascending: false });
     if (data) setScanHistory(data);
   }

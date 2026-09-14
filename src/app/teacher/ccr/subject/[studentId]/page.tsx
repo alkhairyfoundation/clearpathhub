@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -28,12 +29,8 @@ function SubjectTeacherCcrContent() {
 
   async function loadSubjects() {
     try {
-      // Get teacher's class IDs from teacher_classes
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
-      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+      // Get teacher's class IDs (with fallbacks)
+      const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
       const { data } = teacherClassIds.length > 0
         ? await supabase.from('subjects').select('id, name, code').in('class_id', teacherClassIds)

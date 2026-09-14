@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -34,13 +35,8 @@ useEffect(() => {
    async function fetchDashboard() {
     setLoading(true);
     try {
-      // Get teacher's class IDs from teacher_classes
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
-
-      const uniqueClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+      // Get teacher's class IDs (with all fallbacks merged)
+      const uniqueClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
       
       // Get subjects for these classes
       const { data: allSubjects } = uniqueClassIds.length > 0
@@ -106,6 +102,7 @@ useEffect(() => {
       }
 
       // Fetch class mastery data
+      let masteryStudentIds: string[] = [];
       if (uniqueClassIds.length > 0 && allSubjects && allSubjects.length > 0) {
         const subjectIds = allSubjects.map(s => s.id);
         const { data: studentsData } = await supabase
@@ -113,6 +110,7 @@ useEffect(() => {
           .select('profile_id, class_id')
           .in('class_id', uniqueClassIds);
         const studentIds = studentsData?.map(s => s.profile_id) || [];
+        masteryStudentIds = studentIds;
         if (studentIds.length > 0) {
           const { data: masteryData } = await supabase
             .from('mastery_scores')
@@ -162,15 +160,12 @@ useEffect(() => {
 
       // Calculate performance data for charts
       // Fetch results for students in this teacher's classes
-      const studentIdsForResults = classMastery.length > 0
-        ? Array.from(new Set(classMastery.flatMap((g: any) => Array.from(g.studentSet || []))))
-        : [];
       let resultsResData: any[] = [];
-      if (studentIdsForResults.length > 0) {
+      if (masteryStudentIds.length > 0) {
         const { data: rData } = await supabase
           .from('results')
           .select('id, score, grade')
-          .in('student_id', studentIdsForResults);
+          .in('student_id', masteryStudentIds);
         resultsResData = rData || [];
       }
       if (resultsResData.length > 0) {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { GraduationCap, Users, BookOpen, Plus, Edit, Trash2, X, Search, Clock, Calendar, ArrowLeft } from 'lucide-react';
@@ -30,17 +31,13 @@ export default function TeacherClassesPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      // Get teacher's class IDs from teacher_classes
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
-
-      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+      // Get teacher's class IDs (with fallbacks)
+      const teacherClassIds = await getTeacherClassIds(profile?.id || '');
+      const teacherClassIdSet = Array.from(new Set(teacherClassIds));
 
       const [classesRes, studentsRes] = await Promise.all([
-        teacherClassIds.length > 0
-          ? supabase.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').in('id', teacherClassIds).order('level')
+        teacherClassIdSet.length > 0
+          ? supabase.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').in('id', teacherClassIdSet).order('level')
           : { data: [], error: null },
         supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').order('admission_number'),
       ]);

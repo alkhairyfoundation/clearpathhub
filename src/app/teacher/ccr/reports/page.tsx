@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, Users, Search, Loader2, BarChart3, TrendingUp } from 'lucide-react';
@@ -22,15 +23,11 @@ export default function TeacherCcrReports() {
 
   async function fetchData() {
     try {
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
-      const classIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+const classIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
       const { data: kids } = await supabase
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
-        .in('class_id', classIds)
+        .in('class_id', classIds.length > 0 ? classIds : ['none'])
         .order('admission_number');
       if (kids) setStudents(kids);
     } catch (e) {
@@ -61,7 +58,7 @@ export default function TeacherCcrReports() {
         {filtered.map(s => (
           <Link
             key={s.id}
-            href={`/parent/ccr/report?child=${s.profile_id}`}
+            href={`/teacher/ccr/class/${s.id}?name=${encodeURIComponent(s.profile?.first_name + ' ' + s.profile?.last_name)}`}
             className="block bg-white rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:border-primary-300 transition-all dark:bg-slate-800"
           >
             <div className="flex items-center gap-4">

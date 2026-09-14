@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, uploadFile } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, BookOpen, Users, Award, Clock, ArrowLeft, Upload } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -59,8 +60,7 @@ export default function TeacherProfilePage() {
       const { data: staff } = await supabase.from('staff').select('*, department:departments!department_id(name)').eq('profile_id', profile.id).limit(1).maybeSingle();
       if (staff) setStaffInfo(staff);
 
-      const { data: tcData } = await supabase.from('teacher_classes').select('class_id').eq('teacher_id', profile.id);
-      const classIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+      const classIds = Array.from(new Set(await getTeacherClassIds(profile.id)));
       const { data: subjs } = classIds.length > 0
         ? await supabase.from('subjects').select('*, class:classes!class_id(name)').in('class_id', classIds)
         : { data: [] };

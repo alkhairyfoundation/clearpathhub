@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -84,11 +85,7 @@ export default function TeacherResultsPage() {
   async function fetchInitial() {
     setLoading(true);
     try {
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
-      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || [])) as string[];
+      const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
       const [{ data: classData }, { data: settingsData }] = await Promise.all([
         teacherClassIds.length > 0

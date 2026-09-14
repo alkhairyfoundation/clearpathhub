@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Check, X, Loader2, ArrowLeft, Users, AlertCircle, Eye } from 'lucide-react';
@@ -31,8 +32,7 @@ export default function TeacherGoalApprovalsPage() {
   async function fetchGoals() {
     setLoading(true);
     try {
-      const { data: classes } = await supabase.from('classes').select('id').eq('form_teacher_id', profile!.id);
-      const classIds = classes?.map(c => c.id) || [];
+      const classIds = await getTeacherClassIds(profile!.id);
 
       if (classIds.length === 0) { setGoals([]); setLoading(false); return; }
 

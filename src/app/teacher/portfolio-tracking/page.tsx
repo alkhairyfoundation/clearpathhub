@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Loader2, ArrowLeft, Users, Save, AlertCircle, Check, FileText, Plus, X } from 'lucide-react';
@@ -34,8 +35,7 @@ export default function TeacherPortfolioTrackingPage() {
   async function loadStudents() {
     setLoading(true);
     try {
-      const { data: classData } = await supabase.from('teacher_classes').select('class_id').eq('teacher_id', profile!.id);
-      const classIds = classData?.map(c => c.class_id) || [];
+      const classIds = await getTeacherClassIds(profile!.id);
       if (classIds.length === 0) { setLoading(false); return; }
 
       const { data: studentData } = await supabase

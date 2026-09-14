@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, uploadFile } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, X, FileText, Check, Clock, Upload, Image, Paperclip, Loader2, ArrowLeft } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -35,25 +36,24 @@ export default function TeacherHomeworkPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      // Get teacher's class IDs
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
+      // Get teacher's class IDs (with fallbacks)
+      const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
-      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
-
-      const [hwRes, clsRes] = await Promise.all([
+      const [hwRes, clsRes, subjRes] = await Promise.all([
         teacherClassIds.length > 0
           ? supabase.from('homework').select('*, subject:subjects!subject_id(*), class:classes!class_id(*)').in('class_id', teacherClassIds).order('due_date', { ascending: false })
           : { data: [], error: null },
         teacherClassIds.length > 0
           ? supabase.from('classes').select('*').in('id', teacherClassIds).order('name')
           : { data: [], error: null },
+        teacherClassIds.length > 0
+          ? supabase.from('subjects').select('id, name').in('class_id', teacherClassIds).order('name')
+          : { data: [], error: null },
       ]);
       if (hwRes.error) throw new Error(hwRes.error.message);
       if (hwRes.data) setHomework(hwRes.data);
       if (clsRes.data) setClasses(clsRes.data);
+      if (subjRes.data) setSubjects(subjRes.data);
     } catch (err: any) {
       setError(err.message);
     }

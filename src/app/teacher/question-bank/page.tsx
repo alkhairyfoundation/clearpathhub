@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Search, Filter, Edit, Trash2, X, Copy, CheckCircle, XCircle, Loader2, ArrowLeft, BookOpen, Upload, Download, HelpCircle } from 'lucide-react';
@@ -44,12 +45,8 @@ export default function TeacherQuestionBankPage() {
 
   async function fetchData() {
     setLoading(true);
-    // Get teacher's class IDs from teacher_classes
-    const { data: tcData } = await supabase
-      .from('teacher_classes')
-      .select('class_id')
-      .eq('teacher_id', profile?.id);
-    const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || [])) as string[];
+    // Get teacher's class IDs (with fallbacks)
+    const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
     const [qRes, sRes, cRes] = await Promise.all([
       supabase.from('question_bank').select('*, subject:subjects(name, code)').order('created_at', { ascending: false }),

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { BookOpen, Save, ArrowLeft, Loader2, Layers } from 'lucide-react';
@@ -32,12 +33,8 @@ export default function TeacherSchemeOfWorkPage() {
 
   async function fetchInitialData() {
     setLoading(true);
-    // Get teacher's class IDs from teacher_classes
-    const { data: tcData } = await supabase
-      .from('teacher_classes')
-      .select('class_id')
-      .eq('teacher_id', profile?.id);
-    const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || [])) as string[];
+    // Get teacher's class IDs (with fallbacks)
+    const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
     const [termsRes, subjectsRes] = await Promise.all([
       supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date'),
@@ -105,10 +102,18 @@ export default function TeacherSchemeOfWorkPage() {
       const weekNumbers = Object.keys(editableEntries).map(Number).sort((a, b) => a - b);
       for (const weekNum of weekNumbers) {
         const entry = editableEntries[weekNum];
-        if (!entry.topic.trim()) continue;
+        const existing = entries.find(e => e.week_number === weekNum);
+
+        if (!entry.topic.trim()) {
+          if (existing) {
+            const { error } = await supabase.from('scheme_of_work').delete().eq('id', existing.id);
+            if (error) throw new Error(error.message);
+          }
+          continue;
+        }
+
         const subtopicsArr = entry.subtopics.split('\n').map(s => s.trim()).filter(Boolean);
         const objectivesArr = entry.objectives.split('\n').map(s => s.trim()).filter(Boolean);
-        const existing = entries.find(e => e.week_number === weekNum);
 
         const payload = {
           term_id: filters.term_id,

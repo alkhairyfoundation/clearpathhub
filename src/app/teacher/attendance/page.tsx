@@ -27,20 +27,9 @@ export default function TeacherAttendancePage() {
   useEffect(() => { if (selectedClass) loadClassData(); }, [date, selectedClass]);
 
   async function fetchClasses() {
-    // Get teacher's class IDs from teacher_classes
-    const { data: tcData } = await supabase
-      .from('teacher_classes')
-      .select('class_id')
-      .eq('teacher_id', profile?.id);
-
-    const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
-
-    if (teacherClassIds.length > 0) {
-      const { data } = await supabase.from('classes').select('id, name').in('id', teacherClassIds).order('level');
-      if (data) setClasses(data);
-    } else {
-      setClasses([]);
-    }
+    // Teachers can mark attendance for any class (RLS allows teachers to view all classes)
+    const { data } = await supabase.from('classes').select('id, name').order('level');
+    setClasses(data || []);
   }
 
   async function loadClassData() {

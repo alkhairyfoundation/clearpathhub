@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
@@ -24,17 +25,12 @@ export default function TeacherCcrPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
-
-      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
       const { data: kids } = await supabase
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
-        .in('class_id', teacherClassIds)
+        .in('class_id', teacherClassIds.length > 0 ? teacherClassIds : ['none'])
         .order('admission_number');
 
       if (kids) {

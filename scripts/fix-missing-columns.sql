@@ -83,8 +83,9 @@ END IF; END $$;
 -- 3. classes
 -- ============================================================================
 DO $$ BEGIN IF EXISTS (SELECT FROM pg_tables WHERE tablename = 'classes') THEN
-  ALTER TABLE classes ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 50;
-END IF; END $$;
+   ALTER TABLE classes ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 50;
+   ALTER TABLE classes ADD COLUMN IF NOT EXISTS next_class_id UUID REFERENCES classes(id);
+ END IF; END $$;
 
 -- ============================================================================
 -- 4. entrance_applications

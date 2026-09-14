@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import {
   ACTIVITY_LABELS,
   POLL_MS,
@@ -130,15 +131,11 @@ export default function LearningZoneMonitor({ role }: LearningZoneMonitorProps) 
   const fetchClasses = useCallback(async () => {
     try {
       if (isTeacher && profile?.id) {
-        const { data } = await supabase
-          .from('subjects')
-          .select('class_id, class:classes!class_id(id, name)')
-          .eq('teacher_id', profile.id);
-        const seen = new Map<string, string>();
-        (data || []).forEach((s: any) => {
-          if (s.class?.id && !seen.has(s.class.id)) seen.set(s.class.id, s.class.name);
-        });
-        setClassOptions([...seen].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)));
+        const teacherClassIds = await getTeacherClassIds(profile.id);
+        const { data } = teacherClassIds.length > 0
+          ? await supabase.from('classes').select('id, name').in('id', teacherClassIds).order('name')
+          : { data: [] };
+        setClassOptions((data || []).map((c: any) => ({ id: c.id, name: c.name })));
       } else {
         const { data } = await supabase.from('classes').select('id, name').order('name');
         setClassOptions((data || []).map((c: any) => ({ id: c.id, name: c.name })));

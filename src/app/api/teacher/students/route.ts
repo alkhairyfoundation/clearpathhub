@@ -95,10 +95,18 @@ export async function POST(request: NextRequest) {
       );
 
       if (teacherClassCheck.length === 0) {
-        return NextResponse.json(
-          { success: false, error: 'You do not have access to this class' },
-          { status: 403 }
+        // Also check if the teacher teaches a subject in this class
+        const subjectCheck = await query(
+          `SELECT 1 FROM subjects WHERE class_id = $1 AND teacher_id = $2 LIMIT 1`,
+          [class_id, token.id]
         );
+
+        if (subjectCheck.length === 0) {
+          return NextResponse.json(
+            { success: false, error: 'You do not have access to this class' },
+            { status: 403 }
+          );
+        }
       }
     }
 
@@ -254,6 +262,8 @@ export async function GET(request: NextRequest) {
             SELECT form_teacher_id FROM classes WHERE form_teacher_id = $1
             UNION
             SELECT class_teacher_id FROM classes WHERE class_teacher_id = $1
+            UNION
+            SELECT class_id FROM subjects WHERE teacher_id = $1 AND class_id IS NOT NULL
           )
         `);
         params.push(token.id);

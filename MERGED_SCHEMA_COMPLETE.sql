@@ -90,15 +90,16 @@ CREATE TABLE IF NOT EXISTS departments (
 
 -- CLASSES
 CREATE TABLE IF NOT EXISTS classes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  level TEXT NOT NULL,
-  department_id UUID REFERENCES departments(id),
-  form_teacher_id UUID REFERENCES profiles(id),
-  class_teacher_id UUID REFERENCES profiles(id),
-  capacity INTEGER DEFAULT 50,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+   name TEXT NOT NULL,
+   level TEXT NOT NULL,
+   department_id UUID REFERENCES departments(id),
+   form_teacher_id UUID REFERENCES profiles(id),
+   class_teacher_id UUID REFERENCES profiles(id),
+   capacity INTEGER DEFAULT 50,
+   next_class_id UUID REFERENCES classes(id),
+   created_at TIMESTAMP DEFAULT NOW()
+ );
 
 -- PARENT-STUDENT JUNCTION TABLE (New)
 CREATE TABLE IF NOT EXISTS parent_students (

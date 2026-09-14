@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Edit, Trash2, X, FileText, BarChart3, Check, Loader2, Search, Users, Clock, Eye, Send, Hash, ArrowLeft, Download, Copy, HelpCircle } from 'lucide-react';
@@ -80,10 +81,15 @@ export default function TeacherTestsPage() {
 
   async function fetchData() {
     setLoading(true);
+    const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
     const [testsRes, subjectsRes, classesRes] = await Promise.all([
       api('list_tests'),
-      supabase.from('subjects').select('id, name').order('name'),
-      supabase.from('classes').select('id, name').order('level'),
+      teacherClassIds.length > 0
+        ? supabase.from('subjects').select('id, name').in('class_id', teacherClassIds).order('name')
+        : supabase.from('subjects').select('id, name').order('name'),
+      teacherClassIds.length > 0
+        ? supabase.from('classes').select('id, name').in('id', teacherClassIds).order('name')
+        : supabase.from('classes').select('id, name').order('name'),
     ]);
     if (testsRes.tests) setTests(testsRes.tests);
     if (subjectsRes.data) setSubjects(subjectsRes.data);

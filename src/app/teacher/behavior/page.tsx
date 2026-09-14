@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Activity, Star, Edit, Trash2, X, Send, Calendar, User, ArrowLeft, AlertCircle, Info, ShieldAlert } from 'lucide-react';
@@ -29,15 +30,17 @@ export default function TeacherBehaviorPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: tcData } = await supabase
-        .from('teacher_classes')
-        .select('class_id')
-        .eq('teacher_id', profile?.id);
+      const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
-      const teacherClassIds = Array.from(new Set(tcData?.map(tc => tc.class_id).filter(Boolean) || []));
+      const studentIdsRes = teacherClassIds.length > 0
+        ? await supabase.from('students').select('id').in('class_id', teacherClassIds)
+        : { data: [] };
+      const studentIds = (studentIdsRes.data || []).map((s: any) => s.id);
 
       const [reportsRes, studentsRes] = await Promise.all([
-        supabase.from('behavioral_reports').select('*, student:profiles!student_id(*)').order('created_at', { ascending: false }).limit(50),
+        studentIds.length > 0
+          ? supabase.from('behavioral_reports').select('*, student:profiles!student_id(*)').in('student_id', studentIds).order('created_at', { ascending: false }).limit(50)
+          : supabase.from('behavioral_reports').select('*, student:profiles!student_id(*)').order('created_at', { ascending: false }).limit(50),
         teacherClassIds.length > 0
           ? supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name)').in('class_id', teacherClassIds).then(r => ({ data: r.data?.map(s => s.profile).filter(Boolean) || [], error: r.error }))
           : supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),

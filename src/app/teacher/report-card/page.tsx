@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -26,8 +27,8 @@ function buildScoreTypes(config: any): { key: string; label: string; maxScore: n
   return types;
 }
 
-function totalScore(ca1?: number | null, exam?: number | null): number {
-  return Math.min(100, (ca1 ?? 0) + (exam ?? 0));
+function totalScore(...scores: (number | null | undefined)[]): number {
+  return Math.min(100, scores.reduce<number>((sum, s) => sum + (s ?? 0), 0));
 }
 
 const COGNITIVE_FIELDS = [
@@ -82,7 +83,7 @@ function getGradePoint(grade: string): number {
 
 function drawSubjectBarChart(doc: jsPDF, subjects: any[], x: number, y: number, w: number, maxH: number, pageWidth: number): number {
   const sorted = subjects.map(s => {
-    const total = Math.min(100, (s.ca1?.score ?? 0) + (s.exam?.score ?? 0));
+    const total = Math.min(100, [s.ca1?.score, s.ca2?.score, s.ca3?.score, s.exam?.score].reduce<number>((sum, v) => sum + (v ?? 0), 0));
     return { name: s.subject_name, total };
   }).sort((a, b) => b.total - a.total);
   const barH = 4.5;
@@ -208,7 +209,7 @@ function getPerformanceInsights(subjectScores: any[]): {
   sortedByScore: { name: string; score: number }[];
 } {
   const withScores = subjectScores.map(s => {
-    const total = Math.min(100, (s.ca1?.score ?? 0) + (s.exam?.score ?? 0));
+    const total = Math.min(100, [s.ca1?.score, s.ca2?.score, s.ca3?.score, s.exam?.score].reduce<number>((sum, v) => sum + (v ?? 0), 0));
     return { name: s.subject_name, score: total };
   }).filter(s => s.score > 0);
   const sorted = [...withScores].sort((a, b) => b.score - a.score);
@@ -315,7 +316,7 @@ function generateRecommendations(
   const generalRecs: string[] = [];
 
   subjectScores.forEach(s => {
-    const total = Math.min(100, (s.ca1?.score ?? 0) + (s.exam?.score ?? 0));
+    const total = Math.min(100, [s.ca1?.score, s.ca2?.score, s.ca3?.score, s.exam?.score].reduce<number>((sum, v) => sum + (v ?? 0), 0));
     const name = s.subject_name;
     if (total < 40) {
       subjectRecs.push(`${name} (${total}%): Critical — requires intensive remedial tutoring. Focus on core concepts and foundational topics. Schedule extra classes and use practice worksheets.`);
@@ -628,8 +629,7 @@ function ReportCardContent() {
       let studentQuery = supabase.from('students')
         .select('id, profile_id, admission_number, profile:profiles!profile_id(first_name, last_name, avatar_url), class:classes!class_id(name)');
       if (profile?.role !== 'admin') {
-        const { data: tcData } = await supabase.from('teacher_classes').select('class_id').eq('teacher_id', profile?.id);
-        const classIds = tcData?.map(tc => tc.class_id).filter(Boolean) || [];
+        const classIds = await getTeacherClassIds(profile?.id || '');
         studentQuery = studentQuery.in('class_id', classIds.length > 0 ? classIds : ['none']);
       }
       const studentRes = await studentQuery;
@@ -783,17 +783,21 @@ function ReportCardContent() {
       const t1Results = term1Results.filter((r: any) => r.subject_id === sub.subject_id);
       const t1Midterm = t1Results.find(r => r.exam_type === 'ca1');
       const t1Exam = t1Results.find(r => r.exam_type === 'exam');
-      const t1Avg = totalScore(t1Midterm?.score, t1Exam?.score);
+      const t1Ca2 = t1Results.find(r => r.exam_type === 'ca2');
+      const t1Ca3 = t1Results.find(r => r.exam_type === 'ca3');
+      const t1Avg = totalScore(t1Midterm?.score, t1Ca2?.score, t1Ca3?.score, t1Exam?.score);
 
       // Term 2 weighted total
       const t2Results = term2Results.filter((r: any) => r.subject_id === sub.subject_id);
       const t2Midterm = t2Results.find(r => r.exam_type === 'ca1');
       const t2Exam = t2Results.find(r => r.exam_type === 'exam');
-      const t2Avg = totalScore(t2Midterm?.score, t2Exam?.score);
+      const t2Ca2 = t2Results.find(r => r.exam_type === 'ca2');
+      const t2Ca3 = t2Results.find(r => r.exam_type === 'ca3');
+      const t2Avg = totalScore(t2Midterm?.score, t2Ca2?.score, t2Ca3?.score, t2Exam?.score);
 
       // Term 3 weighted total (current)
       const current = subjectScores.find((s: any) => s.subject_id === sub.subject_id);
-      const t3Avg = totalScore(current?.ca1?.score, current?.exam?.score);
+      const t3Avg = totalScore(current?.ca1?.score, current?.ca2?.score, current?.ca3?.score, current?.exam?.score);
 
       // Cumulative = average of all three term totals
       const allAvgs = [t1Avg, t2Avg, t3Avg].filter(a => a != null) as number[];
@@ -816,7 +820,7 @@ function ReportCardContent() {
   // Calculate totals using weighted formula
   function calcTotals() {
     const avgs = subjectScores.map(s => {
-      return totalScore(s.ca1?.score, s.exam?.score);
+      return totalScore(s.ca1?.score, s.ca2?.score, s.ca3?.score, s.exam?.score);
     }).filter(a => a != null) as number[];
 
     const totalAvg = avgs.length > 0 ? Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length) : 0;

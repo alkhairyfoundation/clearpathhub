@@ -137,13 +137,14 @@ CREATE TABLE departments (
 
 -- Classes
 CREATE TABLE classes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  level INTEGER NOT NULL,
-  department_id UUID REFERENCES departments(id),
-  class_teacher_id UUID REFERENCES profiles(id),
-  created_at TIMESTAMP DEFAULT NOW()
-);
+   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+   name TEXT NOT NULL,
+   level INTEGER NOT NULL,
+   department_id UUID REFERENCES departments(id),
+   class_teacher_id UUID REFERENCES profiles(id),
+   next_class_id UUID REFERENCES classes(id),
+   created_at TIMESTAMP DEFAULT NOW()
+ );
 
 -- Subjects
 CREATE TABLE subjects (
