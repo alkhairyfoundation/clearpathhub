@@ -942,3 +942,31 @@ CREATE TABLE IF NOT EXISTS ccr_responses (
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_ccr_responses_student_id ON ccr_responses(student_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_ccr_responses_respondent_type ON ccr_responses(respondent_type); EXCEPTION WHEN undefined_column THEN NULL; END $$;
 DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_ccr_responses_is_submitted ON ccr_responses(is_submitted); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+
+-- ============================================================================
+-- PART 15: Student Risk Predictions
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS student_risk_predictions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES profiles(id),
+  prediction_date DATE DEFAULT CURRENT_DATE,
+  risk_level TEXT DEFAULT 'low',
+  risk_score NUMERIC(5,2),
+  contributing_factors JSONB,
+  predicted_outcome TEXT,
+  confidence_score NUMERIC(5,2),
+  model_version TEXT,
+  is_acknowledged BOOLEAN DEFAULT false,
+  acknowledged_by UUID REFERENCES profiles(id),
+  acknowledged_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_risk_predictions_student_id ON student_risk_predictions(student_id); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_risk_predictions_date ON student_risk_predictions(prediction_date); EXCEPTION WHEN undefined_column THEN NULL; END $$;
+
+-- ============================================================================
+-- END PART 15
+-- ============================================================================

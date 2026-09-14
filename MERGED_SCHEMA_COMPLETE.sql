@@ -1376,6 +1376,28 @@ ALTER TABLE skill_evidence_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ccr_responses ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
+-- Student Risk Predictions
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS student_risk_predictions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id UUID REFERENCES profiles(id),
+  prediction_date DATE DEFAULT CURRENT_DATE,
+  risk_level TEXT DEFAULT 'low',
+  risk_score NUMERIC(5,2),
+  contributing_factors JSONB,
+  predicted_outcome TEXT,
+  confidence_score NUMERIC(5,2),
+  model_version TEXT,
+  is_acknowledged BOOLEAN DEFAULT false,
+  acknowledged_by UUID REFERENCES profiles(id),
+  acknowledged_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS idx_risk_predictions_student_id ON student_risk_predictions(student_id); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ============================================================================
 -- PART 15: AUTH TRIGGER (Auto-create profile on user signup)
 -- ============================================================================
 
