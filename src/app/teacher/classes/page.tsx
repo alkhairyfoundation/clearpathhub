@@ -39,7 +39,9 @@ export default function TeacherClassesPage() {
         teacherClassIdSet.length > 0
           ? supabase.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').in('id', teacherClassIdSet).order('level')
           : { data: [], error: null },
-        supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').order('admission_number'),
+        teacherClassIdSet.length > 0
+          ? supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').in('class_id', teacherClassIdSet).order('admission_number')
+          : { data: [], error: null },
       ]);
       if (classesRes.error) throw new Error(classesRes.error.message);
       if (studentsRes.error) throw new Error(studentsRes.error.message);
@@ -55,14 +57,17 @@ export default function TeacherClassesPage() {
     if (!formData.name.trim()) { setError('Class name is required'); return; }
     setError(''); setSaving(true);
     try {
-      const data = { ...formData, teacher_id: profile?.id, capacity: parseInt(formData.capacity.toString()) };
+      const data = { name: formData.name, level: formData.level, section: formData.section, class_teacher_id: profile?.id, capacity: parseInt(formData.capacity.toString()) };
       if (editingClass) {
         const { error } = await supabase.from('classes').update(data).eq('id', editingClass.id);
         if (error) throw new Error(error.message);
         setSuccess('Class updated');
       } else {
-        const { error } = await supabase.from('classes').insert(data);
+        const { data: newClass, error } = await supabase.from('classes').insert(data).select().maybeSingle();
         if (error) throw new Error(error.message);
+        if (newClass) {
+          await supabase.from('teacher_classes').insert({ teacher_id: profile?.id, class_id: newClass.id });
+        }
         setSuccess('Class created');
       }
       setTimeout(() => { setShowModal(false); setFormData({ name: '', level: '', section: '', teacher_id: '', capacity: 40 }); setEditingClass(null); fetchData(); }, 1000);

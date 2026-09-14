@@ -68,6 +68,7 @@ const [studentClassMap, setStudentClassMap] = useState<Record<string, string>>({
 const [teacherSubjectIds, setTeacherSubjectIds] = useState<string[]>([]);
 const [teacherClassIds, setTeacherClassIds] = useState<string[]>([]);
 const [allSubjects, setAllSubjects] = useState<any[]>([]);
+const [teacherClassMap, setTeacherClassMap] = useState<Record<string, string[]>>({});
   const [formData, setFormData] = useState<UserFormData>({
     email: '', password: '', first_name: '', last_name: '', role: 'teacher', phone: '', class_id: '', avatar_url: '',
   });
@@ -149,6 +150,25 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
 
     if (!fetchError && data) {
       setUsers(data);
+    }
+
+    // Fetch teacher class assignments for display
+    const teacherIds = data?.filter((u: any) => u.role === 'teacher').map((u: any) => u.id) || [];
+    if (teacherIds.length > 0) {
+      const { data: tcData } = await supabase
+        .from('teacher_classes')
+        .select('teacher_id, class:classes!class_id(name)')
+        .in('teacher_id', teacherIds);
+      if (tcData) {
+        const map: Record<string, string[]> = {};
+        tcData.forEach((tc: any) => {
+          if (!map[tc.teacher_id]) map[tc.teacher_id] = [];
+          if (tc.class?.name) map[tc.teacher_id].push(tc.class.name);
+        });
+        setTeacherClassMap(map);
+      }
+    } else {
+      setTeacherClassMap({});
     }
 
     // Fetch class info for student filtering/display
@@ -602,6 +622,9 @@ const [allSubjects, setAllSubjects] = useState<any[]>([]);
                         const cId = studentClassMap[user.id];
                         const c = allClasses.find(cl => cl.id === cId);
                         return c ? c.name : '—';
+                      })() : user.role === 'teacher' ? (() => {
+                        const names = teacherClassMap[user.id];
+                        return names && names.length > 0 ? names.join(', ') : '—';
                       })() : '—'}
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{user.phone || '—'}</td>

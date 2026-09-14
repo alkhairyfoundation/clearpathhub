@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
     const { role } = token as any;
     if (role !== 'admin') return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
 
-    const { classIds } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { classIds } = body as { classIds?: string[] };
     const pool = await getPool();
 
     try {

@@ -62,7 +62,7 @@ export default function TeacherProfilePage() {
 
       const classIds = Array.from(new Set(await getTeacherClassIds(profile.id)));
       const { data: subjs } = classIds.length > 0
-        ? await supabase.from('subjects').select('*, class:classes!class_id(name)').in('class_id', classIds)
+        ? await supabase.from('subjects').select('*, class:classes!class_id(name)').in('class_id', classIds).eq('teacher_id', profile.id)
         : { data: [] };
       if (subjs) {
         setSubjects(subjs);

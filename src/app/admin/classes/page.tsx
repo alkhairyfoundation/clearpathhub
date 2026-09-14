@@ -85,10 +85,21 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
       if (editing) {
         const { error: err } = await supabase.from('classes').update(record).eq('id', editing.id);
         if (err) throw new Error(err.message);
+
+        if (record.class_teacher_id) {
+          const { data: existing } = await supabase.from('teacher_classes').select('id').eq('teacher_id', record.class_teacher_id).eq('class_id', editing.id).maybeSingle();
+          if (!existing) {
+            await supabase.from('teacher_classes').insert({ teacher_id: record.class_teacher_id, class_id: editing.id });
+          }
+        }
+
         setSuccess('Class updated successfully');
       } else {
-        const { error: err } = await supabase.from('classes').insert(record);
+        const { data: newClass, error: err } = await supabase.from('classes').insert(record).select().maybeSingle();
         if (err) throw new Error(err.message);
+        if (newClass && record.class_teacher_id) {
+          await supabase.from('teacher_classes').insert({ teacher_id: record.class_teacher_id, class_id: newClass.id });
+        }
         setSuccess('Class created successfully');
       }
       setTimeout(() => { setShowModal(false); fetchData(); }, 1000);
@@ -120,7 +131,7 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
     setPromoteLoading(true);
     setPromoteResult(null);
     try {
-      const res = await fetch('/api/admin/promote-students', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch('/api/admin/promote-students', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ classIds: [] }) });
       const data = await res.json();
       if (data.success) {
         setPromoteResult(data);
