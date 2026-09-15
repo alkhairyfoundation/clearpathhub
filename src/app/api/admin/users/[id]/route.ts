@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '@/lib/supabase-server';
+import { tryCreateSupabaseAdminClient } from '@/lib/supabase-server';
 import bcrypt from 'bcryptjs';
 import {
   deleteUserInNeon,
@@ -33,7 +33,7 @@ function firstNonEmpty(value: unknown, fallback?: string | null): string | null 
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   try {
-    const adminClient = createSupabaseAdminClient();
+    const adminClient = tryCreateSupabaseAdminClient();
     const id = params.id;
 
     const role = await getRole(id);
@@ -49,8 +49,8 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       );
     }
 
-    // Secondary cleanup in Supabase
-    if (role === 'teacher') {
+    // Secondary cleanup in Supabase (best-effort)
+    if (adminClient && role === 'teacher') {
       await Promise.allSettled([
         adminClient.from('teacher_classes').delete().eq('teacher_id', id),
         adminClient.from('homework').delete().eq('teacher_id', id),
@@ -60,7 +60,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
         adminClient.from('teacher_evaluations').delete().eq('teacher_id', id),
         adminClient.from('staff').delete().eq('profile_id', id),
       ]);
-    } else if (role === 'student') {
+    } else if (adminClient && role === 'student') {
       await Promise.allSettled([
         adminClient.from('students').delete().eq('profile_id', id),
         adminClient.from('homework_submissions').delete().eq('student_id', id),
@@ -75,22 +75,24 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
         adminClient.from('student_classes').delete().eq('student_id', id),
         adminClient.from('student_risk_predictions').delete().eq('student_id', id),
       ]);
-    } else if (role === 'parent') {
+    } else if (adminClient && role === 'parent') {
       await Promise.allSettled([
         adminClient.from('parent_students').delete().eq('parent_id', id),
         adminClient.from('students').update({ parent_id: null }).eq('parent_id', id),
       ]);
-    } else if (role === 'accountant' || role === 'admin') {
+    } else if (adminClient && (role === 'accountant' || role === 'admin')) {
       await Promise.allSettled([
         adminClient.from('staff').delete().eq('profile_id', id),
       ]);
     }
 
-    const { error: profileDeleteError } = await adminClient.from('profiles').delete().eq('id', id);
-    if (profileDeleteError) console.error('Supabase profile delete error:', profileDeleteError);
+    if (adminClient) {
+      const { error: profileDeleteError } = await adminClient.from('profiles').delete().eq('id', id);
+      if (profileDeleteError) console.error('Supabase profile delete error:', profileDeleteError);
 
-    const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(id);
-    if (authDeleteError) console.error('Supabase auth delete error:', authDeleteError);
+      const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(id);
+      if (authDeleteError) console.error('Supabase auth delete error:', authDeleteError);
+    }
 
     return NextResponse.json({ success: true, message: 'User deleted successfully' });
   } catch (error: any) {
@@ -191,9 +193,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 
     // ============================================================
-    // SECONDARY: Sync to Supabase
+    // SECONDARY: Sync to Supabase (best-effort)
     // ============================================================
-    const adminClient = createSupabaseAdminClient();
+    const adminClient = tryCreateSupabaseAdminClient();
 
     const updates: Record<string, any> = {};
     if (first_name !== undefined) updates.first_name = first_name;
@@ -201,17 +203,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (role !== undefined) updates.role = role;
     if (phone !== undefined) updates.phone = phone || null;
     if (avatar_url !== undefined) updates.avatar_url = avatar_url || null;
-    if (Object.keys(updates).length > 0) {
+    if (adminClient && Object.keys(updates).length > 0) {
       const { error: profileSyncError } = await adminClient.from('profiles').update(updates).eq('id', id);
       if (profileSyncError) console.error('Supabase profile sync error:', profileSyncError);
     }
 
-    if (password) {
+    if (adminClient && password) {
       const { error: pwdSyncError } = await adminClient.auth.admin.updateUserById(id, { password });
       if (pwdSyncError) console.error('Supabase password sync error:', pwdSyncError);
     }
 
-    if (teacher_class_ids !== undefined && Array.isArray(teacher_class_ids)) {
+    if (adminClient && teacher_class_ids !== undefined && Array.isArray(teacher_class_ids)) {
       try {
         const { data: existingTCs } = await adminClient
           .from('teacher_classes')
@@ -239,7 +241,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       guardian_email !== undefined || blood_group !== undefined || emergency_contact !== undefined ||
       admission_number !== undefined;
 
-    if (studentPatch) {
+    if (adminClient && studentPatch) {
       try {
         const { data: existingStudent } = await adminClient
           .from('students')
@@ -291,7 +293,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       }
     }
 
-    if (staffPatch) {
+    if (adminClient && staffPatch) {
       try {
         const { data: existingStaff } = await adminClient
           .from('staff')

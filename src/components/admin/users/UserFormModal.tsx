@@ -197,6 +197,11 @@ export default function UserFormModal({
       return;
     }
 
+    if (needsStaff && (!staffData.staff_id.trim() || !staffData.employee_id.trim() || !staffData.designation.trim())) {
+      setError('Staff ID, Employee ID and Designation are required for staff');
+      return;
+    }
+
     setSaving(true);
     try {
       if (isEdit) {
@@ -598,7 +603,8 @@ export default function UserFormModal({
                       value={staffData.staff_id}
                       onChange={(e) => setStaffData({ ...staffData, staff_id: e.target.value })}
                       className="input"
-                      placeholder="Auto-generated if empty"
+                      placeholder="e.g. STF2026000001"
+                      required
                     />
                   </div>
                   <div>
@@ -608,7 +614,8 @@ export default function UserFormModal({
                       value={staffData.employee_id}
                       onChange={(e) => setStaffData({ ...staffData, employee_id: e.target.value })}
                       className="input"
-                      placeholder="Auto-generated if empty"
+                      placeholder="e.g. EMP2026000001"
+                      required
                     />
                   </div>
                 </div>
@@ -634,6 +641,7 @@ export default function UserFormModal({
                       onChange={(e) => setStaffData({ ...staffData, designation: e.target.value })}
                       className="input"
                       placeholder="e.g. Senior Teacher"
+                      required
                     />
                   </div>
                 </div>

@@ -45,3 +45,13 @@ export function createSupabaseAdminClient() {
     },
   });
 }
+
+export function tryCreateSupabaseAdminClient() {
+  if (!supabaseServiceRoleKey) return null;
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
