@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
             'current_class', p.current_class_name,
             'promoted_to_next_class', p.next_class_id IS NOT NULL
           )) FILTER (WHERE p.student_id IS NOT NULL), '[]') AS promoted_students
+        FROM promotions p
       `, classIds && classIds.length > 0 ? [classIds] : []);
 
       const row = result.rows[0];
