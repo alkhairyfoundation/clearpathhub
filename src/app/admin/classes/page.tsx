@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit, Trash2, X, GraduationCap, Loader2, ArrowLeft, ArrowUpCircle, ArrowDownCircle, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, X, GraduationCap, Loader2, ArrowLeft, ArrowUpCircle, ArrowDownCircle, AlertTriangle, CheckCircle, Users } from 'lucide-react';
 import type { Class } from '@/types';
 
 export default function AdminClassesPage() {
@@ -26,6 +26,10 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
   const [promoteLoading, setPromoteLoading] = useState(false);
   const [promoteResult, setPromoteResult] = useState<any>(null);
   const [classData, setClassData] = useState<any[]>([]);
+  const [assignedTeachers, setAssignedTeachers] = useState<any[]>([]);
+  const [assigningClass, setAssigningClass] = useState<any>(null);
+  const [assignSelections, setAssignSelections] = useState<Record<string, boolean>>({});
+  const [assignSaving, setAssignSaving] = useState(false);
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -38,14 +42,16 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
 
   async function fetchData() {
     setLoading(true);
-    const [classesRes, deptsRes, teachersRes] = await Promise.all([
+    const [classesRes, deptsRes, teachersRes, assignRes] = await Promise.all([
       db.from('classes').select('*, department:departments!department_id(name), class_teacher:profiles!class_teacher_id(first_name, last_name)').order('level').order('name'),
       db.from('departments').select('*').order('name'),
       db.from('profiles').select('*').eq('role', 'teacher').order('first_name'),
+      db.from('teacher_classes').select('teacher_id, class_id'),
     ]);
     if (classesRes.data) setClasses(classesRes.data);
     if (deptsRes.data) setDepartments(deptsRes.data);
     if (teachersRes.data) setTeachers(teachersRes.data);
+    if (assignRes.data) setAssignedTeachers(assignRes.data);
     setLoading(false);
   }
 
@@ -148,6 +154,40 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
     }
   }
 
+  function openAssignModal(cls: any) {
+    const selections: Record<string, boolean> = {};
+    assignedTeachers.forEach(t => { if (t.class_id === cls.id) selections[t.teacher_id] = true; });
+    setAssigningClass(cls);
+    setAssignSelections(selections);
+  }
+
+  async function handleSaveAssignments() {
+    if (!assigningClass) return;
+    setAssignSaving(true);
+    setError('');
+    try {
+      const current = assignedTeachers.filter(t => t.class_id === assigningClass.id);
+      for (const teacher of teachers) {
+        const isAssigned = current.some(t => t.teacher_id === teacher.id);
+        const shouldBe = !!assignSelections[teacher.id];
+        if (shouldBe && !isAssigned) {
+          await db.from('teacher_classes').insert({ teacher_id: teacher.id, class_id: assigningClass.id });
+        } else if (!shouldBe && isAssigned) {
+          await db.from('teacher_classes').delete().eq('teacher_id', teacher.id).eq('class_id', assigningClass.id);
+        }
+      }
+      const assignedIds = Object.keys(assignSelections).filter(id => assignSelections[id]);
+      setSuccess(`${assignedIds.length} teacher(s) assigned to ${assigningClass.name}`);
+      setAssigningClass(null);
+      fetchData();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save assignments');
+    } finally {
+      setAssignSaving(false);
+    }
+  }
+
   return (
     <DashboardLayout title="Classes" subtitle="Manage school classes and class teachers">
 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -191,6 +231,7 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Level</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden md:table-cell">Department</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden lg:table-cell">Class Teacher</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase hidden xl:table-cell">Assigned Teachers</th>
                 <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Actions</th>
               </tr>
             </thead>
@@ -198,14 +239,17 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
               {classes.map(cls => {
                 const dept = departments.find(d => d.id === cls.department_id);
                 const teacher = teachers.find(t => t.id === cls.class_teacher_id);
+                const assignedCount = assignedTeachers.filter(t => t.class_id === cls.id).length;
                 return (
                   <tr key={cls.id} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700">
                     <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white dark:text-white">{cls.name}</td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Level {cls.level}</td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden md:table-cell">{dept?.name || '-'}</td>
                     <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden lg:table-cell">{teacher ? `${teacher.first_name} ${teacher.last_name}` : '-'}</td>
+                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 hidden xl:table-cell">{assignedCount}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => openAssignModal(cls)} className="p-2 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg" title="Assign Teachers"><Users size={16} className="text-primary-500" /></button>
                         <button onClick={() => openModal(cls)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><Edit size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
                         <button onClick={() => handleDelete(cls.id)} disabled={deleting === cls.id} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">
                           {deleting === cls.id ? <Loader2 size={16} className="animate-spin text-red-500 dark:text-red-400 dark:text-red-400" /> : <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />}
@@ -239,6 +283,39 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
               <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">
                 {saving && <Loader2 size={16} className="animate-spin" />}
                 {editing ? 'Update' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {assigningClass && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md dark:bg-slate-800">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Assign Teachers — {assigningClass.name}</h2>
+              <button onClick={() => setAssigningClass(null)} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-3 max-h-96 overflow-y-auto">
+              {teachers.length === 0 ? (
+                <p className="text-sm text-slate-500">No teachers found</p>
+              ) : teachers.map(t => (
+                <label key={t.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                  <input
+                    type="checkbox"
+                    checked={!!assignSelections[t.id]}
+                    onChange={e => setAssignSelections(prev => ({ ...prev, [t.id]: e.target.checked }))}
+                    className="w-4 h-4 rounded border-slate-300"
+                  />
+                  <span className="text-sm text-slate-900 dark:text-white">{t.first_name} {t.last_name}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-3 p-6 border-t">
+              <button onClick={() => setAssigningClass(null)} className="btn-outline">Cancel</button>
+              <button onClick={handleSaveAssignments} disabled={assignSaving} className="btn-primary flex items-center gap-2">
+                {assignSaving && <Loader2 size={16} className="animate-spin" />}
+                Save
               </button>
             </div>
           </div>

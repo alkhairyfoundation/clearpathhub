@@ -76,24 +76,40 @@ export default function AdminSubjectsPage() {
     setShowModal(true);
   }
 
+  async function propagateTeacherToContent(subjectId: string, teacherId: string | null, classId: string | null) {
+    if (!teacherId) return;
+    await db.from('lessons').update({ teacher_id: teacherId }).eq('subject_id', subjectId);
+    await db.from('sessions').update({ teacher_id: teacherId }).eq('subject_id', subjectId);
+    if (classId) {
+      const { data: existing } = await db.from('teacher_classes').select('id').eq('teacher_id', teacherId).eq('class_id', classId).maybeSingle();
+      if (!existing) {
+        await db.from('teacher_classes').insert({ teacher_id: teacherId, class_id: classId });
+      }
+    }
+  }
+
   async function handleSave() {
     if (!formData.name.trim()) { setError('Subject name is required'); return; }
     setError(''); setSaving(true);
     try {
+      const teacherId = formData.teacher_id || null;
+      const classId = formData.class_id || null;
       const data = {
         name: formData.name.trim(),
         code: formData.code.trim() || formData.name.substring(0, 4).toUpperCase(),
         department_id: formData.department_id || null,
-        class_id: formData.class_id || null,
-        teacher_id: formData.teacher_id || null,
+        class_id: classId,
+        teacher_id: teacherId,
       };
       if (editingSubject) {
         const { error: err } = await db.from('subjects').update(data).eq('id', editingSubject.id);
         if (err) throw new Error(err.message);
+        await propagateTeacherToContent(editingSubject.id, teacherId, classId);
         setSuccess('Subject updated successfully');
       } else {
-        const { error: err } = await db.from('subjects').insert(data);
+        const { data: created, error: err } = await db.from('subjects').insert(data).select().maybeSingle();
         if (err) throw new Error(err.message);
+        if (created?.id) await propagateTeacherToContent(created.id, teacherId, classId);
         setSuccess('Subject created successfully');
       }
       setTimeout(() => { setShowModal(false); fetchData(); }, 1000);
