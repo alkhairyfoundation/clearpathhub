@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -23,7 +23,7 @@ export default function StudentEntranceExamsPage() {
     setLoading(true);
     try {
       if (!profile?.email) return;
-      const { data } = await supabase
+      const { data } = await db
         .from('entrance_applications')
         .select('*, exam:entrance_exams(*)')
         .eq('email', profile.email)

@@ -1,10 +1,36 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
+import { query as neonQuery } from '@/lib/neon';
 
 const SUBJECT_WEIGHTS: Record<string, Record<string, number>> = {
   JSS3_BECE: { MATHEMATICS: 0.30, ENGLISH: 0.25, 'BASIC SCIENCE': 0.25, 'BASIC TECHNOLOGY': 0.20 },
   SS3_WAEC: { MATHEMATICS: 0.25, ENGLISH: 0.20, PHYSICS: 0.20, CHEMISTRY: 0.15, BIOLOGY: 0.10, GEOGRAPHY: 0.10 },
 };
+
+async function insertMockQuestions(toInsert: any[]): Promise<any[]> {
+  if (toInsert.length === 0) return [];
+  const allKeys = Array.from(new Set(toInsert.flatMap((d) => Object.keys(d || {}))));
+  const colList = allKeys.map((k) => `"${k}"`).join(', ');
+  const valuePlaceholders: string[] = [];
+  const flatValues: any[] = [];
+  for (const row of toInsert) {
+    const rowVals = allKeys.map((k) => (row ?? {})[k]);
+    valuePlaceholders.push(`(${rowVals.map((_, i) => `$${flatValues.length + i + 1}`).join(', ')})`);
+    flatValues.push(...rowVals);
+  }
+  return neonQuery(
+    `INSERT INTO "mock_questions" (${colList}) VALUES ${valuePlaceholders.join(', ')} RETURNING *`,
+    flatValues
+  );
+}
+
+async function mirrorWrites(mirror: () => any) {
+  try {
+    await mirror();
+  } catch (mirrorError) {
+    console.error('Supabase mock-exams mirror error:', mirrorError);
+  }
+}
 
 export async function GET(request: Request) {
   try {
@@ -13,22 +39,33 @@ export async function GET(request: Request) {
     const examType = searchParams.get('exam_type');
     const published = searchParams.get('published');
 
-    const adminClient = createSupabaseAdminClient();
-    let query = adminClient.from('mock_exams').select('*, questions:mock_questions(*)');
-
     if (examId) {
-      query = query.eq('id', examId);
-      const { data, error } = await query.single();
-      if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      const rows = await neonQuery(
+        `SELECT e.*,
+          COALESCE((SELECT jsonb_agg("sq")
+                    FROM (SELECT q.* FROM "mock_questions" q WHERE q.exam_id = e.id) AS "sq"), '[]'::jsonb) AS questions
+         FROM mock_exams e
+         WHERE e.id = $1::uuid
+         LIMIT 1`,
+        [examId]
+      );
+      const data = rows[0];
+      if (!data) return NextResponse.json({ success: false, error: 'Exam not found' }, { status: 500 });
       return NextResponse.json({ success: true, exam: data });
     }
 
-    if (examType) query = query.eq('exam_type', examType);
-    if (published !== null) query = query.eq('is_published', published === 'true');
-    query = query.order('created_at', { ascending: false });
-
-    const { data, error } = await query;
-    if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    const conditions: string[] = [];
+    const params: any[] = [];
+    if (examType) {
+      conditions.push(`exam_type = $${params.length + 1}`);
+      params.push(examType);
+    }
+    if (published !== null) {
+      conditions.push(`is_published = $${params.length + 1}`);
+      params.push(published === 'true');
+    }
+    const sql = `SELECT * FROM mock_exams${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''} ORDER BY created_at DESC`;
+    const data = await neonQuery(sql, params);
     return NextResponse.json({ success: true, exams: data });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -53,29 +90,44 @@ export async function POST(request: Request) {
         } else if (exam_type === 'SS3_WAEC') {
           classLevelValue = 'SS3';
         }
-        
-        const { data, error } = await adminClient.from('mock_exams').insert({
+
+        const rows = await neonQuery(
+          `INSERT INTO mock_exams (title, description, exam_type, academic_year, exam_date, duration_minutes, passing_score, total_questions, shuffle_questions, require_fullscreen, prevent_tab_switch, max_tab_switches, max_attempts, is_published, created_by)
+           VALUES ($1, $2, $3, $4, $5::date, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::uuid)
+           RETURNING *`,
+          [title, description, exam_type, academic_year, exam_date || null, duration_minutes || 120, passing_score || 50, total_questions || 60, shuffle_questions ?? true, require_fullscreen ?? false, prevent_tab_switch ?? false, max_tab_switches || 3, max_attempts || 0, true, created_by]
+        );
+        const data = rows[0];
+        await mirrorWrites(() => adminClient.from('mock_exams').insert({
           title, description, exam_type, academic_year, exam_date: exam_date || null,
           duration_minutes: duration_minutes || 120, passing_score: passing_score || 50,
           total_questions: total_questions || 60, shuffle_questions: shuffle_questions ?? true,
           require_fullscreen: require_fullscreen ?? false, prevent_tab_switch: prevent_tab_switch ?? false,
           max_tab_switches: max_tab_switches || 3, max_attempts: max_attempts || 0,
           is_published: true, created_by, class_level: classLevelValue,
-        }).select().single();
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        }));
         return NextResponse.json({ success: true, exam: data }, { status: 201 });
       }
 
       case 'update_exam': {
         const { id, title, description, exam_date, duration_minutes, passing_score, total_questions, shuffle_questions, require_fullscreen, prevent_tab_switch, max_tab_switches, max_attempts, is_published } = params;
         if (!id) return NextResponse.json({ success: false, error: 'Exam ID required' }, { status: 400 });
-        const { data, error } = await adminClient.from('mock_exams').update({
+        const rows = await neonQuery(
+          `UPDATE mock_exams
+           SET title = $2, description = $3, exam_date = $4::date, duration_minutes = $5, passing_score = $6,
+               total_questions = $7, shuffle_questions = $8, require_fullscreen = $9, prevent_tab_switch = $10,
+               max_tab_switches = $11, max_attempts = $12, is_published = $13
+           WHERE id = $1::uuid
+           RETURNING *`,
+          [id, title, description, exam_date || null, duration_minutes, passing_score, total_questions, shuffle_questions, require_fullscreen, prevent_tab_switch, max_tab_switches, max_attempts, is_published]
+        );
+        const data = rows[0];
+        await mirrorWrites(() => adminClient.from('mock_exams').update({
           title, description, exam_date: exam_date || null,
           duration_minutes, passing_score, total_questions,
           shuffle_questions, require_fullscreen, prevent_tab_switch,
           max_tab_switches, max_attempts, is_published,
-        }).eq('id', id).select().single();
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        }).eq('id', id));
         return NextResponse.json({ success: true, exam: data });
       }
 
@@ -83,13 +135,15 @@ export async function POST(request: Request) {
         const { id: examId } = params;
         if (!examId) return NextResponse.json({ success: false, error: 'Exam ID required' }, { status: 400 });
 
-        const { data: exam, error: examError } = await adminClient.from('mock_exams').select('*').eq('id', examId).single();
-        if (examError || !exam) return NextResponse.json({ success: false, error: 'Exam not found' }, { status: 404 });
+        const examRows = await neonQuery('SELECT * FROM mock_exams WHERE id = $1::uuid LIMIT 1', [examId]);
+        const exam = examRows[0];
+        if (!exam) return NextResponse.json({ success: false, error: 'Exam not found' }, { status: 404 });
 
         // Check remaining capacity
-        const { count: currentCount } = await adminClient.from('mock_questions').select('*', { count: 'exact', head: true }).eq('exam_id', examId);
+        const countRows = await neonQuery('SELECT COUNT(*)::int AS total FROM mock_questions WHERE exam_id = $1::uuid', [examId]);
+        const currentCount = countRows[0]?.total || 0;
         const totalQs = exam.total_questions || 60;
-        const remainingCapacity = Math.max(0, totalQs - (currentCount || 0));
+        const remainingCapacity = Math.max(0, totalQs - currentCount);
         if (remainingCapacity <= 0) {
           return NextResponse.json({ success: false, error: 'Exam has reached its total_questions capacity. No more questions can be added.' }, { status: 400 });
         }
@@ -99,14 +153,12 @@ export async function POST(request: Request) {
           ? ['MATHEMATICS', 'ENGLISH', 'BASIC SCIENCE', 'BASIC TECHNOLOGY']
           : ['MATHEMATICS', 'ENGLISH', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'GEOGRAPHY'];
 
-        const { data: bankQuestions, error: bankError } = await adminClient
-          .from('question_bank')
-          .select('*')
-          .eq('status', 'published')
-          .eq('level', targetLevel)
-          .in('subject', targetSubjects);
+        const bankQuestions = await neonQuery(
+          `SELECT * FROM question_bank
+           WHERE status = $1 AND level = $2 AND subject::text = ANY($3::text[])`,
+          ['published', targetLevel, targetSubjects]
+        );
 
-        if (bankError) return NextResponse.json({ success: false, error: bankError.message }, { status: 500 });
         if (!bankQuestions || bankQuestions.length === 0) {
           return NextResponse.json({ success: true, count: 0, message: 'No questions found in bank for this class level' });
         }
@@ -130,13 +182,13 @@ export async function POST(request: Request) {
 
         let selected: any[] = [];
         for (const subject of targetSubjects) {
-          const subjectQs = bankQuestions.filter(q => q.subject === subject);
+          const subjectQs = bankQuestions.filter((q: any) => q.subject === subject);
           const need = qsPerSubject[subject] || 0;
           if (subjectQs.length === 0 || need <= 0) continue;
-          const veryHard = subjectQs.filter(q => q.difficulty_level === 'VERY_HARD');
-          const hard = subjectQs.filter(q => q.difficulty_level === 'HARD');
-          const medium = subjectQs.filter(q => q.difficulty_level === 'MEDIUM');
-          const easy = subjectQs.filter(q => q.difficulty_level === 'EASY');
+          const veryHard = subjectQs.filter((q: any) => q.difficulty_level === 'VERY_HARD');
+          const hard = subjectQs.filter((q: any) => q.difficulty_level === 'HARD');
+          const medium = subjectQs.filter((q: any) => q.difficulty_level === 'MEDIUM');
+          const easy = subjectQs.filter((q: any) => q.difficulty_level === 'EASY');
           const chosen = [
             ...veryHard.sort(() => Math.random() - 0.5).slice(0, Math.round(need * 0.3)),
             ...hard.sort(() => Math.random() - 0.5).slice(0, Math.round(need * 0.3)),
@@ -144,7 +196,7 @@ export async function POST(request: Request) {
             ...easy.sort(() => Math.random() - 0.5).slice(0, Math.round(need * 0.15)),
           ];
           if (chosen.length < need) {
-            const remaining = subjectQs.filter(q => !chosen.find(s => s.id === q.id)).sort(() => Math.random() - 0.5).slice(0, need - chosen.length);
+            const remaining = subjectQs.filter((q: any) => !chosen.find((s) => s.id === q.id)).sort(() => Math.random() - 0.5).slice(0, need - chosen.length);
             selected = [...selected, ...chosen, ...remaining];
           } else {
             selected = [...selected, ...chosen];
@@ -163,8 +215,8 @@ export async function POST(request: Request) {
           curriculum: q.curriculum || null, grade_level: targetLevel,
         }));
 
-        const { data: inserted, error: insertError } = await adminClient.from('mock_questions').insert(toInsert).select();
-        if (insertError) return NextResponse.json({ success: false, error: insertError.message }, { status: 500 });
+        const inserted = await insertMockQuestions(toInsert);
+        await mirrorWrites(() => adminClient.from('mock_questions').insert(toInsert));
 
         return NextResponse.json({ success: true, count: inserted?.length || 0 });
       }
@@ -172,23 +224,34 @@ export async function POST(request: Request) {
       case 'delete_exam': {
         const { id } = params;
         if (!id) return NextResponse.json({ success: false, error: 'Exam ID required' }, { status: 400 });
-        await adminClient.from('mock_questions').delete().eq('exam_id', id);
-        const { error } = await adminClient.from('mock_exams').delete().eq('id', id);
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        await neonQuery('DELETE FROM mock_questions WHERE exam_id = $1::uuid', [id]);
+        await neonQuery('DELETE FROM mock_exams WHERE id = $1::uuid', [id]);
+        await mirrorWrites(async () => {
+          await adminClient.from('mock_questions').delete().eq('exam_id', id);
+          await adminClient.from('mock_exams').delete().eq('id', id);
+        });
         return NextResponse.json({ success: true });
       }
 
       case 'list_exams': {
         const { exam_type, is_published, class_level } = params;
-        let query = adminClient.from('mock_exams').select('*');
-        if (exam_type) query = query.eq('exam_type', exam_type);
-        if (is_published !== undefined) query = query.eq('is_published', is_published);
+        const conditions: string[] = [];
+        const qParams: any[] = [];
+        if (exam_type) {
+          conditions.push(`exam_type = $${qParams.length + 1}`);
+          qParams.push(exam_type);
+        }
+        if (is_published !== undefined) {
+          conditions.push(`is_published = $${qParams.length + 1}`);
+          qParams.push(is_published);
+        }
         if (class_level) {
           const examType = class_level === 'JSS3' ? 'JSS3_BECE' : 'SS3_WAEC';
-          query = query.eq('exam_type', examType);
+          conditions.push(`exam_type = $${qParams.length + 1}`);
+          qParams.push(examType);
         }
-        const { data, error } = await query.order('created_at', { ascending: false });
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        const sql = `SELECT * FROM mock_exams${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''} ORDER BY created_at DESC`;
+        const data = await neonQuery(sql, qParams);
         return NextResponse.json({ success: true, exams: data });
       }
 

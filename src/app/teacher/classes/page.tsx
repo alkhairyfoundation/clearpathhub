@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -37,10 +37,10 @@ export default function TeacherClassesPage() {
 
       const [classesRes, studentsRes] = await Promise.all([
         teacherClassIdSet.length > 0
-          ? supabase.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').in('id', teacherClassIdSet).order('level')
+          ? db.from('classes').select('*, teacher:profiles!class_teacher_id(first_name, last_name)').in('id', teacherClassIdSet).order('level')
           : { data: [], error: null },
         teacherClassIdSet.length > 0
-          ? supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').in('class_id', teacherClassIdSet).order('admission_number')
+          ? db.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').in('class_id', teacherClassIdSet).order('admission_number')
           : { data: [], error: null },
       ]);
       if (classesRes.error) throw new Error(classesRes.error.message);
@@ -59,14 +59,14 @@ export default function TeacherClassesPage() {
     try {
       const data = { name: formData.name, level: formData.level, section: formData.section, class_teacher_id: profile?.id, capacity: parseInt(formData.capacity.toString()) };
       if (editingClass) {
-        const { error } = await supabase.from('classes').update(data).eq('id', editingClass.id);
+        const { error } = await db.from('classes').update(data).eq('id', editingClass.id);
         if (error) throw new Error(error.message);
         setSuccess('Class updated');
       } else {
-        const { data: newClass, error } = await supabase.from('classes').insert(data).select().maybeSingle();
+        const { data: newClass, error } = await db.from('classes').insert(data).select().maybeSingle();
         if (error) throw new Error(error.message);
         if (newClass) {
-          await supabase.from('teacher_classes').insert({ teacher_id: profile?.id, class_id: newClass.id });
+          await db.from('teacher_classes').insert({ teacher_id: profile?.id, class_id: newClass.id });
         }
         setSuccess('Class created');
       }
@@ -81,7 +81,7 @@ export default function TeacherClassesPage() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this class?')) return;
     try {
-      const { error } = await supabase.from('classes').delete().eq('id', id);
+      const { error } = await db.from('classes').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Class deleted');
       setTimeout(() => setSuccess(''), 3000);

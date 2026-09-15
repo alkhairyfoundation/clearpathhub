@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -65,8 +65,8 @@ export default function StudentEntranceReportPage() {
     setError('');
     try {
       const [appRes, settingsRes] = await Promise.all([
-        supabase.from('entrance_applications').select('*, exam:entrance_exams(*)').eq('id', applicationId).maybeSingle(),
-        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+        db.from('entrance_applications').select('*, exam:entrance_exams(*)').eq('id', applicationId).maybeSingle(),
+        db.from('school_settings').select('*').limit(1).maybeSingle(),
       ]);
 
       if (!appRes.data) { setError('Application not found'); setLoading(false); return; }
@@ -76,7 +76,7 @@ export default function StudentEntranceReportPage() {
       setExam(appRes.data.exam);
       setSchoolSettings(settingsRes.data);
 
-      const { data: analyticsData } = await supabase
+      const { data: analyticsData } = await db
         .from('student_analytics')
         .select('*')
         .eq('application_id', applicationId)

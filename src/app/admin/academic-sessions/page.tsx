@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Edit, Trash2, X, Calendar, CheckCircle, Clock, BookOpen, ChevronDown, ChevronRight, Loader2, ArrowLeft } from 'lucide-react';
@@ -36,8 +36,8 @@ export default function AdminAcademicSessionsPage() {
   async function fetchData() {
     setLoading(true);
     const [sessionsRes, termsRes] = await Promise.all([
-      supabase.from('academic_sessions').select('*').order('start_date', { ascending: false }),
-      supabase.from('terms').select('*').order('start_date'),
+      db.from('academic_sessions').select('*').order('start_date', { ascending: false }),
+      db.from('terms').select('*').order('start_date'),
     ]);
     if (!sessionsRes.error && sessionsRes.data) setSessions(sessionsRes.data);
     if (!termsRes.error && termsRes.data) setTerms(termsRes.data);
@@ -88,11 +88,11 @@ export default function AdminAcademicSessionsPage() {
     setError(''); setSaving(true);
     try {
       if (editingSession) {
-        const { error: err } = await supabase.from('academic_sessions').update(sessionForm).eq('id', editingSession.id);
+        const { error: err } = await db.from('academic_sessions').update(sessionForm).eq('id', editingSession.id);
         if (err) throw new Error(err.message);
         setSuccess('Session updated');
       } else {
-        const { error: err } = await supabase.from('academic_sessions').insert(sessionForm);
+        const { error: err } = await db.from('academic_sessions').insert(sessionForm);
         if (err) throw new Error(err.message);
         setSuccess('Session created');
       }
@@ -112,11 +112,11 @@ export default function AdminAcademicSessionsPage() {
     setError(''); setSaving(true);
     try {
       if (editingTerm) {
-        const { error: err } = await supabase.from('terms').update(termForm).eq('id', editingTerm.id);
+        const { error: err } = await db.from('terms').update(termForm).eq('id', editingTerm.id);
         if (err) throw new Error(err.message);
         setSuccess('Term updated');
       } else {
-        const { error: err } = await supabase.from('terms').insert(termForm);
+        const { error: err } = await db.from('terms').insert(termForm);
         if (err) throw new Error(err.message);
         setSuccess('Term created');
       }
@@ -138,22 +138,22 @@ export default function AdminAcademicSessionsPage() {
     try {
       if (table === 'academic_sessions') {
         // Clear school_settings reference if this session is set as current
-        await supabase.from('school_settings').update({ current_session_id: null }).eq('current_session_id', id);
+        await db.from('school_settings').update({ current_session_id: null }).eq('current_session_id', id);
         // Delete all terms belonging to this session
-        const { data: termIds } = await supabase.from('terms').select('id').eq('session_id', id);
+        const { data: termIds } = await db.from('terms').select('id').eq('session_id', id);
         if (termIds && termIds.length > 0) {
-          const tIds = termIds.map(t => t.id);
+          const tIds = termIds.map((t: any) => t.id);
           // Clear school_settings current_term_id if it points to any of these terms
-          await supabase.from('school_settings').update({ current_term_id: null }).in('current_term_id', tIds);
+          await db.from('school_settings').update({ current_term_id: null }).in('current_term_id', tIds);
           // Delete the terms
-          await supabase.from('terms').delete().in('id', tIds);
+          await db.from('terms').delete().in('id', tIds);
         }
       } else {
         // Clear school_settings reference if this term is set as current
-        await supabase.from('school_settings').update({ current_term_id: null }).eq('current_term_id', id);
+        await db.from('school_settings').update({ current_term_id: null }).eq('current_term_id', id);
       }
       // Now delete the record itself
-      const { error } = await supabase.from(table).delete().eq('id', id);
+      const { error } = await db.from(table).delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess(`${labelCap} and all associated records deleted`);
       setTimeout(() => setSuccess(''), 3000);
@@ -166,8 +166,8 @@ export default function AdminAcademicSessionsPage() {
   async function setCurrentSession(id: string) {
     setSaving(true);
     try {
-      await supabase.from('academic_sessions').update({ is_current: false }).neq('id', id);
-      const { error } = await supabase.from('academic_sessions').update({ is_current: true }).eq('id', id);
+      await db.from('academic_sessions').update({ is_current: false }).neq('id', id);
+      const { error } = await db.from('academic_sessions').update({ is_current: true }).eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Current session updated');
       setTimeout(() => setSuccess(''), 3000);
@@ -180,8 +180,8 @@ export default function AdminAcademicSessionsPage() {
   async function setCurrentTerm(id: string) {
     setSaving(true);
     try {
-      await supabase.from('terms').update({ is_current: false }).neq('id', id);
-      const { error } = await supabase.from('terms').update({ is_current: true }).eq('id', id);
+      await db.from('terms').update({ is_current: false }).neq('id', id);
+      const { error } = await db.from('terms').update({ is_current: true }).eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Current term updated');
       setTimeout(() => setSuccess(''), 3000);
@@ -205,7 +205,7 @@ export default function AdminAcademicSessionsPage() {
         const termEnd = i < 2
           ? new Date(termStart.getTime() + (daysPerTerm - 1) * 86400000)
           : end;
-        await supabase.from('terms').insert({
+        await db.from('terms').insert({
           session_id: sessionId,
           name: TERM_NAMES[i],
           start_date: termStart.toISOString().split('T')[0],

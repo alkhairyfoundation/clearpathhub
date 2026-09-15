@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Search, X, CheckCircle, XCircle, Clock, UserCheck, Users, Loader2, ArrowLeft, Download } from 'lucide-react';
@@ -28,7 +28,7 @@ export default function TeacherAttendancePage() {
 
   async function fetchClasses() {
     // Teachers can mark attendance for any class (RLS allows teachers to view all classes)
-    const { data } = await supabase.from('classes').select('id, name').order('level');
+    const { data } = await db.from('classes').select('id, name').order('level');
     setClasses(data || []);
   }
 
@@ -37,14 +37,14 @@ export default function TeacherAttendancePage() {
     setLoading(true);
     try {
       const [studentsRes, attendanceRes] = await Promise.all([
-        supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('class_id', selectedClass).order('admission_number'),
-        supabase.from('attendance').select('student_id, status').eq('date', date).eq('class_id', selectedClass),
+        db.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('class_id', selectedClass).order('admission_number'),
+        db.from('attendance').select('student_id, status').eq('date', date).eq('class_id', selectedClass),
       ]);
       if (studentsRes.error) throw new Error(studentsRes.error.message);
       if (studentsRes.data) {
         const studentMap: Record<string, string> = {};
-        studentsRes.data.forEach(s => {
-          const record = attendanceRes.data?.find(r => r.student_id === s.profile_id);
+        studentsRes.data.forEach((s: any) => {
+          const record = attendanceRes.data?.find((r: any) => r.student_id === s.profile_id);
           studentMap[s.profile_id] = record?.status || '';
         });
         setStudents(studentsRes.data);
@@ -59,7 +59,7 @@ export default function TeacherAttendancePage() {
   async function markAttendance(studentId: string, status: string) {
     setAttendanceRecords(prev => ({ ...prev, [studentId]: status }));
     try {
-      const { error } = await supabase.from('attendance').upsert({
+      const { error } = await db.from('attendance').upsert({
         student_id: studentId,
         class_id: selectedClass,
         date,

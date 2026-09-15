@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, Download, Printer, QrCode, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
@@ -29,7 +29,7 @@ export default function StudentIDCardPage() {
   }, [profile]);
 
   async function fetchData() {
-    const { data: studentData } = await supabase.from('students').select('*, profile:profiles(*), class:classes(*)').eq('profile_id', profile?.id).maybeSingle();
+    const { data: studentData } = await db.from('students').select('*, profile:profiles(*), class:classes(*)').eq('profile_id', profile?.id).maybeSingle();
     if (studentData) {
       setStudent(studentData);
       const qr = await generateAttendanceQR(studentData.admission_number);
@@ -37,9 +37,9 @@ export default function StudentIDCardPage() {
       setQrFrontUrl(qr);
       setQrBackUrl(qrBack);
     }
-    const { data: idCardData } = await supabase.from('id_cards').select('*').eq('student_id', profile?.id).maybeSingle();
+    const { data: idCardData } = await db.from('id_cards').select('*').eq('student_id', profile?.id).maybeSingle();
     if (idCardData) setIdCard(idCardData);
-    const { data: settings } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
+    const { data: settings } = await db.from('school_settings').select('*').limit(1).maybeSingle();
     if (settings) {
       setSchoolSettings(settings);
       if (settings.id_card_config?.backRules) {

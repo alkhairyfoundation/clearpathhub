@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
   import { useAuth } from '@/context/AuthContext';
-  import { supabase } from '@/lib/supabase';
+  import { db } from '@/lib/db';
   import { useRouter, useParams } from 'next/navigation';
   import { Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Loader2, ArrowLeft, FileText } from 'lucide-react';
 import Calculator from '@/components/Calculator';
@@ -148,7 +148,7 @@ export default function StudentTakeEntranceExamPage() {
   }, [started, submitted]);
 
   async function fetchExam() {
-    const { data: appData } = await supabase
+    const { data: appData } = await db
       .from('entrance_applications')
       .select('*, exam:entrance_exams(*)')
       .eq('id', applicationId)
@@ -163,7 +163,7 @@ export default function StudentTakeEntranceExamPage() {
     setExam(appData.exam);
     setTimeLeft((appData.exam?.duration_minutes || 60) * 60);
 
-    const { data: questionsData } = await supabase
+    const { data: questionsData } = await db
       .from('entrance_questions')
       .select('*')
       .eq('exam_id', appData.exam_id)

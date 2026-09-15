@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, uploadFile, STORAGE_BUCKETS } from '@/lib/supabase';
+import { supabase, uploadFile, STORAGE_BUCKETS } from '@/lib/supabase'
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, DollarSign, CheckCircle, Clock, AlertCircle, CreditCard, Upload, X, Eye, Loader2, FileText, BookOpen } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -33,7 +34,7 @@ export default function ParentPaymentsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const childrenRes = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(id, name)').eq('parent_id', profile?.id);
+      const childrenRes = await db.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(id, name)').eq('parent_id', profile?.id);
       if (childrenRes.error) throw new Error(childrenRes.error.message);
       if (childrenRes.data?.length) {
         setChildren(childrenRes.data);
@@ -41,12 +42,12 @@ export default function ParentPaymentsPage() {
         const classIds = childrenRes.data.map((c: any) => c.class_id).filter(Boolean);
 
         const [invoicesRes, transactionsRes, feeRes, uploadRes] = await Promise.all([
-          supabase.from('invoices').select('*, student:profiles!student_id(first_name, last_name)').in('student_id', childIds).order('due_date', { ascending: true }),
-          supabase.from('transactions').select('*, student:profiles!student_id(first_name, last_name)').in('student_id', childIds).order('created_at', { ascending: false }).limit(20),
+          db.from('invoices').select('*, student:profiles!student_id(first_name, last_name)').in('student_id', childIds).order('due_date', { ascending: true }),
+          db.from('transactions').select('*, student:profiles!student_id(first_name, last_name)').in('student_id', childIds).order('created_at', { ascending: false }).limit(20),
           classIds.length > 0
-            ? supabase.from('fee_structures').select('*, class:classes(name), term:terms(name), academic_session:academic_sessions(name), items:fee_structure_items(*)').in('class_id', classIds).eq('status', 'published').order('created_at', { ascending: false })
+            ? db.from('fee_structures').select('*, class:classes(name), term:terms(name), academic_session:academic_sessions(name), items:fee_structure_items(*)').in('class_id', classIds).eq('status', 'published').order('created_at', { ascending: false })
             : { data: [] },
-          supabase.from('payment_uploads').select('*, student:profiles!payment_uploads_student_id_fkey(first_name, last_name)').eq('parent_id', profile?.id).order('created_at', { ascending: false }),
+          db.from('payment_uploads').select('*, student:profiles!payment_uploads_student_id_fkey(first_name, last_name)').eq('parent_id', profile?.id).order('created_at', { ascending: false }),
         ]);
 
         if (invoicesRes.data) {
@@ -75,7 +76,7 @@ export default function ParentPaymentsPage() {
 
       const storagePath = `${profile?.id}/${Date.now()}-${uploadFile_.name}`;
 
-      await supabase.from('payment_uploads').insert({
+      await db.from('payment_uploads').insert({
         invoice_id: uploadModal.id,
         student_id: uploadModal.student_id,
         parent_id: profile?.id,
@@ -113,7 +114,7 @@ export default function ParentPaymentsPage() {
     }
   }
 
-  const formatCurrency = (amount: number) => `₦${amount.toLocaleString()}`;
+  const formatCurrency = (amount: number) => `?${amount.toLocaleString()}`;
 
   const uploadsForInvoice = (invoiceId: string) => paymentUploads.filter((u: any) => u.invoice_id === invoiceId);
 
@@ -220,7 +221,7 @@ export default function ParentPaymentsPage() {
                                 {getUploadStatusIcon(u.status)}
                                 <span>Receipt uploaded {new Date(u.created_at).toLocaleDateString()}</span>
                                 <span className={`capitalize font-medium ${u.status === 'verified' ? 'text-green-600 dark:text-green-400 dark:text-green-400' : u.status === 'rejected' ? 'text-red-600 dark:text-red-400 dark:text-red-400' : 'text-amber-600 dark:text-amber-400 dark:text-amber-400'}`}>{u.status}</span>
-                                {u.rejection_reason && <span className="text-red-500 dark:text-red-400 dark:text-red-400">— {u.rejection_reason}</span>}
+                                {u.rejection_reason && <span className="text-red-500 dark:text-red-400 dark:text-red-400">� {u.rejection_reason}</span>}
                                 {u.receipt_url && (
                                   <button onClick={() => setPreviewUrl(u.receipt_url)} className="text-blue-600 dark:text-blue-400 dark:text-blue-400 hover:underline"><Eye size={12} /></button>
                                 )}

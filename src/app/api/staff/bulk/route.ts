@@ -1,7 +1,8 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
-import { query as neonQuery } from '@/lib/neon';
 import bcrypt from 'bcryptjs';
+import { query as neonQuery } from '@/lib/neon';
+import { createUserInNeon } from '@/lib/user-queries';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,15 +29,50 @@ interface BulkResult {
   error?: string;
 }
 
-function generateStaffId(role: string, index: number): string {
-  const prefix = role === 'teacher' ? 'TCH' : role === 'accountant' ? 'ACC' : 'ADM';
-  return `${prefix}${String(index + 1).padStart(4, '0')}`;
+function str(v: unknown): string | null {
+  return typeof v === 'string' && v.trim() !== '' ? v.trim() : null;
+}
+
+function rolePrefix(role: string): string {
+  return role === 'teacher' ? 'TCH' : role === 'accountant' ? 'ACC' : 'ADM';
+}
+
+// Generates a code that is unique within this batch AND against existing rows.
+function uniqueCode(
+  prefix: string,
+  seed: number,
+  preferred: string | undefined,
+  used: Set<string>,
+  existing: Set<string>
+): string {
+  let candidate = preferred && preferred.trim() !== '' ? preferred.trim() : '';
+  if (candidate) {
+    const key = candidate.toLowerCase();
+    if (!used.has(key) && !existing.has(key)) {
+      used.add(key);
+      return candidate;
+    }
+  }
+  let num = seed;
+  if (candidate) {
+    const digits = candidate.match(/\d+/g);
+    if (digits) num = parseInt(digits[digits.length - 1], 10);
+  }
+  for (;;) {
+    const code = `${prefix}${String(num).padStart(4, '0')}`;
+    const key = code.toLowerCase();
+    if (!used.has(key) && !existing.has(key)) {
+      used.add(key);
+      return code;
+    }
+    num++;
+  }
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const adminClient = createSupabaseAdminClient();
+  let adminClient: ReturnType<typeof createSupabaseAdminClient> | null = null;
 
+  try {
     const { staff }: { staff: StaffInput[] } = await request.json();
     if (!staff || !Array.isArray(staff) || staff.length === 0) {
       return NextResponse.json(
@@ -52,19 +88,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build department_name → department_id lookup
-    const { data: deptData, error: deptError } = await adminClient
-      .from('departments')
-      .select('id, name');
-
-    if (deptError) {
-      return NextResponse.json({ success: false, error: 'Failed to fetch departments' }, { status: 500 });
-    }
-
-    const deptMap = new Map(
-      (deptData || []).map((d: any) => [d.name.toLowerCase().trim(), d.id])
+    // Department + taken-ID lookups from Neon (source of truth)
+    const deptRows = await neonQuery('SELECT id, name FROM departments');
+    const deptMap = new Map<string, string>(
+      deptRows.map((r: any) => [String(r.name).toLowerCase().trim(), r.id])
     );
 
+    const emailRows = await neonQuery('SELECT email FROM profiles');
+    const existingEmails = new Set(
+      emailRows.map((r: any) => String(r.email).toLowerCase())
+    );
+
+    const existingStaffIds = new Set<string>();
+    const existingEmployeeIds = new Set<string>();
+    const idRows = await neonQuery('SELECT staff_id, employee_id FROM staff');
+    for (const r of idRows as any[]) {
+      if (r.staff_id) existingStaffIds.add(String(r.staff_id).toLowerCase());
+      if (r.employee_id) existingEmployeeIds.add(String(r.employee_id).toLowerCase());
+    }
+
+    adminClient = createSupabaseAdminClient();
+
+    const usedStaffIds = new Set<string>();
+    const usedEmployeeIds = new Set<string>();
     const results: BulkResult[] = [];
 
     for (let i = 0; i < staff.length; i++) {
@@ -73,7 +119,6 @@ export async function POST(request: NextRequest) {
       const result: BulkResult = { row, success: false, email: s.email };
 
       try {
-        // Validate
         if (!s.first_name || !s.last_name || !s.email || !s.password) {
           throw new Error('Missing required fields: first_name, last_name, email, password');
         }
@@ -84,97 +129,99 @@ export async function POST(request: NextRequest) {
           throw new Error('Role must be teacher, accountant, or admin');
         }
 
-        // Check if user already exists
-        const { data: existingUser } = await adminClient
+        const emailKey = s.email.toLowerCase();
+        if (existingEmails.has(emailKey)) {
+          throw new Error('User with this email already exists');
+        }
+
+        const { data: existingProfile } = await adminClient
           .from('profiles')
           .select('id')
           .eq('email', s.email)
           .maybeSingle();
-
-        if (existingUser) {
+        if (existingProfile) {
+          existingEmails.add(emailKey);
           throw new Error('User with this email already exists');
         }
-
-        // Create user in Supabase Auth
-        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-          email: s.email,
-          password: s.password,
-          email_confirm: true,
-          user_metadata: {
-            first_name: s.first_name,
-            last_name: s.last_name,
-            role: s.role,
-          },
-        });
-
-        if (authError) throw new Error('Auth error: ' + authError.message);
-
-        const userId = authData.user.id;
-
-        // Update profile in Supabase
-        await adminClient.from('profiles').update({
-          first_name: s.first_name,
-          last_name: s.last_name,
-          role: s.role,
-          phone: s.phone || null,
-        }).eq('id', userId);
 
         // Resolve department_id
         let departmentId: string | null = null;
         if (s.department_name) {
           const lookup = deptMap.get(s.department_name.toLowerCase().trim());
           if (!lookup) {
-            throw new Error(`Department "${s.department_name}" not found. Available: ${Array.from(deptMap.keys()).join(', ') || 'none'}`);
+            throw new Error(
+              `Department "${s.department_name}" not found. Available: ${Array.from(deptMap.keys()).join(', ') || 'none'}`
+            );
           }
           departmentId = lookup;
         }
 
-        // Generate IDs
-        const staffId = s.staff_id || generateStaffId(s.role, i);
-        const employeeId = s.employee_id || `EMP${String(i + 1).padStart(5, '0')}`;
+        // 1. Create auth user in Supabase (needed for login)
+        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+          email: s.email,
+          password: s.password,
+          email_confirm: true,
+          user_metadata: { first_name: s.first_name, last_name: s.last_name, role: s.role, phone: s.phone || null },
+        });
+        if (authError) throw new Error('Auth error: ' + authError.message);
+        const userId = authData.user.id;
 
-        // Create staff record in Supabase
-        if (s.role === 'accountant' || s.role === 'admin') {
-          const { error: staffError } = await adminClient.from('staff').insert({
-            profile_id: userId,
-            staff_id: staffId,
-            employee_id: employeeId,
-            department_id: departmentId,
-            designation: s.designation || s.role.charAt(0).toUpperCase() + s.role.slice(1),
-            salary: s.salary || null,
-            date_of_employment: s.date_of_employment || null,
-            status: 'active',
-          });
+        // 2. Generate unique staff/employee IDs
+        const staffId = uniqueCode(rolePrefix(s.role), i + 1, s.staff_id, usedStaffIds, existingStaffIds);
+        const employeeId = uniqueCode('EMP', i + 1, s.employee_id, usedEmployeeIds, existingEmployeeIds);
 
-          if (staffError) {
-            throw new Error('Failed to create staff record: ' + staffError.message);
-          }
-        }
-
-        // Also create in Neon
+        // 3. Write to Neon FIRST (primary data store)
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(s.password, salt);
         try {
-          const salt = await bcrypt.genSalt(10);
-          const passwordHash = await bcrypt.hash(s.password, salt);
-
-          await neonQuery(
-            `INSERT INTO profiles (id, email, first_name, last_name, role, phone, password_hash)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             ON CONFLICT (id) DO NOTHING`,
-            [userId, s.email, s.first_name, s.last_name, s.role, s.phone || null, passwordHash]
-          );
-
-          if (s.role === 'accountant' || s.role === 'admin') {
-            await neonQuery(
-              `INSERT INTO staff (profile_id, staff_id, employee_id, department_id, designation, salary, date_of_employment)
-               VALUES ($1, $2, $3, $4, $5, $6, $7)
-               ON CONFLICT (profile_id) DO NOTHING`,
-              [userId, staffId, employeeId, departmentId, s.designation || s.role, s.salary || null, s.date_of_employment || null]
-            );
-          }
-        } catch (neonErr) {
-          // Neon insert is best-effort
+          await createUserInNeon({
+            id: userId,
+            profile: {
+              email: s.email,
+              first_name: s.first_name,
+              last_name: s.last_name,
+              phone: s.phone || null,
+              role: s.role,
+              password_hash: passwordHash,
+            },
+            staffData: {
+              staff_id: staffId,
+              employee_id: employeeId,
+              department_id: departmentId,
+              designation: str(s.designation) || s.role.charAt(0).toUpperCase() + s.role.slice(1),
+              salary: s.salary != null ? parseFloat(String(s.salary)) : null,
+              date_of_employment: str(s.date_of_employment),
+              status: 'active',
+            },
+          });
+        } catch (neonError: any) {
+          // Neon write is the source of truth — roll back the auth user
+          await adminClient.auth.admin.deleteUser(userId).catch(() => {});
+          usedStaffIds.delete(staffId.toLowerCase());
+          usedEmployeeIds.delete(employeeId.toLowerCase());
+          throw new Error('Failed to save staff: ' + neonError.message);
         }
 
+        // 4. Mirror to Supabase (secondary)
+        const { error: pSync } = await adminClient
+          .from('profiles')
+          .update({ first_name: s.first_name, last_name: s.last_name, role: s.role, phone: s.phone || null })
+          .eq('id', userId);
+        if (pSync) console.error('Supabase profile sync error:', pSync.message);
+
+        const { error: stSync } = await adminClient.from('staff').insert({
+          profile_id: userId,
+          staff_id: staffId,
+          employee_id: employeeId,
+          department_id: departmentId,
+          designation: str(s.designation) || s.role.charAt(0).toUpperCase() + s.role.slice(1),
+          salary: s.salary != null ? parseFloat(String(s.salary)) : null,
+          date_of_employment: str(s.date_of_employment),
+          status: 'active',
+        });
+        if (stSync) console.error('Supabase staff sync error:', stSync.message);
+
+        existingEmails.add(emailKey);
         result.success = true;
         result.staff_id = staffId;
       } catch (err: any) {
@@ -187,8 +234,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results,
-      totalSuccess: results.filter(r => r.success).length,
-      totalFailed: results.filter(r => !r.success).length,
+      totalSuccess: results.filter((r) => r.success).length,
+      totalFailed: results.filter((r) => !r.success).length,
     });
   } catch (error: any) {
     console.error('Error in bulk staff creation:', error);

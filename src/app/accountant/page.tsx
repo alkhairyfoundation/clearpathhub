@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
@@ -27,16 +27,16 @@ export default function AccountantDashboard() {
   async function fetchData() {
     setLoading(true);
     const [transactionsRes, invoicesRes, pendingUploadsRes] = await Promise.all([
-      supabase.from('transactions').select('*, student:profiles(first_name, last_name)').order('created_at', { ascending: false }).limit(10),
-      supabase.from('invoices').select('*, student:profiles(first_name, last_name), class:classes(name)').eq('status', 'pending').order('due_date', { ascending: true }).limit(5),
-      supabase.from('payment_uploads').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      db.from('transactions').select('*, student:profiles(first_name, last_name)').order('created_at', { ascending: false }).limit(10),
+      db.from('invoices').select('*, student:profiles(first_name, last_name), class:classes(name)').eq('status', 'pending').order('due_date', { ascending: true }).limit(5),
+      db.from('payment_uploads').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ]);
 
     if (transactionsRes.data) {
       setRecentTransactions(transactionsRes.data);
       const [allIncome, allExpense] = await Promise.all([
-        supabase.from('transactions').select('amount').eq('type', 'income'),
-        supabase.from('transactions').select('amount').eq('type', 'expense'),
+        db.from('transactions').select('amount').eq('type', 'income'),
+        db.from('transactions').select('amount').eq('type', 'expense'),
       ]);
       const income = allIncome.data?.reduce((sum: number, t: any) => sum + (t.amount || 0), 0) || 0;
       const expense = allExpense.data?.reduce((sum: number, t: any) => sum + (t.amount || 0), 0) || 0;
@@ -49,8 +49,8 @@ export default function AccountantDashboard() {
     }
 
     const [allInvoices, allPaidInvoices] = await Promise.all([
-      supabase.from('invoices').select('amount'),
-      supabase.from('invoices').select('amount').eq('status', 'paid'),
+      db.from('invoices').select('amount'),
+      db.from('invoices').select('amount').eq('status', 'paid'),
     ]);
 
     const totalInvoices = allInvoices.data?.reduce((s: number, i: any) => s + (i.amount || 0), 0) || 0;
@@ -71,7 +71,7 @@ export default function AccountantDashboard() {
   }
 
   async function handleExport() {
-    const { data } = await supabase.from('transactions').select('*').order('created_at', { ascending: false });
+    const { data } = await db.from('transactions').select('*').order('created_at', { ascending: false });
     if (!data?.length) { alert('No transactions to export'); return; }
     const headers = Object.keys(data[0]).join(',');
     const rows = data.map((row: Record<string, any>) => Object.values(row).map(v => typeof v === 'object' ? JSON.stringify(v) : String(v || '')).join(',')).join('\n');

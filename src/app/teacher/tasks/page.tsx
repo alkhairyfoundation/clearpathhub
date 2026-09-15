@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, uploadFile } from '@/lib/supabase';
+import { uploadFile } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, BookOpen, CheckCircle, Clock, Loader2, Upload, FileText, Award, X, Calendar, ExternalLink } from 'lucide-react';
@@ -27,7 +28,7 @@ export default function TeacherTasksPage() {
 
   async function fetchTasks() {
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await db
       .from('teacher_tasks')
       .select('*')
       .eq('teacher_id', profile?.id)
@@ -47,7 +48,7 @@ export default function TeacherTasksPage() {
         const { url } = await uploadFile('homework', submissionFile, `task-${selectedTask.id}`);
         if (url) submissionUrl = url;
       }
-      const { error: updateError } = await supabase
+      const { error: updateError } = await db
         .from('teacher_tasks')
         .update({ status: 'submitted', submission_url: submissionUrl })
         .eq('id', selectedTask.id);

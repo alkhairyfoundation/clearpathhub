@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, X, BookOpen, Loader2, ArrowLeft } from 'lucide-react';
 import type { Department } from '@/types';
@@ -28,7 +28,7 @@ export default function AdminDepartmentsPage() {
 
   async function fetchDepartments() {
     setLoading(true);
-    const { data, error } = await supabase.from('departments').select('*').order('name');
+    const { data, error } = await db.from('departments').select('*').order('name');
     if (!error && data) setDepartments(data);
     setLoading(false);
   }
@@ -50,11 +50,11 @@ export default function AdminDepartmentsPage() {
     setError(''); setSaving(true);
     try {
       if (editingDepartment) {
-        const { error: err } = await supabase.from('departments').update(formData).eq('id', editingDepartment.id);
+        const { error: err } = await db.from('departments').update(formData).eq('id', editingDepartment.id);
         if (err) throw new Error(err.message);
         setSuccess('Department updated successfully');
       } else {
-        const { error: err } = await supabase.from('departments').insert(formData);
+        const { error: err } = await db.from('departments').insert(formData);
         if (err) throw new Error(err.message);
         setSuccess('Department created successfully');
       }
@@ -70,9 +70,9 @@ export default function AdminDepartmentsPage() {
     if (!confirm('Delete this department? This will unlink associated classes and subjects.')) return;
     setDeleting(id);
     try {
-      await supabase.from('classes').update({ department_id: null }).eq('department_id', id);
-      await supabase.from('subjects').update({ department_id: null }).eq('department_id', id);
-      const { error } = await supabase.from('departments').delete().eq('id', id);
+      await db.from('classes').update({ department_id: null }).eq('department_id', id);
+      await db.from('subjects').update({ department_id: null }).eq('department_id', id);
+      const { error } = await db.from('departments').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Department deleted successfully');
       setTimeout(() => setSuccess(''), 3000);

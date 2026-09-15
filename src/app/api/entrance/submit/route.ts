@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
+import { query as neonQuery } from '@/lib/neon';
 
 export async function POST(request: Request) {
   try {
@@ -10,48 +11,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Missing applicationId' }, { status: 400 });
     }
 
-    const adminClient = createSupabaseAdminClient();
+    // Write to Neon FIRST (primary data store)
+    const completedAt = new Date().toISOString();
+    await neonQuery(
+      `UPDATE entrance_applications
+       SET exam_score = $2, status = $3, mastery_level = $4, answers = $5::jsonb,
+           security_events = $6::jsonb, completed_at = $7
+       WHERE id = $1::uuid`,
+      [applicationId, score, status, masteryLevel, JSON.stringify(answersData), JSON.stringify(securityEvents), completedAt]
+    );
 
-    const { error: updateError } = await adminClient
-      .from('entrance_applications')
-      .update({
-        exam_score: score,
-        status,
-        mastery_level: masteryLevel,
-        answers: answersData,
-        security_events: securityEvents,
-        completed_at: new Date().toISOString()
-      })
-      .eq('id', applicationId);
-
-    if (updateError) {
-      return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
-    }
-
+    let codeFallback = false;
     if (codeId) {
-      const { error: codeError } = await adminClient
-        .rpc('increment_code_usage', { p_code_id: codeId });
-
-      if (codeError) {
-        const { data: currentCode } = await adminClient
-          .from('entrance_codes')
-          .select('used_count')
-          .eq('id', codeId)
-          .single();
-
-        await adminClient
-          .from('entrance_codes')
-          .update({ used_count: (currentCode?.used_count || 0) + 1 })
-          .eq('id', codeId);
+      try {
+        await neonQuery('SELECT "increment_code_usage"("p_code_id" => $1::uuid)', [codeId]);
+      } catch (codeError) {
+        console.error('increment_code_usage failed, applying fallback:', codeError);
+        codeFallback = true;
+        const codeRows = await neonQuery('SELECT used_count FROM entrance_codes WHERE id = $1::uuid LIMIT 1', [codeId]);
+        const currentCount = codeRows[0]?.used_count || 0;
+        await neonQuery(
+          'UPDATE entrance_codes SET used_count = $1 WHERE id = $2::uuid',
+          [currentCount + 1, codeId]
+        );
       }
     }
 
-    if (studentEmail && answersData) {
-      const bySubject: Record<string, { correct: number; total: number }> = {};
-      const byDifficulty: Record<string, { correct: number; total: number }> = {};
-      const byTopic: Record<string, { correct: number; total: number }> = {};
+    let insertedAnalytics = false;
+    const bySubject: Record<string, { correct: number; total: number }> = {};
+    const byDifficulty: Record<string, { correct: number; total: number }> = {};
+    const byTopic: Record<string, { correct: number; total: number }> = {};
+    let questionsDetail: any[] = [];
 
-      const questionsDetail = answersData.map((a: any) => {
+    if (studentEmail && answersData) {
+      questionsDetail = answersData.map((a: any) => {
         const subj = a.subject || 'General';
         const diff = a.difficulty_level || 'Not Specified';
         const topic = a.topic || 'General';
@@ -83,23 +76,77 @@ export async function POST(request: Request) {
         };
       });
 
-      await adminClient.from('student_analytics').insert({
-        application_id: applicationId,
-        student_email: studentEmail,
-        subject: 'COMBINED',
-        score,
-        mastery_level: masteryLevel,
-        topic_performance: {
-          by_subject: bySubject,
-          by_difficulty: byDifficulty,
-          by_topic: byTopic,
-          questions: questionsDetail,
-          total_questions: answersData.length,
-          correct_count: answersData.filter((a: any) => a.is_correct).length,
-          time_taken_minutes: timeTaken || 0,
-        },
-        time_taken_seconds: timeTaken * 60,
-      });
+      const topicPerformance = {
+        by_subject: bySubject,
+        by_difficulty: byDifficulty,
+        by_topic: byTopic,
+        questions: questionsDetail,
+        total_questions: answersData.length,
+        correct_count: answersData.filter((a: any) => a.is_correct).length,
+        time_taken_minutes: timeTaken || 0,
+      };
+      await neonQuery(
+        `INSERT INTO student_analytics (application_id, student_email, subject, score, mastery_level, topic_performance, time_taken_seconds)
+         VALUES ($1::uuid, $2, $3, $4, $5, $6::jsonb, $7)`,
+        [applicationId, studentEmail, 'COMBINED', score, masteryLevel, JSON.stringify(topicPerformance), timeTaken * 60]
+      );
+      insertedAnalytics = true;
+    }
+
+    // Mirror to Supabase (secondary store, best-effort)
+    try {
+      const adminClient = createSupabaseAdminClient();
+
+      const { error: updateError } = await adminClient
+        .from('entrance_applications')
+        .update({
+          exam_score: score,
+          status,
+          mastery_level: masteryLevel,
+          answers: answersData,
+          security_events: securityEvents,
+          completed_at: completedAt
+        })
+        .eq('id', applicationId);
+      if (updateError) console.error('Supabase entrance_applications mirror error:', updateError);
+
+      if (codeId) {
+        if (codeFallback) {
+          const { data: currentCode } = await adminClient
+            .from('entrance_codes')
+            .select('used_count')
+            .eq('id', codeId)
+            .single();
+          await adminClient
+            .from('entrance_codes')
+            .update({ used_count: (currentCode?.used_count || 0) + 1 })
+            .eq('id', codeId);
+        } else {
+          await adminClient.rpc('increment_code_usage', { p_code_id: codeId });
+        }
+      }
+
+      if (studentEmail && answersData && insertedAnalytics) {
+        await adminClient.from('student_analytics').insert({
+          application_id: applicationId,
+          student_email: studentEmail,
+          subject: 'COMBINED',
+          score,
+          mastery_level: masteryLevel,
+          topic_performance: {
+            by_subject: bySubject,
+            by_difficulty: byDifficulty,
+            by_topic: byTopic,
+            questions: questionsDetail,
+            total_questions: answersData.length,
+            correct_count: answersData.filter((a: any) => a.is_correct).length,
+            time_taken_minutes: timeTaken || 0,
+          },
+          time_taken_seconds: timeTaken * 60,
+        });
+      }
+    } catch (mirrorError) {
+      console.error('Supabase entrance mirror error:', mirrorError);
     }
 
     return NextResponse.json({ success: true });

@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { query as neonQuery } from '@/lib/neon'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
-  const supabase = await createSupabaseServerClient()
   try {
     const { studentId } = await request.json()
     if (!studentId) {
@@ -12,14 +11,12 @@ export async function POST(request: Request) {
     }
 
     // Get all unique topic+subject combinations from practice attempts
-    const { data: topics, error: topicErr } = await supabase
-      .from('practice_attempts')
-      .select('topic, subtopic')
-      .eq('student_id', studentId)
-      .not('topic', 'is', null)
-      .neq('topic', '')
-
-    if (topicErr) throw topicErr
+    const topics = await neonQuery(
+      `SELECT topic, subtopic
+       FROM practice_attempts
+       WHERE student_id = $1::uuid AND topic IS NOT NULL AND topic <> ''`,
+      [studentId]
+    )
 
     if (!topics || topics.length === 0) {
       return NextResponse.json({ message: 'No practice data found', count: 0 })
@@ -27,7 +24,7 @@ export async function POST(request: Request) {
 
     // Deduplicate topics
     const seen = new Set<string>()
-    const uniqueTopics = topics.filter(t => {
+    const uniqueTopics = topics.filter((t: any) => {
       const key = `${t.topic}|${t.subtopic || ''}`
       if (seen.has(key)) return false
       seen.add(key)
@@ -36,14 +33,16 @@ export async function POST(request: Request) {
 
     // Call the DB function for each topic
     let updated = 0
-    for (const t of uniqueTopics) {
-      const { error } = await supabase.rpc('recalc_topic_mastery', {
-        p_student_id: studentId,
-        p_subject_id: null,
-        p_topic: t.topic,
-        p_subtopic: t.subtopic || '',
-      })
-      if (!error) updated++
+    for (const t of uniqueTopics as any[]) {
+      try {
+        await neonQuery(
+          'SELECT "recalc_topic_mastery"("p_student_id" => $1::uuid, "p_subject_id" => $2::uuid, "p_topic" => $3, "p_subtopic" => $4)',
+          [studentId, null, t.topic, t.subtopic || '']
+        )
+        updated++
+      } catch (e) {
+        console.error('recalc_topic_mastery failed for', t.topic, t.subtopic, e)
+      }
     }
 
     return NextResponse.json({ message: 'Mastery recalculated', topics_processed: updated, total_topics: uniqueTopics.length })

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -67,7 +67,7 @@ export default function StudentMockExamReportPage() {
     setLoading(true);
     setError('');
     try {
-      const { data: attemptData, error: attemptErr } = await supabase
+      const { data: attemptData, error: attemptErr } = await db
         .from('mock_attempts')
         .select('*, exam:mock_exams(*)')
         .eq('id', attemptId)
@@ -79,10 +79,10 @@ export default function StudentMockExamReportPage() {
       setAttempt(attemptData);
       setExam(attemptData.exam);
 
-      const { data: settingsRes } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
+      const { data: settingsRes } = await db.from('school_settings').select('*').limit(1).maybeSingle();
       setSchoolSettings(settingsRes);
 
-      const { data: analyticsData } = await supabase
+      const { data: analyticsData } = await db
         .from('mock_analytics')
         .select('*')
         .eq('student_id', profile?.id)
@@ -90,7 +90,7 @@ export default function StudentMockExamReportPage() {
         .maybeSingle();
       setCumulativeAnalytics(analyticsData);
 
-      const { data: allAtts } = await supabase
+      const { data: allAtts } = await db
         .from('mock_attempts')
         .select('*')
         .eq('student_id', profile?.id)

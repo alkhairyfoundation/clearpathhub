@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -85,11 +85,11 @@ export default function TeacherTestsPage() {
     const [testsRes, subjectsRes, classesRes] = await Promise.all([
       api('list_tests'),
       teacherClassIds.length > 0
-        ? supabase.from('subjects').select('id, name').in('class_id', teacherClassIds).order('name')
-        : supabase.from('subjects').select('id, name').order('name'),
+        ? db.from('subjects').select('id, name').in('class_id', teacherClassIds).order('name')
+        : db.from('subjects').select('id, name').order('name'),
       teacherClassIds.length > 0
-        ? supabase.from('classes').select('id, name').in('id', teacherClassIds).order('name')
-        : supabase.from('classes').select('id, name').order('name'),
+        ? db.from('classes').select('id, name').in('id', teacherClassIds).order('name')
+        : db.from('classes').select('id, name').order('name'),
     ]);
     if (testsRes.tests) setTests(testsRes.tests);
     if (subjectsRes.data) setSubjects(subjectsRes.data);
@@ -238,7 +238,7 @@ export default function TeacherTestsPage() {
   async function openBankSelect() {
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let query = supabase.from('question_bank').select('*').eq('status', 'published');
+    let query = db.from('question_bank').select('*').eq('status', 'published');
     const subjectName = selectedTest?.subject?.name?.toUpperCase();
     if (subjectName) query = query.eq('subject', subjectName);
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -266,7 +266,7 @@ export default function TeacherTestsPage() {
     if (!selectedTest || selectedBankIds.size === 0) return;
     setSaving(true);
     try {
-      const { data: selected } = await supabase.from('question_bank').select('*').in('id', Array.from(selectedBankIds));
+      const { data: selected } = await db.from('question_bank').select('*').in('id', Array.from(selectedBankIds));
       if (selected && selected.length > 0) {
         const newQuestions = selected.map((q: any) => ({
           test_id: selectedTest.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
@@ -289,7 +289,7 @@ export default function TeacherTestsPage() {
     if (!selectedTest || !selectedTest.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      let bankQuery = supabase.from('question_bank').select('*').eq('status', 'published');
+      let bankQuery = db.from('question_bank').select('*').eq('status', 'published');
       const subjectName = selectedTest.subject?.name?.toUpperCase();
       if (subjectName) bankQuery = bankQuery.eq('subject', subjectName);
       const { data: allBank } = await bankQuery;

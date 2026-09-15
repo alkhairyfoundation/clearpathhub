@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -49,11 +49,11 @@ export default function TeacherQuestionBankPage() {
     const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
     const [qRes, sRes, cRes] = await Promise.all([
-      supabase.from('question_bank').select('*, subject:subjects(name, code)').order('created_at', { ascending: false }),
+      db.from('question_bank').select('*, subject:subjects(name, code)').order('created_at', { ascending: false }),
       teacherClassIds.length > 0
-        ? supabase.from('subjects').select('*, class:classes!class_id(name)').in('class_id', teacherClassIds).order('name')
-        : supabase.from('subjects').select('*, class:classes!class_id(name)').order('name'),
-      supabase.from('classes').select('*').order('level'),
+        ? db.from('subjects').select('*, class:classes!class_id(name)').in('class_id', teacherClassIds).order('name')
+        : db.from('subjects').select('*, class:classes!class_id(name)').order('name'),
+      db.from('classes').select('*').order('level'),
     ]);
     if (!qRes.error && qRes.data) setQuestions(qRes.data);
     if (!sRes.error && sRes.data) setSubjects(sRes.data);
@@ -97,11 +97,11 @@ export default function TeacherQuestionBankPage() {
         explanation: form.explanation || null, tags: tagsArr, created_by: profile?.id,
       };
       if (editing) {
-        const { error } = await supabase.from('question_bank').update(payload).eq('id', editing.id);
+        const { error } = await db.from('question_bank').update(payload).eq('id', editing.id);
         if (error) throw new Error(error.message);
         setSuccess('Question updated');
       } else {
-        const { error } = await supabase.from('question_bank').insert({ ...payload, status: 'draft' });
+        const { error } = await db.from('question_bank').insert({ ...payload, status: 'draft' });
         if (error) throw new Error(error.message);
         setSuccess('Question created');
       }
@@ -112,7 +112,7 @@ export default function TeacherQuestionBankPage() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this question?')) return;
     try {
-      const { error } = await supabase.from('question_bank').delete().eq('id', id);
+      const { error } = await db.from('question_bank').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Question deleted');
       fetchData();
@@ -121,7 +121,7 @@ export default function TeacherQuestionBankPage() {
 
   async function updateStatus(id: string, status: string) {
     try {
-      const { error } = await supabase.from('question_bank').update({ status }).eq('id', id);
+      const { error } = await db.from('question_bank').update({ status }).eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess(`Question ${status}`);
       fetchData();
@@ -140,7 +140,7 @@ export default function TeacherQuestionBankPage() {
         const [question, optA, optB, optC, optD, correctIdx, explanation] = parts;
         const options = [optA, optB, optC || '', optD || ''].filter(Boolean);
         const firstSubject = subjects[0];
-        const { error } = await supabase.from('question_bank').insert({
+        const { error } = await db.from('question_bank').insert({
           subject_id: firstSubject?.id, subject: firstSubject?.name || null,
           topic: 'Imported', difficulty: 'medium', difficulty_level: 'medium',
           question_type: 'multiple_choice', question, options,

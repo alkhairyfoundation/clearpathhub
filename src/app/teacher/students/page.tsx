@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import {
@@ -62,14 +62,14 @@ export default function TeacherStudentsPage() {
 
       const [studentsRes, classesRes] = await Promise.all([
         teacherClassIds.length > 0
-          ? supabase
+          ? db
               .from('students')
               .select('*, profile:profiles!profile_id(first_name, last_name, email, phone), class:classes!class_id(name)')
               .in('class_id', teacherClassIds)
               .order('created_at', { ascending: false })
           : { data: [], error: null },
         teacherClassIds.length > 0
-          ? supabase
+          ? db
               .from('classes')
               .select('id, name, level')
               .in('id', teacherClassIds)
@@ -139,7 +139,7 @@ export default function TeacherStudentsPage() {
     try {
       if (editingStudent) {
         // Update existing student
-        const { error: updateError } = await supabase
+        const { error: updateError } = await db
           .from('profiles')
           .update({
             first_name: formData.first_name,
@@ -150,7 +150,7 @@ export default function TeacherStudentsPage() {
 
         if (updateError) throw new Error(updateError.message);
 
-        const { error: studentError } = await supabase
+        const { error: studentError } = await db
           .from('students')
           .update({
             class_id: formData.class_id || null,
@@ -206,11 +206,11 @@ export default function TeacherStudentsPage() {
     if (!confirm(`Are you sure you want to delete ${student.profile?.first_name} ${student.profile?.last_name}? This cannot be undone.`)) return;
 
     try {
-      const { error: deleteError } = await supabase.from('students').delete().eq('id', student.id);
+      const { error: deleteError } = await db.from('students').delete().eq('id', student.id);
       if (deleteError) throw new Error(deleteError.message);
 
       if (student.profile_id) {
-        await supabase.from('profiles').delete().eq('id', student.profile_id);
+        await db.from('profiles').delete().eq('id', student.profile_id);
       }
 
       setStudents(students.filter(s => s.id !== student.id));

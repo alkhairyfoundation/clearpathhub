@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -30,8 +30,8 @@ export default function YearlyGoalsPage() {
     setLoading(true);
     try {
       const [sessionRes, termRes] = await Promise.all([
-        supabase.from('academic_sessions').select('*').eq('is_current', true).single(),
-        supabase.from('terms').select('*').eq('is_current', true).single(),
+        db.from('academic_sessions').select('*').eq('is_current', true).single(),
+        db.from('terms').select('*').eq('is_current', true).single(),
       ]);
 
       const session = sessionRes.data;

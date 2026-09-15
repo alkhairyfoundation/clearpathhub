@@ -1,9 +1,9 @@
-﻿'use client';
+'use client';
 
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { UserCheck, Calendar, CheckCircle, XCircle, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -22,12 +22,12 @@ export default function StudentAttendancePage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('attendance').select('*').eq('student_id', profile?.id).order('date', { ascending: false }).limit(30);
+    const { data } = await db.from('attendance').select('*').eq('student_id', profile?.id).order('date', { ascending: false }).limit(30);
     if (data) {
       setAttendance(data);
-      const present = data.filter(a => a.status === 'present').length;
+      const present = data.filter((a: any) => a.status === 'present').length;
       const total = data.length;
-      setStats({ present, absent: data.filter(a => a.status === 'absent').length, late: data.filter(a => a.status === 'late').length, excused: data.filter(a => a.status === 'excused').length, rate: total > 0 ? Math.round((present / total) * 100) : 0 });
+      setStats({ present, absent: data.filter((a: any) => a.status === 'absent').length, late: data.filter((a: any) => a.status === 'late').length, excused: data.filter((a: any) => a.status === 'excused').length, rate: total > 0 ? Math.round((present / total) * 100) : 0 });
     }
     setLoading(false);
   }

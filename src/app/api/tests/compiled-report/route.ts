@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query as neonQuery } from '@/lib/neon';
 
 function gradeQuestion(question: any, answer: any): boolean {
   if (answer === undefined || answer === null) return false;
@@ -49,9 +50,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
     // Fetch all test attempts for the student with test/subject/class info
     let attemptQuery = `
       SELECT ta.*, t.title, t.description, t.subject_id, t.class_id, t.test_type,
@@ -89,8 +87,7 @@ export async function GET(req: NextRequest) {
 
     attemptQuery += ' ORDER BY ta.completed_at ASC';
 
-    const attemptsRes = await pool.query(attemptQuery, attemptParams);
-    const attempts = attemptsRes.rows;
+    const attempts = await neonQuery(attemptQuery, attemptParams);
 
     // When a student retries a test, only the most recently completed attempt
     // should be reported. Older attempts for the same test are superseded.
@@ -108,7 +105,6 @@ export async function GET(req: NextRequest) {
     }
 
     if (latestAttempts.length === 0) {
-      await pool.end();
       return NextResponse.json({
         success: true,
         data: {
@@ -132,26 +128,24 @@ export async function GET(req: NextRequest) {
     let studentAdmission = '';
     let className = '';
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      const spRows = await neonQuery(
+        'SELECT first_name, last_name, email FROM profiles WHERE id = $1 LIMIT 1',
+        [studentId]
       );
-      const { data: sp } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, email')
-        .eq('id', studentId)
-        .single();
+      const sp = spRows[0];
       if (sp) studentName = `${sp.first_name || ''} ${sp.last_name || ''}`.trim();
 
-      const { data: st } = await supabase
-        .from('students')
-        .select('admission_number, class:classes!class_id(name)')
-        .eq('profile_id', studentId)
-        .maybeSingle();
+      const stRows = await neonQuery(
+        `SELECT st.admission_number, c.name AS class_name
+         FROM students st
+         LEFT JOIN classes c ON c.id = st.class_id
+         WHERE st.profile_id = $1 LIMIT 1`,
+        [studentId]
+      );
+      const st = stRows[0];
       if (st) {
         studentAdmission = st.admission_number || '';
-        className = (st as any).class?.name || '';
+        className = st.class_name || '';
       }
     } catch (_) {}
 
@@ -169,11 +163,10 @@ export async function GET(req: NextRequest) {
     const processedAttempts = [];
 
     for (const attempt of latestAttempts) {
-      const questionsRes = await pool.query(
+      const questions = await neonQuery(
         'SELECT * FROM test_questions WHERE test_id = $1 ORDER BY order_index',
         [attempt.test_id]
       );
-      const questions = questionsRes.rows;
       let answersObj: Record<string, any> = {};
       if (attempt.answers) {
         if (typeof attempt.answers === 'string') {
@@ -380,8 +373,6 @@ export async function GET(req: NextRequest) {
       totalSecurityEvents: totalTabSwitches + totalFullscreenExits,
       testsWithEvents: processedAttempts.filter(a => (a.tabSwitches + a.fullscreenExits) > 0).length,
     };
-
-    await pool.end();
 
     return NextResponse.json({
       success: true,

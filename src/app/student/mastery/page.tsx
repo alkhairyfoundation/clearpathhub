@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -47,7 +47,7 @@ export default function StudentMasteryPage() {
     setLoading(true);
     const [scoresRes, subjectsRes] = await Promise.all([
       fetch(`/api/mastery/scores?studentId=${profile?.id}&withSubject=true`).then(r => r.json()),
-      supabase.from('subjects').select('*, class:classes!class_id(name)').order('name'),
+      db.from('subjects').select('*, class:classes!class_id(name)').order('name'),
     ]);
     if (scoresRes.scores) setScores(scoresRes.scores);
     if (!subjectsRes.error && subjectsRes.data) setSubjects(subjectsRes.data);

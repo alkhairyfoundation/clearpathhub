@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -27,7 +27,7 @@ export default function TeacherCcrPage() {
     try {
 const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
-      const { data: kids } = await supabase
+      const { data: kids } = await db
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
         .in('class_id', teacherClassIds.length > 0 ? teacherClassIds : ['none'])
@@ -35,9 +35,9 @@ const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id 
 
       if (kids) {
         setStudents(kids);
-        const profileIds = kids.map(k => k.profile_id);
+        const profileIds = kids.map((k: any) => k.profile_id);
         if (profileIds.length > 0) {
-          const { data: subs } = await supabase
+          const { data: subs } = await db
             .from('ccr_responses')
             .select('*')
             .in('student_id', profileIds)

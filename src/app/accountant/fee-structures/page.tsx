@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, X, Send, Eye, EyeOff, DollarSign, BookOpen, Calendar, Loader2, Check, AlertCircle, Trash2 } from 'lucide-react';
@@ -33,10 +33,10 @@ export default function FeeStructuresPage() {
   async function fetchData() {
     setLoading(true);
     const [feeRes, classRes, sessionRes, termRes] = await Promise.all([
-      supabase.from('fee_structures').select('*, class:classes(name), term:terms(name), academic_session:academic_sessions(name)').order('created_at', { ascending: false }),
-      supabase.from('classes').select('*').order('name'),
-      supabase.from('academic_sessions').select('*').order('name', { ascending: false }),
-      supabase.from('terms').select('*').order('name'),
+      db.from('fee_structures').select('*, class:classes(name), term:terms(name), academic_session:academic_sessions(name)').order('created_at', { ascending: false }),
+      db.from('classes').select('*').order('name'),
+      db.from('academic_sessions').select('*').order('name', { ascending: false }),
+      db.from('terms').select('*').order('name'),
     ]);
     if (feeRes.data) setFeeStructures(feeRes.data);
     if (classRes.data) setClasses(classRes.data);
@@ -67,7 +67,7 @@ export default function FeeStructuresPage() {
       alert('Please fill all required fields');
       return;
     }
-    const { data: newFee, error } = await supabase.from('fee_structures').insert({
+    const { data: newFee, error } = await db.from('fee_structures').insert({
       academic_session_id: formData.academic_session_id || null,
       term_id: formData.term_id || null,
       class_id: formData.class_id,
@@ -81,7 +81,7 @@ export default function FeeStructuresPage() {
     if (error) { alert('Error: ' + error.message); return; }
 
     if (newFee && formData.items.length > 0) {
-      const { error: itemError } = await supabase.from('fee_structure_items').insert(
+      const { error: itemError } = await db.from('fee_structure_items').insert(
         formData.items.map(item => ({
           fee_structure_id: newFee.id,
           item_name: item.item_name,
@@ -99,14 +99,14 @@ export default function FeeStructuresPage() {
 
   async function togglePublish(id: string, currentStatus: string) {
     const newStatus = currentStatus === 'draft' ? 'published' : 'draft';
-    const { error } = await supabase.from('fee_structures').update({ status: newStatus }).eq('id', id);
+    const { error } = await db.from('fee_structures').update({ status: newStatus }).eq('id', id);
     if (error) { alert('Error updating status'); return; }
     fetchData();
   }
 
   async function handleDelete(id: string) {
     if (confirm('Delete this fee structure? This cannot be undone.')) {
-      await supabase.from('fee_structures').delete().eq('id', id);
+      await db.from('fee_structures').delete().eq('id', id);
       fetchData();
     }
   }

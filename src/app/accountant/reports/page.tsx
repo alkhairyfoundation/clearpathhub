@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, BarChart3, DollarSign, TrendingUp, TrendingDown, Calendar, Download, FileText } from 'lucide-react';
@@ -30,19 +30,19 @@ export default function AccountantReportsPage() {
   async function fetchData(start: string, end: string) {
     setLoading(true);
     const [transactionsRes, invoicesRes] = await Promise.all([
-      supabase.from('transactions').select('*').gte('created_at', start).lte('created_at', end + 'T23:59:59').order('created_at', { ascending: false }),
-      supabase.from('invoices').select('*, student:profiles(first_name, last_name)').gte('created_at', start).lte('created_at', end + 'T23:59:59').order('due_date', { ascending: true }),
+      db.from('transactions').select('*').gte('created_at', start).lte('created_at', end + 'T23:59:59').order('created_at', { ascending: false }),
+      db.from('invoices').select('*, student:profiles(first_name, last_name)').gte('created_at', start).lte('created_at', end + 'T23:59:59').order('due_date', { ascending: true }),
     ]);
     if (transactionsRes.data) {
       setTransactions(transactionsRes.data);
       const byMethod: Record<string, number> = {};
-      transactionsRes.data.forEach(t => { const m = t.payment_method || 'cash'; byMethod[m] = (byMethod[m] || 0) + (t.amount || 0); });
+      transactionsRes.data.forEach((t: any) => { const m = t.payment_method || 'cash'; byMethod[m] = (byMethod[m] || 0) + (t.amount || 0); });
       setStats(prev => ({ ...prev, totalIncome: transactionsRes.data.reduce((s: number, t: any) => s + (t.amount || 0), 0), transactionCount: transactionsRes.data.length, byMethod }));
     }
     if (invoicesRes.data) {
       setInvoices(invoicesRes.data);
-      const pending = invoicesRes.data.filter(i => i.status === 'pending').reduce((s: number, i: any) => s + (i.amount || 0), 0);
-      const overdue = invoicesRes.data.filter(i => i.status === 'pending' && new Date(i.due_date) < new Date()).reduce((s: number, i: any) => s + (i.amount || 0), 0);
+      const pending = invoicesRes.data.filter((i: any) => i.status === 'pending').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+      const overdue = invoicesRes.data.filter((i: any) => i.status === 'pending' && new Date(i.due_date) < new Date()).reduce((s: number, i: any) => s + (i.amount || 0), 0);
       setStats(prev => ({ ...prev, totalPending: pending, totalOverdue: overdue }));
     }
     setLoading(false);

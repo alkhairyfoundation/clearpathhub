@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -96,9 +96,9 @@ export default function AdminMockExamsPage() {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
   async function getExamCapacity(eId: string): Promise<{ remaining: number; total: number; current: number }> {
-    const { data: exam } = await supabase.from('mock_exams').select('total_questions').eq('id', eId).single();
+    const { data: exam } = await db.from('mock_exams').select('total_questions').eq('id', eId).single();
     const total = exam?.total_questions || 0;
-    const { count } = await supabase.from('mock_questions').select('*', { count: 'exact', head: true }).eq('exam_id', eId);
+    const { count } = await db.from('mock_questions').select('*', { count: 'exact', head: true }).eq('exam_id', eId);
     const current = count || 0;
     return { remaining: Math.max(0, total - current), total, current };
   }
@@ -126,13 +126,13 @@ export default function AdminMockExamsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data: examsData } = await supabase.from('mock_exams').select('*').order('created_at', { ascending: false });
+    const { data: examsData } = await db.from('mock_exams').select('*').order('created_at', { ascending: false });
     if (examsData) setExams(examsData);
     setLoading(false);
   }
 
   async function fetchBankQuestions() {
-    let query = supabase.from('question_bank').select('*');
+    let query = db.from('question_bank').select('*');
     if (bankFilter.level) query = query.eq('level', bankFilter.level);
     if (bankFilter.subject) query = query.eq('subject', bankFilter.subject);
     if (bankFilter.difficulty) query = query.eq('difficulty_level', bankFilter.difficulty);
@@ -142,30 +142,30 @@ export default function AdminMockExamsPage() {
     const { data } = await query;
     if (data) {
       // Fetch assignment info for each question
-      const { data: mockQs } = await supabase.from('mock_questions').select('id, exam_id, question');
+      const { data: mockQs } = await db.from('mock_questions').select('id, exam_id, question');
       const examAssignments: Record<string, Set<string>> = {};
       if (mockQs) {
         for (const q of data) {
-          const matched = mockQs.filter(mq => mq.question === q.question);
+          const matched = mockQs.filter((mq: any) => mq.question === q.question);
           if (matched.length > 0) {
-            examAssignments[q.id] = new Set(matched.map(m => m.exam_id));
+            examAssignments[q.id] = new Set(matched.map((m: any) => m.exam_id));
           }
         }
       }
-      setBankQuestions(data.map(q => ({ ...q, _examAssignments: examAssignments[q.id] || new Set() })));
+      setBankQuestions(data.map((q: any) => ({ ...q, _examAssignments: examAssignments[q.id] || new Set() })));
     }
   }
 
   async function fetchQuestions() {
     if (!selectedExam) return;
-    const { data } = await supabase.from('mock_questions').select('*').eq('exam_id', selectedExam.id).order('created_at', { ascending: true });
+    const { data } = await db.from('mock_questions').select('*').eq('exam_id', selectedExam.id).order('created_at', { ascending: true });
     if (data) setQuestions(data);
   }
 
   async function fetchAnalytics() {
-    const { data } = await supabase.from('mock_analytics').select('*, student:profiles!student_id(first_name, last_name, email, id)');
+    const { data } = await db.from('mock_analytics').select('*, student:profiles!student_id(first_name, last_name, email, id)');
     if (data) setAnalytics(data);
-    const { data: atts } = await supabase.from('mock_attempts').select('*, student:profiles!student_id(first_name, last_name, email, id)').not('completed_at', 'is', null);
+    const { data: atts } = await db.from('mock_attempts').select('*, student:profiles!student_id(first_name, last_name, email, id)').not('completed_at', 'is', null);
     if (atts) setAttempts(atts);
   }
 
@@ -342,11 +342,11 @@ export default function AdminMockExamsPage() {
       };
 
       if (editingBankQuestion) {
-        const { error } = await supabase.from('question_bank').update(payload).eq('id', editingBankQuestion.id);
+        const { error } = await db.from('question_bank').update(payload).eq('id', editingBankQuestion.id);
         if (error) throw new Error(error.message);
         setSuccess('Question updated in bank');
       } else {
-        const { error } = await supabase.from('question_bank').insert(payload);
+        const { error } = await db.from('question_bank').insert(payload);
         if (error) throw new Error(error.message);
         setSuccess('Question added to bank');
       }
@@ -361,7 +361,7 @@ export default function AdminMockExamsPage() {
 
   async function handleDeleteBankQuestion(qId: string) {
     if (!confirm('Delete this question permanently?')) return;
-    const { error } = await supabase.from('question_bank').delete().eq('id', qId);
+    const { error } = await db.from('question_bank').delete().eq('id', qId);
     if (error) { setError(error.message); return; }
     setSuccess('Question deleted from bank');
     fetchBankQuestions();

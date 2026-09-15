@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -39,9 +39,9 @@ export default function GrowthMapPage() {
   async function buildMap() {
     setLoading(true);
     try {
-      const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+      const { data: student } = await db.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
       const [subjRes, pathRes, scoreRes] = await Promise.all([
-        supabase.from('subjects').select('*').eq('class_id', student?.class_id),
+        db.from('subjects').select('*').eq('class_id', student?.class_id),
         fetch(`/api/mastery/path?studentId=${profile?.id}`).then(r => r.json()),
         fetch(`/api/mastery/scores?studentId=${profile?.id}`).then(r => r.json()),
       ]);
@@ -51,7 +51,7 @@ export default function GrowthMapPage() {
       const paths = (pathRes.path || []) as any[];
       const scores = (scoreRes.scores || []) as any[];
 
-      subjects.forEach((subj, si) => {
+      subjects.forEach((subj: any, si: number) => {
         mapNodes.push({
           id: `subject-${subj.id}`,
           label: subj.name,

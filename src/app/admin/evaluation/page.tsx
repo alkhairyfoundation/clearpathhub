@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Plus, Edit, Trash2, X, Star, Trophy, Calendar, CheckCircle, Clock, BookOpen, Loader2, Search, Award } from 'lucide-react';
@@ -32,9 +32,9 @@ export default function AdminEvaluationPage() {
   async function fetchData() {
     setLoading(true);
     const [tasksRes, evalsRes, teachersRes] = await Promise.all([
-      supabase.from('teacher_tasks').select('*, teacher:profiles!teacher_id(first_name, last_name)').order('due_date', { ascending: false }),
-      supabase.from('teacher_evaluations').select('*, teacher:profiles!teacher_id(first_name, last_name)').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, first_name, last_name, email').eq('role', 'teacher').order('first_name'),
+      db.from('teacher_tasks').select('*, teacher:profiles!teacher_id(first_name, last_name)').order('due_date', { ascending: false }),
+      db.from('teacher_evaluations').select('*, teacher:profiles!teacher_id(first_name, last_name)').order('created_at', { ascending: false }),
+      db.from('profiles').select('id, first_name, last_name, email').eq('role', 'teacher').order('first_name'),
     ]);
     if (tasksRes.data) setTasks(tasksRes.data);
     if (evalsRes.data) setEvaluations(evalsRes.data);
@@ -47,7 +47,7 @@ export default function AdminEvaluationPage() {
     if (!formData.title.trim()) { setError('Title is required'); return; }
     setError(''); setSaving(true);
     try {
-      const { error } = await supabase.from('teacher_tasks').insert({ ...formData, created_by: profile?.id, status: 'pending' });
+      const { error } = await db.from('teacher_tasks').insert({ ...formData, created_by: profile?.id, status: 'pending' });
       if (error) throw new Error(error.message);
       setSuccess('Task assigned successfully');
       setShowTaskModal(false);
@@ -62,7 +62,7 @@ export default function AdminEvaluationPage() {
 
   async function handleGradeTask(id: string, grade: number) {
     try {
-      const { error } = await supabase.from('teacher_tasks').update({ status: 'graded', admin_grade: grade }).eq('id', id);
+      const { error } = await db.from('teacher_tasks').update({ status: 'graded', admin_grade: grade }).eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Task graded');
       setTimeout(() => setSuccess(''), 2000);
@@ -76,7 +76,7 @@ export default function AdminEvaluationPage() {
     if (!selectedTeacher) { setError('Please select a teacher'); return; }
     setError(''); setSaving(true);
     try {
-      const { error } = await supabase.from('teacher_evaluations').insert({
+      const { error } = await db.from('teacher_evaluations').insert({
         teacher_id: selectedTeacher.id, evaluation_type: 'task', title: 'Performance Review',
         description: 'End of term evaluation', due_date: new Date().toISOString().split('T')[0], status: 'pending'
       });

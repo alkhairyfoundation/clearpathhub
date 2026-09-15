@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Search, Filter, Edit, Trash2, X, CheckCircle, XCircle, Loader2, ArrowLeft, BookOpen, HelpCircle, Users, Plus, Upload } from 'lucide-react';
@@ -45,9 +45,9 @@ export default function AdminQuestionBankPage() {
   async function fetchData() {
     setLoading(true);
     const [qRes, sRes, cRes] = await Promise.all([
-      supabase.from('question_bank').select('*, subject:subjects(name, code), creator:profiles(first_name, last_name)').order('created_at', { ascending: false }),
-      supabase.from('subjects').select('*').order('name'),
-      supabase.from('classes').select('*').order('level'),
+      db.from('question_bank').select('*, subject:subjects(name, code), creator:profiles(first_name, last_name)').order('created_at', { ascending: false }),
+      db.from('subjects').select('*').order('name'),
+      db.from('classes').select('*').order('level'),
     ]);
     if (!qRes.error && qRes.data) setQuestions(qRes.data);
     if (!sRes.error && sRes.data) setSubjects(sRes.data);
@@ -58,7 +58,7 @@ export default function AdminQuestionBankPage() {
   async function updateStatus(id: string, status: string) {
     setSaving(true);
     try {
-      const { error } = await supabase.from('question_bank').update({ status }).eq('id', id);
+      const { error } = await db.from('question_bank').update({ status }).eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess(`Question ${status}`);
       fetchData();
@@ -68,7 +68,7 @@ export default function AdminQuestionBankPage() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this question permanently?')) return;
     try {
-      const { error } = await supabase.from('question_bank').delete().eq('id', id);
+      const { error } = await db.from('question_bank').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Question deleted');
       fetchData();
@@ -111,11 +111,11 @@ export default function AdminQuestionBankPage() {
         explanation: form.explanation || null, tags: tagsArr, created_by: profile?.id,
       };
       if (editing) {
-        const { error } = await supabase.from('question_bank').update(payload).eq('id', editing.id);
+        const { error } = await db.from('question_bank').update(payload).eq('id', editing.id);
         if (error) throw new Error(error.message);
         setSuccess('Question updated');
       } else {
-        const { error } = await supabase.from('question_bank').insert({ ...payload, status: 'published' });
+        const { error } = await db.from('question_bank').insert({ ...payload, status: 'published' });
         if (error) throw new Error(error.message);
         setSuccess('Question created');
       }
@@ -135,7 +135,7 @@ export default function AdminQuestionBankPage() {
         const [question, optA, optB, optC, optD, correctIdx, explanation] = parts;
         const options = [optA, optB, optC || '', optD || ''].filter(Boolean);
         const firstSubject = subjects[0];
-        const { error } = await supabase.from('question_bank').insert({
+        const { error } = await db.from('question_bank').insert({
           subject_id: firstSubject?.id, subject: firstSubject?.name || null,
           topic: 'Imported', difficulty: 'medium', difficulty_level: 'medium',
           question_type: 'multiple_choice', question, options,
@@ -155,7 +155,7 @@ export default function AdminQuestionBankPage() {
     if (!confirm(`Are you sure you want to approve and publish all ${counts.draft} pending questions?`)) return;
     setSaving(true);
     try {
-      const { data, error } = await supabase.from('question_bank').update({ status: 'published' }).eq('status', 'draft').select();
+      const { data, error } = await db.from('question_bank').update({ status: 'published' }).eq('status', 'draft').select();
       if (error) throw new Error(error.message);
       const count = data?.length ?? 0;
       setSuccess(`Successfully approved and published ${count} pending questions!`);

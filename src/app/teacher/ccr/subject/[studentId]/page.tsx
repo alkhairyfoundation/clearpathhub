@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -33,8 +33,8 @@ function SubjectTeacherCcrContent() {
       const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
       const { data } = teacherClassIds.length > 0
-        ? await supabase.from('subjects').select('id, name, code').in('class_id', teacherClassIds)
-        : await supabase.from('subjects').select('id, name, code');
+        ? await db.from('subjects').select('id, name, code').in('class_id', teacherClassIds)
+        : await db.from('subjects').select('id, name, code');
       if (data) setSubjects(data);
       if (data?.length === 1) setSelectedSubject(data[0].id);
     } finally {

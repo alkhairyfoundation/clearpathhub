@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Brain, Search, Trophy, Award, Zap, Clock, CheckCircle, BarChart3, Users, Filter, Loader2 } from 'lucide-react';
@@ -25,19 +25,19 @@ export default function AdminStudentPracticePage() {
   async function fetchData() {
     setLoading(true);
     const [studentsRes, classesRes] = await Promise.all([
-      supabase.from('students').select('*, profile:profiles!profile_id(id, first_name, last_name, email), class:classes!class_id(id, name)'),
-      supabase.from('classes').select('*').order('name'),
+      db.from('students').select('*, profile:profiles!profile_id(id, first_name, last_name, email), class:classes!class_id(id, name)'),
+      db.from('classes').select('*').order('name'),
     ]);
     if (classesRes.data) setClasses(classesRes.data);
     if (!studentsRes.data) { setLoading(false); return; }
 
     const today = new Date().toISOString().split('T')[0];
-    const enriched = await Promise.all(studentsRes.data.map(async (s) => {
+    const enriched = await Promise.all(studentsRes.data.map(async (s: any) => {
       const [sessionsRes, streaksRes, goalsRes, badgesRes] = await Promise.all([
-        supabase.from('practice_sessions').select('score, answered_questions, correct_answers, created_at').eq('student_id', s.profile_id).order('created_at', { ascending: false }),
-        supabase.from('learning_streaks').select('*').eq('student_id', s.profile_id).maybeSingle(),
-        supabase.from('daily_goals').select('*').eq('student_id', s.profile_id).eq('date', today).maybeSingle(),
-        supabase.from('badges').select('*').eq('student_id', s.profile_id),
+        db.from('practice_sessions').select('score, answered_questions, correct_answers, created_at').eq('student_id', s.profile_id).order('created_at', { ascending: false }),
+        db.from('learning_streaks').select('*').eq('student_id', s.profile_id).maybeSingle(),
+        db.from('daily_goals').select('*').eq('student_id', s.profile_id).eq('date', today).maybeSingle(),
+        db.from('badges').select('*').eq('student_id', s.profile_id),
       ]);
 
       const sessions = sessionsRes.data || [];

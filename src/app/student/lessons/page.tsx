@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useLearningPresence } from '@/hooks/useLearningPresence';
@@ -65,9 +65,9 @@ export default function StudentLessonsPage() {
 
     setError('');
     try {
-      const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+      const { data: student } = await db.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
 
-      let query = supabase
+      let query = db
         .from('lessons')
         .select('*, subject:subjects(*), class:classes!class_id(name)', { count: 'exact' })
         .eq('is_published', true);
@@ -81,7 +81,8 @@ export default function StudentLessonsPage() {
 
       const { data, error: err, count } = await query
         .order('created_at', { ascending: false })
-        .range(from, to);
+        .limit(to - from + 1)
+        .offset(from);
 
       if (err) throw new Error(err.message);
 
@@ -91,7 +92,7 @@ export default function StudentLessonsPage() {
       }
 
       if (reset) {
-        const { data: subjectsData } = await supabase.from('subjects').select('id, name').order('name');
+        const { data: subjectsData } = await db.from('subjects').select('id, name').order('name');
         if (subjectsData) setSubjects(subjectsData);
       }
     } catch (err: any) {
@@ -119,15 +120,15 @@ export default function StudentLessonsPage() {
     setQuizAnswers({});
 
     if (lesson.session_id) {
-      const { data: quizzes } = await supabase
+      const { data: quizzes } = await db
         .from('quizzes')
         .select('id, title, passing_score')
         .eq('session_id', lesson.session_id);
       if (quizzes && quizzes.length > 0) {
-        const { data: questions } = await supabase
+        const { data: questions } = await db
           .from('quiz_questions')
           .select('*')
-          .in('quiz_id', quizzes.map(q => q.id))
+          .in('quiz_id', quizzes.map((q: any) => q.id))
           .order('order_index', { ascending: true });
         setLessonQuiz(quizzes[0]);
         setQuizQuestions(questions || []);
@@ -173,7 +174,7 @@ export default function StudentLessonsPage() {
 
     const score = Math.round((correctCount / quizQuestions.length) * 100);
     if (lessonQuiz && profile) {
-      await supabase.from('quiz_attempts').insert({
+      await db.from('quiz_attempts').insert({
         quiz_id: lessonQuiz.id,
         student_id: profile.id,
         score,

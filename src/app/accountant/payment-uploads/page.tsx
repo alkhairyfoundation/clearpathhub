@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { CheckCircle, XCircle, Eye, Search, Filter, DollarSign, AlertCircle, Clock, Loader2 } from 'lucide-react';
@@ -33,7 +34,7 @@ export default function PaymentUploadsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await db
       .from('payment_uploads')
       .select('*, student:profiles!payment_uploads_student_id_fkey(first_name, last_name), parent:profiles!payment_uploads_parent_id_fkey(first_name, last_name, email, phone)')
       .order('created_at', { ascending: false });
@@ -86,7 +87,7 @@ export default function PaymentUploadsPage() {
       storage_path: upload.storage_path || null,
     };
 
-    const { error: receiptError } = await supabase.from('receipts').insert(receiptData);
+    const { error: receiptError } = await db.from('receipts').insert(receiptData);
     if (receiptError) {
       alert('Error creating receipt: ' + receiptError.message);
       setActionLoading(null);
@@ -94,10 +95,10 @@ export default function PaymentUploadsPage() {
     }
 
     if (upload.invoice_id && paymentForm.payment_type === 'full') {
-      await supabase.from('invoices').update({ status: 'paid' }).eq('id', upload.invoice_id);
+      await db.from('invoices').update({ status: 'paid' }).eq('id', upload.invoice_id);
     }
 
-    await supabase.from('transactions').insert({
+    await db.from('transactions').insert({
       student_id: upload.student_id,
       type: 'income',
       category: 'School Fees',
@@ -108,7 +109,7 @@ export default function PaymentUploadsPage() {
       recorded_by: profile?.id,
     });
 
-    await supabase.from('payment_uploads').update({
+    await db.from('payment_uploads').update({
       status: 'verified',
       verified_by: profile?.id,
       verified_at: new Date().toISOString(),
@@ -128,7 +129,7 @@ export default function PaymentUploadsPage() {
     setActionLoading(rejectModal.id);
     const upload = uploads.find(u => u.id === rejectModal.id);
 
-    await supabase.from('payment_uploads').update({
+    await db.from('payment_uploads').update({
       status: 'rejected',
       verified_by: profile?.id,
       verified_at: new Date().toISOString(),

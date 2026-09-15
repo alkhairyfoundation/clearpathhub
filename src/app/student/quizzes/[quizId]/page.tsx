@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useParams } from 'next/navigation';
 import { Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Loader2, Award } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -65,9 +65,9 @@ export default function StudentTakeQuizPage() {
 
   async function fetchQuiz() {
     const [quizRes, questionsRes, prevRes] = await Promise.all([
-      supabase.from('quizzes').select('*, session:sessions!session_id(title)').eq('id', quizId).single(),
-      supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('order_index'),
-      supabase.from('quiz_attempts').select('*').eq('quiz_id', quizId).eq('student_id', profile?.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      db.from('quizzes').select('*, session:sessions!session_id(title)').eq('id', quizId).single(),
+      db.from('quiz_questions').select('*').eq('quiz_id', quizId).order('order_index'),
+      db.from('quiz_attempts').select('*').eq('quiz_id', quizId).eq('student_id', profile?.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (quizRes.data) {
       setQuiz(quizRes.data);
@@ -132,7 +132,7 @@ export default function StudentTakeQuizPage() {
     const startedAt = new Date(Date.now() - ((quiz.time_limit || 30) * 60 - timeLeft) * 1000);
 
     try {
-      const { error: attemptError } = await supabase.from('quiz_attempts').insert({
+      const { error: attemptError } = await db.from('quiz_attempts').insert({
         quiz_id: quizId,
         student_id: profile.id,
         answers,

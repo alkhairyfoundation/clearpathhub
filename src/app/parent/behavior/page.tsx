@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Award, AlertTriangle, CheckCircle, Star, Heart, ShieldAlert, Clock, Copy, Monitor, Ban } from 'lucide-react';
@@ -27,15 +27,15 @@ function BehaviorContent() {
   async function fetchData() {
     setLoading(true);
     try {
-      const childrenRes = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
+      const childrenRes = await db.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
       if (childrenRes.error) throw new Error(childrenRes.error.message);
       if (childrenRes.data?.length) {
         setChildren(childrenRes.data);
-        const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
+        const selectedChild = childId ? childrenRes.data.find((c: any) => c.id === childId) : childrenRes.data[0];
         if (selectedChild) {
           setChild(selectedChild);
           const [reportsRes, examLogsRes] = await Promise.all([
-            supabase.from('behavioral_reports').select('*').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20),
+            db.from('behavioral_reports').select('*').eq('student_id', selectedChild.profile_id).order('created_at', { ascending: false }).limit(20),
             fetch('/api/manage-tests', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ action: 'list_exam_logs', student_ids: [selectedChild.profile_id] })

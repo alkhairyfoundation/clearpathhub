@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, uploadFile } from '@/lib/supabase';
+import { uploadFile } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, X, FileText, Check, Clock, Upload, Image, Paperclip, Loader2, ArrowLeft } from 'lucide-react';
@@ -41,13 +42,13 @@ export default function TeacherHomeworkPage() {
 
       const [hwRes, clsRes, subjRes] = await Promise.all([
         teacherClassIds.length > 0
-          ? supabase.from('homework').select('*, subject:subjects!subject_id(*), class:classes!class_id(*)').in('class_id', teacherClassIds).order('due_date', { ascending: false })
+          ? db.from('homework').select('*, subject:subjects!subject_id(*), class:classes!class_id(*)').in('class_id', teacherClassIds).order('due_date', { ascending: false })
           : { data: [], error: null },
         teacherClassIds.length > 0
-          ? supabase.from('classes').select('*').in('id', teacherClassIds).order('name')
+          ? db.from('classes').select('*').in('id', teacherClassIds).order('name')
           : { data: [], error: null },
         teacherClassIds.length > 0
-          ? supabase.from('subjects').select('id, name').in('class_id', teacherClassIds).order('name')
+          ? db.from('subjects').select('id, name').in('class_id', teacherClassIds).order('name')
           : { data: [], error: null },
       ]);
       if (hwRes.error) throw new Error(hwRes.error.message);
@@ -82,9 +83,9 @@ export default function TeacherHomeworkPage() {
 
       let result;
       if (editingHomework) {
-        result = await supabase.from('homework').update(data).eq('id', editingHomework.id);
+        result = await db.from('homework').update(data).eq('id', editingHomework.id);
       } else {
-        result = await supabase.from('homework').insert(data);
+        result = await db.from('homework').insert(data);
       }
       if (result.error) throw new Error(result.error.message);
 
@@ -103,7 +104,7 @@ export default function TeacherHomeworkPage() {
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Delete this homework?')) { await supabase.from('homework').delete().eq('id', id); fetchData(); }
+    if (confirm('Delete this homework?')) { await db.from('homework').delete().eq('id', id); fetchData(); }
   }
 
   function getTypeIcon(type: string) {

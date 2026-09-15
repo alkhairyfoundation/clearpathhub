@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { 
@@ -153,10 +153,10 @@ useEffect(() => {
   async function fetchData() {
     setLoading(true);
     const [examsRes, codesRes, appsRes, classesRes] = await Promise.all([
-      supabase.from('entrance_exams').select('*, questions:entrance_questions(*), applications:entrance_applications(*)').order('exam_date', { ascending: true }),
-      supabase.from('entrance_codes').select('*').order('created_at', { ascending: false }),
-      supabase.from('entrance_applications').select('*, exam:entrance_exams!exam_id(*)').order('created_at', { ascending: false }),
-      supabase.from('classes').select('id, name, level').order('level'),
+      db.from('entrance_exams').select('*, questions:entrance_questions(*), applications:entrance_applications(*)').order('exam_date', { ascending: true }),
+      db.from('entrance_codes').select('*').order('created_at', { ascending: false }),
+      db.from('entrance_applications').select('*, exam:entrance_exams!exam_id(*)').order('created_at', { ascending: false }),
+      db.from('classes').select('id, name, level').order('level'),
     ]);
     if (examsRes.data) setExams(examsRes.data);
     if (codesRes.data) setCodes(codesRes.data);
@@ -172,7 +172,7 @@ async function handleCreateExam() {
       setError(''); setSaving(true);
       try {
         const subjects = formData.subjects || [];
-        const { data: examData, error } = await supabase
+        const { data: examData, error } = await db
           .from('entrance_exams')
           .insert({
             title: formData.title,
@@ -243,7 +243,7 @@ async function handleCreateExam() {
         
         for (const subject of subjects) {
           // Fetch questions for the subject across relevant levels
-          const { data: subjectQuestions } = await supabase
+          const { data: subjectQuestions } = await db
             .from('question_bank')
             .select('*')
             .eq('status', 'published')
@@ -252,10 +252,10 @@ async function handleCreateExam() {
 
           if (subjectQuestions && subjectQuestions.length > 0) {
             // Distribution favoring harder questions if available
-            const veryHard = subjectQuestions.filter(q => q.difficulty_level === 'VERY_HARD');
-            const hard = subjectQuestions.filter(q => q.difficulty_level === 'HARD');
-            const medium = subjectQuestions.filter(q => q.difficulty_level === 'MEDIUM');
-            const easy = subjectQuestions.filter(q => q.difficulty_level === 'EASY');
+            const veryHard = subjectQuestions.filter((q: any) => q.difficulty_level === 'VERY_HARD');
+            const hard = subjectQuestions.filter((q: any) => q.difficulty_level === 'HARD');
+            const medium = subjectQuestions.filter((q: any) => q.difficulty_level === 'MEDIUM');
+            const easy = subjectQuestions.filter((q: any) => q.difficulty_level === 'EASY');
 
             const veryHardCount = Math.max(0, Math.round(questionsPerSubject * 0.4));
             const hardCount = Math.max(0, Math.round(questionsPerSubject * 0.3));
@@ -272,7 +272,7 @@ async function handleCreateExam() {
             // If still short, add more from any difficulty in this subject
             if (selected.length < questionsPerSubject) {
               const remaining = subjectQuestions
-                .filter(q => !selected.find(s => s.id === q.id))
+                .filter((q: any) => !selected.find((s: any) => s.id === q.id))
                 .sort(() => Math.random() - 0.5)
                 .slice(0, questionsPerSubject - selected.length);
               allSelectedQuestions = [...allSelectedQuestions, ...selected, ...remaining];
@@ -309,7 +309,7 @@ async function handleCreateExam() {
           };
           });
           
-          const { error } = await supabase.from('entrance_questions').insert(questionsToInsert);
+          const { error } = await db.from('entrance_questions').insert(questionsToInsert);
           if (error) throw new Error(`Failed to insert questions: ${error.message}`);
         } else {
           setWarning('No questions found in question bank for the selected level and subjects.');
@@ -344,7 +344,7 @@ async function handleCreateExam() {
     
     // Persist subjects on the exam if they were derived from defaults
     if (!exam.subjects || !Array.isArray(exam.subjects) || exam.subjects.length === 0) {
-      await supabase.from('entrance_exams').update({ subjects }).eq('id', exam.id);
+      await db.from('entrance_exams').update({ subjects }).eq('id', exam.id);
     }
     
     try {
@@ -359,7 +359,7 @@ async function handleCreateExam() {
    async function handleRemoveQuestion(questionId: string) {
      if (!confirm('Remove this question from the exam?')) return;
      try {
-       await supabase.from('entrance_questions').delete().eq('id', questionId);
+       await db.from('entrance_questions').delete().eq('id', questionId);
        setQuestions(prev => prev.filter(q => q.id !== questionId));
      } catch (err) {
        console.error('Failed to remove question:', err);
@@ -370,13 +370,13 @@ async function handleCreateExam() {
      if (selectedIds.length === 0) return;
      setSaving(true);
      try {
-       const { data: selectedQbank } = await supabase
+       const { data: selectedQbank } = await db
          .from('question_bank')
          .select('*')
          .in('id', selectedIds);
        
         if (selectedQbank && selectedQbank.length > 0) {
-          const toInsert = selectedQbank.map((q, index) => {
+          const toInsert = selectedQbank.map((q: any, index: number) => {
             const qt = (q.question_type || 'MCQ').toUpperCase();
             const mappedType = qt === 'MULTIPLE_CHOICE' ? 'MCQ' : qt === 'TRUE_FALSE' ? 'TRUE_FALSE' : qt === 'FILL_IN_THE_GAP' || qt === 'FILL_BLANK' ? 'FILL_IN_THE_GAP' : 'MCQ';
             return {
@@ -396,9 +396,9 @@ async function handleCreateExam() {
           };
           });
           
-          await supabase.from('entrance_questions').insert(toInsert);
+          await db.from('entrance_questions').insert(toInsert);
          
-         const { data: updated } = await supabase.from('entrance_questions').select('*').eq('exam_id', examId);
+         const { data: updated } = await db.from('entrance_questions').select('*').eq('exam_id', examId);
          if (updated) setQuestions(updated);
          
          setSuccess(`Added ${toInsert.length} question(s) from question bank`);
@@ -415,7 +415,7 @@ async function handleCreateExam() {
       setSelectedBankIds(new Set());
       setBankSelectSearch('');
       const qbLevels = getQuestionBankLevels(exam.level);
-      let query = supabase.from('question_bank').select('*').eq('status', 'published').in('level', qbLevels);
+      let query = db.from('question_bank').select('*').eq('status', 'published').in('level', qbLevels);
       const examSubjects = exam.subjects;
       if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
         query = query.in('subject', examSubjects);
@@ -459,10 +459,10 @@ async function handleCreateExam() {
       explanation: questionData.explanation || null,
     };
     if (questionData.question_image) payload.question_image = questionData.question_image;
-    const { error } = await supabase.from('entrance_questions').insert(payload);
+    const { error } = await db.from('entrance_questions').insert(payload);
     if (!error) {
       setQuestionData({ question: '', question_image: '', options: ['', '', '', ''], correct_answer: 0, points: 1, question_type: 'MCQ', subject: '', level: '', difficulty_level: 'MEDIUM', topic: '', subtopic: '', explanation: '' });
-      const { data } = await supabase.from('entrance_questions').select('*').eq('exam_id', selectedExam.id);
+      const { data } = await db.from('entrance_questions').select('*').eq('exam_id', selectedExam.id);
       if (data) setQuestions(data);
     }
     setSaving(false);
@@ -478,7 +478,7 @@ async function handleCreateExam() {
     
     while (attempts < maxAttempts) {
       code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const { data: existing } = await supabase
+      const { data: existing } = await db
         .from('entrance_codes')
         .select('id')
         .eq('code', code)
@@ -494,7 +494,7 @@ async function handleCreateExam() {
       return;
     }
     
-    const { error } = await supabase.from('entrance_codes').insert({
+    const { error } = await db.from('entrance_codes').insert({
       code, exam_id: selectedExam.id, max_uses: 100, used_count: 0, is_active: true
     });
     if (error) setError('Failed to generate code: ' + error.message);
@@ -506,10 +506,10 @@ async function handleCreateExam() {
     if (!confirm('Delete this exam and all associated questions, codes, and applications?')) return;
     setDeleting(id);
     try {
-      await supabase.from('entrance_questions').delete().eq('exam_id', id);
-      await supabase.from('entrance_codes').delete().eq('exam_id', id);
-      await supabase.from('entrance_applications').delete().eq('exam_id', id);
-      const { error } = await supabase.from('entrance_exams').delete().eq('id', id);
+      await db.from('entrance_questions').delete().eq('exam_id', id);
+      await db.from('entrance_codes').delete().eq('exam_id', id);
+      await db.from('entrance_applications').delete().eq('exam_id', id);
+      const { error } = await db.from('entrance_exams').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Exam and all associated data deleted');
       setTimeout(() => setSuccess(''), 3000);
@@ -523,7 +523,7 @@ async function handleCreateExam() {
 
   async function handleAssignExam(applicationId: string, examId: string) {
     setSaving(true);
-    await supabase.from('entrance_applications').update({
+    await db.from('entrance_applications').update({
       status: 'assigned',
       exam_id: examId
     }).eq('id', applicationId);
@@ -535,7 +535,7 @@ async function handleCreateExam() {
      if (!confirm('Are you sure you want to permanently delete this application? This cannot be undone.')) return;
      setDeleting(appId);
      try {
-       await supabase.from('entrance_applications').delete().eq('id', appId);
+       await db.from('entrance_applications').delete().eq('id', appId);
        setSuccess('Application deleted successfully');
        fetchData();
      } catch (err: any) {
@@ -549,7 +549,7 @@ async function handleCreateExam() {
      if (!confirm(`Ban this applicant (${email})? They will not be able to apply again.`)) return;
      setDeleting(appId);
      try {
-       await supabase.from('entrance_applications').update({
+       await db.from('entrance_applications').update({
          status: 'banned',
          reviewed_by: profile?.id,
          reviewed_at: new Date().toISOString(),
@@ -604,7 +604,7 @@ async function handleCreateExam() {
       }
     }
 
-    await supabase.from('entrance_applications').update(updateData).eq('id', selectedApplication.id);
+    await db.from('entrance_applications').update(updateData).eq('id', selectedApplication.id);
     setShowApplicationModal(false);
     setAdmissionData({ status: '', admitted_class: '', notes: '' });
     setSaving(false);
@@ -625,7 +625,7 @@ async function handleCreateExam() {
      setQuestionBankLoading(true);
      setQuestionBankError('');
      try {
-       let query = supabase.from('question_bank').select('*');
+       let query = db.from('question_bank').select('*');
        if (questionBankFilter.subject) query = query.eq('subject', questionBankFilter.subject);
        if (questionBankFilter.level) query = query.eq('level', questionBankFilter.level);
        if (questionBankFilter.difficulty) query = query.eq('difficulty_level', questionBankFilter.difficulty);
@@ -674,11 +674,11 @@ async function handleCreateExam() {
           status: 'active',
         };
         if (editingQuestion) {
-          const { error } = await supabase.from('question_bank').update(payload).eq('id', editingQuestion.id);
+          const { error } = await db.from('question_bank').update(payload).eq('id', editingQuestion.id);
           if (error) throw new Error(error.message);
           setQuestionBankSuccess('Question updated successfully');
         } else {
-          const { error } = await supabase.from('question_bank').insert(payload);
+          const { error } = await db.from('question_bank').insert(payload);
           if (error) throw new Error(error.message);
           setQuestionBankSuccess('Question added successfully');
         }
@@ -694,7 +694,7 @@ async function handleCreateExam() {
      setQuestionBankError('');
      setQuestionBankSuccess('');
      try {
-       const { error } = await supabase.from('question_bank').update(questionData).eq('id', id);
+       const { error } = await db.from('question_bank').update(questionData).eq('id', id);
        if (error) throw new Error(error.message);
        setQuestionBankSuccess('Question updated successfully');
        await fetchQuestionBank();
@@ -708,7 +708,7 @@ async function handleCreateExam() {
      if (!confirm('Delete this question?')) return;
      setQuestionBankError('');
      try {
-       const { error } = await supabase.from('question_bank').delete().eq('id', id);
+       const { error } = await db.from('question_bank').delete().eq('id', id);
        if (error) throw new Error(error.message);
        await fetchQuestionBank();
      } catch (err: any) {
@@ -743,7 +743,7 @@ async function handleCreateExam() {
    async function fetchAnalytics() {
      setAnalyticsLoading(true);
      try {
-       const { data } = await supabase
+       const { data } = await db
          .from('student_analytics')
          .select('*, entrance_applications!inner(first_name, last_name)')
          .order('generated_at', { ascending: false });
@@ -756,16 +756,16 @@ async function handleCreateExam() {
          setAnalyticsData(processedData);
          const totalStudents = processedData.length;
          const averageScore = totalStudents > 0 
-           ? processedData.reduce((sum, r) => sum + r.score, 0) / totalStudents 
+            ? processedData.reduce((sum: number, r: any) => sum + r.score, 0) / totalStudents 
            : 0;
-         const masteredCount = processedData.filter(r => r.mastery_level === 'MASTERED').length;
+         const masteredCount = processedData.filter((r: any) => r.mastery_level === 'MASTERED').length;
          setAnalyticsSummary({
            totalStudents,
            averageScore: Math.round(averageScore * 100) / 100,
            masteredCount
          });
          const distribution = { POOR: 0, GOOD: 0, EXCELLENT: 0, PROFICIENT: 0, MASTERED: 0 };
-         processedData.forEach(record => {
+          processedData.forEach((record: any) => {
            if (record.mastery_level in distribution) {
              distribution[record.mastery_level as keyof typeof distribution] += 1;
            }
@@ -790,7 +790,7 @@ async function viewAnalyticsDetails(record: any) {
       setShowAnalyticsDetailModal(true);
       setAnalyticsTab('overview');
       setAnalyticsAppData(null);
-      const { data: app } = await supabase
+      const { data: app } = await db
         .from('entrance_applications')
         .select('*, exam:entrance_exams!exam_id(*)')
         .eq('id', record.application_id)
@@ -805,13 +805,13 @@ async function viewAnalyticsDetails(record: any) {
       setDownloadingReport(id);
 
       try {
-        const { data: application } = await supabase
+        const { data: application } = await db
           .from('entrance_applications')
           .select('*, exam:entrance_exams!exam_id(*)')
           .eq('id', record.application_id)
           .maybeSingle();
 
-        const { data: schoolSettings } = await supabase
+        const { data: schoolSettings } = await db
           .from('school_settings')
           .select('*')
           .limit(1)

@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -40,27 +40,27 @@ export default function StudentPracticePage() {
   async function startPractice() {
     setLoading(true);
     try {
-      const { data: student } = await supabase.from('students').select('*, class:classes!class_id(name)').eq('profile_id', profile?.id).maybeSingle();
-      const { data: term } = await supabase.from('terms').select('*').eq('is_current', true).maybeSingle();
+      const { data: student } = await db.from('students').select('*, class:classes!class_id(name)').eq('profile_id', profile?.id).maybeSingle();
+      const { data: term } = await db.from('terms').select('*').eq('is_current', true).maybeSingle();
 
       // Adaptive question selection based on mastery scores and spaced repetition
       let selectedQuestions: any[] = [];
       const [masteryRes, reviewRes] = await Promise.all([
         fetch(`/api/mastery/scores?studentId=${profile?.id}`).then(r => r.json()),
-        supabase.from('review_schedule').select('subject_id, topic, subtopic').eq('student_id', profile?.id).lte('next_review_date', new Date().toISOString().split('T')[0]),
+        db.from('review_schedule').select('subject_id, topic, subtopic').eq('student_id', profile?.id).lte('next_review_date', new Date().toISOString().split('T')[0]),
       ]);
       const masteryData: { subject_id: string; topic: string; mastery_score: number; level: string }[] = masteryRes.scores || [];
       const dueReviews = reviewRes.data || [];
 
       // Categorize topics for adaptive selection
       const weakTopics = masteryData.filter((m: any) => m.mastery_score < 60).map((m: any) => m.topic);
-      const dueTopicSet = new Set(dueReviews.map(r => r.topic));
+      const dueTopicSet = new Set(dueReviews.map((r: any) => r.topic));
       const masteredTopics = masteryData.filter((m: any) => m.mastery_score >= 80).map((m: any) => m.topic);
 
       // Get current SOW topic (skip if no class assigned)
       let sowTopic: string | null = null;
       if (term && student?.class_id) {
-        const { data: sow } = await supabase.from('scheme_of_work')
+        const { data: sow } = await db.from('scheme_of_work')
           .select('topic').eq('term_id', term.id).eq('class_id', student.class_id)
           .eq('week_number', term.current_week).maybeSingle();
         if (sow?.topic) sowTopic = sow.topic;
@@ -69,12 +69,12 @@ export default function StudentPracticePage() {
       // Build prioritized topic list
       const priorityTopics = new Set<string>();
       weakTopics.slice(0, 3).forEach(t => priorityTopics.add(t));
-      Array.from(dueTopicSet).filter(t => !priorityTopics.has(t)).slice(0, 2).forEach(t => priorityTopics.add(t));
+      Array.from(dueTopicSet).filter((t: any) => !priorityTopics.has(t)).slice(0, 2).forEach((t: any) => priorityTopics.add(t));
       if (sowTopic && !priorityTopics.has(sowTopic)) priorityTopics.add(sowTopic);
       masteredTopics.filter(t => !priorityTopics.has(t)).slice(0, 2).forEach(t => priorityTopics.add(t));
 
       if (priorityTopics.size > 0) {
-        const { data: adaptiveQuestions, error: qErr } = await supabase
+        const { data: adaptiveQuestions, error: qErr } = await db
           .from('question_bank').select('*').in('status', ['published', 'active'])
           .in('topic', Array.from(priorityTopics)).limit(QUESTIONS_PER_SESSION);
         if (qErr) throw qErr;
@@ -83,7 +83,7 @@ export default function StudentPracticePage() {
 
       // Fallback: any published question if not enough adaptive ones
       if (selectedQuestions.length < QUESTIONS_PER_SESSION) {
-        const { data: fallback } = await supabase
+        const { data: fallback } = await db
           .from('question_bank').select('*').in('status', ['published', 'active'])
           .limit(QUESTIONS_PER_SESSION - selectedQuestions.length);
         if (fallback) selectedQuestions.push(...fallback);
@@ -102,7 +102,7 @@ export default function StudentPracticePage() {
       setQuestions(finalQuestions.slice(0, QUESTIONS_PER_SESSION));
 
       // Create practice session
-      const { data: newSession, error: sErr } = await supabase.from('practice_sessions').insert({
+      const { data: newSession, error: sErr } = await db.from('practice_sessions').insert({
         student_id: profile?.id, term_id: term?.id || null,
         date: new Date().toISOString().split('T')[0],
         goal_type: 'mixed', total_questions: finalQuestions.length, status: 'in_progress',
@@ -113,21 +113,21 @@ export default function StudentPracticePage() {
       setStartTime(Date.now());
 
       // Ensure daily goal exists
-      const { data: goal } = await supabase.from('daily_goals').select('*')
+      const { data: goal } = await db.from('daily_goals').select('*')
         .eq('student_id', profile?.id).eq('date', new Date().toISOString().split('T')[0]).maybeSingle();
       if (!goal) {
-        await supabase.from('daily_goals').insert({
+        await db.from('daily_goals').insert({
           student_id: profile?.id, date: new Date().toISOString().split('T')[0],
           target_questions: QUESTIONS_PER_SESSION, target_score: 70,
         });
       } else { setTodayGoal(goal); }
 
       // Fetch streak
-      const { data: streakData } = await supabase.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle();
+      const { data: streakData } = await db.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle();
       if (streakData) setStreak(streakData);
 
       // Fetch badges
-      const { data: badgeData } = await supabase.from('badges').select('*').eq('student_id', profile?.id);
+      const { data: badgeData } = await db.from('badges').select('*').eq('student_id', profile?.id);
       if (badgeData) setBadges(badgeData);
 
     } catch (err: any) { setError(err.message); }
@@ -149,7 +149,7 @@ export default function StudentPracticePage() {
     // Record attempt
     if (session) {
       try {
-        const { error: attemptError } = await supabase.from('practice_attempts').insert({
+        const { error: attemptError } = await db.from('practice_attempts').insert({
           session_id: session.id, student_id: profile?.id,
           question_text: q.question, question_type: q.question_type || 'multiple_choice',
           options: q.options, correct_answer: q.correct_answer,
@@ -185,7 +185,7 @@ export default function StudentPracticePage() {
 
     if (session) {
       try {
-        const { error: sessionError } = await supabase.from('practice_sessions').update({
+        const { error: sessionError } = await db.from('practice_sessions').update({
           status: 'completed', completed_at: new Date().toISOString(),
           answered_questions: finalTotal, correct_answers: finalCorrect, score, duration_seconds: duration,
         }).eq('id', session.id);
@@ -197,11 +197,11 @@ export default function StudentPracticePage() {
 
     // Update daily goal
     const today = new Date().toISOString().split('T')[0];
-    const { data: goal } = await supabase.from('daily_goals').select('*')
+    const { data: goal } = await db.from('daily_goals').select('*')
       .eq('student_id', profile?.id).eq('date', today).maybeSingle();
     if (goal) {
       try {
-        await supabase.from('daily_goals').update({
+        await db.from('daily_goals').update({
           completed_questions: finalTotal, achieved_score: score,
           status: score >= 70 ? 'completed' : 'missed',
         }).eq('id', goal.id);
@@ -224,7 +224,7 @@ export default function StudentPracticePage() {
 
   async function updateReviewSchedules() {
     if (!session) return;
-    const { data: attempts } = await supabase
+    const { data: attempts } = await db
       .from('practice_attempts')
       .select('topic, subtopic, is_correct, difficulty')
       .eq('session_id', session.id);
@@ -242,12 +242,12 @@ export default function StudentPracticePage() {
     const practicedTopics = Object.keys(topicGroups);
     if (practicedTopics.length === 0) return;
 
-    const { data: subjectMap } = await supabase
+    const { data: subjectMap } = await db
       .from('mastery_scores')
       .select('topic, subject_id')
       .eq('student_id', profile?.id)
       .in('topic', practicedTopics);
-    const topicSubjectMap = new Map((subjectMap || []).map(s => [s.topic, s.subject_id]));
+    const topicSubjectMap = new Map((subjectMap || []).map((s: any) => [s.topic, s.subject_id]));
 
     for (const [topic, info] of Object.entries(topicGroups)) {
       const accuracy = info.total > 0 ? (info.correct / info.total) * 100 : 0;
@@ -262,7 +262,7 @@ export default function StudentPracticePage() {
       const nextReview = new Date();
       nextReview.setDate(nextReview.getDate() + intervalDays);
 
-      await supabase.from('review_schedule').upsert({
+      await db.from('review_schedule').upsert({
         student_id: profile?.id, subject_id: subjectId, topic,
         subtopic: Array.from(info.subtopics).join(', '),
         next_review_date: nextReview.toISOString().split('T')[0],
@@ -272,7 +272,7 @@ export default function StudentPracticePage() {
   }
 
   async function updateStreak() {
-    const { data: existing } = await supabase.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle();
+    const { data: existing } = await db.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle();
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
@@ -282,14 +282,14 @@ export default function StudentPracticePage() {
       if (lastDate === yesterday) newStreak = existing.current_streak + 1;
       else if (lastDate === today) newStreak = existing.current_streak;
 
-      await supabase.from('learning_streaks').update({
+      await db.from('learning_streaks').update({
         current_streak: newStreak,
         longest_streak: Math.max(newStreak, existing.longest_streak),
         last_activity_date: today,
       }).eq('id', existing.id);
       setStreak((prev: any) => ({ ...prev, current_streak: newStreak, longest_streak: Math.max(newStreak, existing.longest_streak), last_activity_date: today }));
     } else {
-      const { data: newStreak } = await supabase.from('learning_streaks').insert({
+      const { data: newStreak } = await db.from('learning_streaks').insert({
         student_id: profile?.id, current_streak: 1, longest_streak: 1, last_activity_date: today,
       }).select().single();
       if (newStreak) setStreak(newStreak);
@@ -302,13 +302,13 @@ export default function StudentPracticePage() {
 
     if (!existingTypes.includes('first_goal')) toAward.push('first_goal');
 
-    const { data: s } = await supabase.from('learning_streaks').select('current_streak').eq('student_id', profile?.id).maybeSingle();
+    const { data: s } = await db.from('learning_streaks').select('current_streak').eq('student_id', profile?.id).maybeSingle();
     const streakCount = s?.current_streak || 0;
     if (streakCount >= 3 && !existingTypes.includes('streak_3')) toAward.push('streak_3');
     if (streakCount >= 7 && !existingTypes.includes('streak_7')) toAward.push('streak_7');
 
     for (const badge of toAward) {
-      await supabase.from('badges').insert({ student_id: profile?.id, badge_type: badge, badge_data: { score, total_questions: total, correct_answers: correct } });
+      await db.from('badges').insert({ student_id: profile?.id, badge_type: badge, badge_data: { score, total_questions: total, correct_answers: correct } });
     }
   }
 

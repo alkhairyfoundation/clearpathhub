@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -24,7 +24,7 @@ export default function TeacherCcrReports() {
   async function fetchData() {
     try {
 const classIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
-      const { data: kids } = await supabase
+      const { data: kids } = await db
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
         .in('class_id', classIds.length > 0 ? classIds : ['none'])

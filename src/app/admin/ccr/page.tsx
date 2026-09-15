@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, Users, CheckCircle, AlertCircle, Loader2, TrendingUp, BarChart3, GraduationCap } from 'lucide-react';
@@ -24,13 +24,13 @@ export default function AdminCcrPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: allSubs } = await supabase.from('ccr_responses').select('*');
-      const { count: studentCount } = await supabase.from('students').select('*', { count: 'exact', head: true });
+      const { data: allSubs } = await db.from('ccr_responses').select('*');
+      const { count: studentCount } = await db.from('students').select('*', { count: 'exact', head: true });
 
       const subs = allSubs || [];
       setStats({
         total: subs.length,
-        submitted: subs.filter(s => s.is_submitted).length,
+        submitted: subs.filter((s: any) => s.is_submitted).length,
         students: studentCount || 0,
       });
 
@@ -41,7 +41,7 @@ export default function AdminCcrPage() {
         if (s.is_submitted) grouped[s.respondent_type].submitted++;
       }
       setByType(grouped);
-      setRecentSubmissions(subs.filter(s => s.is_submitted).slice(-10).reverse());
+      setRecentSubmissions(subs.filter((s: any) => s.is_submitted).slice(-10).reverse());
     } catch (e: any) {
       console.error(e);
     } finally {

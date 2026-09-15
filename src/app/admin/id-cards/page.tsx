@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, Search, Download, Printer, X, QrCode, Loader2, Users, Filter, Eye, Settings, Image, FileDown, FileText, Check, Palette } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -70,9 +70,9 @@ export default function AdminIDCardsPage() {
   async function fetchData() {
     setLoading(true);
     const [studentsRes, classesRes, settingsRes] = await Promise.all([
-      supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name, email, phone, avatar_url), class:classes!class_id(name)').order('admission_number'),
-      supabase.from('classes').select('id, name').order('level'),
-      supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+      db.from('students').select('*, profile:profiles!profile_id(first_name, last_name, email, phone, avatar_url), class:classes!class_id(name)').order('admission_number'),
+      db.from('classes').select('id, name').order('level'),
+      db.from('school_settings').select('*').limit(1).maybeSingle(),
     ]);
     console.log('Students data:', studentsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
@@ -82,7 +82,7 @@ export default function AdminIDCardsPage() {
   }
 
   async function loadCardConfig() {
-    const { data } = await supabase.from('school_settings').select('id_card_config').limit(1).maybeSingle();
+    const { data } = await db.from('school_settings').select('id_card_config').limit(1).maybeSingle();
     if (data?.id_card_config) {
       setCardConfig({ ...defaultConfig, ...data.id_card_config });
     }
@@ -91,9 +91,9 @@ export default function AdminIDCardsPage() {
   async function saveCardConfig() {
     setSaving(true);
     try {
-      const { data: settings } = await supabase.from('school_settings').select('id').limit(1).maybeSingle();
+      const { data: settings } = await db.from('school_settings').select('id').limit(1).maybeSingle();
       if (settings?.id) {
-        await supabase.from('school_settings').update({ id_card_config: cardConfig }).eq('id', settings.id);
+        await db.from('school_settings').update({ id_card_config: cardConfig }).eq('id', settings.id);
       }
       setSuccess('Card configuration saved!');
       setTimeout(() => setSuccess(''), 3000);
@@ -138,7 +138,7 @@ export default function AdminIDCardsPage() {
     const qrBack = await generateBackQR(student.admission_number);
     setQrCodeUrl(qr);
     setQrBackUrl(qrBack);
-    const { data: idCardData } = await supabase.from('id_cards').select('*').eq('student_id', student.profile_id).maybeSingle();
+    const { data: idCardData } = await db.from('id_cards').select('*').eq('student_id', student.profile_id).maybeSingle();
     if (idCardData) setSelectedIdCard(idCardData);
     else setSelectedIdCard(null);
     setShowCardModal(true);

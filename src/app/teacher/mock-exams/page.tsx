@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { 
@@ -33,7 +33,7 @@ export default function TeacherMockExamsPage() {
 
   async function fetchExams() {
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await db
       .from('mock_exams')
       .select('*')
       .eq('is_published', true)
@@ -48,7 +48,7 @@ export default function TeacherMockExamsPage() {
     setView('analytics');
     setLoading(true);
 
-    const { data: attempts } = await supabase
+    const { data: attempts } = await db
       .from('mock_attempts')
       .select('*, student:profiles!student_id(first_name, last_name, email, id)')
       .eq('exam_id', exam.id)
@@ -78,7 +78,7 @@ export default function TeacherMockExamsPage() {
 
   async function viewStudentDetail(student: any) {
     setSelectedStudent(student);
-    const { data: analytics } = await supabase
+    const { data: analytics } = await db
       .from('mock_analytics')
       .select('*')
       .eq('student_id', student.student.id)

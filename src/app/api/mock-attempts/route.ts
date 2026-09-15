@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
+import { query as neonQuery } from '@/lib/neon';
 
 function calculateMasteryLevel(score: number): string {
   if (score >= 90) return 'MASTERED';
@@ -39,6 +40,14 @@ function calculatePathway(bySubject: Record<string, { correct: number; total: nu
   return { pathway: 'SCIENCE', reasoning: `Basic Science (${sciencePct}%) is the strongest area suggesting Science track potential. Further development needed across all subjects.` };
 }
 
+async function mirrorWrites(mirror: () => any) {
+  try {
+    await mirror();
+  } catch (mirrorError) {
+    console.error('Supabase mock-attempts mirror error:', mirrorError);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -52,15 +61,13 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: false, error: 'exam_id and student_id required' }, { status: 400 });
         }
 
-        const { data: existingAttempts, error: countError } = await adminClient
-          .from('mock_attempts')
-          .select('id, attempt_number', { count: 'exact' })
-          .eq('exam_id', exam_id)
-          .eq('student_id', student_id);
+        const existingAttempts = await neonQuery(
+          'SELECT id, attempt_number FROM mock_attempts WHERE exam_id = $1::uuid AND student_id = $2::uuid',
+          [exam_id, student_id]
+        );
 
-        if (countError) return NextResponse.json({ success: false, error: countError.message }, { status: 500 });
-
-        const { data: exam } = await adminClient.from('mock_exams').select('*').eq('id', exam_id).single();
+        const examRows = await neonQuery('SELECT * FROM mock_exams WHERE id = $1::uuid LIMIT 1', [exam_id]);
+        const exam = examRows[0];
         const maxAttempts = exam?.max_attempts || 0;
         const currentAttempts = existingAttempts?.length || 0;
 
@@ -69,12 +76,16 @@ export async function POST(request: Request) {
         }
 
         const attemptNumber = currentAttempts + 1;
-        const { data, error } = await adminClient.from('mock_attempts').insert({
+        const rows = await neonQuery(
+          `INSERT INTO mock_attempts (exam_id, student_id, attempt_number, started_at)
+           VALUES ($1::uuid, $2::uuid, $3, $4) RETURNING *`,
+          [exam_id, student_id, attemptNumber, new Date().toISOString()]
+        );
+        const data = rows[0];
+        await mirrorWrites(() => adminClient.from('mock_attempts').insert({
           exam_id, student_id, attempt_number: attemptNumber,
           started_at: new Date().toISOString(),
-        }).select().single();
-
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        }));
         return NextResponse.json({ success: true, attempt: data }, { status: 201 });
       }
 
@@ -84,13 +95,16 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: false, error: 'attempt_id and answers required' }, { status: 400 });
         }
 
-        const { data: attempt, error: attemptError } = await adminClient
-          .from('mock_attempts')
-          .select('*, exam:mock_exams(*)')
-          .eq('id', attempt_id)
-          .single();
-
-        if (attemptError || !attempt) return NextResponse.json({ success: false, error: 'Attempt not found' }, { status: 404 });
+        const attemptRows = await neonQuery(
+          `SELECT ta.*,
+            (SELECT to_jsonb("e") FROM "mock_exams" "e" WHERE "e".id = ta.exam_id) AS exam
+           FROM mock_attempts ta
+           WHERE ta.id = $1::uuid
+           LIMIT 1`,
+          [attempt_id]
+        );
+        const attempt = attemptRows[0];
+        if (!attempt) return NextResponse.json({ success: false, error: 'Attempt not found' }, { status: 404 });
 
         let totalPoints = 0;
         let earnedPoints = 0;
@@ -142,28 +156,20 @@ export async function POST(request: Request) {
 
         const { pathway, reasoning } = calculatePathway(bySubject, byTopic);
 
-        const { error: updateError } = await adminClient
-          .from('mock_attempts')
-          .update({
-            score,
-            mastery_level: masteryLevel,
-            answers: answersDetail,
-            subject_scores: bySubject,
-            topic_mastery: { by_subject: bySubject, by_difficulty: byDifficulty, by_topic: byTopic },
-            security_events: security_events || [],
-            time_taken_seconds: time_taken_seconds || 0,
-            completed_at: new Date().toISOString(),
-          })
-          .eq('id', attempt_id);
+        const completedAt = new Date().toISOString();
+        await neonQuery(
+          `UPDATE mock_attempts
+           SET score = $2, mastery_level = $3, answers = $4::jsonb, subject_scores = $5::jsonb,
+               topic_mastery = $6::jsonb, security_events = $7::jsonb, time_taken_seconds = $8,
+               completed_at = $9
+           WHERE id = $1::uuid`,
+          [attempt_id, score, masteryLevel, JSON.stringify(answersDetail), JSON.stringify(bySubject), JSON.stringify({ by_subject: bySubject, by_difficulty: byDifficulty, by_topic: byTopic }), JSON.stringify(security_events || []), time_taken_seconds || 0, completedAt]
+        );
 
-        if (updateError) return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
-
-        const { data: allAttempts } = await adminClient
-          .from('mock_attempts')
-          .select('score, mastery_level')
-          .eq('exam_id', attempt.exam_id)
-          .eq('student_id', attempt.student_id)
-          .order('created_at', { ascending: false });
+        const allAttempts = await neonQuery(
+          'SELECT score, mastery_level FROM mock_attempts WHERE exam_id = $1::uuid AND student_id = $2::uuid ORDER BY created_at DESC',
+          [attempt.exam_id, attempt.student_id]
+        );
 
         const scores = allAttempts?.map(a => a.score || 0) || [];
         const bestScore = scores.length > 0 ? Math.max(...scores) : score;
@@ -177,47 +183,79 @@ export async function POST(request: Request) {
 
         const strongest = Object.entries(bySubject)
           .filter(([_, d]) => d.total > 0)
-          .sort(([_, a], [__, b]) => (b.correct / b.total) - (a.correct / a.total))
+          .sort(([_, a], [__, b]) => (b.correct / a.total) - (a.correct / b.total))
           .slice(0, 2)
           .map(([s]) => s);
 
-        const { data: existingAnalytics } = await adminClient
-          .from('mock_analytics')
-          .select('id')
-          .eq('student_id', attempt.student_id)
-          .eq('exam_id', attempt.exam_id)
-          .maybeSingle();
+        const existingAnalyticsRows = await neonQuery(
+          'SELECT id FROM mock_analytics WHERE student_id = $1::uuid AND exam_id = $2::uuid LIMIT 1',
+          [attempt.student_id, attempt.exam_id]
+        );
+        const existingAnalytics = existingAnalyticsRows[0];
 
+        const topicPerformance = { by_subject: bySubject, by_difficulty: byDifficulty, by_topic: byTopic };
         if (existingAnalytics) {
-          await adminClient.from('mock_analytics').update({
-            total_attempts: scores.length,
-            best_score: bestScore,
-            average_score: avgScore,
-            latest_score: score,
-            mastery_level: masteryLevel,
-            topic_performance: { by_subject: bySubject, by_difficulty: byDifficulty, by_topic: byTopic },
-            weakest_subjects: weakest,
-            strongest_subjects: strongest,
-            recommended_pathway: pathway,
-            pathway_reasoning: reasoning,
-            updated_at: new Date().toISOString(),
-          }).eq('id', existingAnalytics.id);
+          await neonQuery(
+            `UPDATE mock_analytics
+             SET total_attempts = $2, best_score = $3, average_score = $4, latest_score = $5,
+                 mastery_level = $6, topic_performance = $7::jsonb, weakest_subjects = $8,
+                 strongest_subjects = $9, recommended_pathway = $10, pathway_reasoning = $11,
+                 updated_at = $12
+             WHERE id = $1::uuid`,
+            [existingAnalytics.id, scores.length, bestScore, avgScore, score, masteryLevel, JSON.stringify(topicPerformance), weakest, strongest, pathway, reasoning, new Date().toISOString()]
+          );
         } else {
-          await adminClient.from('mock_analytics').insert({
-            student_id: attempt.student_id,
-            exam_id: attempt.exam_id,
-            total_attempts: scores.length,
-            best_score: bestScore,
-            average_score: avgScore,
-            latest_score: score,
-            mastery_level: masteryLevel,
-            topic_performance: { by_subject: bySubject, by_difficulty: byDifficulty, by_topic: byTopic },
-            weakest_subjects: weakest,
-            strongest_subjects: strongest,
-            recommended_pathway: pathway,
-            pathway_reasoning: reasoning,
-          });
+          await neonQuery(
+            `INSERT INTO mock_analytics (student_id, exam_id, total_attempts, best_score, average_score, latest_score, mastery_level, topic_performance, weakest_subjects, strongest_subjects, recommended_pathway, pathway_reasoning)
+             VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12)`,
+            [attempt.student_id, attempt.exam_id, scores.length, bestScore, avgScore, score, masteryLevel, JSON.stringify(topicPerformance), weakest, strongest, pathway, reasoning]
+          );
         }
+
+        // Mirror to Supabase (secondary store, best-effort)
+        await mirrorWrites(async () => {
+          await adminClient.from('mock_attempts').update({
+            score,
+            mastery_level: masteryLevel,
+            answers: answersDetail,
+            subject_scores: bySubject,
+            topic_mastery: topicPerformance,
+            security_events: security_events || [],
+            time_taken_seconds: time_taken_seconds || 0,
+            completed_at: completedAt,
+          }).eq('id', attempt_id);
+
+          if (existingAnalytics) {
+            await adminClient.from('mock_analytics').update({
+              total_attempts: scores.length,
+              best_score: bestScore,
+              average_score: avgScore,
+              latest_score: score,
+              mastery_level: masteryLevel,
+              topic_performance: topicPerformance,
+              weakest_subjects: weakest,
+              strongest_subjects: strongest,
+              recommended_pathway: pathway,
+              pathway_reasoning: reasoning,
+              updated_at: new Date().toISOString(),
+            }).eq('id', existingAnalytics.id);
+          } else {
+            await adminClient.from('mock_analytics').insert({
+              student_id: attempt.student_id,
+              exam_id: attempt.exam_id,
+              total_attempts: scores.length,
+              best_score: bestScore,
+              average_score: avgScore,
+              latest_score: score,
+              mastery_level: masteryLevel,
+              topic_performance: topicPerformance,
+              weakest_subjects: weakest,
+              strongest_subjects: strongest,
+              recommended_pathway: pathway,
+              pathway_reasoning: reasoning,
+            });
+          }
+        });
 
         return NextResponse.json({
           success: true,
@@ -232,21 +270,43 @@ export async function POST(request: Request) {
 
       case 'list_attempts': {
         const { exam_id, student_id } = params;
-        let query = adminClient.from('mock_attempts').select('*, student:profiles!student_id(first_name, last_name, email)');
-        if (exam_id) query = query.eq('exam_id', exam_id);
-        if (student_id) query = query.eq('student_id', student_id);
-        const { data, error } = await query.order('created_at', { ascending: false });
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        const conditions: string[] = [];
+        const qParams: any[] = [];
+        if (exam_id) {
+          conditions.push(`ta.exam_id = $${qParams.length + 1}::uuid`);
+          qParams.push(exam_id);
+        }
+        if (student_id) {
+          conditions.push(`ta.student_id = $${qParams.length + 1}::uuid`);
+          qParams.push(student_id);
+        }
+        const sql = `SELECT ta.*,
+          (SELECT to_jsonb(tmp)
+           FROM (SELECT p.first_name, p.last_name, p.email) AS tmp) AS student
+          FROM mock_attempts ta
+          LEFT JOIN profiles p ON p.id = ta.student_id
+          ${conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''}
+          ORDER BY ta.created_at DESC`;
+        const data = await neonQuery(sql, qParams);
         return NextResponse.json({ success: true, attempts: data });
       }
 
       case 'get_attempt': {
         const { id } = params;
         if (!id) return NextResponse.json({ success: false, error: 'Attempt ID required' }, { status: 400 });
-        const { data, error } = await adminClient.from('mock_attempts')
-          .select('*, exam:mock_exams(*), student:profiles!student_id(first_name, last_name, email, id)')
-          .eq('id', id).single();
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        const rows = await neonQuery(
+          `SELECT ta.*,
+            (SELECT to_jsonb("e") FROM "mock_exams" "e" WHERE "e".id = ta.exam_id) AS exam,
+            (SELECT to_jsonb(tmp)
+             FROM (SELECT p.first_name, p.last_name, p.email, p.id) AS tmp) AS student
+           FROM mock_attempts ta
+           LEFT JOIN profiles p ON p.id = ta.student_id
+           WHERE ta.id = $1::uuid
+           LIMIT 1`,
+          [id]
+        );
+        const data = rows[0];
+        if (!data) return NextResponse.json({ success: false, error: 'Attempt not found' }, { status: 500 });
         return NextResponse.json({ success: true, attempt: data });
       }
 

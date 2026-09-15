@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Calendar, Search, UserCheck, CheckCircle, XCircle, Clock, Shield, Loader2, Download, Users } from 'lucide-react';
@@ -27,28 +27,28 @@ export default function AdminAttendancePage() {
   useEffect(() => { fetchAttendance(); }, [date, selectedClass]);
 
   async function fetchClasses() {
-    const { data } = await supabase.from('classes').select('id, name').order('level', { ascending: true });
+    const { data } = await db.from('classes').select('id, name').order('level', { ascending: true });
     if (data) setClasses(data);
   }
 
   async function fetchAttendance() {
     setLoading(true);
-    let query = supabase.from('attendance').select('*, student:profiles!student_id(first_name, last_name, email), class:classes!class_id(name)').eq('date', date);
+    let query = db.from('attendance').select('*, student:profiles!student_id(first_name, last_name, email), class:classes!class_id(name)').eq('date', date);
     if (selectedClass !== 'all') query = query.eq('class_id', selectedClass);
     const { data, error } = await query;
     if (error) setError(error.message);
     if (data) {
-      data.sort((a, b) => {
+      data.sort((a: any, b: any) => {
         const na = `${a.student?.first_name || ''} ${a.student?.last_name || ''}`;
         const nb = `${b.student?.first_name || ''} ${b.student?.last_name || ''}`;
         return na.localeCompare(nb);
       });
       setAttendance(data);
       setStats({
-        present: data.filter(a => a.status === 'present').length,
-        absent: data.filter(a => a.status === 'absent').length,
-        late: data.filter(a => a.status === 'late').length,
-        excused: data.filter(a => a.status === 'excused').length,
+        present: data.filter((a: any) => a.status === 'present').length,
+        absent: data.filter((a: any) => a.status === 'absent').length,
+        late: data.filter((a: any) => a.status === 'late').length,
+        excused: data.filter((a: any) => a.status === 'excused').length,
         total: data.length,
       });
     }
@@ -59,7 +59,7 @@ export default function AdminAttendancePage() {
     setSaving(studentId);
     setError('');
     try {
-      const { error } = await supabase.from('attendance').upsert({
+      const { error } = await db.from('attendance').upsert({
         student_id: studentId, class_id: selectedClass !== 'all' ? selectedClass : null, date, status,
         marked_by: profile?.id, marked_at: new Date().toISOString(), scan_method: 'manual',
       }, { onConflict: 'student_id,date' });

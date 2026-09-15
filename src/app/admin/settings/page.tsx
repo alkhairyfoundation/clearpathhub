@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { STORAGE_BUCKETS } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { Save, Shield, Palette, FileText, Image, Check, AlertCircle, Loader2 } from 'lucide-react';
 import type { SchoolSettings } from '@/types';
 import DashboardLayout from '@/components/DashboardLayout';
 import FileUpload from '@/components/FileUpload';
-import { STORAGE_BUCKETS } from '@/lib/supabase';
 
 export default function AdminSettingsPage() {
   const { profile } = useAuth();
@@ -36,7 +36,7 @@ export default function AdminSettingsPage() {
 
   async function fetchSettings() {
     setFetching(true);
-    const { data } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
+    const { data } = await db.from('school_settings').select('*').limit(1).maybeSingle();
     if (data) {
       setSettings(data);
     }
@@ -48,7 +48,7 @@ export default function AdminSettingsPage() {
     setError('');
     setSaved(false);
 
-    const { error: upsertError } = await supabase.from('school_settings').upsert({
+    const { error: upsertError } = await db.from('school_settings').upsert({
       ...settings,
     });
 

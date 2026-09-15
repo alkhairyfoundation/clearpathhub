@@ -1,11 +1,38 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
+import { query as neonQuery } from '@/lib/neon';
 
-async function getRemainingCapacity(adminClient: any, examId: string) {
-  const { data: exam } = await adminClient.from('mock_exams').select('total_questions').eq('id', examId).single();
+async function getRemainingCapacity(examId: string) {
+  const examRows = await neonQuery('SELECT total_questions FROM mock_exams WHERE id = $1::uuid LIMIT 1', [examId]);
+  const exam = examRows[0];
   if (!exam) throw new Error('Exam not found');
-  const { count } = await adminClient.from('mock_questions').select('*', { count: 'exact', head: true }).eq('exam_id', examId);
-  return Math.max(0, (exam.total_questions || 0) - (count || 0));
+  const countRows = await neonQuery('SELECT COUNT(*)::int AS total FROM mock_questions WHERE exam_id = $1::uuid', [examId]);
+  return Math.max(0, (exam.total_questions || 0) - (countRows[0]?.total || 0));
+}
+
+async function insertMockQuestions(toInsert: any[]): Promise<any[]> {
+  if (toInsert.length === 0) return [];
+  const allKeys = Array.from(new Set(toInsert.flatMap((d) => Object.keys(d || {}))));
+  const colList = allKeys.map((k) => `"${k}"`).join(', ');
+  const valuePlaceholders: string[] = [];
+  const flatValues: any[] = [];
+  for (const row of toInsert) {
+    const rowVals = allKeys.map((k) => (row ?? {})[k]);
+    valuePlaceholders.push(`(${rowVals.map((_, i) => `$${flatValues.length + i + 1}`).join(', ')})`);
+    flatValues.push(...rowVals);
+  }
+  return neonQuery(
+    `INSERT INTO "mock_questions" (${colList}) VALUES ${valuePlaceholders.join(', ')} RETURNING *`,
+    flatValues
+  );
+}
+
+async function mirrorMockQuestions(mirror: () => any) {
+  try {
+    await mirror();
+  } catch (mirrorError) {
+    console.error('Supabase mock-questions mirror error:', mirrorError);
+  }
 }
 
 export async function POST(request: Request) {
@@ -17,18 +44,31 @@ export async function POST(request: Request) {
     switch (action) {
       case 'list_questions': {
         const { exam_id, subject, grade_level, exam_type } = params;
-        let query = adminClient.from('mock_questions').select('*');
-        if (exam_id) query = query.eq('exam_id', exam_id);
-        if (subject) query = query.eq('subject', subject);
-        if (grade_level) query = query.eq('grade_level', grade_level);
+        const conditions: string[] = [];
+        const qParams: any[] = [];
+        if (exam_id) {
+          conditions.push(`exam_id = $${qParams.length + 1}::uuid`);
+          qParams.push(exam_id);
+        }
+        if (subject) {
+          conditions.push(`subject = $${qParams.length + 1}`);
+          qParams.push(subject);
+        }
+        if (grade_level) {
+          conditions.push(`grade_level = $${qParams.length + 1}`);
+          qParams.push(grade_level);
+        }
         if (exam_type) {
           let examGradeLevel = null;
           if (exam_type === 'JSS3_BECE') examGradeLevel = 'JSS3';
           else if (exam_type === 'SS3_WAEC') examGradeLevel = 'SS3';
-          if (examGradeLevel) query = query.eq('grade_level', examGradeLevel);
+          if (examGradeLevel) {
+            conditions.push(`grade_level = $${qParams.length + 1}`);
+            qParams.push(examGradeLevel);
+          }
         }
-        const { data, error } = await query.order('created_at', { ascending: true });
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        const sql = `SELECT * FROM mock_questions${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''} ORDER BY created_at ASC`;
+        const data = await neonQuery(sql, qParams);
         return NextResponse.json({ success: true, questions: data });
       }
 
@@ -37,11 +77,17 @@ export async function POST(request: Request) {
         if (!exam_id || !question || !options || correct_answer === undefined) {
           return NextResponse.json({ success: false, error: 'exam_id, question, options, and correct_answer are required' }, { status: 400 });
         }
-        const remaining = await getRemainingCapacity(adminClient, exam_id);
+        const remaining = await getRemainingCapacity(exam_id);
         if (remaining < 1) {
           return NextResponse.json({ success: false, error: 'Exam has reached its total_questions capacity. No more questions can be added.' }, { status: 400 });
         }
-        const { data, error } = await adminClient.from('mock_questions').insert({
+        const rows = await neonQuery(
+          `INSERT INTO mock_questions (exam_id, question, question_image, options, correct_answer, points, question_type, subject, difficulty_level, topic, subtopic, explanation, skill_tag, bloom_level, curriculum, grade_level)
+           VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
+          [exam_id, question, question_image || null, options, correct_answer, points || 1, question_type || 'multiple_choice', subject || null, difficulty_level || null, topic || null, subtopic || null, explanation || null, skill_tag || null, bloom_level || null, curriculum || null, grade_level || null]
+        );
+        const data = rows[0];
+        await mirrorMockQuestions(() => adminClient.from('mock_questions').insert({
           exam_id, question, question_image: question_image || null,
           options, correct_answer, points: points || 1,
           question_type: question_type || 'multiple_choice',
@@ -50,8 +96,7 @@ export async function POST(request: Request) {
           explanation: explanation || null, skill_tag: skill_tag || null,
           bloom_level: bloom_level || null, curriculum: curriculum || null,
           grade_level: grade_level || null,
-        }).select().single();
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        }));
         return NextResponse.json({ success: true, question: data }, { status: 201 });
       }
 
@@ -60,7 +105,7 @@ export async function POST(request: Request) {
         if (!exam_id || !questions || !Array.isArray(questions) || questions.length === 0) {
           return NextResponse.json({ success: false, error: 'exam_id and questions array required' }, { status: 400 });
         }
-        const remaining = await getRemainingCapacity(adminClient, exam_id);
+        const remaining = await getRemainingCapacity(exam_id);
         if (remaining < questions.length) {
           return NextResponse.json({ success: false, error: `Cannot add ${questions.length} question(s). Only ${remaining} slot(s) remaining out of the exam's total_questions capacity.` }, { status: 400 });
         }
@@ -82,24 +127,31 @@ export async function POST(request: Request) {
           curriculum: q.curriculum || null,
           grade_level: q.grade_level || null,
         }));
-        const { data, error } = await adminClient.from('mock_questions').insert(toInsert).select();
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        const data = await insertMockQuestions(toInsert);
+        await mirrorMockQuestions(() => adminClient.from('mock_questions').insert(toInsert));
         return NextResponse.json({ success: true, questions: data }, { status: 201 });
       }
 
       case 'update_question': {
         const { id, ...updates } = params;
         if (!id) return NextResponse.json({ success: false, error: 'Question ID required' }, { status: 400 });
-        const { data, error } = await adminClient.from('mock_questions').update(updates).eq('id', id).select().single();
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        const keys = Object.keys(updates);
+        if (keys.length === 0) return NextResponse.json({ success: false, error: 'Nothing to update' }, { status: 400 });
+        const setSql = keys.map((k, i) => `"${k}" = $${i + 2}`).join(', ');
+        const rows = await neonQuery(
+          `UPDATE mock_questions SET ${setSql} WHERE id = $1::uuid RETURNING *`,
+          [id, ...keys.map((k) => updates[k])]
+        );
+        const data = rows[0];
+        await mirrorMockQuestions(() => adminClient.from('mock_questions').update(updates).eq('id', id));
         return NextResponse.json({ success: true, question: data });
       }
 
       case 'delete_question': {
         const { id } = params;
         if (!id) return NextResponse.json({ success: false, error: 'Question ID required' }, { status: 400 });
-        const { error } = await adminClient.from('mock_questions').delete().eq('id', id);
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        await neonQuery('DELETE FROM mock_questions WHERE id = $1::uuid', [id]);
+        await mirrorMockQuestions(() => adminClient.from('mock_questions').delete().eq('id', id));
         return NextResponse.json({ success: true });
       }
 
@@ -109,22 +161,22 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: false, error: 'exam_id and question_ids array required' }, { status: 400 });
         }
 
-        const remaining = await getRemainingCapacity(adminClient, exam_id);
+        const remaining = await getRemainingCapacity(exam_id);
         if (remaining < question_ids.length) {
           return NextResponse.json({ success: false, error: `Cannot add ${question_ids.length} question(s). Only ${remaining} slot(s) remaining out of the exam's total_questions capacity.` }, { status: 400 });
         }
 
-        const { data: bankQuestions, error: bankError } = await adminClient
-          .from('question_bank')
-          .select('*')
-          .in('id', question_ids);
+        const bankQuestions = await neonQuery(
+          'SELECT * FROM question_bank WHERE id::text = ANY($1::text[])',
+          [question_ids.map((x: any) => String(x))]
+        );
 
-        if (bankError) return NextResponse.json({ success: false, error: bankError.message }, { status: 500 });
         if (!bankQuestions || bankQuestions.length === 0) {
           return NextResponse.json({ success: false, error: 'No questions found in bank' }, { status: 404 });
         }
 
-        const { data: exam } = await adminClient.from('mock_exams').select('exam_type').eq('id', exam_id).single();
+        const examRows = await neonQuery('SELECT exam_type FROM mock_exams WHERE id = $1::uuid LIMIT 1', [exam_id]);
+        const exam = examRows[0];
         const targetLevel = exam?.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3';
 
         const toInsert = bankQuestions.map((q: any) => ({
@@ -137,24 +189,38 @@ export async function POST(request: Request) {
           curriculum: q.curriculum || null, grade_level: targetLevel,
         }));
 
-        const { data: inserted, error: insertError } = await adminClient.from('mock_questions').insert(toInsert).select();
-        if (insertError) return NextResponse.json({ success: false, error: insertError.message }, { status: 500 });
+        const inserted = await insertMockQuestions(toInsert);
+        await mirrorMockQuestions(() => adminClient.from('mock_questions').insert(toInsert));
 
         return NextResponse.json({ success: true, count: inserted?.length || 0, questions: inserted });
       }
 
       case 'list_bank_for_class': {
         const { level, subject, difficulty, question_type, search } = params;
-        let query = adminClient.from('question_bank').select('*');
-        if (level) query = query.eq('level', level);
-        if (subject) query = query.eq('subject', subject);
-        if (difficulty) query = query.eq('difficulty_level', difficulty);
-        if (question_type) query = query.eq('question_type', question_type);
-        if (search) query = query.ilike('question', `%${search}%`);
-        query = query.order('created_at', { ascending: false });
-
-        const { data, error } = await query;
-        if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        const conditions: string[] = [];
+        const qParams: any[] = [];
+        if (level) {
+          conditions.push(`level = $${qParams.length + 1}`);
+          qParams.push(level);
+        }
+        if (subject) {
+          conditions.push(`subject = $${qParams.length + 1}`);
+          qParams.push(subject);
+        }
+        if (difficulty) {
+          conditions.push(`difficulty_level = $${qParams.length + 1}`);
+          qParams.push(difficulty);
+        }
+        if (question_type) {
+          conditions.push(`question_type = $${qParams.length + 1}`);
+          qParams.push(question_type);
+        }
+        if (search) {
+          conditions.push(`question ILIKE $${qParams.length + 1}`);
+          qParams.push(`%${search}%`);
+        }
+        const sql = `SELECT * FROM question_bank${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''} ORDER BY created_at DESC`;
+        const data = await neonQuery(sql, qParams);
         return NextResponse.json({ success: true, questions: data });
       }
 

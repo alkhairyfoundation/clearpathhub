@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -36,8 +36,8 @@ export default function TeacherGoalApprovalsPage() {
 
       if (classIds.length === 0) { setGoals([]); setLoading(false); return; }
 
-      const { data: students } = await supabase.from('students').select('profile_id').in('class_id', classIds);
-      const studentIds = students?.map(s => s.profile_id) || [];
+      const { data: students } = await db.from('students').select('profile_id').in('class_id', classIds);
+      const studentIds = students?.map((s: any) => s.profile_id) || [];
 
       if (studentIds.length === 0) { setGoals([]); setLoading(false); return; }
 

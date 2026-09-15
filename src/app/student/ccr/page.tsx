@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import CcrForm from '@/components/CcrForm';
@@ -22,7 +22,7 @@ export default function StudentCcrPage() {
 
   async function fetchStudent() {
     try {
-      const { data } = await supabase
+      const { data } = await db
         .from('students')
         .select('*')
         .eq('profile_id', profile?.id)

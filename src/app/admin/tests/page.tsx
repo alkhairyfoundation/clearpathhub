@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Plus, Edit, Trash2, X, FileText, BarChart3, Check, Loader2, Search, Users, Clock, Eye, Send, Download, Hash, Copy, HelpCircle } from 'lucide-react';
@@ -79,8 +79,8 @@ export default function AdminTestsPage() {
       const [testsRes, attemptsRes, subjectsRes, classesRes] = await Promise.all([
         api('list_tests'),
         api('list_attempts', { limit: '50' }),
-        supabase.from('subjects').select('id, name').order('name'),
-        supabase.from('classes').select('id, name').order('level'),
+        db.from('subjects').select('id, name').order('name'),
+        db.from('classes').select('id, name').order('level'),
       ]);
       if (testsRes.tests) setTests(testsRes.tests);
       if (attemptsRes.attempts) setAttempts(attemptsRes.attempts);
@@ -195,7 +195,7 @@ export default function AdminTestsPage() {
     setSelectedTest(test);
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let query = supabase.from('question_bank').select('*').eq('status', 'published');
+    let query = db.from('question_bank').select('*').eq('status', 'published');
     const subjectName = test.subject?.name?.toUpperCase();
     if (subjectName) query = query.eq('subject', subjectName);
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -223,7 +223,7 @@ export default function AdminTestsPage() {
     if (!selectedTest || selectedBankIds.size === 0) return;
     setSaving(true);
     try {
-      const { data: selected } = await supabase.from('question_bank').select('*').in('id', Array.from(selectedBankIds));
+      const { data: selected } = await db.from('question_bank').select('*').in('id', Array.from(selectedBankIds));
       if (selected && selected.length > 0) {
         const questions = selected.map((q: any) => ({
           test_id: selectedTest.id, question: q.question, options: q.options || [''], correct_answer: q.correct_answer ?? 0,
@@ -246,7 +246,7 @@ export default function AdminTestsPage() {
     if (!test.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      let bankQuery = supabase.from('question_bank').select('*').eq('status', 'published');
+      let bankQuery = db.from('question_bank').select('*').eq('status', 'published');
       const subjectName = test.subject?.name?.toUpperCase();
       if (subjectName) bankQuery = bankQuery.eq('subject', subjectName);
       const { data: allBank } = await bankQuery;

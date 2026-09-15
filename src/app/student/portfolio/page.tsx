@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -27,8 +27,8 @@ export default function StudentPortfolioPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const { data: session } = await supabase.from('academic_sessions').select('*').eq('is_current', true).single();
-      const { data: term } = await supabase.from('terms').select('*').eq('is_current', true).single();
+      const { data: session } = await db.from('academic_sessions').select('*').eq('is_current', true).single();
+      const { data: term } = await db.from('terms').select('*').eq('is_current', true).single();
       if (!session || !term) { setLoading(false); return; }
 
       const [goalRes, rubricRes, evidenceRes] = await Promise.all([

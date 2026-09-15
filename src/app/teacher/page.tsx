@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -40,24 +40,24 @@ useEffect(() => {
       
       // Get subjects for these classes
       const { data: allSubjects } = uniqueClassIds.length > 0
-        ? await supabase.from('subjects').select('id, name, class_id').in('class_id', uniqueClassIds)
+        ? await db.from('subjects').select('id, name, class_id').in('class_id', uniqueClassIds)
         : { data: [] };
 
       const [
         classesRes, homeworkRes, quizzesRes, sessionsRes, announcementsRes
       ] = await Promise.all([
         uniqueClassIds.length > 0
-          ? supabase.from('classes').select('id, name, level').in('id', uniqueClassIds).order('level')
+          ? db.from('classes').select('id, name, level').in('id', uniqueClassIds).order('level')
           : { data: [] },
-        supabase.from('homework').select('id, title, due_date, class_id', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_active', true),
-        supabase.from('quizzes').select('id, title, due_date', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_active', true),
-        supabase.from('sessions').select('*, class:classes!class_id(name), subject:subjects!subject_id(name)').in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).order('created_at', { ascending: false }).limit(5),
-        supabase.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').in('audience', ['all', 'teachers', 'staff']).order('created_at', { ascending: false }).limit(5),
+        db.from('homework').select('id, title, due_date, class_id', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_active', true),
+        db.from('quizzes').select('id, title, due_date', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_active', true),
+        db.from('sessions').select('*, class:classes!class_id(name), subject:subjects!subject_id(name)').in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).order('created_at', { ascending: false }).limit(5),
+        db.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').in('audience', ['all', 'teachers', 'staff']).order('created_at', { ascending: false }).limit(5),
       ]);
 
       // Fetch students count
       const { count: studentCount } = uniqueClassIds.length > 0
-        ? await supabase.from('students').select('id', { count: 'exact', head: true }).in('class_id', uniqueClassIds)
+        ? await db.from('students').select('id', { count: 'exact', head: true }).in('class_id', uniqueClassIds)
         : { count: 0 };
 
       setStats({
@@ -76,17 +76,17 @@ useEffect(() => {
       if (uniqueClassIds.length > 0) {
         if (classesRes.data) {
           setMyClasses(classesRes.data);
-          classesRes.data.forEach(c => { classMap[c.id] = c.name; });
+          classesRes.data.forEach((c: any) => { classMap[c.id] = c.name; });
         }
       }
 
       // Fetch scheme of work coverage
       if (allSubjects && allSubjects.length > 0) {
-        const { data: currentTerm } = await supabase.from('terms').select('id, name, start_date, end_date').eq('is_current', true).maybeSingle();
+        const { data: currentTerm } = await db.from('terms').select('id, name, start_date, end_date').eq('is_current', true).maybeSingle();
         if (currentTerm) {
           const coverage = await Promise.all(
-            allSubjects.map(async (subj) => {
-              const { count } = await supabase
+            allSubjects.map(async (subj: any) => {
+              const { count } = await db
                 .from('scheme_of_work')
                 .select('id', { count: 'exact', head: true })
                 .eq('term_id', currentTerm.id)
@@ -104,21 +104,21 @@ useEffect(() => {
       // Fetch class mastery data
       let masteryStudentIds: string[] = [];
       if (uniqueClassIds.length > 0 && allSubjects && allSubjects.length > 0) {
-        const subjectIds = allSubjects.map(s => s.id);
-        const { data: studentsData } = await supabase
+        const subjectIds = allSubjects.map((s: any) => s.id);
+        const { data: studentsData } = await db
           .from('students')
           .select('profile_id, class_id')
           .in('class_id', uniqueClassIds);
-        const studentIds = studentsData?.map(s => s.profile_id) || [];
+        const studentIds = studentsData?.map((s: any) => s.profile_id) || [];
         masteryStudentIds = studentIds;
         if (studentIds.length > 0) {
-          const { data: masteryData } = await supabase
+          const { data: masteryData } = await db
             .from('mastery_scores')
             .select('*, subject:subjects!subject_id(name, code)')
             .in('student_id', studentIds)
             .in('subject_id', subjectIds);
           if (masteryData) {
-            const studentClassMap = new Map(studentsData!.map(s => [s.profile_id, s.class_id]));
+            const studentClassMap = new Map<string, string>(studentsData!.map((s: any) => [s.profile_id, s.class_id] as [string, string]));
             const groups: Record<string, any> = {};
             for (const ms of masteryData) {
               const cId = studentClassMap.get(ms.student_id);
@@ -162,7 +162,7 @@ useEffect(() => {
       // Fetch results for students in this teacher's classes
       let resultsResData: any[] = [];
       if (masteryStudentIds.length > 0) {
-        const { data: rData } = await supabase
+        const { data: rData } = await db
           .from('results')
           .select('id, score, grade')
           .in('student_id', masteryStudentIds);

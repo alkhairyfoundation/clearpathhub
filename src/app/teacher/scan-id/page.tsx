@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { QrCode, Camera, UserCheck, Check, X, Loader2 } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function TeacherScanIDPage() {
 
   async function fetchTodayHistory() {
     const today = new Date().toISOString().split('T')[0];
-    const { data } = await supabase
+    const { data } = await db
       .from('attendance')
       .select('*, student:profiles!student_id(first_name, last_name)')
       .eq('date', today)
@@ -59,7 +59,7 @@ export default function TeacherScanIDPage() {
       // Not JSON, use as-is for backward compatibility
     }
     
-    const { data: student } = await supabase
+    const { data: student } = await db
       .from('students')
       .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
       .eq('admission_number', admissionNumber)
@@ -70,7 +70,7 @@ export default function TeacherScanIDPage() {
       const now = new Date();
       const cutoffHour = 8, cutoffMin = 30;
       const isLate = now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() > cutoffMin);
-      await supabase.from('attendance').upsert({
+      await db.from('attendance').upsert({
         student_id: student.profile_id,
         class_id: student.class_id,
         date: today,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, Users, CheckCircle, ArrowLeft, ImageIcon } from 'lucide-react';
@@ -60,8 +60,8 @@ export default function TeacherQuizzesPage() {
     setLoading(true);
     try {
       const [quizzesRes, sessionsRes] = await Promise.all([
-        supabase.from('quizzes').select('*, session:sessions!session_id(*), questions:quiz_questions!quiz_id(*)').order('created_at', { ascending: false }),
-        supabase.from('sessions').select('*').order('title'),
+        db.from('quizzes').select('*, session:sessions!session_id(*), questions:quiz_questions!quiz_id(*)').order('created_at', { ascending: false }),
+        db.from('sessions').select('*').order('title'),
       ]);
       if (quizzesRes.error) throw new Error(quizzesRes.error.message);
       if (quizzesRes.data) setQuizzes(quizzesRes.data);
@@ -76,7 +76,7 @@ export default function TeacherQuizzesPage() {
     if (!formData.title) { setError('Quiz title is required'); return; }
     setError('');
     try {
-      const { data: quiz, error: quizError } = await supabase.from('quizzes').insert({ title: formData.title, description: formData.description, session_id: formData.session_id || null, passing_score: formData.passing_score, time_limit: formData.time_limit }).select().single();
+      const { data: quiz, error: quizError } = await db.from('quizzes').insert({ title: formData.title, description: formData.description, session_id: formData.session_id || null, passing_score: formData.passing_score, time_limit: formData.time_limit }).select().single();
       if (quizError) throw new Error(quizError.message);
       if (quiz && questions.length > 0) {
         const quizQuestions = questions.map((q, i) => ({
@@ -90,7 +90,7 @@ export default function TeacherQuizzesPage() {
           question_type: q.question_type || 'multiple_choice',
           order_index: i,
         }));
-        const { error: qError } = await supabase.from('quiz_questions').insert(quizQuestions);
+        const { error: qError } = await db.from('quiz_questions').insert(quizQuestions);
         if (qError) throw new Error(qError.message);
       }
       setShowModal(false);
@@ -105,7 +105,7 @@ export default function TeacherQuizzesPage() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this quiz?')) return;
     try {
-      const { error } = await supabase.from('quizzes').delete().eq('id', id);
+      const { error } = await db.from('quizzes').delete().eq('id', id);
       if (error) throw new Error(error.message);
       fetchData();
     } catch (err: any) {

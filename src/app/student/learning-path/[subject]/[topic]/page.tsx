@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -45,10 +45,10 @@ export default function TopicLearningPathPage() {
     setLoading(true);
     try {
       const [subjRes, pathRes, scoreRes, lessonsRes] = await Promise.all([
-        supabase.from('subjects').select('*, class:classes!class_id(name)').eq('id', subjectId).single(),
+        db.from('subjects').select('*, class:classes!class_id(name)').eq('id', subjectId).single(),
         fetch(`/api/mastery/path?studentId=${profile?.id}&subjectId=${subjectId}&topic=${encodeURIComponent(topicName)}`).then(r => r.json()),
         fetch(`/api/mastery/scores?studentId=${profile?.id}&subjectId=${subjectId}&topic=${encodeURIComponent(topicName)}`).then(r => r.json()),
-        supabase.from('lessons').select('*').eq('subject_id', subjectId).eq('topic', topicName).eq('is_published', true),
+        db.from('lessons').select('*').eq('subject_id', subjectId).eq('topic', topicName).eq('is_published', true),
       ]);
 
       if (subjRes.data) setSubject(subjRes.data);

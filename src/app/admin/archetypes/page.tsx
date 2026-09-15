@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit, Trash2, X, Loader2, ArrowLeft, Target } from 'lucide-react';
 import type { Archetype } from '@/types';
@@ -28,7 +28,7 @@ export default function AdminArchetypesPage() {
 
   async function fetchArchetypes() {
     setLoading(true);
-    const { data, error } = await supabase.from('archetypes').select('*').order('name');
+    const { data, error } = await db.from('archetypes').select('*').order('name');
     if (!error && data) setArchetypes(data);
     setLoading(false);
   }
@@ -51,11 +51,11 @@ export default function AdminArchetypesPage() {
     setError(''); setSaving(true);
     try {
       if (editing) {
-        const { error: err } = await supabase.from('archetypes').update(formData).eq('id', editing.id);
+        const { error: err } = await db.from('archetypes').update(formData).eq('id', editing.id);
         if (err) throw new Error(err.message);
         setSuccess('Archetype updated');
       } else {
-        const { error: err } = await supabase.from('archetypes').insert(formData);
+        const { error: err } = await db.from('archetypes').insert(formData);
         if (err) throw new Error(err.message);
         setSuccess('Archetype created');
       }
@@ -66,7 +66,7 @@ export default function AdminArchetypesPage() {
   }
 
   async function handleToggleActive(item: Archetype) {
-    const { error } = await supabase.from('archetypes').update({ is_active: !item.is_active }).eq('id', item.id);
+    const { error } = await db.from('archetypes').update({ is_active: !item.is_active }).eq('id', item.id);
     if (!error) fetchArchetypes();
   }
 
@@ -74,7 +74,7 @@ export default function AdminArchetypesPage() {
     if (!confirm('Delete this archetype?')) return;
     setDeleting(id);
     try {
-      const { error } = await supabase.from('archetypes').delete().eq('id', id);
+      const { error } = await db.from('archetypes').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Archetype deleted');
       setTimeout(() => setSuccess(''), 3000);

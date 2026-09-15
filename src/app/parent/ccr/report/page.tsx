@@ -1,11 +1,11 @@
-﻿'use client';
+'use client';
 
 import { Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { BarChart3, Loader2, AlertCircle, TrendingUp, CheckCircle, ArrowLeft, Download } from 'lucide-react';
 import Link from 'next/link';
 import type { SgiScore } from '@/types';
@@ -31,7 +31,7 @@ function ParentCcrReportContent() {
 
   async function fetchData() {
     try {
-      const { data: c } = await supabase
+      const { data: c } = await db
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name)')
         .eq('profile_id', childId)
@@ -40,7 +40,7 @@ function ParentCcrReportContent() {
 
       const [res, settingsRes] = await Promise.all([
         fetch(`/api/ccr/report?student_id=${childId}`),
-        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+        db.from('school_settings').select('*').limit(1).maybeSingle(),
       ]);
       const result = await res.json();
       if (!result.success) throw new Error(result.error);

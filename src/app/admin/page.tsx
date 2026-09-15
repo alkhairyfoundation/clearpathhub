@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -76,17 +76,17 @@ export default function AdminDashboard() {
       classesRes, subjectsRes, attendanceRes, resultsRes,
       announcementsRes, recentSessionsRes, recentResultsRes
     ] = await Promise.all([
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent'),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'accountant'),
-      supabase.from('classes').select('id', { count: 'exact', head: true }),
-      supabase.from('subjects').select('id', { count: 'exact', head: true }),
-      supabase.from('attendance').select('status, date').order('date', { ascending: false }).limit(30),
-      supabase.from('results').select('score').order('created_at', { ascending: false }).limit(100),
-      supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(5),
-      supabase.from('sessions').select('*, teacher:profiles!teacher_id(first_name, last_name), subject:subjects!subject_id(name)').order('created_at', { ascending: false }).limit(5),
-      supabase.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)').order('created_at', { ascending: false }).limit(5),
+      db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
+      db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
+      db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent'),
+      db.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'accountant'),
+      db.from('classes').select('id', { count: 'exact', head: true }),
+      db.from('subjects').select('id', { count: 'exact', head: true }),
+      db.from('attendance').select('status, date').order('date', { ascending: false }).limit(30),
+      db.from('results').select('score').order('created_at', { ascending: false }).limit(100),
+      db.from('announcements').select('*').order('created_at', { ascending: false }).limit(5),
+      db.from('sessions').select('*, teacher:profiles!teacher_id(first_name, last_name), subject:subjects!subject_id(name)').order('created_at', { ascending: false }).limit(5),
+      db.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)').order('created_at', { ascending: false }).limit(5),
     ]);
 
     const presentCount = attendanceRes.data?.filter((a: { status: string }) => a.status === 'present').length || 0;
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
       const lowScores = resultsRes.data.filter((r: { score: number }) => r.score < 50);
       const uniqueStudents = new Set<string>();
       if (lowScores.length > 0) {
-        const { data: studentData } = await supabase
+        const { data: studentData } = await db
           .from('results')
           .select('student_id, score, student:profiles!student_id(first_name, last_name)')
           .lt('score', 50)

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, Users, Search, Loader2, BarChart3, TrendingUp, Download } from 'lucide-react';
@@ -22,7 +22,7 @@ export default function AdminCcrReports() {
 
   async function fetchData() {
     try {
-      const { data } = await supabase
+const { data } = await db
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name, email), class:classes!class_id(name)')
         .order('admission_number');

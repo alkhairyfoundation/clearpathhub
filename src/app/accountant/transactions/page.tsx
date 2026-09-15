@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { Plus, Search, Download, TrendingUp, TrendingDown, DollarSign, X, Edit, Trash2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -27,23 +27,23 @@ export default function AccountantTransactionsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('transactions').select('*, student:profiles(*)').order('created_at', { ascending: false }).limit(100);
+    const { data } = await db.from('transactions').select('*, student:profiles(*)').order('created_at', { ascending: false }).limit(100);
     if (data) {
       setTransactions(data);
-      const income = data.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-      const expense = data.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const income = data.filter((t: any) => t.type === 'income').reduce((sum: number, t: any) => sum + t.amount, 0);
+      const expense = data.filter((t: any) => t.type === 'expense').reduce((sum: number, t: any) => sum + t.amount, 0);
       setStats({ income, expense, balance: income - expense });
     }
     setLoading(false);
   }
 
   async function handleSave() {
-    await supabase.from('transactions').insert({ ...formData, recorded_by: profile?.id, amount: parseFloat(formData.amount.toString()) });
+    await db.from('transactions').insert({ ...formData, recorded_by: profile?.id, amount: parseFloat(formData.amount.toString()) });
     setShowModal(false); setFormData({ type: 'income', category: '', amount: 0, description: '', student_id: '', payment_method: '' }); fetchData();
   }
 
   async function handleDelete(id: string) {
-    if (confirm('Delete this transaction?')) { await supabase.from('transactions').delete().eq('id', id); fetchData(); }
+    if (confirm('Delete this transaction?')) { await db.from('transactions').delete().eq('id', id); fetchData(); }
   }
 
   const filtered = transactions.filter(t => 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -34,10 +34,10 @@ export default function SubjectLearningPathPage() {
     setLoading(true);
     try {
       const [subjRes, pathRes, scoreRes, sowRes] = await Promise.all([
-        supabase.from('subjects').select('*, class:classes!class_id(name)').eq('id', subjectId).single(),
+        db.from('subjects').select('*, class:classes!class_id(name)').eq('id', subjectId).single(),
         fetch(`/api/mastery/path?studentId=${profile?.id}&subjectId=${subjectId}`).then(r => r.json()),
         fetch(`/api/mastery/scores?studentId=${profile?.id}&subjectId=${subjectId}`).then(r => r.json()),
-        supabase.from('scheme_of_work').select('topic').eq('subject_id', subjectId),
+        db.from('scheme_of_work').select('topic').eq('subject_id', subjectId),
       ]);
 
       if (subjRes.data) setSubject(subjRes.data);

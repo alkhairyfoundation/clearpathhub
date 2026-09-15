@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Search, TrendingDown, DollarSign, X, Trash2, Filter, Calendar } from 'lucide-react';
@@ -44,7 +44,7 @@ export default function AccountantExpensesPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('transactions').select('*').eq('type', 'expense').order('created_at', { ascending: false });
+    const { data } = await db.from('transactions').select('*').eq('type', 'expense').order('created_at', { ascending: false });
     if (data) {
       setExpenses(data);
       const total = data.reduce((s: number, t: any) => s + t.amount, 0);
@@ -59,7 +59,7 @@ export default function AccountantExpensesPage() {
   }
 
   async function handleSave() {
-    await supabase.from('transactions').insert({
+    await db.from('transactions').insert({
       type: 'expense',
       category: formData.category,
       amount: parseFloat(formData.amount.toString()),
@@ -75,7 +75,7 @@ export default function AccountantExpensesPage() {
 
   async function handleDelete(id: string) {
     if (confirm('Delete this expense?')) {
-      await supabase.from('transactions').delete().eq('id', id);
+      await db.from('transactions').delete().eq('id', id);
       fetchData();
     }
   }

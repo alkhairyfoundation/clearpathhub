@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -22,16 +22,16 @@ export default function StudentQuizzesPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
-    let quizzesQuery = supabase.from('quizzes').select('*, session:sessions!session_id(title, subject:subjects!subject_id(name), class_id)');
+    const { data: student } = await db.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+    let quizzesQuery = db.from('quizzes').select('*, session:sessions!session_id(title, subject:subjects!subject_id(name), class_id)');
     const [quizzesRes, attemptsRes] = await Promise.all([
       quizzesQuery.order('created_at', { ascending: false }),
-      supabase.from('quiz_attempts').select('*').eq('student_id', profile?.id),
+      db.from('quiz_attempts').select('*').eq('student_id', profile?.id),
     ]);
     if (quizzesRes.data) {
       let filteredQuizzes = quizzesRes.data;
       if (student?.class_id) {
-        filteredQuizzes = quizzesRes.data.filter(q => 
+        filteredQuizzes = quizzesRes.data.filter((q: any) => 
           !q.session?.class_id || q.session.class_id === student.class_id
         );
       }
@@ -39,7 +39,7 @@ export default function StudentQuizzesPage() {
     }
     if (attemptsRes.data) {
       const map: Record<string, any> = {};
-      attemptsRes.data.forEach(a => { map[a.quiz_id] = a; });
+      attemptsRes.data.forEach((a: any) => { map[a.quiz_id] = a; });
       setAttempts(map);
     }
     setLoading(false);

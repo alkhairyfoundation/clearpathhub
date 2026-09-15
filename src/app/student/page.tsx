@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -36,11 +36,11 @@ useEffect(() => {
     try {
       let sessionsCount = 0;
       const [studentRes, homeworkRes, resultsRes, attendanceRes, announcementsRes] = await Promise.all([
-        supabase.from('students').select('*, class:classes!class_id(name)').eq('profile_id', profile?.id).maybeSingle(),
-        supabase.from('homework').select('id, title, due_date, subject:subjects!subject_id(name), class:classes!class_id(name)').eq('is_active', true).order('due_date', { ascending: true }).limit(5),
-        supabase.from('results').select('score, subject:subjects!subject_id(name)').eq('student_id', profile?.id),
-        supabase.from('attendance').select('status').eq('student_id', profile?.id),
-        supabase.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').in('audience', ['all', 'students']).order('created_at', { ascending: false }).limit(5),
+        db.from('students').select('*, class:classes!class_id(name)').eq('profile_id', profile?.id).maybeSingle(),
+        db.from('homework').select('id, title, due_date, subject:subjects!subject_id(name), class:classes!class_id(name)').eq('is_active', true).order('due_date', { ascending: true }).limit(5),
+        db.from('results').select('score, subject:subjects!subject_id(name)').eq('student_id', profile?.id),
+        db.from('attendance').select('status').eq('student_id', profile?.id),
+        db.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').in('audience', ['all', 'students']).order('created_at', { ascending: false }).limit(5),
       ]);
       if (studentRes.error) throw new Error(studentRes.error.message);
 
@@ -49,7 +49,7 @@ useEffect(() => {
         const studentClassId = studentRes.data.class_id;
 
         // Fetch current term and this week's scheme of work
-        const { data: currentTerm } = await supabase
+        const { data: currentTerm } = await db
           .from('terms')
           .select('*')
           .eq('is_current', true)
@@ -62,7 +62,7 @@ useEffect(() => {
           setCurrentWeekInfo({ term: currentTerm.name, week: currentWeek });
 
           if (studentClassId) {
-            const { data: sowData } = await supabase
+            const { data: sowData } = await db
               .from('scheme_of_work')
               .select('*, subject:subjects!subject_id(name, code)')
               .eq('term_id', currentTerm.id)
@@ -71,7 +71,7 @@ useEffect(() => {
             if (sowData) setThisWeekTopics(sowData);
           }
         }
-        let sessionsQuery = supabase
+        let sessionsQuery = db
           .from('sessions')
           .select('id, title, description, created_at, class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name)')
           .order('created_at', { ascending: false })
@@ -92,7 +92,7 @@ useEffect(() => {
       ? Math.round(resultsRes.data.reduce((sum: number, r: any) => sum + r.score, 0) / resultsRes.data.length)
       : 0;
 
-    const presentCount = attendanceRes.data?.filter(a => a.status === 'present').length || 0;
+    const presentCount = attendanceRes.data?.filter((a: any) => a.status === 'present').length || 0;
     const totalAttendance = attendanceRes.data?.length || 1;
 
     setStats({
@@ -109,10 +109,10 @@ useEffect(() => {
       // Practice data
       const today = new Date().toISOString().split('T')[0];
       const [goalRes, streakRes, badgesRes, reviewRes] = await Promise.all([
-        supabase.from('daily_goals').select('*').eq('student_id', profile?.id).eq('date', today).maybeSingle(),
-        supabase.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle(),
-        supabase.from('badges').select('*').eq('student_id', profile?.id),
-        supabase.from('review_schedule').select('id', { count: 'exact', head: true }).eq('student_id', profile?.id).lte('next_review_date', today),
+        db.from('daily_goals').select('*').eq('student_id', profile?.id).eq('date', today).maybeSingle(),
+        db.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle(),
+        db.from('badges').select('*').eq('student_id', profile?.id),
+        db.from('review_schedule').select('id', { count: 'exact', head: true }).eq('student_id', profile?.id).lte('next_review_date', today),
       ]);
       if (goalRes.data) setTodayGoal(goalRes.data);
       if (streakRes.data) setStreak(streakRes.data);
@@ -243,7 +243,7 @@ useEffect(() => {
                   {recentLessons.map(lesson => (
                     <div key={lesson.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-xl">
                       <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30 rounded-lg flex items-center justify-center"><Video size={20} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" /></div>
-                      <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 dark:text-white dark:text-white truncate">{lesson.title}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{lesson.teacher ? `${lesson.teacher.first_name} ${lesson.teacher.last_name}` : ''} • {new Date(lesson.created_at).toLocaleDateString()}</p></div>
+                      <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 dark:text-white dark:text-white truncate">{lesson.title}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{lesson.teacher ? `${lesson.teacher.first_name} ${lesson.teacher.last_name}` : ''} � {new Date(lesson.created_at).toLocaleDateString()}</p></div>
                     </div>
                   ))}
                 </div>
@@ -264,7 +264,7 @@ useEffect(() => {
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hw.due_date && new Date(hw.due_date) < new Date() ? 'bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30' : 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30'}`}>
                         <FileText size={20} className={hw.due_date && new Date(hw.due_date) < new Date() ? 'text-red-600 dark:text-red-400 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400'} />
                       </div>
-                      <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 dark:text-white dark:text-white truncate">{hw.title}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{hw.subject?.name || 'No subject'} • Due: {hw.due_date ? new Date(hw.due_date).toLocaleDateString() : 'No date'}</p></div>
+                      <div className="flex-1 min-w-0"><p className="font-semibold text-slate-900 dark:text-white dark:text-white truncate">{hw.title}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{hw.subject?.name || 'No subject'} � Due: {hw.due_date ? new Date(hw.due_date).toLocaleDateString() : 'No date'}</p></div>
                     </div>
                   ))}
                 </div>

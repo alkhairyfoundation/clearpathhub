@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, BarChart3, PieChart, Users } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';

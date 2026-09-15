@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar, Clock, AlertCircle } from 'lucide-react';
 import jsQR from 'jsqr';
@@ -30,7 +30,7 @@ export default function AdminStaffAttendancePage() {
 
   async function checkToday() {
     const today = new Date().toISOString().split('T')[0];
-    const { data } = await supabase
+    const { data } = await db
       .from('staff_attendance')
       .select('*')
       .eq('staff_id', profile?.id)
@@ -109,7 +109,7 @@ export default function AdminStaffAttendancePage() {
     } catch {}
 
     try {
-      const { error } = await supabase.from('staff_attendance').upsert({
+      const { error } = await db.from('staff_attendance').upsert({
         staff_id: profile?.id, date: today, status,
         qr_code: qrCode, marked_at: now,
       }, { onConflict: 'staff_id,date' });

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -113,9 +113,9 @@ function ReportCardContent() {
     setLoading(true);
     try {
       const [childrenRes, termsRes, settingsRes] = await Promise.all([
-        supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name, avatar_url), class:classes!class_id(name)').eq('parent_id', profile?.id),
-        supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
-        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+        db.from('students').select('*, profile:profiles!profile_id(first_name, last_name, avatar_url), class:classes!class_id(name)').eq('parent_id', profile?.id),
+        db.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
+        db.from('school_settings').select('*').limit(1).maybeSingle(),
       ]);
       if (childrenRes.error) throw new Error(childrenRes.error.message);
       if (termsRes.error) throw new Error(termsRes.error.message);
@@ -156,12 +156,12 @@ function ReportCardContent() {
       const endOfDay = endDate + 'T23:59:59';
 
       const [resR, attR, behR, hwR, remR, domR] = await Promise.all([
-        supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', pid).eq('term', termName).order('created_at'),
-        supabase.from('attendance').select('*').eq('student_id', pid).gte('date', startDate).lte('date', endDate).order('date'),
-        supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', pid).gte('created_at', startDate).lte('created_at', endOfDay),
-        supabase.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', pid).gte('submitted_at', startDate).lte('submitted_at', endOfDay),
-        supabase.from('report_remarks').select('*').eq('student_id', pid).eq('term_id', selectedTerm.id).maybeSingle(),
-        supabase.from('domain_grades').select('*').eq('student_id', pid).eq('term_id', selectedTerm.id).maybeSingle(),
+        db.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', pid).eq('term', termName).order('created_at'),
+        db.from('attendance').select('*').eq('student_id', pid).gte('date', startDate).lte('date', endDate).order('date'),
+        db.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', pid).gte('created_at', startDate).lte('created_at', endOfDay),
+        db.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', pid).gte('submitted_at', startDate).lte('submitted_at', endOfDay),
+        db.from('report_remarks').select('*').eq('student_id', pid).eq('term_id', selectedTerm.id).maybeSingle(),
+        db.from('domain_grades').select('*').eq('student_id', pid).eq('term_id', selectedTerm.id).maybeSingle(),
       ]);
       setResults(resR.data || []);
       setAttendance(attR.data || []);

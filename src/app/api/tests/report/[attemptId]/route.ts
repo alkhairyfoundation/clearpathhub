@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query as neonQuery } from '@/lib/neon';
 
 function gradeQuestion(question: any, answer: any): boolean {
   if (answer === undefined || answer === null) return false;
@@ -38,10 +39,8 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
     if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { attemptId } = params;
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
 
-    const attemptRes = await pool.query(
+    const attemptRows = await neonQuery(
       `SELECT ta.*, t.title, t.description, t.subject_id, t.class_id, t.test_type, t.total_marks, t.passing_score, t.duration_minutes,
               s.name AS subject_name, s.code AS subject_code, c.name AS class_name
        FROM test_attempts ta
@@ -52,20 +51,18 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
       [attemptId]
     );
 
-    if (attemptRes.rows.length === 0) {
-      await pool.end();
+    if (attemptRows.length === 0) {
       return NextResponse.json({ error: 'Attempt not found' }, { status: 404 });
     }
 
-    const attempt = attemptRes.rows[0];
+    const attempt = attemptRows[0];
 
     const testSubjectName = attempt.subject_name || '';
 
-    const questionsRes = await pool.query(
+    const questions = await neonQuery(
       'SELECT * FROM test_questions WHERE test_id = $1 ORDER BY order_index',
       [attempt.test_id]
     );
-    const questions = questionsRes.rows;
 
     const answersObj = typeof attempt.answers === 'object' && attempt.answers ? attempt.answers : {};
     const questionDetails: any[] = [];
@@ -198,35 +195,27 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
     let studentName = '';
     let studentAdmission = '';
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      const spRows = await neonQuery(
+        'SELECT first_name, last_name FROM profiles WHERE id = $1 LIMIT 1',
+        [attempt.student_id]
       );
-      const { data: sp } = await supabase
-        .from('profiles')
-        .select('first_name, last_name')
-        .eq('id', attempt.student_id)
-        .single();
+      const sp = spRows[0];
       if (sp) studentName = `${sp.first_name || ''} ${sp.last_name || ''}`.trim();
-      const { data: st } = await supabase
-        .from('students')
-        .select('admission_number')
-        .eq('profile_id', attempt.student_id)
-        .maybeSingle();
+      const stRows = await neonQuery(
+        'SELECT admission_number FROM students WHERE profile_id = $1 LIMIT 1',
+        [attempt.student_id]
+      );
+      const st = stRows[0];
       if (st) studentAdmission = st.admission_number || '';
     } catch (_) {}
 
     let securityEvents: any[] = [];
     try {
-      const logsRes = await pool.query(
+      securityEvents = await neonQuery(
         'SELECT event_type, event_data, severity, created_at FROM exam_activity_logs WHERE attempt_id = $1 ORDER BY created_at ASC',
         [attemptId]
       );
-      securityEvents = logsRes.rows;
     } catch (_) {}
-
-    await pool.end();
 
     return NextResponse.json({
       success: true,

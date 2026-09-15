@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Download, Upload, FileText, Table, FileSpreadsheet, Printer, Loader2, CheckCircle, AlertCircle, Users, BookOpen, BarChart3, DollarSign, QrCode } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -22,10 +22,10 @@ export default function ImportExportPage() {
 
   async function fetchStats() {
     const [studentsRes, teachersRes, resultsRes, attendanceRes] = await Promise.all([
-      supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'student'),
-      supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'teacher'),
-      supabase.from('results').select('id', { count: 'exact' }),
-      supabase.from('attendance').select('id', { count: 'exact' }),
+      db.from('profiles').select('id', { count: 'exact' }).eq('role', 'student'),
+      db.from('profiles').select('id', { count: 'exact' }).eq('role', 'teacher'),
+      db.from('results').select('id', { count: 'exact' }),
+      db.from('attendance').select('id', { count: 'exact' }),
     ]);
     setStats({
       students: studentsRes.count || 0,
@@ -40,11 +40,11 @@ export default function ImportExportPage() {
     try {
       let data: any[] = [];
       switch (type) {
-        case 'Students': data = (await supabase.from('profiles').select('*').eq('role', 'student')).data || []; break;
-        case 'Teachers': data = (await supabase.from('profiles').select('*').eq('role', 'teacher')).data || []; break;
-        case 'Results': data = (await supabase.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)')).data || []; break;
-        case 'Attendance': data = (await supabase.from('attendance').select('*, student:profiles!student_id(first_name, last_name)')).data || []; break;
-        case 'Invoices': data = (await supabase.from('invoices').select('*')).data || []; break;
+        case 'Students': data = (await db.from('profiles').select('*').eq('role', 'student')).data || []; break;
+        case 'Teachers': data = (await db.from('profiles').select('*').eq('role', 'teacher')).data || []; break;
+        case 'Results': data = (await db.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)')).data || []; break;
+        case 'Attendance': data = (await db.from('attendance').select('*, student:profiles!student_id(first_name, last_name)')).data || []; break;
+        case 'Invoices': data = (await db.from('invoices').select('*')).data || []; break;
       }
 
       if (format === 'CSV') {
@@ -90,7 +90,7 @@ export default function ImportExportPage() {
         let successCount = 0;
         for (const row of rows) {
           if (type === 'Students' && row.first_name && row.last_name && row.email) {
-            const { error } = await supabase.from('profiles').insert({
+            const { error } = await db.from('profiles').insert({
               first_name: row.first_name, last_name: row.last_name,
               email: row.email, phone: row.phone || '', role: 'student', is_active: true,
             });

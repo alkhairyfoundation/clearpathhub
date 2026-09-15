@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Clock, AlertTriangle, Check, X, ChevronRight, ChevronLeft, Flag, Eye, EyeOff, Loader2, ImageIcon } from 'lucide-react';
 import Calculator from '@/components/Calculator';

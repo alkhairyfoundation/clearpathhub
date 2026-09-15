@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
+import { query as neonQuery } from '@/lib/neon';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,14 +26,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid respondent_type' }, { status: 400 });
     }
 
-    const adminClient = createSupabaseAdminClient();
-
-    const existing = await adminClient
-      .from('ccr_responses')
-      .select('id')
-      .eq('student_id', student_id)
-      .eq('respondent_type', respondent_type)
-      .maybeSingle();
+    const existingRows = await neonQuery(
+      `SELECT id FROM ccr_responses
+       WHERE student_id = $1::uuid AND respondent_type = $2
+       LIMIT 1`,
+      [student_id, respondent_type]
+    );
+    const existing = existingRows[0];
 
     const payload = {
       student_id,
@@ -44,15 +44,40 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    let result;
-    if (existing.data?.id) {
-      result = await adminClient.from('ccr_responses').update(payload).eq('id', existing.data.id).select().single();
+    let row: any;
+    if (existing?.id) {
+      const rows = await neonQuery(
+        `UPDATE ccr_responses
+         SET academic_session_id = $1::uuid, term_id = $2::uuid, respondent_type = $3,
+             data = $4::jsonb, is_submitted = $5, updated_at = $6
+         WHERE id = $7::uuid
+         RETURNING *`,
+        [payload.academic_session_id, payload.term_id, payload.respondent_type, JSON.stringify(payload.data), payload.is_submitted, payload.updated_at, existing.id]
+      );
+      row = rows[0];
     } else {
-      result = await adminClient.from('ccr_responses').insert(payload).select().single();
+      const rows = await neonQuery(
+        `INSERT INTO ccr_responses (student_id, academic_session_id, term_id, respondent_type, data, is_submitted, updated_at)
+         VALUES ($1::uuid, $2::uuid, $3::uuid, $4, $5::jsonb, $6, $7)
+         RETURNING *`,
+        [payload.student_id, payload.academic_session_id, payload.term_id, payload.respondent_type, JSON.stringify(payload.data), payload.is_submitted, payload.updated_at]
+      );
+      row = rows[0];
     }
 
-    if (result.error) throw result.error;
-    return NextResponse.json({ success: true, data: result.data });
+    // Mirror to Supabase (secondary store, best-effort)
+    try {
+      const adminClient = createSupabaseAdminClient();
+      if (existing?.id) {
+        await adminClient.from('ccr_responses').update(payload).eq('id', existing.id);
+      } else {
+        await adminClient.from('ccr_responses').insert(payload);
+      }
+    } catch (mirrorError) {
+      console.error('Supabase ccr submit mirror error:', mirrorError);
+    }
+
+    return NextResponse.json({ success: true, data: row || null });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

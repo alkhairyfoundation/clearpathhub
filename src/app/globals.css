@@ -189,6 +189,15 @@ a {
   .animate-scale-in {
     animation: scaleIn 0.3s ease-out;
   }
+
+  .slide-over-in {
+    animation: slideOverIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes slideOverIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
   
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }

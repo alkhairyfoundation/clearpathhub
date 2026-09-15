@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, TrendingUp, UserCheck, Award, FileText, Calendar, Download, ChevronDown, Brain, BookOpen } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -28,10 +28,10 @@ function WeeklyReportContent() {
   async function fetchData() {
     setLoading(true);
     try {
-      const childrenRes = await supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
+      const childrenRes = await db.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id);
       if (childrenRes.error) throw new Error(childrenRes.error.message);
       if (childrenRes.data?.length) {
-        const selectedChild = childId ? childrenRes.data.find(c => c.id === childId) : childrenRes.data[0];
+        const selectedChild = childId ? childrenRes.data.find((c: any) => c.id === childId) : childrenRes.data[0];
         if (selectedChild) {
           setChild(selectedChild);
           const now = new Date();
@@ -45,19 +45,19 @@ function WeeklyReportContent() {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'list_attempts', student_id: selectedChild.profile_id, date_from: weekStart.toISOString(), date_to: weekEnd.toISOString() })
           }).then(r => r.json());
-          const { data: settingsData } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
+          const { data: settingsData } = await db.from('school_settings').select('*').limit(1).maybeSingle();
           setSchoolSettings(settingsData);
 
           const [attendanceRes, resultsRes, homeworkRes, behaviorRes, quizRes] = await Promise.all([
-            supabase.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', weekStart.toISOString().split('T')[0]).lt('date', weekEnd.toISOString().split('T')[0]),
-            supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
-            supabase.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', selectedChild.profile_id).gte('submitted_at', weekStart.toISOString()).lt('submitted_at', weekEnd.toISOString()),
-            supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
-            supabase.from('quiz_attempts').select('*, quiz:quizzes!quiz_id(title)').eq('student_id', selectedChild.profile_id).gte('completed_at', weekStart.toISOString()).lt('completed_at', weekEnd.toISOString()),
+            db.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', weekStart.toISOString().split('T')[0]).lt('date', weekEnd.toISOString().split('T')[0]),
+            db.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
+            db.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', selectedChild.profile_id).gte('submitted_at', weekStart.toISOString()).lt('submitted_at', weekEnd.toISOString()),
+            db.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
+            db.from('quiz_attempts').select('*, quiz:quizzes!quiz_id(title)').eq('student_id', selectedChild.profile_id).gte('completed_at', weekStart.toISOString()).lt('completed_at', weekEnd.toISOString()),
           ]);
 
         const totalAttendance = attendanceRes.data?.length || 0;
-        const presentDays = attendanceRes.data?.filter(a => a.status === 'present').length || 0;
+        const presentDays = attendanceRes.data?.filter((a: any) => a.status === 'present').length || 0;
         const attendanceRate = totalAttendance > 0 ? Math.round((presentDays / totalAttendance) * 100) : 0;
         const avgScore = resultsRes.data?.length ? Math.round(resultsRes.data.reduce((s: number, r: any) => s + (r.score || 0), 0) / resultsRes.data.length) : 0;
 
@@ -139,7 +139,7 @@ function WeeklyReportContent() {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(6);
     doc.setFont('helvetica', 'normal');
-    doc.text(schoolName + ' — Official Document', pageWidth / 2, ph - 6, { align: 'center' });
+    doc.text(schoolName + ' � Official Document', pageWidth / 2, ph - 6, { align: 'center' });
     doc.text('This report is system-generated and does not require a signature.', pageWidth / 2, ph - 2.5, { align: 'center' });
 
     doc.save(`weekly-report-${child.profile?.first_name}-${report.weekStart}.pdf`);

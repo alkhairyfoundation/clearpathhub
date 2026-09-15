@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
@@ -33,7 +33,7 @@ export default function ParentChildrenPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name, email, phone), class:classes!class_id(name)')
         .eq('parent_id', profile?.id)
@@ -43,7 +43,7 @@ export default function ParentChildrenPage() {
       if (data) {
         setChildren(data);
         const stats: Record<string, any> = {};
-        const profileIds = data.map(c => c.profile_id);
+        const profileIds = data.map((c: any) => c.profile_id);
 
         if (profileIds.length > 0) {
           const testRes = await fetch('/api/manage-tests', {
@@ -51,10 +51,10 @@ export default function ParentChildrenPage() {
             body: JSON.stringify({ action: 'list_attempts_by_students', student_ids: profileIds })
           }).then(r => r.json());
           const [resultsRes, attendanceRes, quizRes, homeworkRes] = await Promise.all([
-            supabase.from('results').select('student_id, score').in('student_id', profileIds),
-            supabase.from('attendance').select('student_id, status').in('student_id', profileIds),
-            supabase.from('quiz_attempts').select('student_id, id, score').in('student_id', profileIds),
-            supabase.from('homework_submissions').select('student_id, id, marks').in('student_id', profileIds),
+            db.from('results').select('student_id, score').in('student_id', profileIds),
+            db.from('attendance').select('student_id, status').in('student_id', profileIds),
+            db.from('quiz_attempts').select('student_id, id, score').in('student_id', profileIds),
+            db.from('homework_submissions').select('student_id, id, marks').in('student_id', profileIds),
           ]);
 
           const resultsByChild = groupBy(resultsRes.data || [], 'student_id');

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
@@ -23,7 +23,7 @@ export default function ParentCcrDashboard() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: kids } = await supabase
+      const { data: kids } = await db
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name, email), class:classes!class_id(name)')
         .eq('parent_id', profile?.id)
@@ -31,9 +31,9 @@ export default function ParentCcrDashboard() {
 
       if (kids) {
         setChildren(kids);
-        const profileIds = kids.map(k => k.profile_id);
+        const profileIds = kids.map((k: any) => k.profile_id);
         if (profileIds.length > 0) {
-          const { data: subs } = await supabase
+          const { data: subs } = await db
             .from('ccr_responses')
             .select('*')
             .in('student_id', profileIds)

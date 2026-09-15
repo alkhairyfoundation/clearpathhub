@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, QrCode, Download, Printer, Eye, Loader2, Maximize2, Minimize2, Smartphone } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -30,7 +30,7 @@ export default function AdminSchoolQRPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
+    const { data } = await db.from('school_settings').select('*').limit(1).maybeSingle();
     if (data) setSchoolSettings(data);
     setLoading(false);
   }

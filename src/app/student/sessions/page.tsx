@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useLearningPresence } from '@/hooks/useLearningPresence';
@@ -102,17 +102,17 @@ export default function StudentSessionsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: studentData } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+      const { data: studentData } = await db.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
       const studentClassId = studentData?.class_id;
 
-      let query = supabase.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes(quiz_questions!quiz_id(*))').eq('is_published', true);
+      let query = db.from('sessions').select('*, subject:subjects!subject_id(*), quiz:quizzes(quiz_questions!quiz_id(*))').eq('is_published', true);
       query = query.not('video_url', 'is', null);
       if (studentClassId) {
         query = query.eq('class_id', studentClassId);
       }
       const [{ data: sessionsData }, { data: subjectsData }] = await Promise.all([
         query.order('created_at', { ascending: false }),
-        supabase.from('subjects').select('id, name').order('name'),
+        db.from('subjects').select('id, name').order('name'),
       ]);
       if (sessionsData) setSessions(sessionsData);
       if (subjectsData) setSubjects(subjectsData);
@@ -180,7 +180,7 @@ export default function StudentSessionsPage() {
     );
     const quizId = checkpointQuiz?.id;
     if (quizId) {
-      await supabase.from('quiz_attempts').insert({
+      await db.from('quiz_attempts').insert({
         quiz_id: quizId,
         student_id: profile.id,
         score: checkpoints.length > 0 ? Math.round((correct / checkpoints.length) * 100) : 0,
@@ -381,7 +381,7 @@ export default function StudentSessionsPage() {
   async function handleStartPostQuiz(quiz: any) {
     if (!quiz) return;
     setQuizSubmitted(true);
-    const quizAttempts = await supabase
+    const quizAttempts = await db
       .from('quiz_attempts')
       .insert({
         quiz_id: quiz.id,

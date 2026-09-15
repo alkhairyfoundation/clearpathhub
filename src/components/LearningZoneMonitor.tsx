@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import {
   ACTIVITY_LABELS,
@@ -109,7 +109,7 @@ export default function LearningZoneMonitor({ role }: LearningZoneMonitorProps) 
 
   const fetchStudents = useCallback(async () => {
     try {
-      const { data } = await supabase
+      const { data } = await db
         .from('students')
         .select('profile_id, class_id, class:classes!class_id(name), profile:profiles!profile_id(first_name, last_name, email)');
       const map = new Map<string, StudentInfo>();
@@ -133,11 +133,11 @@ export default function LearningZoneMonitor({ role }: LearningZoneMonitorProps) 
       if (isTeacher && profile?.id) {
         const teacherClassIds = await getTeacherClassIds(profile.id);
         const { data } = teacherClassIds.length > 0
-          ? await supabase.from('classes').select('id, name').in('id', teacherClassIds).order('name')
+          ? await db.from('classes').select('id, name').in('id', teacherClassIds).order('name')
           : { data: [] };
         setClassOptions((data || []).map((c: any) => ({ id: c.id, name: c.name })));
       } else {
-        const { data } = await supabase.from('classes').select('id, name').order('name');
+        const { data } = await db.from('classes').select('id, name').order('name');
         setClassOptions((data || []).map((c: any) => ({ id: c.id, name: c.name })));
       }
     } catch {
@@ -147,7 +147,7 @@ export default function LearningZoneMonitor({ role }: LearningZoneMonitorProps) 
 
   const fetchPresence = useCallback(async () => {
     const since = new Date(Date.now() - PRESENT_WINDOW_MS).toISOString();
-    const { data, error: err } = await supabase
+    const { data, error: err } = await db
       .from('learning_presence')
       .select('*')
       .gte('last_heartbeat_at', since);
@@ -225,7 +225,7 @@ export default function LearningZoneMonitor({ role }: LearningZoneMonitorProps) 
     setCheckedMsg('');
     setEventsLoading(true);
     setEvents([]);
-    const { data, error: err } = await supabase
+    const { data, error: err } = await db
       .from('learning_events')
       .select('*')
       .eq('student_id', d.row.student_id)
@@ -239,7 +239,7 @@ export default function LearningZoneMonitor({ role }: LearningZoneMonitorProps) 
     if (!selected) return;
     setChecking(true);
     setCheckedMsg('');
-    const { error: err } = await supabase
+    const { error: err } = await db
       .from('learning_presence')
       .update({ checked_by: profile?.id || null, checked_at: new Date().toISOString() })
       .eq('student_id', selected.student_id);

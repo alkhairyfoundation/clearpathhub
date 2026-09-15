@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -32,10 +32,10 @@ export default function StudentGrowthPathPage() {
     setLoading(true);
     try {
       const [archRes, skillRes, sessionRes, termRes] = await Promise.all([
-        supabase.from('archetypes').select('*').eq('is_active', true).order('name'),
+        db.from('archetypes').select('*').eq('is_active', true).order('name'),
         fetch('/api/skills').then(r => r.json()),
-        supabase.from('academic_sessions').select('*').eq('is_current', true).single(),
-        supabase.from('terms').select('*').eq('is_current', true).single(),
+        db.from('academic_sessions').select('*').eq('is_current', true).single(),
+        db.from('terms').select('*').eq('is_current', true).single(),
       ]);
 
       if (archRes.data) setArchetypes(archRes.data);
@@ -76,8 +76,8 @@ export default function StudentGrowthPathPage() {
       const skillNames = selectedSkills.map(id => skills.find(s => s.id === id)?.name).filter(Boolean);
       const goalStatement = `This term I am growing to become a stronger ${arch?.name} by practising ${skillNames.join(', ')}.`;
 
-      const { data: session } = await supabase.from('academic_sessions').select('*').eq('is_current', true).single();
-      const { data: term } = await supabase.from('terms').select('*').eq('is_current', true).single();
+      const { data: session } = await db.from('academic_sessions').select('*').eq('is_current', true).single();
+      const { data: term } = await db.from('terms').select('*').eq('is_current', true).single();
 
       if (!session || !term) { throw new Error('No active session or term'); }
 

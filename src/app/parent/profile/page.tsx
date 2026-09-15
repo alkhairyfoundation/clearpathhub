@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, uploadFile } from '@/lib/supabase';
+import { supabase, uploadFile } from '@/lib/supabase'
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Users, GraduationCap, TrendingUp, AlertTriangle, ArrowLeft, Upload } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -53,15 +54,15 @@ export default function ParentProfilePage() {
   async function fetchChildrenData() {
     if (!profile) return;
 
-    const { data: students } = await supabase.from('students').select('*, profile(first_name, last_name), class(name)').eq('parent_id', profile.id);
+    const { data: students } = await db.from('students').select('*, profile(first_name, last_name), class(name)').eq('parent_id', profile.id);
     if (students) {
       setChildren(students);
-      const statsPromises = students.map(async (child) => {
-        const { data: attendance } = await supabase.from('attendance').select('status').eq('student_id', child.profile_id);
+      const statsPromises = students.map(async (child: any) => {
+        const { data: attendance } = await db.from('attendance').select('status').eq('student_id', child.profile_id);
         const attendanceRate = attendance && attendance.length > 0 ? Math.round((attendance.filter((a: any) => a.status === 'present' || a.status === 'late').length / attendance.length) * 100) : 0;
-        const { data: results } = await supabase.from('results').select('score').eq('student_id', child.profile_id);
+        const { data: results } = await db.from('results').select('score').eq('student_id', child.profile_id);
         const avgScore = results && results.length > 0 ? Math.round(results.reduce((sum: number, r: any) => sum + r.score, 0) / results.length) : 0;
-        const { count: pendingBehavior } = await supabase.from('behavioral_reports').select('*', { count: 'exact', head: true }).eq('student_id', child.profile_id).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+        const { count: pendingBehavior } = await db.from('behavioral_reports').select('*', { count: 'exact', head: true }).eq('student_id', child.profile_id).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
         return { id: child.id, attendance: attendanceRate, avgScore, pendingBehavior: pendingBehavior || 0 };
       });
       const stats = await Promise.all(statsPromises);
@@ -71,7 +72,7 @@ export default function ParentProfilePage() {
 
   async function handleSaveProfile() {
     setSaving(true); setError(''); setSaved(false);
-    const { error: updateError } = await supabase.from('profiles').update({ first_name: formData.first_name, last_name: formData.last_name, phone: formData.phone || null, avatar_url: formData.avatar_url || null }).eq('id', profile?.id);
+    const { error: updateError } = await db.from('profiles').update({ first_name: formData.first_name, last_name: formData.last_name, phone: formData.phone || null, avatar_url: formData.avatar_url || null }).eq('id', profile?.id);
     if (updateError) { setError(updateError.message); } else { setSaved(true); setTimeout(() => setSaved(false), 3000); }
     setSaving(false);
   }
@@ -151,7 +152,7 @@ export default function ParentProfilePage() {
                         </div>
                         <div>
                           <p className="font-semibold text-slate-900 dark:text-white dark:text-white">{child.profile?.first_name} {child.profile?.last_name}</p>
-                          <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{child.admission_number} • {child.class?.name || 'N/A'}</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{child.admission_number} � {child.class?.name || 'N/A'}</p>
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3">

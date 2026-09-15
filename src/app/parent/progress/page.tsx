@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, Suspense, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
@@ -47,14 +47,14 @@ function ProgressContent() {
   async function fetchInitial() {
     setLoading(true);
     try {
-      const childrenRes = await supabase
+      const childrenRes = await db
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
         .eq('parent_id', profile?.id);
       if (childrenRes.error) throw new Error(childrenRes.error.message);
       setChildren(childrenRes.data || []);
 
-      const { data: termsData } = await supabase.from('terms').select('*').order('start_date', { ascending: false });
+      const { data: termsData } = await db.from('terms').select('*').order('start_date', { ascending: false });
       setTerms(termsData || []);
 
       if (childrenRes.data?.length) {
@@ -89,23 +89,23 @@ function ProgressContent() {
       }
 
       const baseQuery = (table: string) => {
-        let q = supabase.from(table).select('*');
-        if (table === 'results') q = supabase.from(table).select('*, subject:subjects!subject_id(name)');
-        if (table === 'quiz_attempts') q = supabase.from(table).select('*, quiz:quizzes!quiz_id(title)');
-        if (table === 'test_attempts') q = supabase.from(table).select('*, test:tests!test_id(title)');
-        if (table === 'homework_submissions') q = supabase.from(table).select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))');
+        let q = db.from(table).select('*');
+        if (table === 'results') q = db.from(table).select('*, subject:subjects!subject_id(name)');
+        if (table === 'quiz_attempts') q = db.from(table).select('*, quiz:quizzes!quiz_id(title)');
+        if (table === 'test_attempts') q = db.from(table).select('*, test:tests!test_id(title)');
+        if (table === 'homework_submissions') q = db.from(table).select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))');
         return q;
       };
 
       const [resR, attR, behR, quizR, testR, hwR, streakR, pracR] = await Promise.all([
         baseQuery('results').eq('student_id', pid).order('created_at', { ascending: false }),
-        supabase.from('attendance').select('*').eq('student_id', pid).order('date', { ascending: false }),
-        supabase.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', pid).order('created_at', { ascending: false }),
+        db.from('attendance').select('*').eq('student_id', pid).order('date', { ascending: false }),
+        db.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', pid).order('created_at', { ascending: false }),
         baseQuery('quiz_attempts').eq('student_id', pid).order('completed_at', { ascending: false }),
         baseQuery('test_attempts').eq('student_id', pid).order('completed_at', { ascending: false }),
         baseQuery('homework_submissions').eq('student_id', pid).order('submitted_at', { ascending: false }),
-        supabase.from('learning_streaks').select('*').eq('student_id', pid).maybeSingle(),
-        supabase.from('practice_sessions').select('*').eq('student_id', pid).order('created_at', { ascending: false }),
+        db.from('learning_streaks').select('*').eq('student_id', pid).maybeSingle(),
+        db.from('practice_sessions').select('*').eq('student_id', pid).order('created_at', { ascending: false }),
       ]);
 
       if (dateFilter) {
@@ -384,7 +384,7 @@ function ProgressContent() {
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><BarChart3 size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Grade Distribution</h2>
                     <div className="space-y-3">
                       {[
-                        { grade: 'A', range: '≥80%', count: gradeDistribution.A, color: 'bg-green-500', max: Math.max(...Object.values(gradeDistribution), 1) },
+                        { grade: 'A', range: '=80%', count: gradeDistribution.A, color: 'bg-green-500', max: Math.max(...Object.values(gradeDistribution), 1) },
                         { grade: 'B', range: '70-79%', count: gradeDistribution.B, color: 'bg-blue-500', max: Math.max(...Object.values(gradeDistribution), 1) },
                         { grade: 'C', range: '60-69%', count: gradeDistribution.C, color: 'bg-yellow-500', max: Math.max(...Object.values(gradeDistribution), 1) },
                         { grade: 'D', range: '50-59%', count: gradeDistribution.D, color: 'bg-orange-500', max: Math.max(...Object.values(gradeDistribution), 1) },

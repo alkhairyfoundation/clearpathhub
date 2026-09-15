@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, BookOpen, Award, TrendingUp, GraduationCap, Hash, ArrowLeft } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -27,15 +27,15 @@ export default function StudentProfilePage() {
   async function fetchStudentData() {
     if (!profile) return;
 
-    const { data: student } = await supabase.from('students').select('*, class(name, level)').eq('profile_id', profile.id).limit(1).maybeSingle();
+    const { data: student } = await db.from('students').select('*, class(name, level)').eq('profile_id', profile.id).limit(1).maybeSingle();
     if (student) {
       setStudentInfo(student);
       if (student.class) setStudentClass(student.class);
       if (student.class_id) {
         const [attendanceRes, homeworkRes, resultsRes] = await Promise.all([
-          supabase.from('attendance').select('status').eq('student_id', profile!.id),
-          supabase.from('homework_submissions').select('id').eq('student_id', profile!.id),
-          supabase.from('results').select('*, subject:subjects(name)').eq('student_id', profile!.id).order('created_at', { ascending: false }).limit(5),
+          db.from('attendance').select('status').eq('student_id', profile!.id),
+          db.from('homework_submissions').select('id').eq('student_id', profile!.id),
+          db.from('results').select('*, subject:subjects(name)').eq('student_id', profile!.id).order('created_at', { ascending: false }).limit(5),
         ]);
 
         if (attendanceRes.data && attendanceRes.data.length > 0) {
@@ -43,7 +43,7 @@ export default function StudentProfilePage() {
           setAttendanceRate(Math.round((present / attendanceRes.data.length) * 100));
         }
 
-        const { count: totalHomework } = await supabase.from('homework').select('*', { count: 'exact', head: true }).eq('class_id', student.class_id);
+        const { count: totalHomework } = await db.from('homework').select('*', { count: 'exact', head: true }).eq('class_id', student.class_id);
         setHomeworkStats({ submitted: (homeworkRes.data || []).length, total: totalHomework || 0 });
 
         if (resultsRes.data) {

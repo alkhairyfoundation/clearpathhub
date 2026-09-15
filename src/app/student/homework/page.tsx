@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, uploadFile } from '@/lib/supabase';
+import { supabase, uploadFile } from '@/lib/supabase'
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Upload, Check, Clock, FileText, Paperclip, Image, FileVideo, ExternalLink, Loader2, ArrowLeft } from 'lucide-react';
@@ -36,9 +37,9 @@ export default function StudentHomeworkPage() {
     setError('');
 
     try {
-      const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+      const { data: student } = await db.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
 
-      let hwQuery = supabase
+      let hwQuery = db
         .from('homework')
         .select('*, subject:subjects(*), class:classes(*)', { count: 'exact' })
         .eq('is_active', true);
@@ -51,8 +52,8 @@ export default function StudentHomeworkPage() {
       const to = from + PAGE_SIZE - 1;
 
       const [hwRes, subRes] = await Promise.all([
-        hwQuery.order('due_date', { ascending: true }).range(from, to),
-        supabase.from('homework_submissions').select('*, homework:homework(*)').eq('student_id', profile?.id).order('submitted_at', { ascending: false }),
+        hwQuery.order('due_date', { ascending: true }).limit(to - from + 1).offset(from),
+        db.from('homework_submissions').select('*, homework:homework(*)').eq('student_id', profile?.id).order('submitted_at', { ascending: false }),
       ]);
 
       if (hwRes.error) throw new Error(hwRes.error.message);
@@ -100,7 +101,7 @@ export default function StudentHomeworkPage() {
 
       const submissionValue = text || url || uploadedUrls.join(',');
 
-      const { error: submitError } = await supabase.from('homework_submissions').insert({
+      const { error: submitError } = await db.from('homework_submissions').insert({
         homework_id: homeworkId,
         student_id: profile?.id,
         submission_url: submissionValue,
@@ -285,7 +286,7 @@ export default function StudentHomeworkPage() {
                                           const newFiles = [...submissionFiles[hw.id]];
                                           newFiles.splice(i, 1);
                                           setSubmissionFiles({ ...submissionFiles, [hw.id]: newFiles });
-                                        }} className="ml-1 text-blue-400 hover:text-red-500 dark:text-red-400 dark:text-red-400">×</button>
+                                        }} className="ml-1 text-blue-400 hover:text-red-500 dark:text-red-400 dark:text-red-400">�</button>
                                       </span>
                                     ))}
                                   </div>

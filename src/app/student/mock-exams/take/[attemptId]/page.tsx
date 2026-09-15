@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useParams } from 'next/navigation';
 import { Clock, AlertTriangle, Check, ChevronRight, ChevronLeft, Flag, Loader2, ArrowLeft, FileText } from 'lucide-react';
 import Calculator from '@/components/Calculator';
@@ -122,7 +122,7 @@ export default function StudentTakeMockExamPage() {
   async function fetchExam() {
     setLoading(true);
     try {
-      const { data: attemptData } = await supabase
+      const { data: attemptData } = await db
         .from('mock_attempts')
         .select('*, exam:mock_exams(*)')
         .eq('id', attemptId)
@@ -140,7 +140,7 @@ export default function StudentTakeMockExamPage() {
         return;
       }
 
-      const { data: questionsData } = await supabase
+      const { data: questionsData } = await db
         .from('mock_questions')
         .select('*')
         .eq('exam_id', attemptData.exam_id);

@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { FileText, Loader2, Download, BarChart3, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
 import type { SgiScore } from '@/types';
 import { generateCcrPdf } from '@/lib/ccr-pdf';
@@ -29,7 +29,7 @@ export default function StudentCcrReport() {
     try {
       const [res, settingsRes] = await Promise.all([
         fetch(`/api/ccr/report?student_id=${profile?.id}`),
-        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+        db.from('school_settings').select('*').limit(1).maybeSingle(),
       ]);
       const result = await res.json();
       if (!result.success) throw new Error(result.error);

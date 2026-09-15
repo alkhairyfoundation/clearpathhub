@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -40,8 +40,8 @@ export default function IslamicGrowthPage() {
       const todayStr = new Date().toISOString().split('T')[0];
 
       const [todayRes, historyRes] = await Promise.all([
-        supabase.from('islamic_tracking').select('*').eq('student_id', profile?.id).eq('date', todayStr).maybeSingle(),
-        supabase.from('islamic_tracking').select('*').eq('student_id', profile?.id).order('date', { ascending: false }).limit(30),
+        db.from('islamic_tracking').select('*').eq('student_id', profile?.id).eq('date', todayStr).maybeSingle(),
+        db.from('islamic_tracking').select('*').eq('student_id', profile?.id).order('date', { ascending: false }).limit(30),
       ]);
 
       if (todayRes.data) {
@@ -65,13 +65,13 @@ export default function IslamicGrowthPage() {
         setHistory(historyRes.data);
         const total = historyRes.data.length;
         const avgAdab = total > 0
-          ? Math.round(historyRes.data.reduce((s, r) => s + (r.adab_rating || 0), 0) / total * 10) / 10
+          ? Math.round(historyRes.data.reduce((s: number, r: any) => s + (r.adab_rating || 0), 0) / total * 10) / 10
           : 0;
         setStats({
           totalDays: total,
           avgAdab,
-          memorizedAyahs: historyRes.data.reduce((s, r) => s + (r.quran_memorized_ayahs || 0), 0),
-          perfectDays: historyRes.data.filter(r =>
+          memorizedAyahs: historyRes.data.reduce((s: number, r: any) => s + (r.quran_memorized_ayahs || 0), 0),
+          perfectDays: historyRes.data.filter((r: any) =>
             r.salah_fajr && r.salah_dhuhr && r.salah_asr && r.salah_maghrib && r.salah_isha
           ).length,
         });
@@ -88,7 +88,7 @@ export default function IslamicGrowthPage() {
       const todayStr = new Date().toISOString().split('T')[0];
       const payload = { ...form, date: todayStr, student_id: profile?.id, self_reported: true };
 
-      const { error } = await supabase.from('islamic_tracking').upsert(payload, {
+      const { error } = await db.from('islamic_tracking').upsert(payload, {
         onConflict: 'student_id, date',
       });
       if (error) throw error;
@@ -278,7 +278,7 @@ export default function IslamicGrowthPage() {
                             </p>
                             <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-500">
                               <span>{completedSalah}/5 Salah</span>
-                              {day.quran_memorized_ayahs > 0 && <span>• +{day.quran_memorized_ayahs} ayahs</span>}
+                              {day.quran_memorized_ayahs > 0 && <span>� +{day.quran_memorized_ayahs} ayahs</span>}
                             </div>
                           </div>
                         </div>

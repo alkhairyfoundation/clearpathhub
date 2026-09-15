@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { query as neonQuery } from '@/lib/neon';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -42,19 +43,15 @@ export async function createUserAdmin(
 
     // Create profile
     if (data.user) {
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          role,
-          phone: phone || null,
-        });
-
-      if (profileError && !profileError.message.includes('duplicate')) {
-        throw profileError;
+      try {
+        await neonQuery(
+          `INSERT INTO profiles (id, email, first_name, last_name, role, phone) VALUES ($1, $2, $3, $4, $5, $6)`,
+          [data.user.id, email, firstName, lastName, role, phone || null]
+        );
+      } catch (profileError: any) {
+        if (!profileError?.message?.includes('duplicate')) {
+          throw profileError;
+        }
       }
     }
 
@@ -82,12 +79,11 @@ export async function updateUserRole(
   role: 'admin' | 'teacher' | 'student' | 'parent' | 'accountant'
 ) {
   try {
-    const { error } = await supabaseAdmin
-      .from('profiles')
-      .update({ role, updated_at: new Date().toISOString() })
-      .eq('id', userId);
+    await neonQuery(
+      `UPDATE profiles SET role = $1, updated_at = $2 WHERE id = $3`,
+      [role, new Date().toISOString(), userId]
+    );
 
-    if (error) throw error;
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -97,17 +93,17 @@ export async function updateUserRole(
 // Get all users (admin only)
 export async function getAllUsers(role?: string) {
   try {
-    let query = supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
-
+    let data;
     if (role) {
-      query = query.eq('role', role);
+      data = await neonQuery(
+        `SELECT * FROM profiles WHERE role = $1 ORDER BY created_at DESC`,
+        [role]
+      );
+    } else {
+      data = await neonQuery(
+        `SELECT * FROM profiles ORDER BY created_at DESC`
+      );
     }
-
-    const { data, error } = await query;
-    if (error) throw error;
 
     return { success: true, data };
   } catch (error: any) {

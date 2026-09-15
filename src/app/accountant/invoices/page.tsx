@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Edit, Trash2, X, DollarSign, FileText, Printer, Check, Clock } from 'lucide-react';
@@ -24,8 +24,8 @@ export default function AccountantInvoicesPage() {
   async function fetchData() {
     setLoading(true);
     const [invRes, stuRes] = await Promise.all([
-      supabase.from('invoices').select('*, student:profiles(*)').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
+      db.from('invoices').select('*, student:profiles(*)').order('created_at', { ascending: false }),
+      db.from('profiles').select('*').eq('role', 'student').order('first_name'),
     ]);
     if (invRes.data) setInvoices(invRes.data);
     if (stuRes.data) setStudents(stuRes.data);
@@ -34,7 +34,7 @@ export default function AccountantInvoicesPage() {
 
   async function handleSave() {
     const invoiceNumber = `INV-${Date.now()}`;
-    await supabase.from('invoices').insert({ ...formData, invoice_number: invoiceNumber, amount: parseFloat(formData.amount.toString()), student_id: formData.student_id || null });
+    await db.from('invoices').insert({ ...formData, invoice_number: invoiceNumber, amount: parseFloat(formData.amount.toString()), student_id: formData.student_id || null });
     setShowModal(false); setFormData({ student_id: '', amount: 0, description: '', due_date: '' }); fetchData();
   }
 
@@ -42,8 +42,8 @@ export default function AccountantInvoicesPage() {
     const receiptNumber = `RCP-${Date.now()}`;
     const invoice = invoices.find(i => i.id === id);
     if (invoice) {
-      await supabase.from('receipts').insert({ invoice_id: id, receipt_number: receiptNumber, amount_paid: invoice.amount });
-      await supabase.from('invoices').update({ status: 'paid' }).eq('id', id);
+      await db.from('receipts').insert({ invoice_id: id, receipt_number: receiptNumber, amount_paid: invoice.amount });
+      await db.from('invoices').update({ status: 'paid' }).eq('id', id);
       fetchData();
     }
   }

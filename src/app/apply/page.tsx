@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useState, Suspense, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Clock, Check, X, FileText, Upload, AlertCircle, ArrowLeft, GraduationCap, ShieldAlert } from 'lucide-react';
@@ -139,7 +139,7 @@ function ApplyPageContent() {
     setLoading(true);
     setError('');
     try {
-      const { data: codeResult } = await supabase
+      const { data: codeResult } = await db
         .from('entrance_codes')
         .select('*, exam:entrance_exams(*)')
         .eq('code', codeToVerify.toUpperCase().trim())
@@ -159,7 +159,7 @@ function ApplyPageContent() {
         setCodeValid(true);
         setCodeData(codeResult);
         setExam(codeResult.exam);
-        const { data: questionsData } = await supabase
+        const { data: questionsData } = await db
           .from('entrance_questions')
           .select('*')
           .eq('exam_id', codeResult.exam_id)
@@ -192,7 +192,7 @@ function ApplyPageContent() {
     setSubmitting(true);
 
     try {
-      const { data: application, error: insertError } = await supabase
+      const { data: application, error: insertError } = await db
         .from('entrance_applications')
         .insert({
           exam_id: exam.id,

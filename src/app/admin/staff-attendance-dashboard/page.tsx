@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, UserCheck, Calendar, Search, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function AdminStaffAttendanceDashboard() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await db
       .from('profiles')
       .select('id, first_name, last_name, email, role')
       .in('role', ['teacher', 'accountant', 'admin'])
@@ -37,7 +37,7 @@ export default function AdminStaffAttendanceDashboard() {
   }
 
   async function fetchAttendance() {
-    const { data } = await supabase
+    const { data } = await db
       .from('staff_attendance')
       .select('*')
       .eq('date', date)
@@ -49,11 +49,11 @@ export default function AdminStaffAttendanceDashboard() {
     setUpdating(staffId);
     const existing = staffAttendance.find(a => a.staff_id === staffId);
     if (existing) {
-      await supabase.from('staff_attendance').update({
+      await db.from('staff_attendance').update({
         status, marked_at: new Date().toISOString(),
       }).eq('id', existing.id);
     } else {
-      await supabase.from('staff_attendance').insert({
+      await db.from('staff_attendance').insert({
         staff_id: staffId, date, status,
         marked_at: new Date().toISOString(),
       });

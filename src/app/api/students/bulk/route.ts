@@ -1,7 +1,8 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
-import { query as neonQuery } from '@/lib/neon';
 import bcrypt from 'bcryptjs';
+import { query as neonQuery } from '@/lib/neon';
+import { createUserInNeon, generateNextAdmissionNumber } from '@/lib/user-queries';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,10 +31,14 @@ interface BulkResult {
   error?: string;
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const adminClient = createSupabaseAdminClient();
+function str(v: unknown): string | null {
+  return typeof v === 'string' && v.trim() !== '' ? v.trim() : null;
+}
 
+export async function POST(request: NextRequest) {
+  let adminClient: ReturnType<typeof createSupabaseAdminClient> | null = null;
+
+  try {
     const { students }: { students: StudentInput[] } = await request.json();
     if (!students || !Array.isArray(students) || students.length === 0) {
       return NextResponse.json(
@@ -49,18 +54,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build class_name → class_id lookup from Supabase
-    const { data: classesData, error: classesError } = await adminClient
-      .from('classes')
-      .select('id, name');
-
-    if (classesError) {
-      return NextResponse.json({ success: false, error: 'Failed to fetch classes: ' + classesError.message }, { status: 500 });
-    }
-
-    const classMap = new Map(
-      (classesData || []).map((c: any) => [c.name.toLowerCase().trim(), c.id])
+    // Class lookup from Neon (source of truth)
+    const classRows = await neonQuery('SELECT id, name FROM classes');
+    const classMap = new Map<string, string>(
+      classRows.map((r: any) => [String(r.name).toLowerCase().trim(), r.id])
     );
+
+    // Existing emails from Neon for duplicate detection
+    const emailRows = await neonQuery('SELECT email FROM profiles');
+    const existingEmails = new Set(
+      emailRows.map((r: any) => String(r.email).toLowerCase())
+    );
+
+    adminClient = createSupabaseAdminClient();
 
     const results: BulkResult[] = [];
 
@@ -77,97 +83,102 @@ export async function POST(request: NextRequest) {
           throw new Error('Password must be at least 6 characters');
         }
 
-        // Check if user already exists in Supabase Auth
-        const { data: existingUsers } = await adminClient
+        const emailKey = s.email.toLowerCase();
+        if (existingEmails.has(emailKey)) {
+          throw new Error('User with this email already exists');
+        }
+
+        // Secondary duplicate check against Supabase (best-effort safety net)
+        const { data: existingProfile } = await adminClient
           .from('profiles')
           .select('id')
           .eq('email', s.email)
           .maybeSingle();
-
-        if (existingUsers) {
+        if (existingProfile) {
+          existingEmails.add(emailKey);
           throw new Error('User with this email already exists');
         }
-
-        // Create user in Supabase Auth
-        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-          email: s.email,
-          password: s.password,
-          email_confirm: true,
-          user_metadata: { first_name: s.first_name, last_name: s.last_name, role: 'student' },
-        });
-
-        if (authError) throw new Error('Supabase auth error: ' + authError.message);
-
-        const userId = authData.user.id;
-
-        // Update profile metadata in Supabase
-        await adminClient.from('profiles').update({
-          first_name: s.first_name,
-          last_name: s.last_name,
-          role: 'student',
-          phone: s.phone || null,
-        }).eq('id', userId);
-
-        // Generate admission number
-        const { count } = await adminClient
-          .from('students')
-          .select('*', { count: 'exact', head: true });
-
-        const admissionNumber = `STD${new Date().getFullYear()}${String((count || 0) + 1).padStart(4, '0')}`;
 
         // Resolve class_id from class_name
         let classId: string | null = null;
         if (s.class_name) {
           const lookup = classMap.get(s.class_name.toLowerCase().trim());
           if (!lookup) {
-            throw new Error(`Class "${s.class_name}" not found. Available: ${Array.from(classMap.keys()).join(', ') || 'none'}`);
+            throw new Error(
+              `Class "${s.class_name}" not found. Available: ${Array.from(classMap.keys()).join(', ') || 'none'}`
+            );
           }
           classId = lookup;
         }
 
-        // Create student record in Supabase
-        const { error: studentError } = await adminClient.from('students').insert({
+        // 1. Create auth user in Supabase (needed for login)
+        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+          email: s.email,
+          password: s.password,
+          email_confirm: true,
+          user_metadata: { first_name: s.first_name, last_name: s.last_name, role: 'student', phone: s.phone || null },
+        });
+        if (authError) throw new Error('Supabase auth error: ' + authError.message);
+        const userId = authData.user.id;
+
+        const admissionNumber = await generateNextAdmissionNumber();
+
+        // 2. Write to Neon FIRST (primary data store)
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(s.password, salt);
+        try {
+          await createUserInNeon({
+            id: userId,
+            profile: {
+              email: s.email,
+              first_name: s.first_name,
+              last_name: s.last_name,
+              phone: s.phone || null,
+              role: 'student',
+              password_hash: passwordHash,
+            },
+            student: {
+              admission_number: admissionNumber,
+              class_id: classId,
+              date_of_birth: str(s.date_of_birth),
+              gender: str(s.gender),
+              address: str(s.address),
+              guardian_name: str(s.guardian_name),
+              guardian_phone: str(s.guardian_phone),
+              guardian_email: str(s.guardian_email),
+              blood_group: str(s.blood_group),
+              emergency_contact: str(s.emergency_contact),
+            },
+          });
+        } catch (neonError: any) {
+          // Neon write is the source of truth — roll back the auth user
+          await adminClient.auth.admin.deleteUser(userId).catch(() => {});
+          throw new Error('Failed to save student: ' + neonError.message);
+        }
+
+        // 3. Mirror to Supabase (secondary)
+        const { error: pSync } = await adminClient
+          .from('profiles')
+          .update({ first_name: s.first_name, last_name: s.last_name, role: 'student', phone: s.phone || null })
+          .eq('id', userId);
+        if (pSync) console.error('Supabase profile sync error:', pSync.message);
+
+        const { error: sSync } = await adminClient.from('students').insert({
           profile_id: userId,
           admission_number: admissionNumber,
           class_id: classId,
-          gender: s.gender || null,
-          date_of_birth: s.date_of_birth || null,
-          address: s.address || null,
-          guardian_name: s.guardian_name || null,
-          guardian_phone: s.guardian_phone || null,
-          guardian_email: s.guardian_email || null,
-          blood_group: s.blood_group || null,
-          emergency_contact: s.emergency_contact || null,
+          gender: str(s.gender),
+          date_of_birth: str(s.date_of_birth),
+          address: str(s.address),
+          guardian_name: str(s.guardian_name),
+          guardian_phone: str(s.guardian_phone),
+          guardian_email: str(s.guardian_email),
+          blood_group: str(s.blood_group),
+          emergency_contact: str(s.emergency_contact),
         });
+        if (sSync) console.error('Supabase student sync error:', sSync.message);
 
-        if (studentError) {
-          throw new Error('Failed to create student record: ' + studentError.message);
-        }
-
-        // Also create in Neon for backward compatibility
-        try {
-          const salt = await bcrypt.genSalt(10);
-          const passwordHash = await bcrypt.hash(s.password, salt);
-
-          await neonQuery(
-            `INSERT INTO profiles (id, email, first_name, last_name, role, phone, password_hash)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)
-             ON CONFLICT (id) DO NOTHING`,
-            [userId, s.email, s.first_name, s.last_name, 'student', s.phone || null, passwordHash]
-          );
-
-          await neonQuery(
-            `INSERT INTO students (profile_id, admission_number, class_id, gender, date_of_birth, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-             ON CONFLICT (profile_id) DO NOTHING`,
-            [userId, admissionNumber, classId, s.gender || null, s.date_of_birth || null,
-             s.address || null, s.guardian_name || null, s.guardian_phone || null,
-             s.guardian_email || null, s.blood_group || null, s.emergency_contact || null]
-          );
-        } catch (neonErr) {
-          // Neon insert is best-effort; Supabase is the primary store
-        }
-
+        existingEmails.add(emailKey);
         result.success = true;
         result.admission_number = admissionNumber;
       } catch (err: any) {
@@ -180,8 +191,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results,
-      totalSuccess: results.filter(r => r.success).length,
-      totalFailed: results.filter(r => !r.success).length,
+      totalSuccess: results.filter((r) => r.success).length,
+      totalFailed: results.filter((r) => !r.success).length,
     });
   } catch (error: any) {
     console.error('Error in bulk student creation:', error);

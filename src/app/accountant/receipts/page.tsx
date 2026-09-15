@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Download, Printer, FileText, X } from 'lucide-react';
@@ -22,13 +22,13 @@ export default function AccountantReceiptsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data } = await supabase.from('receipts').select('*, student:profiles(first_name, last_name)').order('created_at', { ascending: false });
+    const { data } = await db.from('receipts').select('*, student:profiles(first_name, last_name)').order('created_at', { ascending: false });
     if (data) setReceipts(data);
     setLoading(false);
   }
 
   async function handleSave() {
-    await supabase.from('receipts').insert({ ...formData, created_by: profile?.id });
+    await db.from('receipts').insert({ ...formData, created_by: profile?.id });
     setShowModal(false); setFormData({ title: '', amount: 0, student_id: '', description: '' }); fetchData();
   }
 

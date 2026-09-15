@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Bell, Calendar, AlertTriangle, Info } from 'lucide-react';
@@ -32,19 +32,20 @@ export default function ParentAnnouncementsPage() {
     else setLoadingMore(true);
     const from = pageNum * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('announcements')
       .select('*', { count: 'exact' })
       .in('audience', ['all', 'parents'])
       .order('created_at', { ascending: false })
-      .range(from, to);
+      .limit(to - from + 1)
+      .offset(from);
     if (!error && data) {
       setAnnouncements(prev => reset ? data : [...prev, ...data]);
       setHasMore(data.length === PAGE_SIZE);
 
       // Update last read timestamp on first load
       if (reset && data.length > 0) {
-        await supabase
+        await db
           .from('profiles')
           .update({ last_read_announcements: new Date().toISOString() })
           .eq('id', profile?.id);

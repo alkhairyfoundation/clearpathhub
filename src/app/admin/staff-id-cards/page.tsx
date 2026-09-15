@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search, Download, Printer, X, QrCode, Loader2, Users, Eye, Settings, FileDown, FileText, Check, Palette } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -44,13 +44,13 @@ export default function AdminStaffIDCardsPage() {
 
   async function fetchData() {
     setLoading(true);
-    let query = supabase.from('profiles').select('*').in('role', ['teacher', 'accountant', 'admin']).order('first_name');
+    let query = db.from('profiles').select('*').in('role', ['teacher', 'accountant', 'admin']).order('first_name');
     if (selectedRole !== 'all') {
-      query = supabase.from('profiles').select('*').eq('role', selectedRole).order('first_name');
+      query = db.from('profiles').select('*').eq('role', selectedRole).order('first_name');
     }
     const [staffRes, settingsRes] = await Promise.all([
       query,
-      supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+      db.from('school_settings').select('*').limit(1).maybeSingle(),
     ]);
     if (staffRes.data) setStaff(staffRes.data);
     if (settingsRes.data) setSchoolSettings(settingsRes.data);

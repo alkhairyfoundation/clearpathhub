@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -37,10 +37,10 @@ export default function TeacherSchemeOfWorkPage() {
     const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
     const [termsRes, subjectsRes] = await Promise.all([
-      supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date'),
+      db.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date'),
       teacherClassIds.length > 0
-        ? supabase.from('subjects').select('*, class:classes!class_id(name)').in('class_id', teacherClassIds).order('name')
-        : supabase.from('subjects').select('*, class:classes!class_id(name)').order('name'),
+        ? db.from('subjects').select('*, class:classes!class_id(name)').in('class_id', teacherClassIds).order('name')
+        : db.from('subjects').select('*, class:classes!class_id(name)').order('name'),
     ]);
     if (!termsRes.error && termsRes.data) setTerms(termsRes.data);
     if (!subjectsRes.error && subjectsRes.data) setMySubjects(subjectsRes.data);
@@ -51,7 +51,7 @@ export default function TeacherSchemeOfWorkPage() {
     if (!filters.term_id || !filters.subject_id) return;
     setLoading(true);
     const selectedSubject = mySubjects.find(s => s.id === filters.subject_id);
-    const { data } = await supabase
+    const { data } = await db
       .from('scheme_of_work')
       .select('*')
       .eq('term_id', filters.term_id)
@@ -61,7 +61,7 @@ export default function TeacherSchemeOfWorkPage() {
     if (data) {
       setEntries(data);
       const editable: Record<string, any> = {};
-      data.forEach(e => {
+      data.forEach((e: any) => {
         editable[e.week_number] = {
           topic: e.topic || '',
           subtopics: Array.isArray(e.subtopics) ? e.subtopics.join('\n') : '',
@@ -106,7 +106,7 @@ export default function TeacherSchemeOfWorkPage() {
 
         if (!entry.topic.trim()) {
           if (existing) {
-            const { error } = await supabase.from('scheme_of_work').delete().eq('id', existing.id);
+            const { error } = await db.from('scheme_of_work').delete().eq('id', existing.id);
             if (error) throw new Error(error.message);
           }
           continue;
@@ -127,10 +127,10 @@ export default function TeacherSchemeOfWorkPage() {
         };
 
         if (existing) {
-          const { error } = await supabase.from('scheme_of_work').update(payload).eq('id', existing.id);
+          const { error } = await db.from('scheme_of_work').update(payload).eq('id', existing.id);
           if (error) throw new Error(error.message);
         } else {
-          const { error } = await supabase.from('scheme_of_work').insert(payload);
+          const { error } = await db.from('scheme_of_work').insert(payload);
           if (error) throw new Error(error.message);
         }
       }

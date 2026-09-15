@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { Send, MessageCircle, Mail, X, Loader2 } from 'lucide-react';
 
 interface ResultItem {
@@ -93,7 +93,7 @@ export default function SendResultButton({ studentId, studentName, results, clas
     setLoading(true);
     setError('');
     try {
-      const { data: student } = await supabase
+      const { data: student } = await db
         .from('students')
         .select('parent_id, class:classes!class_id(name)')
         .eq('profile_id', studentId)
@@ -105,7 +105,7 @@ export default function SendResultButton({ studentId, studentName, results, clas
         return;
       }
 
-      const { data: parent } = await supabase
+      const { data: parent } = await db
         .from('profiles')
         .select('phone, email')
         .eq('id', student.parent_id)

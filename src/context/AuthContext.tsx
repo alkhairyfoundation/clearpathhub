@@ -3,6 +3,7 @@
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "next-auth/react";
 import { createContext, useEffect, useState, ReactNode, useCallback, useContext } from 'react';
 import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
 import type { Profile, UserRole } from '@/types';
 
 interface AuthContextType {
@@ -68,14 +69,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string, retries = 3) {
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-        // On first load, Supabase session may not be recovered from localStorage
-        // yet. Call getSession() to trigger recovery before querying profiles.
-        await supabase.auth.getSession();
-        const { data, error } = await supabase
+        // Profile is read from Neon (primary store) via /api/db.
+        const { data, error } = await db
           .from('profiles')
           .select('*')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
 
         if (data) {
           setProfileState(data);
@@ -128,11 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fetch and return profile for immediate role-based redirect
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        const { data: profile } = await supabase
+        const { data: profile } = await db
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         if (profile) {
           return { error: null, profile };
         }

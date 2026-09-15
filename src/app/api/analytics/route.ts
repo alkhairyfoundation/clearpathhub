@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { query as neonQuery } from '@/lib/neon'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
-  const supabase = await createSupabaseServerClient()
   try {
     // Get query parameters
     const { searchParams } = new URL(request.url)
@@ -13,32 +12,31 @@ export async function GET(request: Request) {
     const riskLevel = searchParams.get('riskLevel')
 
     // Build query
-    let query = supabase
-      .from('student_risk_predictions')
-      .select(`
-        *,
-        student:profiles(id, first_name, last_name, email)
-      `)
-      .order('prediction_date', { ascending: false })
-
-    // Apply filters
+    const conditions: string[] = []
+    const params: any[] = []
     if (studentId) {
-      query = query.eq('student_id', studentId)
+      conditions.push(`srp.student_id = $${params.length + 1}::uuid`)
+      params.push(studentId)
     }
-
     if (riskLevel) {
-      query = query.eq('risk_level', riskLevel)
+      conditions.push(`srp.risk_level = $${params.length + 1}`)
+      params.push(riskLevel)
     }
 
-    // Apply limit
-    query = query.limit(limit)
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    const sql = `
+      SELECT srp.*,
+        (SELECT to_jsonb(tmp)
+         FROM (SELECT s.id, s.first_name, s.last_name, s.email) AS tmp) AS student
+      FROM student_risk_predictions srp
+      LEFT JOIN profiles s ON s.id = srp.student_id
+      ${where}
+      ORDER BY srp.prediction_date DESC
+      LIMIT $${params.length + 1}
+    `
+    params.push(limit)
 
-    // Execute query
-    const { data, error } = await query
-
-    if (error) {
-      throw error
-    }
+    const data = await neonQuery(sql, params)
 
     return NextResponse.json({ success: true, data })
   } catch (error: any) {

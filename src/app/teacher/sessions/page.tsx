@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Play, Youtube, Edit, Trash2, X, FileVideo, Clock, CheckCircle, AlertCircle, HelpCircle, Pause, BookOpen, Loader2, Search } from 'lucide-react';
@@ -85,9 +85,9 @@ export default function TeacherSessionsPage() {
     setLoading(true);
     try {
       const [sessionsRes, subjectsRes, classesRes] = await Promise.all([
-        supabase.from('sessions').select('*, subject:subjects!subject_id(*), class:classes!class_id(name), quiz:quizzes(*)').eq('teacher_id', profile?.id).not('video_url', 'is', null).order('created_at', { ascending: false }),
-        supabase.from('subjects').select('*').order('name'),
-        supabase.from('classes').select('id, name').order('level'),
+        db.from('sessions').select('*, subject:subjects!subject_id(*), class:classes!class_id(name), quiz:quizzes(*)').eq('teacher_id', profile?.id).not('video_url', 'is', null).order('created_at', { ascending: false }),
+        db.from('subjects').select('*').order('name'),
+        db.from('classes').select('id, name').order('level'),
       ]);
       if (sessionsRes.error) throw new Error(sessionsRes.error.message);
       if (sessionsRes.data) setSessions(sessionsRes.data);
@@ -121,10 +121,10 @@ export default function TeacherSessionsPage() {
       let sessionId = editingSession?.id;
 
       if (editingSession) {
-        const { error } = await supabase.from('sessions').update(data).eq('id', editingSession.id);
+        const { error } = await db.from('sessions').update(data).eq('id', editingSession.id);
         if (error) throw new Error(error.message);
       } else {
-        const { data: newSession, error: sessionError } = await supabase.from('sessions').insert(data).select().single();
+        const { data: newSession, error: sessionError } = await db.from('sessions').insert(data).select().single();
         if (sessionError) throw new Error(sessionError.message);
         if (newSession) sessionId = newSession.id;
       }
@@ -138,7 +138,7 @@ export default function TeacherSessionsPage() {
           time_limit: formData.duration,
         };
         
-        const { data: existingQuiz } = await supabase
+        const { data: existingQuiz } = await db
           .from('quizzes')
           .select('id')
           .eq('session_id', sessionId)
@@ -147,16 +147,16 @@ export default function TeacherSessionsPage() {
         let quizId = existingQuiz?.id;
         
         if (!quizId) {
-          const { data: quiz, error: insErr } = await supabase.from('quizzes').insert(quizData).select().maybeSingle();
+          const { data: quiz, error: insErr } = await db.from('quizzes').insert(quizData).select().maybeSingle();
           if (quiz) quizId = quiz.id;
           else if (insErr) {
-            const { data: retry } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+            const { data: retry } = await db.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
             if (retry) quizId = retry.id;
           }
         }
         
         if (quizId) {
-          await supabase.from('quiz_questions').delete().eq('quiz_id', quizId);
+          await db.from('quiz_questions').delete().eq('quiz_id', quizId);
           const questions = checkpoints.map(cp => ({
             quiz_id: quizId,
             question: cp.question,
@@ -168,24 +168,24 @@ export default function TeacherSessionsPage() {
             is_checkpoint: true,
             order_index: checkpoints.indexOf(cp),
           }));
-          await supabase.from('quiz_questions').insert(questions);
+          await db.from('quiz_questions').insert(questions);
         }
       }
 
       // Save lesson notes if provided
       if (lessonNotes && sessionId) {
-        const { data: existingLesson } = await supabase
+        const { data: existingLesson } = await db
           .from('lessons')
           .select('id')
           .eq('session_id', sessionId)
           .maybeSingle();
 
         if (existingLesson) {
-          await supabase.from('lessons').update({
+          await db.from('lessons').update({
             content: lessonNotes,
           }).eq('id', existingLesson.id);
         } else {
-          await supabase.from('lessons').insert({
+          await db.from('lessons').insert({
             subject_id: formData.subject_id || null,
             teacher_id: profile?.id,
             session_id: sessionId,
@@ -213,7 +213,7 @@ export default function TeacherSessionsPage() {
 
   async function handleDelete(id: string) {
     if (confirm('Delete this video lesson?')) {
-      await supabase.from('sessions').delete().eq('id', id);
+      await db.from('sessions').delete().eq('id', id);
       fetchData();
     }
   }
@@ -274,19 +274,19 @@ export default function TeacherSessionsPage() {
       duration: session.duration || 0,
     });
     // Load existing checkpoints
-    const { data: quiz } = await supabase
+    const { data: quiz } = await db
       .from('quizzes')
       .select('id')
       .eq('session_id', session.id)
       .maybeSingle();
     if (quiz) {
-      const { data: questions } = await supabase
+      const { data: questions } = await db
         .from('quiz_questions')
         .select('*')
         .eq('quiz_id', quiz.id)
         .order('timestamp_seconds', { ascending: true });
       if (questions) {
-        setCheckpoints(questions.map(q => ({
+        setCheckpoints(questions.map((q: any) => ({
           id: q.id,
           timestamp_seconds: q.timestamp_seconds || 0,
           question: q.question,
@@ -298,7 +298,7 @@ export default function TeacherSessionsPage() {
       }
     }
     // Load existing lesson notes
-    const { data: lesson } = await supabase
+    const { data: lesson } = await db
       .from('lessons')
       .select('content')
       .eq('session_id', session.id)

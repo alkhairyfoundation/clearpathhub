@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { createClient } from "@supabase/supabase-js";
+import { query as neonQuery } from "@/lib/neon";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -37,11 +38,11 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
+          const rows = await neonQuery(
+            'SELECT * FROM profiles WHERE id = $1 LIMIT 1',
+            [data.user.id]
+          );
+          const profile = rows[0] || null;
 
           return {
             id: data.user.id,

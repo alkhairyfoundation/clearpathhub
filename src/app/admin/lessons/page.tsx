@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { STORAGE_BUCKETS } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, FileText, Trash2, X, ArrowLeft, Paperclip, Search, Eye, Loader2, HelpCircle, CheckCircle, Pencil } from 'lucide-react';
 import type { Lesson, Subject } from '@/types';
 import FileUpload from '@/components/FileUpload';
-import { STORAGE_BUCKETS } from '@/lib/supabase';
 
 export default function AdminLessonsPage() {
   const { profile } = useAuth();
@@ -41,10 +41,10 @@ export default function AdminLessonsPage() {
   async function fetchData() {
     setLoading(true);
     const [lessonsRes, subjectsRes, teachersRes, classesRes] = await Promise.all([
-      supabase.from('lessons').select('*, subject:subjects!subject_id(*), teacher:profiles!teacher_id(first_name, last_name), class:classes!class_id(name)').order('created_at', { ascending: false }),
-      supabase.from('subjects').select('*').order('name'),
-      supabase.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
-      supabase.from('classes').select('id, name, level').order('name'),
+      db.from('lessons').select('*, subject:subjects!subject_id(*), teacher:profiles!teacher_id(first_name, last_name), class:classes!class_id(name)').order('created_at', { ascending: false }),
+      db.from('subjects').select('*').order('name'),
+      db.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
+      db.from('classes').select('id, name, level').order('name'),
     ]);
     if (lessonsRes.data) setLessons(lessonsRes.data);
     if (subjectsRes.data) setSubjects(subjectsRes.data);
@@ -80,11 +80,11 @@ export default function AdminLessonsPage() {
       };
 
       if (editingLesson) {
-        const { error } = await supabase.from('lessons').update(data).eq('id', editingLesson.id);
+        const { error } = await db.from('lessons').update(data).eq('id', editingLesson.id);
         if (error) throw new Error(error.message);
         setSuccess('Lesson updated');
       } else {
-        const { error } = await supabase.from('lessons').insert(data);
+        const { error } = await db.from('lessons').insert(data);
         if (error) throw new Error(error.message);
         setSuccess('Lesson created');
       }
@@ -100,7 +100,7 @@ export default function AdminLessonsPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this lesson?')) return;
-    await supabase.from('lessons').delete().eq('id', id);
+    await db.from('lessons').delete().eq('id', id);
     setSuccess('Lesson deleted');
     fetchData();
     setTimeout(() => setSuccess(''), 3000);
@@ -108,7 +108,7 @@ export default function AdminLessonsPage() {
 
   async function ensureSessionForLesson(lesson: any): Promise<string | null> {
     if (lesson.session_id) return lesson.session_id;
-    const { data: newSession } = await supabase.from('sessions').insert({
+    const { data: newSession } = await db.from('sessions').insert({
       title: lesson.title,
       subject_id: lesson.subject_id || null,
       class_id: lesson.class_id || null,
@@ -116,7 +116,7 @@ export default function AdminLessonsPage() {
       is_published: true,
     }).select('id').single();
     if (!newSession) return null;
-    await supabase.from('lessons').update({ session_id: newSession.id }).eq('id', lesson.id);
+    await db.from('lessons').update({ session_id: newSession.id }).eq('id', lesson.id);
     lesson.session_id = newSession.id;
     return newSession.id;
   }
@@ -124,10 +124,10 @@ export default function AdminLessonsPage() {
   async function openQuizManager(lesson: any) {
     setSelectedLesson(lesson);
     const sessionId = lesson.session_id;
-    const { data: bySession } = await supabase.from('quizzes').select('id').eq('session_id', sessionId);
+    const { data: bySession } = await db.from('quizzes').select('id').eq('session_id', sessionId);
     let questions: any[] = [];
     if (bySession?.length) {
-      const { data: qq } = await supabase.from('quiz_questions').select('*').in('quiz_id', bySession.map(q => q.id)).order('created_at');
+      const { data: qq } = await db.from('quiz_questions').select('*').in('quiz_id', bySession.map((q: any) => q.id)).order('created_at');
       questions = qq || [];
     }
     setQuizQuestions(questions);
@@ -141,23 +141,23 @@ export default function AdminLessonsPage() {
     if (!sessionId) { setError('Could not create session for lesson'); setSaving(false); return; }
     setError('');
     let quizId = null;
-    const { data: existing } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+    const { data: existing } = await db.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
     if (existing) { quizId = existing.id; }
     else {
-      const { data: nq, error: insErr } = await supabase.from('quizzes').insert({ session_id: sessionId, title: `${selectedLesson.title} Quiz`, passing_score: 60 }).select('id').maybeSingle();
+      const { data: nq, error: insErr } = await db.from('quizzes').insert({ session_id: sessionId, title: `${selectedLesson.title} Quiz`, passing_score: 60 }).select('id').maybeSingle();
       if (nq) quizId = nq.id;
       else if (insErr) {
-        const { data: retry } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+        const { data: retry } = await db.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
         if (retry) quizId = retry.id;
       }
     }
     if (quizId) {
-      await supabase.from('quiz_questions').insert({
+      await db.from('quiz_questions').insert({
         quiz_id: quizId, question: quizForm.question,
         options: quizForm.options.filter(o => o.trim()),
         correct_answer: quizForm.correct_answer, points: quizForm.points,
       });
-      const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('created_at');
+      const { data } = await db.from('quiz_questions').select('*').eq('quiz_id', quizId).order('created_at');
       setQuizQuestions(data || []);
       setQuizForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1 });
     }
@@ -165,7 +165,7 @@ export default function AdminLessonsPage() {
   }
 
   async function deleteQuizQuestion(id: string) {
-    await supabase.from('quiz_questions').delete().eq('id', id);
+    await db.from('quiz_questions').delete().eq('id', id);
     if (selectedLesson) { openQuizManager(selectedLesson); }
   }
 

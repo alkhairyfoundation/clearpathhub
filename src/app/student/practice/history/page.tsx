@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -26,10 +26,10 @@ export default function PracticeHistoryPage() {
   async function fetchData() {
     setLoading(true);
     const [sessionsRes, goalsRes, streakRes, badgesRes] = await Promise.all([
-      supabase.from('practice_sessions').select('*').eq('student_id', profile?.id).order('created_at', { ascending: false }).limit(30),
-      supabase.from('daily_goals').select('*').eq('student_id', profile?.id).order('date', { ascending: false }).limit(30),
-      supabase.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle(),
-      supabase.from('badges').select('*').eq('student_id', profile?.id).order('awarded_at', { ascending: false }),
+      db.from('practice_sessions').select('*').eq('student_id', profile?.id).order('created_at', { ascending: false }).limit(30),
+      db.from('daily_goals').select('*').eq('student_id', profile?.id).order('date', { ascending: false }).limit(30),
+      db.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle(),
+      db.from('badges').select('*').eq('student_id', profile?.id).order('awarded_at', { ascending: false }),
     ]);
 
     if (sessionsRes.data) setSessions(sessionsRes.data);
@@ -38,10 +38,10 @@ export default function PracticeHistoryPage() {
     if (badgesRes.data) setBadges(badgesRes.data);
 
     if (sessionsRes.data) {
-      const completed = sessionsRes.data.filter(s => s.status === 'completed');
-      const totalQ = completed.reduce((sum, s) => sum + (s.answered_questions || 0), 0);
-      const scores = completed.filter(s => s.score != null);
-      const avgScore = scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s.score, 0) / scores.length) : 0;
+      const completed = sessionsRes.data.filter((s: any) => s.status === 'completed');
+      const totalQ = completed.reduce((sum: number, s: any) => sum + (s.answered_questions || 0), 0);
+      const scores = completed.filter((s: any) => s.score != null);
+      const avgScore = scores.length > 0 ? Math.round(scores.reduce((sum: number, s: any) => sum + s.score, 0) / scores.length) : 0;
       setStats({
         totalSessions: sessionsRes.data.length,
         totalQuestions: totalQ,

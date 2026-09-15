@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { Plus, X, Loader2, ArrowLeft, BookOpen, Check, AlertCircle } from 'lucide-react';
 import type { ClassTermFramework, AcademicSession, Term, Subject, Skill, Archetype } from '@/types';
@@ -38,11 +38,11 @@ export default function AdminGrowthFrameworksPage() {
   async function loadData() {
     setLoading(true);
     const [sessionsRes, termsRes, subjectsRes, skillsData, frameworksRes] = await Promise.all([
-      supabase.from('academic_sessions').select('*').order('name', { ascending: false }),
-      supabase.from('terms').select('*').order('name'),
-      supabase.from('subjects').select('*').order('name'),
+      db.from('academic_sessions').select('*').order('name', { ascending: false }),
+      db.from('terms').select('*').order('name'),
+      db.from('subjects').select('*').order('name'),
       fetch('/api/skills').then(r => r.json()),
-      supabase.from('class_term_frameworks').select('*, session:academic_sessions(*), term:terms(*)'),
+      db.from('class_term_frameworks').select('*, session:academic_sessions(*), term:terms(*)'),
     ]);
     if (!sessionsRes.error && sessionsRes.data) setSessions(sessionsRes.data);
     if (!termsRes.error && termsRes.data) setTerms(termsRes.data);
@@ -92,42 +92,42 @@ export default function AdminGrowthFrameworksPage() {
       };
 
       if (editing) {
-        const { error: err } = await supabase.from('class_term_frameworks').update(payload).eq('id', editing.id);
+        const { error: err } = await db.from('class_term_frameworks').update(payload).eq('id', editing.id);
         if (err) throw new Error(err.message);
 
         if (formData.competencies.length > 0) {
-          await supabase.from('academic_competencies').delete().eq('framework_id', editing.id);
+          await db.from('academic_competencies').delete().eq('framework_id', editing.id);
           const comps = formData.competencies.map((c, i) => ({
             framework_id: editing.id, subject_id: c.subject_id, competency_text: c.competency_text, order_index: i,
           }));
-          const { error: compErr } = await supabase.from('academic_competencies').insert(comps);
+          const { error: compErr } = await db.from('academic_competencies').insert(comps);
           if (compErr) throw new Error(compErr.message);
         }
         if (formData.expected_skills.length > 0) {
-          await supabase.from('skill_expectations').delete().eq('framework_id', editing.id);
+          await db.from('skill_expectations').delete().eq('framework_id', editing.id);
           const exps = formData.expected_skills.map((sid, i) => ({
             framework_id: editing.id, skill_id: sid, order_index: i,
           }));
-          const { error: expErr } = await supabase.from('skill_expectations').insert(exps);
+          const { error: expErr } = await db.from('skill_expectations').insert(exps);
           if (expErr) throw new Error(expErr.message);
         }
         setSuccess('Framework updated');
       } else {
-        const { data: newFw, error: err } = await supabase.from('class_term_frameworks').insert(payload).select().single();
+        const { data: newFw, error: err } = await db.from('class_term_frameworks').insert(payload).select().single();
         if (err) throw new Error(err.message);
 
         if (formData.competencies.length > 0) {
           const comps = formData.competencies.map((c, i) => ({
             framework_id: newFw.id, subject_id: c.subject_id, competency_text: c.competency_text, order_index: i,
           }));
-          const { error: compErr } = await supabase.from('academic_competencies').insert(comps);
+          const { error: compErr } = await db.from('academic_competencies').insert(comps);
           if (compErr) throw new Error(compErr.message);
         }
         if (formData.expected_skills.length > 0) {
           const exps = formData.expected_skills.map((sid, i) => ({
             framework_id: newFw.id, skill_id: sid, order_index: i,
           }));
-          const { error: expErr } = await supabase.from('skill_expectations').insert(exps);
+          const { error: expErr } = await db.from('skill_expectations').insert(exps);
           if (expErr) throw new Error(expErr.message);
         }
         setSuccess('Framework published');

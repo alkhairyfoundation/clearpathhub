@@ -1,51 +1,96 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
-import { query as neonQuery } from '@/lib/neon';
 import bcrypt from 'bcryptjs';
+import {
+  deleteUserInNeon,
+  updateNeonPasswordHash,
+  updateNeonProfile,
+  replaceNeonTeacherClasses,
+  upsertNeonStudentRecord,
+  generateNextAdmissionNumber,
+  getNeonStudentRecord,
+  upsertNeonStaffRecord,
+  type NewStudentData,
+  type NewStaffData,
+} from '@/lib/user-queries';
+import { query as neonQuery } from '@/lib/neon';
+
+async function getRole(id: string): Promise<string | null> {
+  try {
+    const rows = await neonQuery('SELECT role FROM profiles WHERE id = $1', [id]);
+    return rows[0]?.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function firstNonEmpty(value: unknown, fallback?: string | null): string | null {
+  if (value !== undefined && value !== null && String(value).trim() !== '') {
+    return String(value).trim();
+  }
+  return fallback ?? null;
+}
 
 export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
   try {
     const adminClient = createSupabaseAdminClient();
+    const id = params.id;
 
-    // Get user role first so we know what related data to clean up
-    const { data: profile } = await adminClient
-      .from('profiles')
-      .select('role')
-      .eq('id', params.id)
-      .maybeSingle();
+    const role = await getRole(id);
 
-    // Clean up role-specific dependencies before deleting
-    if (profile?.role === 'teacher') {
-      await adminClient.from('teacher_classes').delete().eq('teacher_id', params.id);
-      await adminClient.from('homework').delete().eq('teacher_id', params.id);
-      await adminClient.from('sessions').delete().eq('teacher_id', params.id);
-      await adminClient.from('lessons').delete().eq('teacher_id', params.id);
-    } else if (profile?.role === 'student') {
-      await adminClient.from('students').delete().eq('profile_id', params.id);
-      await adminClient.from('homework_submissions').delete().eq('student_id', params.id);
-    } else if (profile?.role === 'parent') {
-      await adminClient.from('parent_students').delete().eq('parent_id', params.id);
-      // Also clear legacy student parent links
-      await adminClient.from('students').update({ parent_id: null }).eq('parent_id', params.id);
-    } else if (profile?.role === 'accountant') {
-      await adminClient.from('staff').delete().eq('profile_id', params.id);
-    }
-
-    // Delete profile from Supabase profiles
-    await adminClient.from('profiles').delete().eq('id', params.id);
-
-    // Delete auth user
-    const { error: authError } = await adminClient.auth.admin.deleteUser(params.id);
-    if (authError) {
-      return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
-    }
-
-    // Delete user profile from Neon Postgres
+    // Primary cleanup in Neon (source of truth)
     try {
-      await neonQuery('DELETE FROM profiles WHERE id = $1', [params.id]);
-    } catch {
-      // Neon cleanup is best-effort
+      await deleteUserInNeon(id);
+    } catch (neonError: any) {
+      console.error('Error deleting user in Neon (primary):', neonError);
+      return NextResponse.json(
+        { success: false, error: `Failed to remove user record: ${neonError.message}` },
+        { status: 500 }
+      );
     }
+
+    // Secondary cleanup in Supabase
+    if (role === 'teacher') {
+      await Promise.allSettled([
+        adminClient.from('teacher_classes').delete().eq('teacher_id', id),
+        adminClient.from('homework').delete().eq('teacher_id', id),
+        adminClient.from('sessions').delete().eq('teacher_id', id),
+        adminClient.from('lessons').delete().eq('teacher_id', id),
+        adminClient.from('teacher_tasks').delete().eq('teacher_id', id),
+        adminClient.from('teacher_evaluations').delete().eq('teacher_id', id),
+        adminClient.from('staff').delete().eq('profile_id', id),
+      ]);
+    } else if (role === 'student') {
+      await Promise.allSettled([
+        adminClient.from('students').delete().eq('profile_id', id),
+        adminClient.from('homework_submissions').delete().eq('student_id', id),
+        adminClient.from('quiz_attempts').delete().eq('student_id', id),
+        adminClient.from('test_attempts').delete().eq('student_id', id),
+        adminClient.from('attendance').delete().eq('student_id', id),
+        adminClient.from('results').delete().eq('student_id', id),
+        adminClient.from('behavioral_reports').delete().eq('student_id', id),
+        adminClient.from('invoices').delete().eq('student_id', id),
+        adminClient.from('transactions').delete().eq('student_id', id),
+        adminClient.from('id_cards').delete().eq('student_id', id),
+        adminClient.from('student_classes').delete().eq('student_id', id),
+        adminClient.from('student_risk_predictions').delete().eq('student_id', id),
+      ]);
+    } else if (role === 'parent') {
+      await Promise.allSettled([
+        adminClient.from('parent_students').delete().eq('parent_id', id),
+        adminClient.from('students').update({ parent_id: null }).eq('parent_id', id),
+      ]);
+    } else if (role === 'accountant' || role === 'admin') {
+      await Promise.allSettled([
+        adminClient.from('staff').delete().eq('profile_id', id),
+      ]);
+    }
+
+    const { error: profileDeleteError } = await adminClient.from('profiles').delete().eq('id', id);
+    if (profileDeleteError) console.error('Supabase profile delete error:', profileDeleteError);
+
+    const { error: authDeleteError } = await adminClient.auth.admin.deleteUser(id);
+    if (authDeleteError) console.error('Supabase auth delete error:', authDeleteError);
 
     return NextResponse.json({ success: true, message: 'User deleted successfully' });
   } catch (error: any) {
@@ -58,107 +103,149 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
-    const supabase = await createSupabaseAdminClient();
-
+    const id = params.id;
     const body = await request.json();
-    const { first_name, last_name, role, phone, password, teacher_class_ids, class_id,
-      date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact, admission_number } = body;
+    const { first_name, last_name, role, phone, avatar_url, password, teacher_class_ids, class_id,
+      date_of_birth, gender, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact, admission_number,
+      staff_id, employee_id, department_id, designation, salary, date_of_employment, status } = body;
+
+    const staffPatch =
+      staff_id !== undefined || employee_id !== undefined || department_id !== undefined ||
+      designation !== undefined || salary !== undefined || date_of_employment !== undefined ||
+      status !== undefined;
+
+    // ============================================================
+    // PRIMARY: Apply changes to Neon first
+    // ============================================================
+    try {
+      const profileFields: Record<string, any> = {};
+      if (first_name !== undefined) profileFields.first_name = first_name;
+      if (last_name !== undefined) profileFields.last_name = last_name;
+      if (role !== undefined) profileFields.role = role;
+      if (phone !== undefined) profileFields.phone = phone || null;
+      if (avatar_url !== undefined) profileFields.avatar_url = avatar_url || null;
+      await updateNeonProfile(id, profileFields);
+
+      if (teacher_class_ids !== undefined && Array.isArray(teacher_class_ids)) {
+        await replaceNeonTeacherClasses(id, teacher_class_ids.filter((c: string) => typeof c === 'string'));
+      }
+
+      if (staffPatch) {
+        const mergedStaff: NewStaffData = {
+          staff_id: staff_id !== undefined && String(staff_id).trim() !== '' ? String(staff_id).trim() : `STF${new Date().getFullYear()}${Date.now().toString().slice(-6)}`,
+          employee_id: employee_id !== undefined && String(employee_id).trim() !== '' ? String(employee_id).trim() : `EMP${new Date().getFullYear()}${Date.now().toString().slice(-6)}`,
+          department_id: department_id !== undefined ? department_id || null : null,
+          designation: designation !== undefined ? designation || null : null,
+          salary: salary !== undefined ? (salary != null && salary !== '' ? parseFloat(String(salary)) : null) : null,
+          date_of_employment: date_of_employment !== undefined ? date_of_employment || null : null,
+          status: status !== undefined ? status || 'active' : 'active',
+        };
+        await upsertNeonStaffRecord(id, mergedStaff);
+      }
+
+      const studentPatch =
+        class_id !== undefined || date_of_birth !== undefined || gender !== undefined ||
+        address !== undefined || guardian_name !== undefined || guardian_phone !== undefined ||
+        guardian_email !== undefined || blood_group !== undefined || emergency_contact !== undefined ||
+        admission_number !== undefined;
+
+      // Merge incoming fields over the existing Neon student record so a partial
+      // patch never wipes fields the client didn't send.
+      if (studentPatch) {
+        const existing = await getNeonStudentRecord(id);
+        const merged: NewStudentData = {
+          admission_number: firstNonEmpty(admission_number, existing?.admission_number) ?? '',
+          class_id: class_id !== undefined ? (firstNonEmpty(class_id)) : (existing?.class_id ?? null),
+          date_of_birth: date_of_birth !== undefined ? firstNonEmpty(date_of_birth) : (existing?.date_of_birth ?? null),
+          gender: gender !== undefined ? firstNonEmpty(gender) : (existing?.gender ?? null),
+          address: address !== undefined ? firstNonEmpty(address) : (existing?.address ?? null),
+          guardian_name: guardian_name !== undefined ? firstNonEmpty(guardian_name) : (existing?.guardian_name ?? null),
+          guardian_phone: guardian_phone !== undefined ? firstNonEmpty(guardian_phone) : (existing?.guardian_phone ?? null),
+          guardian_email: guardian_email !== undefined ? firstNonEmpty(guardian_email) : (existing?.guardian_email ?? null),
+          blood_group: blood_group !== undefined ? firstNonEmpty(blood_group) : (existing?.blood_group ?? null),
+          emergency_contact: emergency_contact !== undefined ? firstNonEmpty(emergency_contact) : (existing?.emergency_contact ?? null),
+        };
+        if (!merged.admission_number) {
+          merged.admission_number = await generateNextAdmissionNumber();
+        }
+        await upsertNeonStudentRecord(id, merged);
+      }
+
+      if (password) {
+        if (password.length < 6) {
+          return NextResponse.json(
+            { success: false, error: 'Password must be at least 6 characters' },
+            { status: 400 }
+          );
+        }
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, salt);
+        await updateNeonPasswordHash(id, passwordHash);
+      }
+    } catch (neonError: any) {
+      console.error('Error updating user in Neon (primary):', neonError);
+      return NextResponse.json(
+        { success: false, error: `Failed to update user: ${neonError.message}` },
+        { status: 500 }
+      );
+    }
+
+    // ============================================================
+    // SECONDARY: Sync to Supabase
+    // ============================================================
+    const adminClient = createSupabaseAdminClient();
 
     const updates: Record<string, any> = {};
     if (first_name !== undefined) updates.first_name = first_name;
     if (last_name !== undefined) updates.last_name = last_name;
     if (role !== undefined) updates.role = role;
     if (phone !== undefined) updates.phone = phone || null;
-
+    if (avatar_url !== undefined) updates.avatar_url = avatar_url || null;
     if (Object.keys(updates).length > 0) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', params.id);
-
-      if (updateError) {
-        return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
-      }
-
-      // Update user profile in Neon Postgres
-      try {
-        const setClause = Object.keys(updates)
-          .map((key, index) => `${key} = $${index + 2}`)
-          .join(', ');
-        const values = Object.values(updates);
-        await neonQuery(
-          `UPDATE profiles SET ${setClause} WHERE id = $1`,
-          [params.id, ...values]
-        );
-      } catch (neonUpdateError) {
-        console.error('Error updating profile in Neon:', neonUpdateError);
-      }
+      const { error: profileSyncError } = await adminClient.from('profiles').update(updates).eq('id', id);
+      if (profileSyncError) console.error('Supabase profile sync error:', profileSyncError);
     }
 
     if (password) {
-      if (password.length < 6) {
-        return NextResponse.json({ success: false, error: 'Password must be at least 6 characters' }, { status: 400 });
-      }
-      const adminClient = createSupabaseAdminClient();
-      const { error: authError } = await adminClient.auth.admin.updateUserById(params.id, { password });
-      if (authError) {
-        return NextResponse.json({ success: false, error: authError.message }, { status: 500 });
-      }
-
-      // Update password hash in Neon Postgres
-      try {
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(password, salt);
-        await neonQuery(
-          'UPDATE profiles SET password_hash = $1 WHERE id = $2',
-          [passwordHash, params.id]
-        );
-      } catch (neonPasswordError) {
-        console.error('Error updating password hash in Neon:', neonPasswordError);
-      }
+      const { error: pwdSyncError } = await adminClient.auth.admin.updateUserById(id, { password });
+      if (pwdSyncError) console.error('Supabase password sync error:', pwdSyncError);
     }
 
-    // Update teacher class assignments via teacher_classes junction table
-    if (teacher_class_ids !== undefined) {
+    if (teacher_class_ids !== undefined && Array.isArray(teacher_class_ids)) {
       try {
-        // Get current class IDs assigned to this teacher
-        const { data: existingTCs } = await supabase
+        const { data: existingTCs } = await adminClient
           .from('teacher_classes')
           .select('class_id')
-          .eq('teacher_id', params.id);
-
-        const existingIds = existingTCs?.map(tc => tc.class_id) || [];
-
-        // Classes to add
-        const addIds = teacher_class_ids.filter((id: string) => !existingIds.includes(id));
+          .eq('teacher_id', id);
+        const existingIds = existingTCs?.map((tc) => tc.class_id) || [];
+        const addIds = teacher_class_ids.filter((cid: string) => !existingIds.includes(cid));
+        const removeIds = existingIds.filter((cid: string) => !teacher_class_ids.includes(cid));
         if (addIds.length > 0) {
-          await supabase.from('teacher_classes').insert(
-            addIds.map((cid: string) => ({ teacher_id: params.id, class_id: cid }))
+          await adminClient.from('teacher_classes').insert(
+            addIds.map((cid: string) => ({ teacher_id: id, class_id: cid }))
           );
         }
-
-        // Classes to remove
-        const removeIds = existingIds.filter((id: string) => !teacher_class_ids.includes(id));
         if (removeIds.length > 0) {
-          await supabase.from('teacher_classes').delete()
-            .eq('teacher_id', params.id)
-            .in('class_id', removeIds);
+          await adminClient.from('teacher_classes').delete().eq('teacher_id', id).in('class_id', removeIds);
         }
       } catch (tcErr) {
-        console.error('Error updating teacher class assignments:', tcErr);
+        console.error('Supabase teacher_classes sync error:', tcErr);
       }
     }
 
-    // Update student record
-    if (class_id !== undefined || date_of_birth !== undefined || gender !== undefined || address !== undefined ||
-        guardian_name !== undefined || guardian_phone !== undefined || guardian_email !== undefined ||
-        blood_group !== undefined || emergency_contact !== undefined || admission_number !== undefined) {
-      const { data: existingStudent } = await supabase
-        .from('students')
-        .select('id')
-        .eq('profile_id', params.id)
-        .maybeSingle();
-      if (existingStudent) {
+    const studentPatch =
+      class_id !== undefined || date_of_birth !== undefined || gender !== undefined ||
+      address !== undefined || guardian_name !== undefined || guardian_phone !== undefined ||
+      guardian_email !== undefined || blood_group !== undefined || emergency_contact !== undefined ||
+      admission_number !== undefined;
+
+    if (studentPatch) {
+      try {
+        const { data: existingStudent } = await adminClient
+          .from('students')
+          .select('id')
+          .eq('profile_id', id)
+          .maybeSingle();
         const studentUpdates: Record<string, any> = {};
         if (class_id !== undefined) studentUpdates.class_id = class_id || null;
         if (date_of_birth !== undefined) studentUpdates.date_of_birth = date_of_birth || null;
@@ -169,52 +256,74 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         if (guardian_email !== undefined) studentUpdates.guardian_email = guardian_email || null;
         if (blood_group !== undefined) studentUpdates.blood_group = blood_group || null;
         if (emergency_contact !== undefined) studentUpdates.emergency_contact = emergency_contact || null;
-        if (admission_number !== undefined && admission_number !== '' && admission_number !== null) studentUpdates.admission_number = admission_number;
-        const { error: updateErr } = await supabase.from('students').update(studentUpdates).eq('id', existingStudent.id);
-        if (updateErr) {
-          return NextResponse.json({ success: false, error: `Failed to update student record: ${updateErr.message}` }, { status: 500 });
+        if (admission_number !== undefined && String(admission_number).trim() !== '') {
+          studentUpdates.admission_number = String(admission_number).trim();
         }
-      } else {
-        // Student record doesn't exist in Supabase — check Neon first
-        let existingAdmission = admission_number;
-        if (!existingAdmission || existingAdmission.trim() === '') {
-          try {
-            const neonRows = await neonQuery(
-              'SELECT admission_number FROM students WHERE profile_id = $1',
-              [params.id]
-            );
-            if (neonRows.length > 0) {
-              existingAdmission = neonRows[0].admission_number;
-            }
-          } catch { /* ignore Neon errors */ }
+        if (existingStudent) {
+          if (Object.keys(studentUpdates).length > 0) {
+            await adminClient.from('students').update(studentUpdates).eq('id', existingStudent.id);
+          }
+        } else {
+          let sbAdmission = firstNonEmpty(admission_number);
+          if (!sbAdmission) {
+            const existing = await getNeonStudentRecord(id);
+            sbAdmission = existing?.admission_number ?? null;
+          }
+          if (!sbAdmission) {
+            sbAdmission = `STD${new Date().getFullYear()}${Date.now().toString().slice(-6)}`;
+          }
+          await adminClient.from('students').insert({
+            profile_id: id,
+            admission_number: sbAdmission,
+            class_id: class_id !== undefined ? class_id || null : null,
+            date_of_birth: date_of_birth || null,
+            gender: gender || null,
+            address: address || null,
+            guardian_name: guardian_name || null,
+            guardian_phone: guardian_phone || null,
+            guardian_email: guardian_email || null,
+            blood_group: blood_group || null,
+            emergency_contact: emergency_contact || null,
+          });
         }
-        // Generate one if still empty (timestamp-based to avoid collisions)
-        const admissionNumber = (existingAdmission && existingAdmission.trim() !== '')
-          ? existingAdmission.trim()
-          : `STD${new Date().getFullYear()}${Date.now().toString().slice(-6)}`;
-        const { error: insertErr } = await supabase.from('students').insert({
-          profile_id: params.id,
-          admission_number: admissionNumber,
-          class_id: class_id || null,
-          date_of_birth: date_of_birth || null,
-          gender: gender || null,
-          address: address || null,
-          guardian_name: guardian_name || null,
-          guardian_phone: guardian_phone || null,
-          guardian_email: guardian_email || null,
-          blood_group: blood_group || null,
-          emergency_contact: emergency_contact || null,
-        });
-        if (insertErr) {
-          return NextResponse.json({ success: false, error: `Failed to create student record: ${insertErr.message}` }, { status: 500 });
+      } catch (syncErr: any) {
+        console.error('Supabase student sync error:', syncErr);
+      }
+    }
+
+    if (staffPatch) {
+      try {
+        const { data: existingStaff } = await adminClient
+          .from('staff')
+          .select('id')
+          .eq('profile_id', id)
+          .maybeSingle();
+        const staffUpdates: Record<string, any> = {};
+        if (staff_id !== undefined && String(staff_id).trim() !== '') staffUpdates.staff_id = String(staff_id).trim();
+        if (employee_id !== undefined && String(employee_id).trim() !== '') staffUpdates.employee_id = String(employee_id).trim();
+        if (department_id !== undefined) staffUpdates.department_id = department_id || null;
+        if (designation !== undefined) staffUpdates.designation = designation || null;
+        if (salary !== undefined) staffUpdates.salary = salary != null && salary !== '' ? parseFloat(String(salary)) : null;
+        if (date_of_employment !== undefined) staffUpdates.date_of_employment = date_of_employment || null;
+        if (status !== undefined) staffUpdates.status = status || 'active';
+        if (existingStaff) {
+          if (Object.keys(staffUpdates).length > 0) {
+            await adminClient.from('staff').update(staffUpdates).eq('id', existingStaff.id);
+          }
+        } else {
+          await adminClient.from('staff').insert({
+            profile_id: id,
+            staff_id: staff_id && String(staff_id).trim() !== '' ? String(staff_id).trim() : `STF${new Date().getFullYear()}${Date.now().toString().slice(-6)}`,
+            employee_id: employee_id && String(employee_id).trim() !== '' ? String(employee_id).trim() : `EMP${new Date().getFullYear()}${Date.now().toString().slice(-6)}`,
+            department_id: department_id || null,
+            designation: designation || null,
+            salary: salary != null && salary !== '' ? parseFloat(String(salary)) : null,
+            date_of_employment: date_of_employment || null,
+            status: status || 'active',
+          });
         }
-        // Also sync to Neon (best-effort)
-        try {
-          await neonQuery(
-            `INSERT INTO students (profile_id, admission_number, class_id) VALUES ($1, $2, $3)`,
-            [params.id, admissionNumber, class_id || null]
-          );
-        } catch { /* best-effort */ }
+      } catch (syncErr: any) {
+        console.error('Supabase staff sync error:', syncErr);
       }
     }
 

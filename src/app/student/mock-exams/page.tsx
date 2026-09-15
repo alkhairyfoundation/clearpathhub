@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -24,7 +24,7 @@ export default function StudentMockExamsPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: examsData } = await supabase
+      const { data: examsData } = await db
         .from('mock_exams')
         .select('*')
         .eq('is_published', true)
@@ -34,7 +34,7 @@ export default function StudentMockExamsPage() {
       setExams(examsData || []);
 
       if (profile?.id) {
-        const { data: attemptsData } = await supabase
+        const { data: attemptsData } = await db
           .from('mock_attempts')
           .select('*, exam:mock_exams(*)')
           .eq('student_id', profile.id)
@@ -42,7 +42,7 @@ export default function StudentMockExamsPage() {
 
         setAttempts(attemptsData || []);
 
-        const { data: analyticsData } = await supabase
+        const { data: analyticsData } = await db
           .from('mock_analytics')
           .select('*')
           .eq('student_id', profile.id);

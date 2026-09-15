@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, uploadFile } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Clock, MapPin, ArrowLeft, Upload } from 'lucide-react';
@@ -59,7 +60,7 @@ export default function AdminProfilePage() {
   }, [profile]);
 
   async function fetchSchoolSettings() {
-    const { data } = await supabase.from('school_settings').select('*').limit(1).maybeSingle();
+    const { data } = await db.from('school_settings').select('*').limit(1).maybeSingle();
     if (data) setSchoolSettings(data);
   }
 
@@ -68,7 +69,7 @@ export default function AdminProfilePage() {
     setError('');
     setSaved(false);
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await db
       .from('profiles')
       .update({
         first_name: formData.first_name,

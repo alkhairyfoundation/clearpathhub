@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -38,7 +38,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
     try {
       const [res, settingsRes] = await Promise.all([
         fetch(`/api/tests/report/${params.attemptId}`),
-        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+        db.from('school_settings').select('*').limit(1).maybeSingle(),
       ]);
       const result = await res.json();
       if (!result.success) throw new Error(result.error);
@@ -54,12 +54,7 @@ export default function TestReportPage({ params }: { params: { attemptId: string
   async function handleSendToParent() {
     if (!data) return;
     try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-      );
-      const { data: student } = await supabase
+      const { data: student } = await db
         .from('students')
         .select('*, parent:parent_id!inner(profiles!profile_id(phone, email))')
         .eq('profile_id', profile?.id)

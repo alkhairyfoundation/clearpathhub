@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { Award, TrendingUp, BookOpen, Calendar, ArrowLeft, AlertTriangle, TrendingDown, BarChart3, PieChart, Download, Loader2, FileText } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
@@ -28,10 +28,10 @@ export default function StudentResultsPage() {
   async function fetchData() {
     setLoading(true);
     const [resRes, testsRes, quizzesRes, settingsRes] = await Promise.all([
-      supabase.from('results').select('*, subject:subjects!subject_id(*)').eq('student_id', profile?.id).order('created_at', { ascending: false }),
+      db.from('results').select('*, subject:subjects!subject_id(*)').eq('student_id', profile?.id).order('created_at', { ascending: false }),
       fetch(`/api/test-attempts?studentId=${profile?.id}`).then(r => r.json()),
-      supabase.from('quiz_attempts').select('*, quiz:quizzes!quiz_id(title)').eq('student_id', profile?.id).order('completed_at', { ascending: false }),
-      supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+      db.from('quiz_attempts').select('*, quiz:quizzes!quiz_id(title)').eq('student_id', profile?.id).order('completed_at', { ascending: false }),
+      db.from('school_settings').select('*').limit(1).maybeSingle(),
     ]);
     if (resRes.data) setResults(resRes.data);
     if (testsRes.attempts) setTestAttempts(testsRes.attempts);

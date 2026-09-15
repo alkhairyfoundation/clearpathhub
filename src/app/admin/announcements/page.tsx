@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Plus, Edit, Trash2, X, Megaphone, Calendar, Users, Eye, Clock, AlertTriangle, CheckCircle, Loader2, Search, Filter } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function AdminAnnouncementsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data, error } = await supabase.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').order('created_at', { ascending: false });
+    const { data, error } = await db.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').order('created_at', { ascending: false });
     if (error) setError(error.message);
     if (data) setAnnouncements(data);
     setLoading(false);
@@ -66,11 +66,11 @@ export default function AdminAnnouncementsPage() {
         is_active: formData.scheduled_at ? new Date(formData.scheduled_at) > new Date() : true,
       };
       if (editingAnn) {
-        const { error: err } = await supabase.from('announcements').update(data).eq('id', editingAnn.id);
+        const { error: err } = await db.from('announcements').update(data).eq('id', editingAnn.id);
         if (err) throw new Error(err.message);
         setSuccess('Announcement updated successfully');
       } else {
-        const { error: err } = await supabase.from('announcements').insert(data);
+        const { error: err } = await db.from('announcements').insert(data);
         if (err) throw new Error(err.message);
         setSuccess('Announcement published successfully');
       }
@@ -85,7 +85,7 @@ export default function AdminAnnouncementsPage() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this announcement?')) return;
     try {
-      const { error } = await supabase.from('announcements').delete().eq('id', id);
+      const { error } = await db.from('announcements').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Announcement deleted');
       setTimeout(() => setSuccess(''), 3000);
@@ -97,7 +97,7 @@ export default function AdminAnnouncementsPage() {
 
   async function toggleActive(ann: any) {
     try {
-      const { error } = await supabase.from('announcements').update({ is_active: !ann.is_active }).eq('id', ann.id);
+      const { error } = await db.from('announcements').update({ is_active: !ann.is_active }).eq('id', ann.id);
       if (error) throw new Error(error.message);
     } catch (err: any) {
       setError(err.message || 'Failed to update');

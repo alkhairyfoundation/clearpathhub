@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Edit, Trash2, X, GraduationCap, Loader2, ArrowLeft, ArrowUpCircle, ArrowDownCircle, AlertTriangle, CheckCircle } from 'lucide-react';
@@ -39,9 +39,9 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
   async function fetchData() {
     setLoading(true);
     const [classesRes, deptsRes, teachersRes] = await Promise.all([
-      supabase.from('classes').select('*, department:departments!department_id(name), class_teacher:profiles!class_teacher_id(first_name, last_name)').order('level').order('name'),
-      supabase.from('departments').select('*').order('name'),
-      supabase.from('profiles').select('*').eq('role', 'teacher').order('first_name'),
+      db.from('classes').select('*, department:departments!department_id(name), class_teacher:profiles!class_teacher_id(first_name, last_name)').order('level').order('name'),
+      db.from('departments').select('*').order('name'),
+      db.from('profiles').select('*').eq('role', 'teacher').order('first_name'),
     ]);
     if (classesRes.data) setClasses(classesRes.data);
     if (deptsRes.data) setDepartments(deptsRes.data);
@@ -50,7 +50,7 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
   }
 
   async function fetchClassData() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('classes')
       .select(`
         id, name, level, next_class_id,
@@ -83,22 +83,22 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
         class_teacher_id: formData.class_teacher_id && formData.class_teacher_id.trim() !== '' ? formData.class_teacher_id : null,
       };
       if (editing) {
-        const { error: err } = await supabase.from('classes').update(record).eq('id', editing.id);
+        const { error: err } = await db.from('classes').update(record).eq('id', editing.id);
         if (err) throw new Error(err.message);
 
         if (record.class_teacher_id) {
-          const { data: existing } = await supabase.from('teacher_classes').select('id').eq('teacher_id', record.class_teacher_id).eq('class_id', editing.id).maybeSingle();
+          const { data: existing } = await db.from('teacher_classes').select('id').eq('teacher_id', record.class_teacher_id).eq('class_id', editing.id).maybeSingle();
           if (!existing) {
-            await supabase.from('teacher_classes').insert({ teacher_id: record.class_teacher_id, class_id: editing.id });
+            await db.from('teacher_classes').insert({ teacher_id: record.class_teacher_id, class_id: editing.id });
           }
         }
 
         setSuccess('Class updated successfully');
       } else {
-        const { data: newClass, error: err } = await supabase.from('classes').insert(record).select().maybeSingle();
+        const { data: newClass, error: err } = await db.from('classes').insert(record).select().maybeSingle();
         if (err) throw new Error(err.message);
         if (newClass && record.class_teacher_id) {
-          await supabase.from('teacher_classes').insert({ teacher_id: record.class_teacher_id, class_id: newClass.id });
+          await db.from('teacher_classes').insert({ teacher_id: record.class_teacher_id, class_id: newClass.id });
         }
         setSuccess('Class created successfully');
       }
@@ -114,9 +114,9 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
     if (!confirm('Delete this class? This will unlink associated students and subjects.')) return;
     setDeleting(id);
     try {
-      await supabase.from('students').update({ class_id: null }).eq('class_id', id);
-      await supabase.from('subjects').update({ class_id: null }).eq('class_id', id);
-      const { error } = await supabase.from('classes').delete().eq('id', id);
+      await db.from('students').update({ class_id: null }).eq('class_id', id);
+      await db.from('subjects').update({ class_id: null }).eq('class_id', id);
+      const { error } = await db.from('classes').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Class deleted successfully');
       setTimeout(() => setSuccess(''), 3000);

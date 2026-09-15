@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import DashboardLayout from '@/components/DashboardLayout';
 import Link from 'next/link';
 import { Loader2, FileText, Check, X, ExternalLink, ChevronRight } from 'lucide-react';
@@ -24,14 +24,14 @@ export default function ParentTestsPage() {
 
   async function fetchData() {
     try {
-      const { data: students } = await supabase
+      const { data: students } = await db
         .from('students')
         .select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)')
         .eq('parent_id', profile?.id);
       if (!students) { setLoading(false); return; }
       setChildren(students);
 
-      const profileIds = students.map(s => s.profile_id);
+      const profileIds = students.map((s: any) => s.profile_id);
       if (profileIds.length > 0) {
         const res = await fetch('/api/manage-tests', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },

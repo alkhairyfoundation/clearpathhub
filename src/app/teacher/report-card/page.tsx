@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -613,8 +613,8 @@ function ReportCardContent() {
     setLoading(true);
     try {
       const [settingsRes, termsRes] = await Promise.all([
-        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
-        supabase.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
+        db.from('school_settings').select('*').limit(1).maybeSingle(),
+        db.from('terms').select('*, session:academic_sessions!session_id(name)').order('start_date', { ascending: false }),
       ]);
       setSchoolSettings(settingsRes.data);
       setAssessmentConfig(settingsRes.data?.assessment_config || null);
@@ -626,7 +626,7 @@ function ReportCardContent() {
       setSelectedTerm(termParam ? (termsRes.data || []).find((t: any) => t.id === termParam) : (termsRes.data || []).find((t: any) => t.is_current) || (termsRes.data || [])[0]);
 
       // Admin sees all students; teacher sees only students in their assigned classes
-      let studentQuery = supabase.from('students')
+      let studentQuery = db.from('students')
         .select('id, profile_id, admission_number, profile:profiles!profile_id(first_name, last_name, avatar_url), class:classes!class_id(name)');
       if (profile?.role !== 'admin') {
         const classIds = await getTeacherClassIds(profile?.id || '');
@@ -653,15 +653,15 @@ function ReportCardContent() {
       const termEnd = selectedTerm.end_date;
 
       const [resultsRes, remarksRes, domainRes, attRes] = await Promise.all([
-        supabase.from('results')
+        db.from('results')
           .select('*, subject:subjects!subject_id(name)')
           .eq('student_id', pid)
           .eq('term', termName)
           .eq('academic_year', sessionName)
           .order('created_at'),
-        supabase.from('report_remarks').select('*').eq('student_id', pid).eq('term_id', selectedTerm.id).maybeSingle(),
-        supabase.from('domain_grades').select('*').eq('student_id', pid).eq('term_id', selectedTerm.id).maybeSingle(),
-        supabase.from('attendance').select('*').eq('student_id', pid).gte('date', termStart).lte('date', termEnd),
+        db.from('report_remarks').select('*').eq('student_id', pid).eq('term_id', selectedTerm.id).maybeSingle(),
+        db.from('domain_grades').select('*').eq('student_id', pid).eq('term_id', selectedTerm.id).maybeSingle(),
+        db.from('attendance').select('*').eq('student_id', pid).gte('date', termStart).lte('date', termEnd),
       ]);
 
       // Group results by subject (Mid-Term Test via ca1, Exam via exam)
@@ -706,8 +706,8 @@ function ReportCardContent() {
         const t1 = sorted[0];
         const t2 = sorted[1];
         const [t1Res, t2Res] = await Promise.all([
-          supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', pid).eq('term', t1?.name).eq('academic_year', sessionName),
-          supabase.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', pid).eq('term', t2?.name).eq('academic_year', sessionName),
+          db.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', pid).eq('term', t1?.name).eq('academic_year', sessionName),
+          db.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', pid).eq('term', t2?.name).eq('academic_year', sessionName),
         ]);
         setTerm1Results(t1Res.data || []);
         setTerm2Results(t2Res.data || []);
@@ -724,7 +724,7 @@ function ReportCardContent() {
     setSaving(true); setError('');
     try {
       const payload = { student_id: selectedStudent.profile_id, term_id: selectedTerm.id, ...reportRemarks };
-      const { error: err } = await supabase.from('report_remarks').upsert(payload, { onConflict: 'student_id,term_id' });
+      const { error: err } = await db.from('report_remarks').upsert(payload, { onConflict: 'student_id,term_id' });
       if (err) throw new Error(err.message);
       setSuccess('Remarks saved');
       setShowRemarksEditor(false);
@@ -741,7 +741,7 @@ function ReportCardContent() {
       [...COGNITIVE_FIELDS, ...AFFECTIVE_FIELDS, ...PSYCHOMOTOR_FIELDS].forEach(f => {
         if (domainGrades[f.key] != null) payload[f.key] = domainGrades[f.key];
       });
-      const { error: err } = await supabase.from('domain_grades').upsert(payload, { onConflict: 'student_id,term_id' });
+      const { error: err } = await db.from('domain_grades').upsert(payload, { onConflict: 'student_id,term_id' });
       if (err) throw new Error(err.message);
       setSuccess('Domain grades saved');
       setShowDomainEditor(false);

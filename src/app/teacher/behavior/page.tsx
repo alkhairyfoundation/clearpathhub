@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -33,17 +33,17 @@ export default function TeacherBehaviorPage() {
       const teacherClassIds = Array.from(new Set(await getTeacherClassIds(profile?.id || '')));
 
       const studentIdsRes = teacherClassIds.length > 0
-        ? await supabase.from('students').select('id').in('class_id', teacherClassIds)
+        ? await db.from('students').select('id').in('class_id', teacherClassIds)
         : { data: [] };
       const studentIds = (studentIdsRes.data || []).map((s: any) => s.id);
 
       const [reportsRes, studentsRes] = await Promise.all([
         studentIds.length > 0
-          ? supabase.from('behavioral_reports').select('*, student:profiles!student_id(*)').in('student_id', studentIds).order('created_at', { ascending: false }).limit(50)
-          : supabase.from('behavioral_reports').select('*, student:profiles!student_id(*)').order('created_at', { ascending: false }).limit(50),
+          ? db.from('behavioral_reports').select('*, student:profiles!student_id(*)').in('student_id', studentIds).order('created_at', { ascending: false }).limit(50)
+          : db.from('behavioral_reports').select('*, student:profiles!student_id(*)').order('created_at', { ascending: false }).limit(50),
         teacherClassIds.length > 0
-          ? supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name)').in('class_id', teacherClassIds).then(r => ({ data: r.data?.map(s => s.profile).filter(Boolean) || [], error: r.error }))
-          : supabase.from('profiles').select('*').eq('role', 'student').order('first_name'),
+          ? db.from('students').select('*, profile:profiles!profile_id(first_name, last_name)').in('class_id', teacherClassIds).then(r => ({ data: r.data?.map((s: any) => s.profile).filter(Boolean) || [], error: r.error }))
+          : db.from('profiles').select('*').eq('role', 'student').order('first_name'),
       ]);
       if (reportsRes.error) throw new Error(reportsRes.error.message);
       if (reportsRes.data) setReports(reportsRes.data);
@@ -58,7 +58,7 @@ export default function TeacherBehaviorPage() {
     if (!formData.student_id || !formData.week_start) { setError('Student and week start are required'); return; }
     setError(''); setSuccess('');
     try {
-      const { error } = await supabase.from('behavioral_reports').insert({
+      const { error } = await db.from('behavioral_reports').insert({
         student_id: formData.student_id,
         week_start: formData.week_start,
         week_end: formData.week_end,

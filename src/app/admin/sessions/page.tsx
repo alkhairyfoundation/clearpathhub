@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { STORAGE_BUCKETS } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, FileText, Trash2, X, Eye, ArrowLeft, Video, Clock, Users, BookOpen, Loader2, Search, PlayCircle } from 'lucide-react';
 import type { Subject } from '@/types';
 import FileUpload from '@/components/FileUpload';
-import { STORAGE_BUCKETS } from '@/lib/supabase';
 
 export default function AdminSessionsPage() {
   const { profile } = useAuth();
@@ -46,10 +46,10 @@ export default function AdminSessionsPage() {
   async function fetchData() {
     setLoading(true);
     const [sessionsRes, subjectsRes, teachersRes, classesRes] = await Promise.all([
-      supabase.from('sessions').select('*, subject:subjects!subject_id(name), class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name), quiz:quizzes(id, title)').not('video_url', 'is', null).order('created_at', { ascending: false }),
-      supabase.from('subjects').select('id, name').order('name'),
-      supabase.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
-      supabase.from('classes').select('id, name').order('level'),
+      db.from('sessions').select('*, subject:subjects!subject_id(name), class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name), quiz:quizzes(id, title)').not('video_url', 'is', null).order('created_at', { ascending: false }),
+      db.from('subjects').select('id, name').order('name'),
+      db.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
+      db.from('classes').select('id, name').order('level'),
     ]);
     if (sessionsRes.data) setSessions(sessionsRes.data);
     if (subjectsRes.data) setSubjects(subjectsRes.data);
@@ -63,7 +63,7 @@ export default function AdminSessionsPage() {
     if (!formData.video_url.trim()) { setError('Video URL is required'); return; }
     setError(''); setSaving(true);
     try {
-      const { error } = await supabase.from('sessions').insert({
+      const { error } = await db.from('sessions').insert({
         title: formData.title,
         description: formData.description,
         video_url: formData.video_url,
@@ -90,15 +90,15 @@ export default function AdminSessionsPage() {
     if (!confirm('Delete this video lesson and all associated quizzes?')) return;
     try {
       // Delete lessons linked to this session
-      await supabase.from('lessons').delete().eq('session_id', id);
+      await db.from('lessons').delete().eq('session_id', id);
       // Delete quizzes and their questions
-      const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', id);
+      const { data: quizzes } = await db.from('quizzes').select('id').eq('session_id', id);
       if (quizzes && quizzes.length > 0) {
-        const qIds = quizzes.map(q => q.id);
-        await supabase.from('quiz_questions').delete().in('quiz_id', qIds);
-        await supabase.from('quizzes').delete().in('id', qIds);
+        const qIds = quizzes.map((q: any) => q.id);
+        await db.from('quiz_questions').delete().in('quiz_id', qIds);
+        await db.from('quizzes').delete().in('id', qIds);
       }
-      const { error } = await supabase.from('sessions').delete().eq('id', id);
+      const { error } = await db.from('sessions').delete().eq('id', id);
       if (error) throw new Error(error.message);
     } catch (err: any) {
       console.error('Failed to delete session:', err);
@@ -107,23 +107,23 @@ export default function AdminSessionsPage() {
   }
 
   async function getCheckpointQuizId(sessionId: string): Promise<string | null> {
-    const { data: existing } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+    const { data: existing } = await db.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
     if (existing) return existing.id;
-    const { data: created, error: insErr } = await supabase.from('quizzes').insert({
+    const { data: created, error: insErr } = await db.from('quizzes').insert({
       session_id: sessionId,
       title: 'Checkpoint Quiz',
       passing_score: 80,
     }).select('id').maybeSingle();
     if (created) return created.id;
     if (insErr) {
-      const { data: retry } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+      const { data: retry } = await db.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
       return retry?.id || null;
     }
     return null;
   }
 
   async function loadCheckpoints(quizId: string) {
-    const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('timestamp_seconds', { ascending: true });
+    const { data } = await db.from('quiz_questions').select('*').eq('quiz_id', quizId).order('timestamp_seconds', { ascending: true });
     setCheckpoints(data || []);
   }
 
@@ -145,7 +145,7 @@ export default function AdminSessionsPage() {
     const quizId = await getCheckpointQuizId(selectedSession.id);
     if (!quizId) { setError('Failed to create checkpoint quiz'); setSaving(false); return; }
 
-    const { error: insertError } = await supabase.from('quiz_questions').insert({
+    const { error: insertError } = await db.from('quiz_questions').insert({
       quiz_id: quizId,
       question: checkpointForm.question.trim(),
       options: validOptions,
@@ -163,7 +163,7 @@ export default function AdminSessionsPage() {
   }
 
   async function deleteCheckpoint(id: string) {
-    await supabase.from('quiz_questions').delete().eq('id', id);
+    await db.from('quiz_questions').delete().eq('id', id);
     const qId = await getCheckpointQuizId(selectedSession.id);
     if (qId) await loadCheckpoints(qId);
   }

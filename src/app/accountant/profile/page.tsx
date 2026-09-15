@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, uploadFile } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Save, Eye, EyeOff, User, Phone, Check, AlertCircle, Loader2, Shield, Calendar, DollarSign, TrendingUp, TrendingDown, Receipt, FileText, Upload } from 'lucide-react';
@@ -51,17 +52,17 @@ export default function AccountantProfilePage() {
 
   async function fetchStaffInfo() {
     if (!profile) return;
-    const { data } = await supabase.from('staff').select('*, department:departments(name)').eq('profile_id', profile.id).maybeSingle();
+    const { data } = await db.from('staff').select('*, department:departments(name)').eq('profile_id', profile.id).maybeSingle();
     if (data) setStaffInfo(data);
   }
 
   async function fetchStats() {
     if (!profile) return;
     const [incomeRes, expenseRes, pendingRes, totalRes] = await Promise.all([
-      supabase.from('transactions').select('amount').eq('type', 'income'),
-      supabase.from('transactions').select('amount').eq('type', 'expense'),
-      supabase.from('invoices').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('invoices').select('id', { count: 'exact', head: true }),
+      db.from('transactions').select('amount').eq('type', 'income'),
+      db.from('transactions').select('amount').eq('type', 'expense'),
+      db.from('invoices').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      db.from('invoices').select('id', { count: 'exact', head: true }),
     ]);
     const income = incomeRes.data?.reduce((sum: number, t: any) => sum + (t.amount || 0), 0) || 0;
     const expense = expenseRes.data?.reduce((sum: number, t: any) => sum + (t.amount || 0), 0) || 0;
@@ -71,7 +72,7 @@ export default function AccountantProfilePage() {
   async function handleSave() {
     if (!profile) return;
     setSaving(true); setMsg(null);
-    const { error } = await supabase.from('profiles').update({ first_name: formData.first_name, last_name: formData.last_name, phone: formData.phone || null, avatar_url: formData.avatar_url || null }).eq('id', profile.id);
+    const { error } = await db.from('profiles').update({ first_name: formData.first_name, last_name: formData.last_name, phone: formData.phone || null, avatar_url: formData.avatar_url || null }).eq('id', profile.id);
     if (error) { setMsg({ type: 'error', text: error.message }); } 
     else { setMsg({ type: 'success', text: 'Profile updated!' }); setProfile({ ...profile, ...formData }); }
     setSaving(false);

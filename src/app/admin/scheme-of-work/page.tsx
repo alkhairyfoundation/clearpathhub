@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { BookOpen, Save, ArrowLeft, Plus, Trash2, Loader2, FileText, Layers } from 'lucide-react';
@@ -37,10 +37,10 @@ export default function AdminSchemeOfWorkPage() {
   async function fetchInitialData() {
     setLoading(true);
     const [sessionsRes, termsRes, classesRes, subjectsRes] = await Promise.all([
-      supabase.from('academic_sessions').select('*').order('start_date', { ascending: false }),
-      supabase.from('terms').select('*').order('start_date'),
-      supabase.from('classes').select('*').order('level'),
-      supabase.from('subjects').select('*, class:classes!class_id(name)').order('name'),
+      db.from('academic_sessions').select('*').order('start_date', { ascending: false }),
+      db.from('terms').select('*').order('start_date'),
+      db.from('classes').select('*').order('level'),
+      db.from('subjects').select('*, class:classes!class_id(name)').order('name'),
     ]);
     if (!sessionsRes.error && sessionsRes.data) setSessions(sessionsRes.data);
     if (!termsRes.error && termsRes.data) setTerms(termsRes.data);
@@ -54,7 +54,7 @@ export default function AdminSchemeOfWorkPage() {
   async function loadEntries() {
     if (!filters.term_id || !filters.class_id || !filters.subject_id) return;
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await db
       .from('scheme_of_work')
       .select('*')
       .eq('term_id', filters.term_id)
@@ -64,7 +64,7 @@ export default function AdminSchemeOfWorkPage() {
     if (data) {
       setEntries(data);
       const editable: Record<string, any> = {};
-      data.forEach(e => {
+      data.forEach((e: any) => {
         editable[e.week_number] = {
           topic: e.topic || '',
           subtopics: Array.isArray(e.subtopics) ? e.subtopics.join('\n') : '',
@@ -119,10 +119,10 @@ export default function AdminSchemeOfWorkPage() {
         };
 
         if (existing) {
-          const { error } = await supabase.from('scheme_of_work').update(payload).eq('id', existing.id);
+          const { error } = await db.from('scheme_of_work').update(payload).eq('id', existing.id);
           if (error) throw new Error(error.message);
         } else {
-          const { error } = await supabase.from('scheme_of_work').insert(payload);
+          const { error } = await db.from('scheme_of_work').insert(payload);
           if (error) throw new Error(error.message);
         }
       }

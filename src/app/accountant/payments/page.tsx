@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { DollarSign, Search, CheckCircle, Clock, AlertCircle, X, Plus, Filter, Download, ChevronDown, TrendingUp, Users } from 'lucide-react';
@@ -29,10 +29,10 @@ export default function AccountantPaymentsPage() {
   async function fetchData() {
     setLoading(true);
     const [invRes, recRes, uploadRes, stuRes] = await Promise.all([
-      supabase.from('invoices').select('*, student:profiles(first_name, last_name), class:classes(name)').order('created_at', { ascending: false }),
-      supabase.from('receipts').select('*, invoice:invoices(invoice_number, student:profiles(first_name, last_name))').order('created_at', { ascending: false }).limit(50),
-      supabase.from('payment_uploads').select('*, student:profiles(first_name, last_name), parent:profiles!payment_uploads_parent_id_fkey(first_name, last_name)').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('*, student:students!profile_id(class_id, classes:class_id(name))').eq('role', 'student').order('first_name'),
+      db.from('invoices').select('*, student:profiles(first_name, last_name), class:classes(name)').order('created_at', { ascending: false }),
+      db.from('receipts').select('*, invoice:invoices(invoice_number, student:profiles(first_name, last_name))').order('created_at', { ascending: false }).limit(50),
+      db.from('payment_uploads').select('*, student:profiles(first_name, last_name), parent:profiles!payment_uploads_parent_id_fkey(first_name, last_name)').order('created_at', { ascending: false }),
+      db.from('profiles').select('*, student:students!profile_id(class_id, classes:class_id(name))').eq('role', 'student').order('first_name'),
     ]);
     if (invRes.data) {
       setInvoices(invRes.data);
@@ -52,7 +52,7 @@ export default function AccountantPaymentsPage() {
 
   async function handleCreateReceipt() {
     const receiptNumber = `RCP-${Date.now()}`;
-    await supabase.from('receipts').insert({
+    await db.from('receipts').insert({
       receipt_number: receiptNumber,
       amount_paid: parseFloat(formData.amount.toString()),
       payment_method: formData.payment_method,
@@ -63,7 +63,7 @@ export default function AccountantPaymentsPage() {
       payment_type: 'full',
       balance_remaining: 0,
     });
-    await supabase.from('transactions').insert({
+    await db.from('transactions').insert({
       student_id: formData.student_id || null,
       type: 'income',
       category: 'School Fees',

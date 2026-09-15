@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -38,7 +38,7 @@ export default function TeacherPortfolioTrackingPage() {
       const classIds = await getTeacherClassIds(profile!.id);
       if (classIds.length === 0) { setLoading(false); return; }
 
-      const { data: studentData } = await supabase
+      const { data: studentData } = await db
         .from('students')
         .select('profile_id, profile:profiles!profile_id(first_name, last_name), class_id')
         .in('class_id', classIds);
@@ -52,8 +52,8 @@ export default function TeacherPortfolioTrackingPage() {
     setLoading(true);
     setSelectedStudent(studentId);
     try {
-      const { data: session } = await supabase.from('academic_sessions').select('*').eq('is_current', true).single();
-      const { data: term } = await supabase.from('terms').select('*').eq('is_current', true).single();
+      const { data: session } = await db.from('academic_sessions').select('*').eq('is_current', true).single();
+      const { data: term } = await db.from('terms').select('*').eq('is_current', true).single();
 
       if (!session || !term) { setLoading(false); return; }
 
@@ -103,8 +103,8 @@ export default function TeacherPortfolioTrackingPage() {
     if (!selectedStudent || !evidenceForm.text_snapshot.trim()) return;
     setSaving(true);
     try {
-      const sessionRes = await supabase.from('academic_sessions').select('*').eq('is_current', true).single();
-      const termRes = await supabase.from('terms').select('*').eq('is_current', true).single();
+      const sessionRes = await db.from('academic_sessions').select('*').eq('is_current', true).single();
+      const termRes = await db.from('terms').select('*').eq('is_current', true).single();
       const session = sessionRes.data;
       const term = termRes.data;
       if (!session || !term) throw new Error('No active session');

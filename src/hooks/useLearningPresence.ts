@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import {
   HEARTBEAT_MS,
   IDLE_AFTER_MS,
@@ -61,7 +61,7 @@ export function useLearningPresence(options: UseLearningPresenceOptions) {
     const studentId = optsRef.current.userId;
     if (!studentId) return;
     fire(
-      supabase
+      db
         .from('learning_events')
         .insert({
           student_id: studentId,
@@ -80,14 +80,14 @@ export function useLearningPresence(options: UseLearningPresenceOptions) {
     if (!studentId) return;
     if (id) {
       fire(
-        supabase
+        db
           .from('study_sessions')
           .update({ ended_at: new Date().toISOString(), signals_count: signalsRef.current.length })
           .eq('id', id)
       );
     }
     fire(
-      supabase
+      db
         .from('learning_events')
         .insert({
           student_id: studentId,
@@ -142,7 +142,7 @@ export function useLearningPresence(options: UseLearningPresenceOptions) {
     }
 
     fire(
-      supabase
+      db
         .from('learning_presence')
         .upsert(
           {
@@ -168,7 +168,7 @@ export function useLearningPresence(options: UseLearningPresenceOptions) {
     runningRef.current = true;
 
     fire(
-      supabase
+      db
         .from('learning_events')
         .insert({
           student_id: userId,
@@ -179,7 +179,7 @@ export function useLearningPresence(options: UseLearningPresenceOptions) {
     );
 
     fire(
-      supabase
+      db
         .from('study_sessions')
         .insert({
           student_id: userId,
@@ -233,7 +233,7 @@ export function useLearningPresence(options: UseLearningPresenceOptions) {
       runningRef.current = false;
       endStudySession();
       fire(
-        supabase
+        db
           .from('learning_presence')
           .delete()
           .eq('student_id', userId)
@@ -252,7 +252,7 @@ export function useLearningPresence(options: UseLearningPresenceOptions) {
     const studentId = optsRef.current.userId;
     if (!studentId) return;
     fire(
-      supabase
+      db
         .from('learning_events')
         .insert({
           student_id: studentId,

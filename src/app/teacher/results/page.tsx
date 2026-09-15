@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -89,9 +89,9 @@ export default function TeacherResultsPage() {
 
       const [{ data: classData }, { data: settingsData }] = await Promise.all([
         teacherClassIds.length > 0
-          ? supabase.from('classes').select('*').in('id', teacherClassIds).order('name')
-          : supabase.from('classes').select('*').order('name'),
-        supabase.from('school_settings').select('*').limit(1).maybeSingle(),
+          ? db.from('classes').select('*').in('id', teacherClassIds).order('name')
+          : db.from('classes').select('*').order('name'),
+        db.from('school_settings').select('*').limit(1).maybeSingle(),
       ]);
       setClasses(classData || []);
       setSchoolSettings(settingsData);
@@ -107,8 +107,8 @@ export default function TeacherResultsPage() {
     setReportData(null);
     try {
       const [{ data: subjData }, { data: studData }] = await Promise.all([
-        supabase.from('subjects').select('*').or(`class_id.eq.${selectedClassId},class_id.is.null`).order('name'),
-        supabase.from('students')
+        db.from('subjects').select('*').or(`class_id.eq.${selectedClassId},class_id.is.null`).order('name'),
+        db.from('students')
           .select('profile_id, admission_number, profile:profiles!profile_id(first_name, last_name)')
           .eq('class_id', selectedClassId)
           .order('admission_number'),

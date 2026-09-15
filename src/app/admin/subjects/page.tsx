@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, Edit, Trash2, X, FileText, Loader2, Search, Filter, Download, Hash } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -47,10 +47,10 @@ export default function AdminSubjectsPage() {
   async function fetchData() {
     setLoading(true);
     const [subjectsRes, classesRes, deptsRes, teachersRes] = await Promise.all([
-      supabase.from('subjects').select('*, department:departments!department_id(name), class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name)').order('name'),
-      supabase.from('classes').select('id, name').order('level'),
-      supabase.from('departments').select('id, name').order('name'),
-      supabase.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
+      db.from('subjects').select('*, department:departments!department_id(name), class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name)').order('name'),
+      db.from('classes').select('id, name').order('level'),
+      db.from('departments').select('id, name').order('name'),
+      db.from('profiles').select('id, first_name, last_name').eq('role', 'teacher').order('first_name'),
     ]);
     if (subjectsRes.data) setSubjects(subjectsRes.data);
     if (classesRes.data) setClasses(classesRes.data);
@@ -88,11 +88,11 @@ export default function AdminSubjectsPage() {
         teacher_id: formData.teacher_id || null,
       };
       if (editingSubject) {
-        const { error: err } = await supabase.from('subjects').update(data).eq('id', editingSubject.id);
+        const { error: err } = await db.from('subjects').update(data).eq('id', editingSubject.id);
         if (err) throw new Error(err.message);
         setSuccess('Subject updated successfully');
       } else {
-        const { error: err } = await supabase.from('subjects').insert(data);
+        const { error: err } = await db.from('subjects').insert(data);
         if (err) throw new Error(err.message);
         setSuccess('Subject created successfully');
       }
@@ -108,9 +108,9 @@ export default function AdminSubjectsPage() {
     if (!confirm('Delete this subject? This will unlink related sessions and lessons.')) return;
     setDeleting(id);
     try {
-      await supabase.from('sessions').update({ subject_id: null }).eq('subject_id', id);
-      await supabase.from('lessons').update({ subject_id: null }).eq('subject_id', id);
-      const { error } = await supabase.from('subjects').delete().eq('id', id);
+      await db.from('sessions').update({ subject_id: null }).eq('subject_id', id);
+      await db.from('lessons').update({ subject_id: null }).eq('subject_id', id);
+      const { error } = await db.from('subjects').delete().eq('id', id);
       if (error) throw new Error(error.message);
       setSuccess('Subject deleted successfully');
       setTimeout(() => setSuccess(''), 3000);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, FileText, Trash2, X, ArrowLeft, Paperclip, Search, HelpCircle, Loader2 } from 'lucide-react';
@@ -38,9 +38,9 @@ export default function TeacherLessonsPage() {
   async function fetchData() {
     setLoading(true);
     const [lessonsRes, subjectsRes, classesRes] = await Promise.all([
-      supabase.from('lessons').select('*, subject:subjects!subject_id(*), class:classes!class_id(name)').eq('teacher_id', profile?.id).order('created_at', { ascending: false }),
-      supabase.from('subjects').select('*').order('name'),
-      supabase.from('classes').select('id, name, level').order('name'),
+      db.from('lessons').select('*, subject:subjects!subject_id(*), class:classes!class_id(name)').eq('teacher_id', profile?.id).order('created_at', { ascending: false }),
+      db.from('subjects').select('*').order('name'),
+      db.from('classes').select('id, name, level').order('name'),
     ]);
     if (lessonsRes.data) setLessons(lessonsRes.data);
     if (subjectsRes.data) setSubjects(subjectsRes.data);
@@ -52,7 +52,7 @@ export default function TeacherLessonsPage() {
     if (!formData.title.trim()) { setError('Title is required'); return; }
     setError(''); setSaving(true);
     try {
-      const { error } = await supabase.from('lessons').insert({
+      const { error } = await db.from('lessons').insert({
         title: formData.title, content: formData.content,
         subject_id: formData.subject_id || null, class_id: formData.class_id || null,
         teacher_id: profile?.id,
@@ -71,13 +71,13 @@ export default function TeacherLessonsPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this lesson?')) return;
-    await supabase.from('lessons').delete().eq('id', id);
+    await db.from('lessons').delete().eq('id', id);
     fetchData();
   }
 
   async function ensureSessionForLesson(lesson: any): Promise<string | null> {
     if (lesson.session_id) return lesson.session_id;
-    const { data: newSession } = await supabase.from('sessions').insert({
+    const { data: newSession } = await db.from('sessions').insert({
       title: lesson.title,
       subject_id: lesson.subject_id || null,
       class_id: lesson.class_id || null,
@@ -85,7 +85,7 @@ export default function TeacherLessonsPage() {
       is_published: true,
     }).select('id').single();
     if (!newSession) return null;
-    await supabase.from('lessons').update({ session_id: newSession.id }).eq('id', lesson.id);
+    await db.from('lessons').update({ session_id: newSession.id }).eq('id', lesson.id);
     lesson.session_id = newSession.id;
     return newSession.id;
   }
@@ -93,10 +93,10 @@ export default function TeacherLessonsPage() {
   async function openQuizManager(lesson: any) {
     setSelectedLesson(lesson);
     const sessionId = lesson.session_id;
-    const { data: quizzes } = await supabase.from('quizzes').select('id').eq('session_id', sessionId);
+    const { data: quizzes } = await db.from('quizzes').select('id').eq('session_id', sessionId);
     let questions: any[] = [];
     if (quizzes?.length) {
-      const { data } = await supabase.from('quiz_questions').select('*').in('quiz_id', quizzes.map(q => q.id)).order('created_at');
+      const { data } = await db.from('quiz_questions').select('*').in('quiz_id', quizzes.map((q: any) => q.id)).order('created_at');
       questions = data || [];
     }
     setQuizQuestions(questions);
@@ -110,23 +110,23 @@ export default function TeacherLessonsPage() {
     if (!sessionId) { setError('Could not create session for lesson'); setSaving(false); return; }
     setError('');
     let quizId = null;
-    const { data: existing } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+    const { data: existing } = await db.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
     if (existing) { quizId = existing.id; }
     else {
-      const { data: nq, error: insErr } = await supabase.from('quizzes').insert({ session_id: sessionId, title: `${selectedLesson.title} Quiz`, passing_score: 60 }).select('id').maybeSingle();
+      const { data: nq, error: insErr } = await db.from('quizzes').insert({ session_id: sessionId, title: `${selectedLesson.title} Quiz`, passing_score: 60 }).select('id').maybeSingle();
       if (nq) quizId = nq.id;
       else if (insErr) {
-        const { data: retry } = await supabase.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
+        const { data: retry } = await db.from('quizzes').select('id').eq('session_id', sessionId).maybeSingle();
         if (retry) quizId = retry.id;
       }
     }
     if (quizId) {
-      await supabase.from('quiz_questions').insert({
+      await db.from('quiz_questions').insert({
         quiz_id: quizId, question: quizForm.question,
         options: quizForm.options.filter(o => o.trim()),
         correct_answer: quizForm.correct_answer, points: quizForm.points,
       });
-      const { data } = await supabase.from('quiz_questions').select('*').eq('quiz_id', quizId).order('created_at');
+      const { data } = await db.from('quiz_questions').select('*').eq('quiz_id', quizId).order('created_at');
       setQuizQuestions(data || []);
       setQuizForm({ question: '', options: ['', '', '', ''], correct_answer: 0, points: 1 });
     }
@@ -134,7 +134,7 @@ export default function TeacherLessonsPage() {
   }
 
   async function deleteQuizQuestion(id: string) {
-    await supabase.from('quiz_questions').delete().eq('id', id);
+    await db.from('quiz_questions').delete().eq('id', id);
     if (selectedLesson) openQuizManager(selectedLesson);
   }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -23,7 +23,7 @@ export default function StudentTestsPage() {
 
   async function fetchData() {
     setLoading(true);
-    const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+    const { data: student } = await db.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
     
     const res = await fetch(`/api/student-tests?studentId=${profile?.id}&classId=${student?.class_id || ''}`);
     const data = await res.json();

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { NextRequest } from 'next/server';
-import { createSupabaseAdminClient } from '@/lib/supabase-server';
+import { query as neonQuery } from '@/lib/neon';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,14 +19,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid student_id format' }, { status: 400 });
     }
 
-    const adminClient = createSupabaseAdminClient();
-    let query = adminClient.from('ccr_responses').select('*');
+    const conditions: string[] = [];
+    const params: any[] = [];
+    if (studentId) {
+      conditions.push(`student_id = $${params.length + 1}::uuid`);
+      params.push(studentId);
+    }
+    if (respondentType) {
+      conditions.push(`respondent_type = $${params.length + 1}`);
+      params.push(respondentType);
+    }
+    const sql = `SELECT * FROM ccr_responses${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''}`;
 
-    if (studentId) query = query.eq('student_id', studentId);
-    if (respondentType) query = query.eq('respondent_type', respondentType);
-
-    const { data, error } = await query;
-    if (error) throw error;
+    const data = await neonQuery(sql, params);
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -28,8 +28,8 @@ useEffect(() => {
     setLoading(true);
     try {
       const [childrenRes, announcementsRes] = await Promise.all([
-        supabase.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id),
-        supabase.from('announcements').select('*').in('audience', ['all', 'parents']).order('created_at', { ascending: false }).limit(5),
+        db.from('students').select('*, profile:profiles!profile_id(first_name, last_name), class:classes!class_id(name)').eq('parent_id', profile?.id),
+        db.from('announcements').select('*').in('audience', ['all', 'parents']).order('created_at', { ascending: false }).limit(5),
       ]);
       if (childrenRes.error) throw new Error(childrenRes.error.message);
 
@@ -37,20 +37,20 @@ useEffect(() => {
         setChildren(childrenRes.data);
         setStats(prev => ({ ...prev, totalChildren: childrenRes.data.length }));
 
-        const childIds = childrenRes.data.map(c => c.profile_id);
+        const childIds = childrenRes.data.map((c: any) => c.profile_id);
         const apiCall = async (action: string, data: any = {}) => {
           const res = await fetch('/api/manage-tests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) });
           return res.json();
         };
         if (childIds.length > 0) {
           const [resultsData, quizData, testData, homeworkData, behaviorData, examLogsData, invoiceData] = await Promise.all([
-            supabase.from('results').select('score, subject:subjects!subject_id(name), created_at').in('student_id', childIds).order('created_at', { ascending: false }),
-            supabase.from('quiz_attempts').select('id, score, passed, completed_at, quiz:quizzes!quiz_id(title)').in('student_id', childIds).order('completed_at', { ascending: false }),
+            db.from('results').select('score, subject:subjects!subject_id(name), created_at').in('student_id', childIds).order('created_at', { ascending: false }),
+            db.from('quiz_attempts').select('id, score, passed, completed_at, quiz:quizzes!quiz_id(title)').in('student_id', childIds).order('completed_at', { ascending: false }),
             apiCall('list_attempts_by_students', { student_ids: childIds }),
-            supabase.from('homework_submissions').select('id, marks, submitted_at, homework:homework!homework_id(title, subject:subjects!subject_id(name))').in('student_id', childIds).order('submitted_at', { ascending: false }),
-            supabase.from('behavioral_reports').select('id, rating, behavior, created_at').in('student_id', childIds).order('created_at', { ascending: false }),
+            db.from('homework_submissions').select('id, marks, submitted_at, homework:homework!homework_id(title, subject:subjects!subject_id(name))').in('student_id', childIds).order('submitted_at', { ascending: false }),
+            db.from('behavioral_reports').select('id, rating, behavior, created_at').in('student_id', childIds).order('created_at', { ascending: false }),
             apiCall('list_exam_logs', { student_ids: childIds }),
-            supabase.from('invoices').select('id, amount, status').in('student_id', childIds),
+            db.from('invoices').select('id, amount, status').in('student_id', childIds),
           ]);
 
           if (resultsData.data?.length) {
@@ -75,7 +75,7 @@ useEffect(() => {
       if (announcementsRes.data) {
         setAnnouncements(announcementsRes.data);
         const lastRead = profile?.last_read_announcements ? new Date(profile.last_read_announcements).getTime() : 0;
-        const unreadCount = announcementsRes.data.filter(a => new Date(a.created_at).getTime() > lastRead).length;
+        const unreadCount = announcementsRes.data.filter((a: any) => new Date(a.created_at).getTime() > lastRead).length;
         setStats(prev => ({ ...prev, unreadAnnouncements: unreadCount }));
       }
     } catch (err: any) {
@@ -116,7 +116,7 @@ useEffect(() => {
             {[
               { title: 'My Children', value: stats.totalChildren, icon: <Users size={24} />, href: '/parent/children', bg: 'bg-primary-100 dark:bg-primary-900/30 dark:bg-primary-900/30', color: 'text-primary-600 dark:text-primary-400 dark:text-primary-400' },
               { title: 'Avg Performance', value: `${stats.avgPerformance}%`, icon: <TrendingUp size={24} />, href: '/parent/progress', bg: 'bg-emerald-100 dark:bg-emerald-900/30 dark:bg-emerald-900/30', color: 'text-emerald-600 dark:text-emerald-400 dark:text-emerald-400' },
-              { title: 'Pending Fees', value: `₦${stats.pendingFees.toLocaleString()}`, icon: <DollarSign size={24} />, href: '/parent/payments', bg: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400 dark:text-amber-400' },
+              { title: 'Pending Fees', value: `?${stats.pendingFees.toLocaleString()}`, icon: <DollarSign size={24} />, href: '/parent/payments', bg: 'bg-amber-100 dark:bg-amber-900/30 dark:bg-amber-900/30', color: 'text-amber-600 dark:text-amber-400 dark:text-amber-400' },
               { title: 'Announcements', value: stats.unreadAnnouncements, icon: <Bell size={24} />, href: '/parent/announcements', bg: 'bg-purple-100 dark:bg-purple-900/30 dark:bg-purple-900/30', color: 'text-purple-600 dark:text-purple-400 dark:text-purple-400' },
             ].map((card, i) => (
               <Link key={i} href={card.href} className="card hover:shadow-md cursor-pointer">

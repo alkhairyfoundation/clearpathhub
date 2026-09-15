@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { getQuestionsByType, DOMAINS, getDomainQuestions } from '@/lib/ccr-questions';
 import { Save, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import type { CcrQuestion, CcrRespondentType } from '@/types';
@@ -40,7 +40,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
   async function loadExisting() {
     setLoading(true);
     try {
-      const { data } = await supabase
+      const { data } = await db
         .from('ccr_responses')
         .select('*')
         .eq('student_id', studentId)
@@ -70,7 +70,7 @@ export default function CcrForm({ respondentType, studentId, studentName, subjec
         is_submitted: finalSubmit,
       };
 
-      const { data: sessionData } = await supabase.from('school_settings').select('current_session_id, current_term_id').single();
+      const { data: sessionData } = await db.from('school_settings').select('current_session_id, current_term_id').single();
       if (sessionData) {
         payload.academic_session_id = sessionData.current_session_id;
         payload.term_id = sessionData.current_term_id;

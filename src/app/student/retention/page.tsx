@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -29,7 +29,7 @@ export default function RetentionPage() {
   async function fetchChecks() {
     setLoading(true);
     try {
-      const { data } = await supabase
+      const { data } = await db
         .from('retention_checks')
         .select('*, subject:subjects!subject_id(name, code)')
         .eq('student_id', profile?.id)

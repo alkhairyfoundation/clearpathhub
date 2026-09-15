@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar } from 'lucide-react';
 import jsQR from 'jsqr';
@@ -30,7 +30,7 @@ export default function StaffScanQRPage() {
 
   async function fetchTodayHistory() {
     const today = new Date().toISOString().split('T')[0];
-    const { data } = await supabase
+    const { data } = await db
       .from('staff_attendance')
       .select('*')
       .eq('staff_id', profile?.id)
@@ -101,7 +101,7 @@ export default function StaffScanQRPage() {
     } catch {}
     
     const todayDate = new Date().toISOString().split('T')[0];
-    const { data: existing } = await supabase
+    const { data: existing } = await db
       .from('staff_attendance')
       .select('id')
       .eq('staff_id', profile?.id)
@@ -109,9 +109,9 @@ export default function StaffScanQRPage() {
       .maybeSingle();
 
     if (existing) {
-      await supabase.from('staff_attendance').update({ status: 'present', marked_at: new Date().toISOString() }).eq('id', existing.id);
+      await db.from('staff_attendance').update({ status: 'present', marked_at: new Date().toISOString() }).eq('id', existing.id);
     } else {
-      await supabase.from('staff_attendance').insert({
+      await db.from('staff_attendance').insert({
         staff_id: profile?.id, qr_code: qrCode, marked_at: new Date().toISOString(),
         date: todayDate, status: 'present',
       });

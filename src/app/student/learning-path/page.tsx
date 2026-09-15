@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -27,9 +27,9 @@ export default function LearningPathPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const { data: student } = await supabase.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
+      const { data: student } = await db.from('students').select('class_id').eq('profile_id', profile?.id).maybeSingle();
 
-      let subjQuery = supabase.from('subjects').select('*, class:classes!class_id(name)').order('name');
+      let subjQuery = db.from('subjects').select('*, class:classes!class_id(name)').order('name');
       if (student?.class_id) {
         subjQuery = subjQuery.eq('class_id', student.class_id);
       }
