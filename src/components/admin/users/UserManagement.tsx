@@ -43,6 +43,14 @@ export default function UserManagement() {
     classId: '',
     departmentId: '',
   });
+  const [searchInput, setSearchInput] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((f) => (f.search === searchInput ? f : { ...f, search: searchInput }));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
@@ -318,7 +326,15 @@ export default function UserManagement() {
       {/* Filters */}
       <UserFilters
         filters={filters}
-        onChange={setFilters}
+        searchInput={searchInput}
+        onSearchInput={setSearchInput}
+        onChange={(next) => {
+          if (next.role !== filters.role) {
+            next = { ...next, search: '', classId: '', departmentId: '' };
+            setSearchInput('');
+          }
+          setFilters(next);
+        }}
         classes={classes}
         departments={departments}
         loadingClasses={loadingMeta}

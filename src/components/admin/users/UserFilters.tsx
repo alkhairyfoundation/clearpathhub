@@ -25,6 +25,8 @@ export interface UserFiltersState {
 
 interface UserFiltersProps {
   filters: UserFiltersState;
+  searchInput: string;
+  onSearchInput: (value: string) => void;
   onChange: (filters: UserFiltersState) => void;
   classes: ClassOption[];
   departments: DepartmentOption[];
@@ -34,6 +36,8 @@ interface UserFiltersProps {
 
 export default function UserFilters({
   filters,
+  searchInput,
+  onSearchInput,
   onChange,
   classes,
   departments,
@@ -53,8 +57,8 @@ export default function UserFilters({
           <input
             type="text"
             placeholder="Search by name, email, phone, admission or staff number..."
-            value={filters.search}
-            onChange={(e) => set({ search: e.target.value })}
+            value={searchInput}
+            onChange={(e) => onSearchInput(e.target.value)}
             className="input pl-10"
           />
         </div>

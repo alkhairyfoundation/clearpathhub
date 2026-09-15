@@ -12,6 +12,10 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_hash TEXT;
 -- last_read_announcements (kept in sync with Supabase profiles)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_read_announcements TIMESTAMP;
 
+-- staff.status (drives the active/inactive badge in user management; default active)
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+CREATE INDEX IF NOT EXISTS idx_staff_status ON staff(status);
+
 -- teacher_classes junction (many-to-many Teacher <-> Class)
 CREATE TABLE IF NOT EXISTS teacher_classes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
