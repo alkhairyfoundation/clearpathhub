@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
           FROM students_to_promote st
           WHERE s.id = st.student_id
             AND st.next_class_id IS NOT NULL
-          RETURNING s.id, s.profile_id, st.current_class_name, st.level, st.next_class_id
+          RETURNING s.id AS student_id, s.profile_id, st.current_class_name, st.level, st.next_class_id
         )
         SELECT
           (SELECT COUNT(*) FROM students_to_promote) AS total_eligible,
