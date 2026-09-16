@@ -784,6 +784,9 @@ export async function upsertNeonStaffRecord(
   }
 }
 
+// Columns that reference a profile id and are safe to NULL out (they may not
+// exist yet / may be on tables that are absent in some environments, so each
+// statement is executed inside its own savepoint and failures are skipped).
 const NULL_REF_PAIRS: Array<[string, string]> = [
   ['subjects', 'teacher_id'],
   ['classes', 'form_teacher_id'],
@@ -795,26 +798,118 @@ const NULL_REF_PAIRS: Array<[string, string]> = [
   ['teacher_evaluations', 'teacher_id'],
   ['teacher_evaluations', 'evaluated_by'],
   ['student_risk_predictions', 'acknowledged_by'],
+  ['student_risk_predictions', 'student_id'],
   ['receipts', 'uploaded_by'],
   ['announcements', 'created_by'],
-  ['behavioral_reports', 'entered_by'],
   ['results', 'entered_by'],
+  ['results', 'student_id'],
   ['transactions', 'recorded_by'],
   ['attendance', 'marked_by'],
+  ['attendance', 'student_id'],
   ['staff_attendance', 'marked_by'],
+  ['staff_attendance', 'staff_id'],
+  ['behavioral_reports', 'student_id'],
+  ['homework_submissions', 'student_id'],
+  ['quiz_attempts', 'student_id'],
+  ['test_attempts', 'student_id'],
+  ['invoices', 'student_id'],
+  ['id_cards', 'student_id'],
+  ['student_classes', 'student_id'],
+  ['student_term_goals', 'approved_by'],
+  ['student_skill_rubrics', 'updated_by'],
+  ['islamic_tracking', 'verified_by'],
+  ['class_term_frameworks', 'created_by'],
+  ['messages', 'sender_id'],
+  ['messages', 'recipient_id'],
+  ['user_notifications', 'sender_id'],
+  ['mock_exams', 'created_by'],
+  ['tests', 'created_by'],
+  ['question_bank', 'created_by'],
+  ['portfolio_evidence', 'created_by'],
+  ['exam_activity_logs', 'student_id'],
+  ['mock_analytics', 'student_id'],
+  ['mock_attempts', 'student_id'],
 ];
+
+// Returns a list of [table, column] pairs that most commonly need their rows
+// hard-deleted per role before the profile row can be removed.
+function childDeletesForRole(role?: string): Array<[string, string]> {
+  if (role === 'teacher') {
+    return [
+      ['teacher_classes', 'teacher_id'],
+      ['homework', 'teacher_id'],
+      ['sessions', 'teacher_id'],
+      ['lessons', 'teacher_id'],
+      ['teacher_tasks', 'teacher_id'],
+      ['teacher_evaluations', 'teacher_id'],
+      ['staff', 'profile_id'],
+    ];
+  }
+  if (role === 'student') {
+    return [
+      ['mastery_tracking', 'student_id'],
+      ['mastery_scores', 'student_id'],
+      ['mastery_practice_logs', 'student_id'],
+      ['mastery_learning_path', 'student_id'],
+      ['practice_sessions', 'student_id'],
+      ['review_schedule', 'student_id'],
+      ['retention_checks', 'student_id'],
+      ['learning_streaks', 'student_id'],
+      ['daily_goals', 'student_id'],
+      ['goal_hierarchy', 'student_id'],
+      ['daily_accountability', 'student_id'],
+      ['skills_tracking', 'student_id'],
+      ['student_levels', 'student_id'],
+      ['promotion_readiness', 'student_id'],
+      ['performance_colors', 'student_id'],
+      ['spaced_repetition_schedule', 'student_id'],
+      ['student_skill_rubrics', 'student_id'],
+      ['student_term_goals', 'student_id'],
+      ['xp_transactions', 'student_id'],
+      ['ai_coach_interactions', 'student_id'],
+      ['ccr_responses', 'student_id'],
+      ['portfolio_evidence', 'student_id'],
+      ['notification_preferences', 'profile_id'],
+      ['parent_students', 'student_id'],
+      ['students', 'profile_id'],
+    ];
+  }
+  if (role === 'parent') {
+    return [['parent_students', 'parent_id']];
+  }
+  if (role === 'accountant' || role === 'admin') {
+    return [['staff', 'profile_id']];
+  }
+  return [];
+}
 
 export async function deleteUserInNeon(id: string): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    for (const [table, column] of NULL_REF_PAIRS) {
+    // Runs a statement inside its own savepoint so a missing table/column (or
+    // any other non-fatal error) only rolls back that one statement instead of
+    // aborting the whole transaction with "current transaction is aborted".
+    let savepointSeq = 0;
+    const runIsolated = async (sql: string, params: unknown[] = []) => {
+      savepointSeq++;
+      const sp = `sp_${savepointSeq}`;
+      await client.query(`SAVEPOINT ${sp}`);
       try {
-        await client.query(`UPDATE ${table} SET ${column} = NULL WHERE ${column} = $1`, [id]);
+        await client.query(sql, params);
+        await client.query(`RELEASE SAVEPOINT ${sp}`);
       } catch {
-        // table/column may not exist in Neon — ignore
+        try {
+          await client.query(`ROLLBACK TO SAVEPOINT ${sp}`);
+        } catch {
+          // ignore
+        }
       }
+    };
+
+    for (const [table, column] of NULL_REF_PAIRS) {
+      await runIsolated(`UPDATE ${table} SET ${column} = NULL WHERE ${column} = $1`, [id]);
     }
 
     const roleRows = await client.query(
@@ -823,50 +918,12 @@ export async function deleteUserInNeon(id: string): Promise<void> {
     );
     const role = roleRows.rows[0]?.role as string | undefined;
 
-    const safeDelete = async (table: string, column: string) => {
-      try {
-        await client.query(`DELETE FROM ${table} WHERE ${column} = $1`, [id]);
-      } catch {
-        // ignore missing tables/columns
-      }
-    };
+    for (const [table, column] of childDeletesForRole(role)) {
+      await runIsolated(`DELETE FROM ${table} WHERE ${column} = $1`, [id]);
+    }
 
-    if (role === 'teacher') {
-      await safeDelete('teacher_classes', 'teacher_id');
-      await safeDelete('homework', 'teacher_id');
-      await safeDelete('sessions', 'teacher_id');
-      await safeDelete('lessons', 'teacher_id');
-      await safeDelete('teacher_tasks', 'teacher_id');
-      await safeDelete('teacher_evaluations', 'teacher_id');
-      await safeDelete('staff', 'profile_id');
-    } else if (role === 'student') {
-      await safeDelete('homework_submissions', 'student_id');
-      await safeDelete('quiz_attempts', 'student_id');
-      await safeDelete('test_attempts', 'student_id');
-      await safeDelete('attendance', 'student_id');
-      await safeDelete('results', 'student_id');
-      await safeDelete('behavioral_reports', 'student_id');
-      await safeDelete('invoices', 'student_id');
-      await safeDelete('transactions', 'student_id');
-      await safeDelete('id_cards', 'student_id');
-      await safeDelete('student_classes', 'student_id');
-      await safeDelete('student_risk_predictions', 'student_id');
-      await safeDelete('mastery_tracking', 'student_id');
-      await safeDelete('mastery_scores', 'student_id');
-      await safeDelete('practice_sessions', 'student_id');
-      await safeDelete('review_schedule', 'student_id');
-      await safeDelete('ccr_responses', 'student_id');
-      await safeDelete('parent_students', 'student_id');
-      await safeDelete('students', 'profile_id');
-    } else if (role === 'parent') {
-      await safeDelete('parent_students', 'parent_id');
-      try {
-        await client.query(`UPDATE students SET parent_id = NULL WHERE parent_id = $1`, [id]);
-      } catch {
-        // ignore
-      }
-    } else if (role === 'accountant' || role === 'admin') {
-      await safeDelete('staff', 'profile_id');
+    if (role === 'parent') {
+      await runIsolated(`UPDATE students SET parent_id = NULL WHERE parent_id = $1`, [id]);
     }
 
     await client.query(`DELETE FROM profiles WHERE id = $1`, [id]);
