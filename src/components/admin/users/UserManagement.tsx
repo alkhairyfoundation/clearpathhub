@@ -381,13 +381,15 @@ export default function UserManagement() {
       />
 
       {/* Detail slide-over */}
-      <UserDetailPanel
-        user={viewing}
-        loading={detailLoading}
-        onClose={() => setViewing(null)}
-        onEdit={openEdit}
-        onLinkStudents={openLink}
-      />
+      {viewing && (
+        <UserDetailPanel
+          user={viewing}
+          loading={detailLoading}
+          onClose={() => setViewing(null)}
+          onEdit={openEdit}
+          onLinkStudents={openLink}
+        />
+      )}
 
       {/* Create / edit modal */}
       <UserFormModal

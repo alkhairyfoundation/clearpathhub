@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,10 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const studentResult = await pool.query(
+    const studentResult = await query(
       `SELECT 
         p.first_name, p.last_name,
         s.class_id,
@@ -29,9 +27,9 @@ export async function POST(req: NextRequest) {
        WHERE p.id = $1`,
       [student_id]
     );
-    const student = studentResult.rows[0];
+    const student = studentResult[0];
 
-    const masteryResult = await pool.query(
+    const masteryResult = await query(
       `SELECT ms.topic, ms.mastery_score, ms.level, ms.total_attempts, ms.correct_attempts,
               sub.name as subject_name
        FROM mastery_scores ms
@@ -41,30 +39,30 @@ export async function POST(req: NextRequest) {
        LIMIT 5`,
       [student_id]
     );
-    const weakTopics = masteryResult.rows;
+    const weakTopics = masteryResult;
 
-    const streakResult = await pool.query(
+    const streakResult = await query(
       `SELECT current_streak, longest_streak FROM learning_streaks WHERE student_id = $1`,
       [student_id]
     );
-    const streak = streakResult.rows[0];
+    const streak = streakResult[0];
 
-    const recentResult = await pool.query(
+    const recentResult = await query(
       `SELECT score, correct_answers, answered_questions, created_at
        FROM practice_sessions
        WHERE student_id = $1 AND status = 'completed'
        ORDER BY created_at DESC LIMIT 5`,
       [student_id]
     );
-    const recentSessions = recentResult.rows;
+    const recentSessions = recentResult;
 
-    const goalResult = await pool.query(
+    const goalResult = await query(
       `SELECT goal_text, status, dimension FROM goal_hierarchy
        WHERE student_id = $1 AND period_type = 'daily' AND status = 'active'
        LIMIT 3`,
       [student_id]
     );
-    const activeGoals = goalResult.rows;
+    const activeGoals = goalResult;
 
     let responseText = '';
     let recommendations: any[] = [];
@@ -124,7 +122,7 @@ export async function POST(req: NextRequest) {
       if (activeGoals.length > 0) {
         responseText = `Here are your active goals:\n`;
         activeGoals.forEach((g: any) => {
-          responseText += `• ${g.goal_text} (${g.status})\n`;
+          responseText += `\u2022 ${g.goal_text} (${g.status})\n`;
         });
         responseText += `\nKeep pushing forward! Every completed goal builds your future.`;
       } else {
@@ -136,7 +134,7 @@ export async function POST(req: NextRequest) {
         ];
       }
     } else {
-      responseText = `Assalamu Alaikum ${student.first_name}! I'm your AI Learning Coach. I can help you with:\n\n📚 Personalized study recommendations\n🎯 Learning gap analysis\n📅 Revision planning\n💪 Motivation and encouragement\n\nWhat would you like help with?`;
+      responseText = `Assalamu Alaikum ${student.first_name}! I'm your AI Learning Coach. I can help you with:\n\nPersonalized study recommendations\nLearning gap analysis\nRevision planning\nMotivation and encouragement\n\nWhat would you like help with?`;
       recommendations = [
         { type: 'motivation', text: 'Give me motivation!', priority: 'medium' },
         { type: 'gap_analysis', text: 'Analyze my learning gaps', priority: 'medium' },
@@ -145,13 +143,13 @@ export async function POST(req: NextRequest) {
       ];
     }
 
-    await pool.query(
+    await query(
       `INSERT INTO ai_coach_interactions (student_id, interaction_type, prompt_text, response_text, recommendations, context)
        VALUES ($1, $2, $3, $4, $5, $6)`,
       [student_id, interaction_type, body.prompt || '', responseText, JSON.stringify(recommendations), JSON.stringify(context || {})]
     );
 
-    const recentResult2 = await pool.query(
+    const history = await query(
       `SELECT response_text, recommendations, interaction_type, created_at
        FROM ai_coach_interactions
        WHERE student_id = $1
@@ -159,12 +157,10 @@ export async function POST(req: NextRequest) {
       [student_id]
     );
 
-    await pool.end();
-
     return NextResponse.json({
       response: responseText,
       recommendations,
-      history: recentResult2.rows,
+      history,
       student: { name: `${student.first_name} ${student.last_name}`, className: student.class_name },
       weakTopics,
       streak,

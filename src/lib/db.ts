@@ -21,6 +21,7 @@ type AnyVal = any;
 class DbQuery<T = any> {
   private table: string;
   private selectStr?: string;
+  private selectCalled = false;
   private filters: Filter[] = [];
   private orders: OrderSpec[] = [];
   private limitVal?: number | null;
@@ -35,6 +36,7 @@ class DbQuery<T = any> {
   }
 
   select(columns?: string, opts?: { count?: 'exact' | 'planned' | 'estimated'; head?: boolean }): this {
+    this.selectCalled = true;
     this.selectStr = columns;
     if (opts?.count) this.countMode = opts.count;
     if (opts?.head) this.headMode = true;
@@ -153,7 +155,7 @@ class DbQuery<T = any> {
 
   private async execute(): Promise<DbResult<T>> {
     const isWrite = !!this.write;
-    const returnEnhanced = isWrite && !!this.selectStr;
+    const returnEnhanced = isWrite && (this.selectCalled || !!this.selectStr);
     if (this.write) {
       this.write.returnEnhanced = returnEnhanced;
     }

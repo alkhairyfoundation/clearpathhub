@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 function gradeQuestion(question: any, answer: any): boolean {
   if (answer === undefined || answer === null) return false;
@@ -50,41 +51,35 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const testResult = await pool.query(
+    const testResult = await query(
       'SELECT * FROM tests WHERE id = $1 AND is_published = true',
       [testId]
     );
 
-    if (testResult.rows.length === 0) {
-      await pool.end();
+    if (testResult.length === 0) {
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
-    const test = testResult.rows[0];
+    const test = testResult[0];
 
     const maxAttempts = test.max_attempts ?? 0;
 
-    const existingCountRes = await pool.query(
+    const existingCountRes = await query(
       'SELECT COUNT(*) as count FROM test_attempts WHERE test_id = $1 AND student_id = $2 AND completed_at IS NOT NULL',
       [testId, student_id]
     );
-    const attemptsCount = parseInt(existingCountRes.rows[0]?.count || '0', 10);
+    const attemptsCount = parseInt(existingCountRes[0]?.count || '0', 10);
 
     if (maxAttempts > 0 && attemptsCount >= maxAttempts) {
-      await pool.end();
       return NextResponse.json({ error: 'Maximum attempts reached for this test.' }, { status: 409 });
     }
 
     const attemptNumber = attemptsCount + 1;
 
-    const questionsResult = await pool.query(
+    const questions = await query(
       'SELECT * FROM test_questions WHERE test_id = $1 ORDER BY order_index',
       [testId]
     );
-    const questions = questionsResult.rows;
 
     let correct = 0;
     const answersArr = typeof answers === 'object' && !Array.isArray(answers) ? answers : {};
@@ -94,13 +89,13 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
     const finalScore = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
     const passed = finalScore >= (test.passing_score || 50);
 
-    const hasAttemptNumberCol = await pool.query(
+    const hasAttemptNumberCol = await query(
       `SELECT column_name FROM information_schema.columns
        WHERE table_name = 'test_attempts' AND column_name = 'attempt_number'`
     );
 
-    const attemptResult = hasAttemptNumberCol.rows.length > 0
-      ? await pool.query(
+    const attemptResult = hasAttemptNumberCol.length > 0
+      ? await query(
           `INSERT INTO test_attempts (test_id, student_id, answers, score, passed, tab_switches, fullscreen_exits, time_taken, started_at, completed_at, attempt_number)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10)
            RETURNING *`,
@@ -110,7 +105,7 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
             time_taken || 0, started_at || new Date().toISOString(), attemptNumber,
           ]
         )
-      : await pool.query(
+      : await query(
           `INSERT INTO test_attempts (test_id, student_id, answers, score, passed, tab_switches, fullscreen_exits, time_taken, started_at, completed_at)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
            RETURNING *`,
@@ -121,7 +116,7 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
           ]
         );
 
-    const attempt = attemptResult.rows[0];
+    const attempt = attemptResult[0];
 
     if (security_events && Array.isArray(security_events) && security_events.length > 0) {
       try {
@@ -138,7 +133,7 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
           logParams.push(attempt.id, student_id, e.type || 'unknown', JSON.stringify({ key: e.key, count: e.count }), severity);
         });
 
-        await pool.query(
+        await query(
           `INSERT INTO exam_activity_logs (attempt_id, student_id, event_type, event_data, severity) VALUES ${logValues}`,
           logParams
         );
@@ -146,8 +141,6 @@ export async function POST(req: NextRequest, { params }: { params: { testId: str
         console.error('Failed to log security events:', logErr);
       }
     }
-
-    await pool.end();
 
     return NextResponse.json({
       attempt: {

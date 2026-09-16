@@ -9,7 +9,7 @@ import {
   Plus, Edit, Trash2, X, FileText, Clock, Users, Check,
   Loader2, Search, Eye, Download, Award, AlertCircle,
   GraduationCap, ChevronDown, BarChart3, Brain, TrendingUp,
-  Lightbulb, BookOpen, RotateCcw, Filter, Database
+  Lightbulb, BookOpen, RotateCcw, Filter, Database, RefreshCw
 } from 'lucide-react';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -38,6 +38,7 @@ export default function AdminMockExamsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [swapLoading, setSwapLoading] = useState<string | null>(null);
 
   // Exam form state
   const [formData, setFormData] = useState({
@@ -439,6 +440,84 @@ export default function AdminMockExamsPage() {
     });
     const data = await res.json();
     if (data.success) { fetchQuestions(); setSuccess('Question removed'); }
+  }
+
+  async function handleSwapQuestion(q: any) {
+    if (!selectedExam) return;
+    if (!confirm('Replace this question with a random question from the bank (same subject)?')) return;
+    setSwapLoading(q.id);
+    try {
+      const targetLevel = selectedExam.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3';
+      const { data: bankQs } = await db
+        .from('question_bank')
+        .select('*')
+        .in('status', ['published', 'active'])
+        .eq('level', targetLevel)
+        .eq('subject', q.subject);
+      const { data: existingQs } = await db.from('mock_questions').select('question').eq('exam_id', selectedExam.id);
+      const existingTexts = new Set((existingQs || []).map((x: any) => (x.question || '').trim().toLowerCase()));
+      const candidates = (bankQs || []).filter((bq: any) => {
+        const key = (bq.question || '').trim().toLowerCase();
+        return key && !existingTexts.has(key);
+      });
+      if (candidates.length === 0) {
+        setSuccess('No replacement questions available in the bank for this subject.');
+        return;
+      }
+      const replacement = candidates[Math.floor(Math.random() * candidates.length)];
+      const primaryLevel = replacement.level || targetLevel;
+      const primarySubject = replacement.subject || q.subject || 'General';
+      const primaryDifficulty = replacement.difficulty_level || q.difficulty_level || 'MEDIUM';
+      const primaryType = replacement.question_type === 'TRUE_FALSE' ? 'true_false' : replacement.question_type === 'FILL_IN_THE_GAP' || replacement.question_type === 'FILL_BLANK' ? 'fill_blank' : 'multiple_choice';
+      const insertBody = {
+        action: 'bulk_insert_questions',
+        exam_id: selectedExam.id,
+        questions: [{
+          question: replacement.question,
+          question_image: replacement.question_image || null,
+          options: replacement.options || [''],
+          correct_answer: replacement.correct_answer ?? 0,
+          points: replacement.points ?? 1,
+          question_type: primaryType,
+          subject: primarySubject,
+          difficulty_level: primaryDifficulty,
+          topic: replacement.topic || q.topic || null,
+          subtopic: replacement.subtopic || null,
+          explanation: replacement.explanation || null,
+          skill_tag: replacement.skill_tag || null,
+          bloom_level: replacement.bloom_level || null,
+          curriculum: replacement.curriculum || null,
+          grade_level: primaryLevel,
+        }],
+      };
+      const insertRes = await fetch('/api/mock-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(insertBody),
+      });
+      const insertData = await insertRes.json();
+      if (insertData.success) {
+        const delRes = await fetch('/api/mock-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete_question', id: q.id }),
+        });
+        const delData = await delRes.json();
+        if (delData.success) {
+          await fetchQuestions();
+          setSuccess('Question swapped');
+        } else {
+          await fetchQuestions();
+          setSuccess('Replacement added (could not remove old one)');
+        }
+      } else {
+        setError(insertData.error || 'Failed to swap question');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to swap question');
+    } finally {
+      setSwapLoading(null);
+    }
   }
 
   async function handleEditMockQ(q: any) {
@@ -933,14 +1012,20 @@ export default function AdminMockExamsPage() {
                             <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">{q.points} pt(s)</span>
                           </div>
                         </div>
-                        <div className="flex gap-1 shrink-0">
-                          <button onClick={() => handleEditMockQ(q)} className="p-1 hover:bg-slate-200 rounded dark:hover:bg-slate-600" title="Edit">
-                            <Edit size={14} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
-                          </button>
-                          <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded" title="Remove from exam">
-                            <Trash2 size={14} className="text-red-500 dark:text-red-400 dark:text-red-400" />
-                          </button>
-                        </div>
+<div className="flex gap-1 shrink-0">
+                           <button onClick={() => handleEditMockQ(q)} className="p-1 hover:bg-slate-200 rounded dark:hover:bg-slate-600" title="Edit">
+                             <Edit size={14} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
+                           </button>
+                           {swapLoading === q.id
+                             ? <Loader2 size={14} className="animate-spin text-primary-500 p-1" />
+                             : <button onClick={() => handleSwapQuestion(q)} className="p-1 hover:bg-blue-50 dark:hover:bg-slate-600 rounded" title="Swap from bank">
+                                 <RefreshCw size={14} className="text-blue-500" />
+                               </button>
+                           }
+                           <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-100 dark:bg-red-900/30 dark:bg-red-900/30 rounded" title="Remove from exam">
+                             <Trash2 size={14} className="text-red-500 dark:text-red-400 dark:text-red-400" />
+                           </button>
+                         </div>
                       </div>
                     ))}
                   </div>

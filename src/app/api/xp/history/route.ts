@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,30 +12,25 @@ export async function GET(req: NextRequest) {
 
     if (!studentId) return NextResponse.json({ error: 'student_id required' }, { status: 400 });
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const txResult = await pool.query(
+    const txResult = await query(
       `SELECT * FROM xp_transactions WHERE student_id = $1 ORDER BY created_at DESC LIMIT 100`,
       [studentId]
     );
 
-    const levelResult = await pool.query(
+    const levelResult = await query(
       `SELECT * FROM student_levels WHERE student_id = $1`,
       [studentId]
     );
 
-    const streakResult = await pool.query(
+    const streakResult = await query(
       `SELECT current_streak, longest_streak, streak_type FROM learning_streaks WHERE student_id = $1`,
       [studentId]
     );
 
-    await pool.end();
-
     return NextResponse.json({
-      transactions: txResult.rows,
-      level: levelResult.rows[0] || null,
-      streak: streakResult.rows[0] || null,
+      transactions: txResult,
+      level: levelResult[0] || null,
+      streak: streakResult[0] || null,
     });
   } catch (error: any) {
     console.error('XP history error:', error);

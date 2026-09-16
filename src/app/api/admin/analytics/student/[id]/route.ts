@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import pool from '@/lib/neon';
 
 interface QueryParams {
   term?: string;
@@ -23,9 +24,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       date_to: searchParams.get('date_to') || undefined,
       subject_id: searchParams.get('subject_id') || undefined,
     };
-
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
 
     const subjectFilter = q.subject_id ? `AND r.subject_id = $2` : '';
     const subjectParam = q.subject_id || '';
@@ -247,7 +245,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const profile = profileResult.rows[0];
     if (!profile) {
-      await pool.end();
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
 
@@ -849,8 +846,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (insights.weaknesses.length > 3) {
       insights.weaknesses = insights.weaknesses.slice(0, 5);
     }
-
-    await pool.end();
 
     return NextResponse.json({
       profile: {

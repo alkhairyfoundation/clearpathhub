@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 import { getTeacherClassIds } from '@/lib/teacher-classes';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Edit, Trash2, X, FileText, BarChart3, Check, Loader2, Search, Users, Clock, Eye, Send, Hash, ArrowLeft, Download, Copy, HelpCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, X, FileText, BarChart3, Check, Loader2, Search, Users, Clock, Eye, Send, Hash, ArrowLeft, Download, Copy, HelpCircle, RefreshCw } from 'lucide-react';
 import { formatDate } from '@/lib/date-utils';
 import JSZip from 'jszip';
 import { generateTestReportPdf } from '@/lib/test-report-pdf';
@@ -32,6 +32,7 @@ export default function TeacherTestsPage() {
   const [selectedTest, setSelectedTest] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [swapLoading, setSwapLoading] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -219,6 +220,49 @@ export default function TeacherTestsPage() {
     }
   }
 
+  async function handleSwapQuestion(q: any) {
+    if (!selectedTest) return;
+    if (!confirm('Replace this question with a random question from the bank (same subject)?')) return;
+    setSwapLoading(q.id);
+    try {
+      let bankQuery = db.from('question_bank').select('*').in('status', ['published', 'active']);
+      const subjectName = (q.subject || selectedTest?.subject?.name || '').toUpperCase();
+      if (subjectName) bankQuery = bankQuery.eq('subject', subjectName);
+      const { data: bankQs } = await bankQuery;
+      const { data: existingQs } = await db.from('test_questions').select('question').eq('test_id', selectedTest.id);
+      const existingTexts = new Set((existingQs || []).map((x: any) => (x.question || '').trim().toLowerCase()));
+      const candidates = (bankQs || []).filter((bq: any) => {
+        const key = (bq.question || '').trim().toLowerCase();
+        return key && !existingTexts.has(key);
+      });
+      if (candidates.length === 0) {
+        setWarning('No replacement questions available in the bank for this subject.');
+        return;
+      }
+      const replacement = candidates[Math.floor(Math.random() * candidates.length)];
+      const newQuestion = {
+        test_id: selectedTest.id, question: replacement.question, options: replacement.options || [''],
+        correct_answer: replacement.correct_answer ?? 0, points: replacement.points ?? 1,
+        question_type: replacement.question_type || 'multiple_choice', order_index: 0,
+        subject: replacement.subject || null, topic: replacement.topic || null,
+        subtopic: replacement.subtopic || null, difficulty_level: replacement.difficulty_level || null,
+      };
+      const insertRes = await api('bulk_insert_questions', { test_id: selectedTest.id, questions: [newQuestion] });
+      if (insertRes.error) {
+        setError(insertRes.error || 'Failed to swap question');
+        return;
+      }
+      await api('delete_question', { id: q.id });
+      const refreshed = await api('list_questions', { test_id: selectedTest.id });
+      if (refreshed.questions) setQuestions(refreshed.questions);
+      setSuccess('Question swapped');
+    } catch (err: any) {
+      setError(err.message || 'Failed to swap question');
+    } finally {
+      setSwapLoading(null);
+    }
+  }
+
   function editTestQuestion(q: any) {
     setEditingQuestion(q);
     setQuestionForm({
@@ -238,7 +282,7 @@ export default function TeacherTestsPage() {
   async function openBankSelect() {
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let query = db.from('question_bank').select('*').eq('status', 'published');
+    let query = db.from('question_bank').select('*').in('status', ['published', 'active']);
     const subjectName = selectedTest?.subject?.name?.toUpperCase();
     if (subjectName) query = query.eq('subject', subjectName);
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -274,8 +318,11 @@ export default function TeacherTestsPage() {
           subject: q.subject || null, topic: q.topic || null, subtopic: q.subtopic || null, difficulty_level: q.difficulty_level || null,
         }));
         const res = await api('bulk_insert_questions', { test_id: selectedTest.id, questions: newQuestions });
-        if (res.questions) setQuestions(res.questions);
-        setSuccess(`Added ${questions.length} question(s) from bank`);
+        if (res.questions) {
+          const added = res.questions.length - questions.length;
+          setQuestions(res.questions);
+          setSuccess(`Added ${added} question(s) from bank`);
+        }
       }
       setShowBankSelect(false);
     } catch (err: any) {
@@ -289,7 +336,7 @@ export default function TeacherTestsPage() {
     if (!selectedTest || !selectedTest.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      let bankQuery = db.from('question_bank').select('*').eq('status', 'published');
+      let bankQuery = db.from('question_bank').select('*').in('status', ['published', 'active']);
       const subjectName = selectedTest.subject?.name?.toUpperCase();
       if (subjectName) bankQuery = bankQuery.eq('subject', subjectName);
       const { data: allBank } = await bankQuery;
@@ -302,8 +349,11 @@ export default function TeacherTestsPage() {
           subject: q.subject || null, topic: q.topic || null, subtopic: q.subtopic || null, difficulty_level: q.difficulty_level || null,
         }));
         const res = await api('bulk_insert_questions', { test_id: selectedTest.id, questions });
-        if (res.questions) setQuestions(res.questions);
-        setSuccess(`Auto-populated ${questions.length} questions`);
+        if (res.questions) {
+          const added = res.questions.length - questions.length;
+          setQuestions(res.questions);
+          setSuccess(`Auto-populated ${added} questions`);
+        }
       } else {
         setWarning('No questions found in the question bank');
       }
@@ -651,6 +701,12 @@ export default function TeacherTestsPage() {
                             <button onClick={() => editTestQuestion(q)} className="p-1 hover:bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 rounded-lg" title="Edit question">
                               <Edit size={14} className="text-primary-600 dark:text-primary-400 dark:text-primary-400" />
                             </button>
+                            {swapLoading === q.id
+                              ? <Loader2 size={14} className="animate-spin text-primary-500" />
+                              : <button onClick={() => handleSwapQuestion(q)} className="p-1 hover:bg-blue-50 dark:bg-blue-900/20 rounded-lg" title="Swap from bank">
+                                  <RefreshCw size={14} className="text-blue-500" />
+                                </button>
+                            }
                             <button onClick={() => handleDeleteQuestion(q.id)} className="p-1 hover:bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 rounded-lg" title="Delete question">
                               <Trash2 size={14} className="text-red-500 dark:text-red-400 dark:text-red-400" />
                             </button>
@@ -682,15 +738,19 @@ export default function TeacherTestsPage() {
                   <div className="text-center py-8 text-slate-400 dark:text-slate-500 dark:text-slate-500 text-sm">No questions in bank</div>
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {bankFiltered.map((q: any) => (
-                      <label key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer ${selectedBankIds.has(q.id) ? 'border-primary-300 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700'}`}>
-                        <input type="checkbox" checked={selectedBankIds.has(q.id)} onChange={() => toggleBankSelect(q.id)} className="w-4 h-4 mt-0.5 text-primary-600 dark:text-primary-400 dark:text-primary-400 rounded" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{q.subject} • {q.level} • {q.difficulty_level}</p>
-                        </div>
-                      </label>
-                    ))}
+                    {bankFiltered.map((q: any) => {
+                      const alreadyIn = questions.some((x: any) => (x.question || '').trim().toLowerCase() === (q.question || '').trim().toLowerCase());
+                      return (
+                        <label key={q.id} className={`flex items-start gap-3 p-3 rounded-lg border ${alreadyIn ? 'opacity-60 bg-slate-50 dark:bg-slate-700/50 cursor-not-allowed' : `cursor-pointer ${selectedBankIds.has(q.id) ? 'border-primary-300 bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700'}`}`}>
+                          <input type="checkbox" checked={selectedBankIds.has(q.id)} disabled={alreadyIn} onChange={() => toggleBankSelect(q.id)} className="w-4 h-4 mt-0.5 text-primary-600 dark:text-primary-400 dark:text-primary-400 rounded" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 dark:text-white dark:text-white">{q.question}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{q.subject} • {q.level} • {q.difficulty_level}</p>
+                            {alreadyIn && <p className="text-xs text-amber-600 dark:text-amber-400">Already in test</p>}
+                          </div>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-2 border-t">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query as dbQuery } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,10 +18,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    let query = `
+    let sql = `
       SELECT mlp.*, s.name as subject_name, s.code as subject_code
       FROM mastery_learning_path mlp
       LEFT JOIN subjects s ON mlp.subject_id = s.id
@@ -30,20 +28,19 @@ export async function GET(req: NextRequest) {
     let idx = 2;
 
     if (subjectId) {
-      query += ` AND mlp.subject_id = $${idx++}`;
+      sql += ` AND mlp.subject_id = $${idx++}`;
       params.push(subjectId);
     }
     if (topic) {
-      query += ` AND mlp.topic = $${idx++}`;
+      sql += ` AND mlp.topic = $${idx++}`;
       params.push(topic);
     }
 
-    query += ' ORDER BY mlp.subject_id, mlp.topic, mlp.stage';
+    sql += ' ORDER BY mlp.subject_id, mlp.topic, mlp.stage';
 
-    const result = await pool.query(query, params);
-    await pool.end();
+    const path = await dbQuery(sql, params);
 
-    return NextResponse.json({ path: result.rows });
+    return NextResponse.json({ path });
   } catch (error: any) {
     console.error('Error fetching mastery path:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -64,13 +61,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
     if (action === 'initialize') {
       const stages = ['lesson', 'practice', 'challenge', 'mastery_verification', 'advancement'];
       const values = stages.map((stage, i) => {
-        const isUnlocked = i === 0;
         return `($${i * 7 + 1}, $${i * 7 + 2}, $${i * 7 + 3}, $${i * 7 + 4}, $${i * 7 + 5}, $${i * 7 + 6})`;
       }).join(', ');
 
@@ -79,54 +72,53 @@ export async function POST(req: NextRequest) {
         flatParams.push(student_id, subject_id, topic, stage, i === 0, 3);
       });
 
-      await pool.query(
+      await dbQuery(
         `INSERT INTO mastery_learning_path (student_id, subject_id, topic, stage, is_unlocked, max_attempts)
          VALUES ${values}
          ON CONFLICT (student_id, subject_id, topic, stage) DO NOTHING`,
         flatParams
       );
 
-      const result = await pool.query(
+      const path = await dbQuery(
         'SELECT * FROM mastery_learning_path WHERE student_id = $1 AND subject_id = $2 AND topic = $3 ORDER BY stage',
         [student_id, subject_id, topic]
       );
 
-      await pool.end();
-      return NextResponse.json({ path: result.rows }, { status: 201 });
+      return NextResponse.json({ path }, { status: 201 });
     }
 
     if (action === 'complete_stage') {
       const { stage, score } = body;
-      await pool.query(
+      await dbQuery(
         `UPDATE mastery_learning_path SET
            is_completed = true,
            completed_at = NOW(),
            attempts_count = attempts_count + 1,
-           score_on_completion = COALESCE($4, score_on_completion)
+           score_on_completion = COALESCE($5, score_on_completion)
          WHERE student_id = $1 AND subject_id = $2 AND topic = $3 AND stage = $4`,
         [student_id, subject_id, topic, stage, score]
       );
 
       if (stage === 'lesson') {
-        await pool.query(
+        await dbQuery(
           `UPDATE mastery_learning_path SET is_unlocked = true
            WHERE student_id = $1 AND subject_id = $2 AND topic = $3 AND stage = 'practice'`,
           [student_id, subject_id, topic]
         );
       } else if (stage === 'practice') {
-        await pool.query(
+        await dbQuery(
           `UPDATE mastery_learning_path SET is_unlocked = true
            WHERE student_id = $1 AND subject_id = $2 AND topic = $3 AND stage = 'challenge'`,
           [student_id, subject_id, topic]
         );
       } else if (stage === 'challenge' && score && score >= 80) {
-        await pool.query(
+        await dbQuery(
           `UPDATE mastery_learning_path SET is_unlocked = true
            WHERE student_id = $1 AND subject_id = $2 AND topic = $3 AND stage = 'mastery_verification'`,
           [student_id, subject_id, topic]
         );
       } else if (stage === 'mastery_verification' && score && score >= 80) {
-        await pool.query(
+        await dbQuery(
           `UPDATE mastery_learning_path SET is_unlocked = true
            WHERE student_id = $1 AND subject_id = $2 AND topic = $3 AND stage = 'advancement'`,
           [student_id, subject_id, topic]
@@ -134,7 +126,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (score && score < 80) {
-        await pool.query(
+        await dbQuery(
           `UPDATE mastery_learning_path SET
              attempts_count = attempts_count + 1,
              score_on_completion = $5,
@@ -144,27 +136,24 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const result = await pool.query(
+      const path = await dbQuery(
         'SELECT * FROM mastery_learning_path WHERE student_id = $1 AND subject_id = $2 AND topic = $3 ORDER BY stage',
         [student_id, subject_id, topic]
       );
 
-      await pool.end();
-      return NextResponse.json({ path: result.rows });
+      return NextResponse.json({ path });
     }
 
     if (action === 'request_intervention') {
-      await pool.query(
+      await dbQuery(
         `UPDATE mastery_learning_path SET teacher_intervention_required = true
          WHERE student_id = $1 AND subject_id = $2 AND topic = $3 AND stage = $4`,
         [student_id, subject_id, topic, body.stage]
       );
 
-      await pool.end();
       return NextResponse.json({ success: true });
     }
 
-    await pool.end();
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error: any) {
     console.error('Error managing mastery path:', error);

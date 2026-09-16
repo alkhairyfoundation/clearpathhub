@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import pool from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,9 +14,6 @@ export async function GET(req: NextRequest) {
     if (studentIds.length < 2 || studentIds.length > 4) {
       return NextResponse.json({ error: 'Provide 2-4 student IDs' }, { status: 400 });
     }
-
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
 
     const studentData = await Promise.all(studentIds.map(async (sid) => {
       const [prof, res, ms] = await Promise.all([
@@ -83,8 +81,6 @@ export async function GET(req: NextRequest) {
         homework_completion: hw.rows[0]?.completion_rate,
       };
     }));
-
-    await pool.end();
 
     // Build comparison dimensions
     const dimensions = [

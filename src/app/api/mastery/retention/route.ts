@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query as dbQuery } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,10 +17,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    let query = `
+    let sql = `
       SELECT rc.*, s.name as subject_name, s.code as subject_code
       FROM retention_checks rc
       LEFT JOIN subjects s ON rc.subject_id = s.id
@@ -29,19 +27,18 @@ export async function GET(req: NextRequest) {
     let idx = 2;
 
     if (status === 'due') {
-      query += ` AND rc.check_date <= CURRENT_DATE AND rc.passed IS NULL`;
+      sql += ` AND rc.check_date <= CURRENT_DATE AND rc.passed IS NULL`;
     } else if (status === 'passed') {
-      query += ` AND rc.passed = true`;
+      sql += ` AND rc.passed = true`;
     } else if (status === 'failed') {
-      query += ` AND rc.passed = false`;
+      sql += ` AND rc.passed = false`;
     }
 
-    query += ' ORDER BY rc.check_date ASC';
+    sql += ' ORDER BY rc.check_date ASC';
 
-    const result = await pool.query(query, params);
-    await pool.end();
+    const checks = await dbQuery(sql, params);
 
-    return NextResponse.json({ checks: result.rows });
+    return NextResponse.json({ checks });
   } catch (error: any) {
     console.error('Error fetching retention checks:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -64,10 +61,7 @@ export async function POST(req: NextRequest) {
 
     const passed = retest_score >= 80;
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    await pool.query(
+    await dbQuery(
       `UPDATE retention_checks SET
          retest_score = $1,
          passed = $2,
@@ -77,13 +71,13 @@ export async function POST(req: NextRequest) {
       [retest_score, passed, check_id, student_id]
     );
 
-    const check = await pool.query(
+    const check = await dbQuery(
       'SELECT * FROM retention_checks WHERE id = $1',
       [check_id]
     );
 
-    if (!passed && check.rows[0]) {
-      await pool.query(
+    if (!passed && check[0]) {
+      await dbQuery(
         `UPDATE mastery_learning_path SET
            is_unlocked = true,
            teacher_intervention_required = false
@@ -91,12 +85,11 @@ export async function POST(req: NextRequest) {
            AND subject_id = $2
            AND topic = $3
            AND stage = 'practice'`,
-        [student_id, check.rows[0].subject_id, check.rows[0].topic]
+        [student_id, check[0].subject_id, check[0].topic]
       );
     }
 
-    await pool.end();
-    return NextResponse.json({ check: { ...check.rows[0], retest_score, passed } });
+    return NextResponse.json({ check: { ...check[0], retest_score, passed } });
   } catch (error: any) {
     console.error('Error updating retention check:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -7,11 +8,8 @@ export async function GET(req: NextRequest) {
     if (!token || token.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-    const result = await pool.query('SELECT * FROM skills ORDER BY name');
-    await pool.end();
-    return NextResponse.json(result.rows);
+    const result = await query('SELECT * FROM skills ORDER BY name');
+    return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -27,14 +25,11 @@ export async function POST(req: NextRequest) {
     if (!name?.trim() || !description?.trim()) {
       return NextResponse.json({ error: 'Name and description are required' }, { status: 400 });
     }
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-    const result = await pool.query(
+    const result = await query(
       'INSERT INTO skills (name, category, description) VALUES ($1, $2, $3) RETURNING *',
       [name.trim(), category || null, description.trim()]
     );
-    await pool.end();
-    return NextResponse.json(result.rows[0], { status: 201 });
+    return NextResponse.json(result[0], { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -50,8 +45,6 @@ export async function PUT(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 });
     }
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
     const sets: string[] = [];
     const params: any[] = [];
     let idx = 1;
@@ -63,15 +56,14 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
     params.push(id);
-    const result = await pool.query(
+    const result = await query(
       `UPDATE skills SET ${sets.join(', ')} WHERE id = $${idx} RETURNING *`,
       params
     );
-    await pool.end();
-    if (result.rows.length === 0) {
+    if (result.length === 0) {
       return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json(result[0]);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -88,11 +80,8 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'id query param is required' }, { status: 400 });
     }
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-    const result = await pool.query('DELETE FROM skills WHERE id = $1 RETURNING id', [id]);
-    await pool.end();
-    if (result.rows.length === 0) {
+    const result = await query('DELETE FROM skills WHERE id = $1 RETURNING id', [id]);
+    if (result.length === 0) {
       return NextResponse.json({ error: 'Skill not found' }, { status: 404 });
     }
     return NextResponse.json({ deleted: true });

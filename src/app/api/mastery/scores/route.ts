@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query as dbQuery } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,37 +19,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    let query = 'SELECT ms.*';
+    let sql = 'SELECT ms.*';
     const params: any[] = [studentId];
     let idx = 2;
 
     if (withSubject) {
-      query += ', jsonb_build_object(\'name\', s.name, \'code\', s.code) as subject';
+      sql += ', jsonb_build_object(\'name\', s.name, \'code\', s.code) as subject';
     }
-    query += ' FROM mastery_scores ms';
+    sql += ' FROM mastery_scores ms';
     if (withSubject) {
-      query += ' LEFT JOIN subjects s ON ms.subject_id = s.id';
+      sql += ' LEFT JOIN subjects s ON ms.subject_id = s.id';
     }
-    query += ' WHERE ms.student_id = $1';
+    sql += ' WHERE ms.student_id = $1';
 
     if (subjectId) {
-      query += ` AND ms.subject_id = $${idx++}`;
+      sql += ` AND ms.subject_id = $${idx++}`;
       params.push(subjectId);
     }
     if (topic) {
-      query += ` AND ms.topic = $${idx++}`;
+      sql += ` AND ms.topic = $${idx++}`;
       params.push(topic);
     }
 
-    query += ' ORDER BY ms.mastery_score DESC';
+    sql += ' ORDER BY ms.mastery_score DESC';
 
-    const result = await pool.query(query, params);
-    await pool.end();
+    const scores = await dbQuery(sql, params);
 
-    return NextResponse.json({ scores: result.rows });
+    return NextResponse.json({ scores });
   } catch (error: any) {
     console.error('Error fetching mastery scores:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

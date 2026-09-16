@@ -8,7 +8,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { 
   ArrowLeft, Plus, Edit, Trash2, X, FileText, Clock, Users, Check, 
   Loader2, Search, QrCode, Eye, Hash, Download, Award, AlertCircle, 
-  GraduationCap, ChevronDown, CheckCircle, XCircle, Filter, BarChart3
+  GraduationCap, ChevronDown, CheckCircle, XCircle, Filter, BarChart3, RefreshCw
 } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
 import jsPDF from 'jspdf';
@@ -32,7 +32,10 @@ export default function AdminEntranceExamsPage() {
   const [activeTab, setActiveTab] = useState<'exams' | 'codes' | 'applications' | 'questionBank' | 'analytics'>('applications');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [swapLoading, setSwapLoading] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [examFilter, setExamFilter] = useState('');
 const [formData, setFormData] = useState({
       title: '', description: '', level: '', subjects: [] as string[], academic_year: new Date().getFullYear().toString(),
       exam_date: '', duration_minutes: 60, passing_score: 50, total_questions: 40,
@@ -74,6 +77,7 @@ const [formData, setFormData] = useState({
    const [bankSelectQuestions, setBankSelectQuestions] = useState<any[]>([]);
    const [bankSelectFiltered, setBankSelectFiltered] = useState<any[]>([]);
    const [selectedBankIds, setSelectedBankIds] = useState<Set<string>>(new Set());
+   const [bankSelectExistingTexts, setBankSelectExistingTexts] = useState<Set<string>>(new Set());
    
    // Analytics State
    const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -197,11 +201,17 @@ async function handleCreateExam() {
         if (error) throw new Error(error.message);
         
         // Auto-populate questions from question bank if exam has level and subjects specified
+        let inserted = 0, requested = 0;
         if (formData.level && formData.subjects && formData.subjects.length > 0) {
-          await autoPopulateExamQuestions(examData.id, formData.level, formData.subjects, formData.total_questions);
+          const res = await autoPopulateExamQuestions(examData.id, formData.level, formData.subjects, formData.total_questions);
+          inserted = res.inserted; requested = res.requested;
         }
         
-        setSuccess('Exam created and populated with questions');
+        setSuccess(inserted === 0
+          ? 'Exam created. No questions were auto-populated - add questions manually.'
+          : inserted >= requested
+            ? `Exam created and populated with ${inserted} questions`
+            : `Exam created with ${inserted} of ${requested} questions (bank only had ${inserted} available)`);
         setShowExamModal(false);
         fetchData();
       } catch (err: any) {
@@ -228,67 +238,118 @@ async function handleCreateExam() {
       }
     }
 
-    async function autoPopulateExamQuestions(examId: string, examLevel: string, subjects: string[], totalQuestions?: number) {
+    async function autoPopulateExamQuestions(examId: string, examLevel: string, subjects: string[], totalQuestions?: number): Promise<{ inserted: number; requested: number }> {
       try {
         if (!subjects || subjects.length === 0) {
           console.warn('No subjects selected for exam');
-          return;
+          return { inserted: 0, requested: 0 };
         }
 
-        const questionCount = totalQuestions || formData.total_questions || 40;
-        const questionsPerSubject = Math.max(1, Math.floor(questionCount / subjects.length));
-        
-        let allSelectedQuestions: any[] = [];
+        const questionCount = Math.max(0, Math.floor((totalQuestions ?? formData.total_questions ?? 40) || 0));
         const bankLevels = getQuestionBankLevels(examLevel);
-        
-        for (const subject of subjects) {
-          // Fetch questions for the subject across relevant levels
-          const { data: subjectQuestions } = await db
-            .from('question_bank')
-            .select('*')
-            .eq('status', 'published')
-            .eq('subject', subject)
-            .in('level', bankLevels);
 
-          if (subjectQuestions && subjectQuestions.length > 0) {
-            // Distribution favoring harder questions if available
-            const veryHard = subjectQuestions.filter((q: any) => q.difficulty_level === 'VERY_HARD');
-            const hard = subjectQuestions.filter((q: any) => q.difficulty_level === 'HARD');
-            const medium = subjectQuestions.filter((q: any) => q.difficulty_level === 'MEDIUM');
-            const easy = subjectQuestions.filter((q: any) => q.difficulty_level === 'EASY');
+        // Fetch questions for the subject across relevant levels (published OR active - both are valid bank statuses)
+        const { data: bankQuestions, error: bankError } = await db
+          .from('question_bank')
+          .select('*')
+          .in('status', ['published', 'active'])
+          .in('level', bankLevels)
+          .in('subject', subjects);
 
-            const veryHardCount = Math.max(0, Math.round(questionsPerSubject * 0.4));
-            const hardCount = Math.max(0, Math.round(questionsPerSubject * 0.3));
-            const mediumCount = Math.max(0, Math.round(questionsPerSubject * 0.2));
-            const easyCount = Math.max(0, questionsPerSubject - veryHardCount - hardCount - mediumCount);
+        if (bankError) throw new Error(`Failed to load question bank: ${bankError.message}`);
 
-            const selected = [
-              ...veryHard.sort(() => Math.random() - 0.5).slice(0, veryHardCount),
-              ...hard.sort(() => Math.random() - 0.5).slice(0, hardCount),
-              ...medium.sort(() => Math.random() - 0.5).slice(0, mediumCount),
-              ...easy.sort(() => Math.random() - 0.5).slice(0, easyCount),
-            ];
+        // Fetch existing questions for this exam to avoid duplicates
+        const { data: existingQs } = await db
+          .from('entrance_questions')
+          .select('question')
+          .eq('exam_id', examId);
+        const existingTexts = new Set((existingQs || []).map((q: any) => (q.question || '').trim().toLowerCase()));
 
-            // If still short, add more from any difficulty in this subject
-            if (selected.length < questionsPerSubject) {
-              const remaining = subjectQuestions
-                .filter((q: any) => !selected.find((s: any) => s.id === q.id))
-                .sort(() => Math.random() - 0.5)
-                .slice(0, questionsPerSubject - selected.length);
-              allSelectedQuestions = [...allSelectedQuestions, ...selected, ...remaining];
-            } else {
-              allSelectedQuestions = [...allSelectedQuestions, ...selected];
-            }
+        // Dedupe bank by question text and exclude questions already in the exam
+        const seenTexts = new Set<string>();
+        const filteredBankQuestions = (bankQuestions || []).filter((q: any) => {
+          const key = (q.question || '').trim().toLowerCase();
+          if (!key || existingTexts.has(key) || seenTexts.has(key)) return false;
+          seenTexts.add(key);
+          return true;
+        });
+
+        if (filteredBankQuestions.length === 0) {
+          setWarning('No new questions found in question bank for the selected level and subjects (all already in exam or bank empty).');
+          return { inserted: 0, requested: questionCount };
+        }
+
+        // Per-subject target: equal split, then hand out the remainder round-robin.
+        const perSubjectTarget = subjects.length > 0 ? Math.floor(questionCount / subjects.length) : 0;
+        const targetBySubject: Record<string, number> = {};
+        subjects.forEach((s) => { targetBySubject[s] = perSubjectTarget; });
+        let remainder = questionCount - perSubjectTarget * subjects.length;
+        let rr = 0;
+        while (remainder > 0) {
+          targetBySubject[subjects[rr % subjects.length]]++;
+          remainder--; rr++;
+        }
+
+        const subjectBank: Record<string, any[]> = {};
+        subjects.forEach((s) => { subjectBank[s] = filteredBankQuestions.filter((q: any) => q.subject === s); });
+
+        const pickWeighted = (pool: any[], count: number): any[] => {
+          if (pool.length === 0 || count <= 0) return [];
+          const veryHard = pool.filter((q: any) => q.difficulty_level === 'VERY_HARD').sort(() => Math.random() - 0.5);
+          const hard = pool.filter((q: any) => q.difficulty_level === 'HARD').sort(() => Math.random() - 0.5);
+          const medium = pool.filter((q: any) => q.difficulty_level === 'MEDIUM').sort(() => Math.random() - 0.5);
+          const easy = pool.filter((q: any) => q.difficulty_level === 'EASY').sort(() => Math.random() - 0.5);
+          const vhCount = Math.min(veryHard.length, Math.max(0, Math.round(count * 0.4)));
+          const hCount = Math.min(hard.length, Math.max(0, Math.round(count * 0.3)));
+          const mCount = Math.min(medium.length, Math.max(0, Math.round(count * 0.2)));
+          const eCount = Math.max(0, count - vhCount - hCount - mCount);
+          const chosen = [
+            ...veryHard.slice(0, vhCount),
+            ...hard.slice(0, hCount),
+            ...medium.slice(0, mCount),
+            ...easy.slice(0, Math.min(easy.length, eCount)),
+          ];
+          if (chosen.length < count) {
+            const used = new Set(chosen.map((q: any) => q.id));
+            const remaining = pool.filter((q: any) => !used.has(q.id)).sort(() => Math.random() - 0.5);
+            chosen.push(...remaining.slice(0, count - chosen.length));
           }
+          return chosen;
+        };
+
+        // First pass: difficulty-weighted selection per subject (capped at each subject's target)
+        const selectedBySubject: Record<string, any[]> = {};
+        for (const subject of subjects) {
+          const target = targetBySubject[subject] || 0;
+          selectedBySubject[subject] = pickWeighted(subjectBank[subject] || [], target).slice(0, Math.max(0, target));
         }
-        
-        // Shuffle all selected questions
-        if (allSelectedQuestions.length > 0) {
-          allSelectedQuestions = allSelectedQuestions.sort(() => Math.random() - 0.5);
+
+        const totalSelected = (): number =>
+          Object.values(selectedBySubject).reduce((acc: number, arr: any[]) => acc + arr.length, 0);
+
+        // Second pass: redistribute - fill unmet quota from subjects that still have surplus questions.
+        let guard = 0;
+        while (guard < subjects.length * 5) {
+          guard++;
+          let added = 0;
+          for (const subject of subjects) {
+            if (totalSelected() >= questionCount) break;
+            const chosen = selectedBySubject[subject];
+            const used = new Set(chosen.map((q: any) => q.id));
+            const available = (subjectBank[subject] || []).filter((q: any) => !used.has(q.id));
+            if (available.length === 0) continue;
+            chosen.push(available.sort(() => Math.random() - 0.5)[0]);
+            added++;
+          }
+          if (added === 0) break;
         }
-        
-        // Insert selected questions into entrance_questions
-        if (allSelectedQuestions.length > 0) {
+
+        // Flatten, shuffle, and cap at exactly the requested count.
+        let allSelectedQuestions: any[] = Object.values(selectedBySubject).flat();
+        allSelectedQuestions = allSelectedQuestions.sort(() => Math.random() - 0.5).slice(0, questionCount);
+        const inserted = allSelectedQuestions.length;
+
+        if (inserted > 0) {
           const questionsToInsert = allSelectedQuestions.map((q, index) => {
             const qt = (q.question_type || 'MCQ').toUpperCase();
             const mappedType = qt === 'MULTIPLE_CHOICE' ? 'MCQ' : qt === 'TRUE_FALSE' ? 'TRUE_FALSE' : qt === 'FILL_IN_THE_GAP' || qt === 'FILL_BLANK' ? 'FILL_IN_THE_GAP' : 'MCQ';
@@ -308,15 +369,18 @@ async function handleCreateExam() {
             order_index: index,
           };
           });
-          
+
           const { error } = await db.from('entrance_questions').insert(questionsToInsert);
           if (error) throw new Error(`Failed to insert questions: ${error.message}`);
         } else {
-          setWarning('No questions found in question bank for the selected level and subjects.');
+          setWarning(`No questions found in the question bank for ${examLevel} / ${subjects.join(', ')}. Add questions manually.`);
         }
+
+        return { inserted, requested: questionCount };
       } catch (error) {
         console.error('Error auto-populating exam questions:', error);
         setWarning('Exam created but question auto-population had issues. You can add questions manually.');
+        return { inserted: 0, requested: Math.max(0, Math.floor((totalQuestions ?? formData.total_questions ?? 40) || 0)) };
       }
     }
 
@@ -348,8 +412,14 @@ async function handleCreateExam() {
     }
     
     try {
-      await autoPopulateExamQuestions(exam.id, level, subjects, totalQuestions);
-      setSuccess('Questions populated successfully!');
+      const { inserted, requested } = await autoPopulateExamQuestions(exam.id, level, subjects, totalQuestions);
+      if (inserted >= requested) {
+        setSuccess(`Questions populated successfully! (${inserted} questions added)`);
+      } else if (inserted > 0) {
+        setWarning(`Populated ${inserted} of ${requested} questions - the question bank only had ${inserted} available for this level/subjects.`);
+      } else {
+        setWarning('No questions found in the question bank for this exam. Add questions manually.');
+      }
       fetchData();
     } catch (error) {
       setError('Failed to populate questions. Please add manually.');
@@ -366,17 +436,102 @@ async function handleCreateExam() {
      }
    }
 
+   async function loadQuestionsForExam(examId: string, examLevel: string, subjects: string[]) {
+     setQuestionsLoading(true);
+     try {
+       const { data } = await db.from('entrance_questions').select('*').eq('exam_id', examId).order('order_index', { ascending: true });
+       if (data) setQuestions(data);
+     } catch (err) {
+       console.error('Failed to load exam questions:', err);
+     } finally {
+       setQuestionsLoading(false);
+     }
+   }
+
+   async function handleSwapQuestion(examId: string, questionId: string, subject: string, examLevel: string) {
+     if (!confirm('Replace this question with a random question from the bank (same subject)?')) return;
+     setSwapLoading(questionId);
+     try {
+       const bankLevels = getQuestionBankLevels(examLevel);
+       const { data: bankQs } = await db
+         .from('question_bank')
+         .select('*')
+         .in('status', ['published', 'active'])
+         .in('level', bankLevels)
+         .eq('subject', subject);
+       const { data: existingQs } = await db
+         .from('entrance_questions')
+         .select('question')
+         .eq('exam_id', examId);
+       const existingTexts = new Set((existingQs || []).map((q: any) => (q.question || '').trim().toLowerCase()));
+       const candidates = (bankQs || []).filter((q: any) => {
+         const key = (q.question || '').trim().toLowerCase();
+         return key && !existingTexts.has(key);
+       });
+       if (candidates.length === 0) {
+         setWarning('No replacement questions available in the bank for this subject.');
+         return;
+       }
+       const replacement = candidates[Math.floor(Math.random() * candidates.length)];
+       const mappedType = (() => {
+         const qt = (replacement.question_type || 'MCQ').toUpperCase();
+         if (qt === 'TRUE_FALSE') return 'TRUE_FALSE';
+         if (qt === 'FILL_IN_THE_GAP' || qt === 'FILL_BLANK') return 'FILL_IN_THE_GAP';
+         return 'MCQ';
+       })();
+       const payload = {
+         exam_id: examId,
+         question: replacement.question,
+         question_image: replacement.question_image || null,
+         options: replacement.options || [''],
+         correct_answer: replacement.correct_answer ?? 0,
+         points: replacement.points ?? 1,
+         question_type: mappedType,
+         subject: replacement.subject || subject || 'General',
+         difficulty_level: replacement.difficulty_level || 'MEDIUM',
+         topic: replacement.topic || 'General',
+         subtopic: replacement.subtopic || null,
+         explanation: replacement.explanation || null,
+         order_index: 9999,
+       };
+       await db.from('entrance_questions').update({ order_index: 9999 }).eq('id', questionId);
+       await db.from('entrance_questions').insert([payload]);
+       await db.from('entrance_questions').delete().eq('id', questionId);
+       const { data: updated } = await db.from('entrance_questions').select('*').eq('exam_id', examId).order('order_index', { ascending: true });
+       if (updated) setQuestions(updated);
+       setSuccess('Question swapped');
+     } catch (err: any) {
+       setError(err.message || 'Failed to swap question');
+     } finally {
+       setSwapLoading(null);
+     }
+   }
+
    async function handleAddQuestionsFromBank(examId: string, selectedIds: string[]) {
      if (selectedIds.length === 0) return;
      setSaving(true);
      try {
-       const { data: selectedQbank } = await db
-         .from('question_bank')
-         .select('*')
-         .in('id', selectedIds);
-       
-        if (selectedQbank && selectedQbank.length > 0) {
-          const toInsert = selectedQbank.map((q: any, index: number) => {
+const { data: selectedQbank } = await db
+        .from('question_bank')
+        .select('*')
+        .in('id', selectedIds);
+      
+      const { data: existingQs } = await db
+        .from('entrance_questions')
+        .select('question')
+        .eq('exam_id', examId);
+      const existingTexts = new Set((existingQs || []).map((q: any) => (q.question || '').trim().toLowerCase()));
+      const bankTexts = new Set<string>();
+      const filteredQbank = (selectedQbank || []).filter((q: any) => {
+        const key = (q.question || '').trim().toLowerCase();
+        if (!key || existingTexts.has(key) || bankTexts.has(key)) return false;
+        bankTexts.add(key);
+        return true;
+      });
+const startingOrder = (existingQs || []).length;
+
+        if (filteredQbank.length > 0) {
+          const toInsert = filteredQbank.map((q: any, index: number) => {
             const qt = (q.question_type || 'MCQ').toUpperCase();
             const mappedType = qt === 'MULTIPLE_CHOICE' ? 'MCQ' : qt === 'TRUE_FALSE' ? 'TRUE_FALSE' : qt === 'FILL_IN_THE_GAP' || qt === 'FILL_BLANK' ? 'FILL_IN_THE_GAP' : 'MCQ';
             return {
@@ -392,17 +547,19 @@ async function handleCreateExam() {
             topic: q.topic || 'General',
             subtopic: q.subtopic || null,
             explanation: q.explanation || null,
-            order_index: index,
+            order_index: startingOrder + index,
           };
           });
           
-          await db.from('entrance_questions').insert(toInsert);
-         
-         const { data: updated } = await db.from('entrance_questions').select('*').eq('exam_id', examId);
-         if (updated) setQuestions(updated);
-         
-         setSuccess(`Added ${toInsert.length} question(s) from question bank`);
+await db.from('entrance_questions').insert(toInsert);
+       
+       const { data: updated } = await db.from('entrance_questions').select('*').eq('exam_id', examId);
+       if (updated) setQuestions(updated);
+       setSuccess(`Added ${toInsert.length} question(s) from question bank`);
+       if (toInsert.length < selectedIds.length) {
+         setWarning(`${selectedIds.length - toInsert.length} question(s) skipped because they are already in this exam.`);
        }
+     }
      } catch (err: any) {
        setError(err.message || 'Failed to add questions');
      } finally {
@@ -410,21 +567,24 @@ async function handleCreateExam() {
      }
    }
 
-    async function openBankSelectModal(exam: any) {
-      setSelectedExam(exam);
-      setSelectedBankIds(new Set());
-      setBankSelectSearch('');
-      const qbLevels = getQuestionBankLevels(exam.level);
-      let query = db.from('question_bank').select('*').eq('status', 'published').in('level', qbLevels);
-      const examSubjects = exam.subjects;
-      if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
-        query = query.in('subject', examSubjects);
-      }
-      const { data } = await query.order('created_at', { ascending: false });
-      setBankSelectQuestions(data || []);
-      setBankSelectFiltered(data || []);
-      setShowBankSelectModal(true);
-    }
+async function openBankSelectModal(exam: any) {
+       setSelectedExam(exam);
+       setSelectedBankIds(new Set());
+       setBankSelectSearch('');
+       const qbLevels = getQuestionBankLevels(exam.level);
+       let query = db.from('question_bank').select('*').in('status', ['published', 'active']).in('level', qbLevels);
+       const examSubjects = exam.subjects;
+       if (examSubjects && Array.isArray(examSubjects) && examSubjects.length > 0) {
+         query = query.in('subject', examSubjects);
+       }
+       const { data } = await query.order('created_at', { ascending: false });
+       setBankSelectQuestions(data || []);
+       const { data: existingQs } = await db.from('entrance_questions').select('question').eq('exam_id', exam.id);
+       const existSet = new Set<string>((existingQs || []).map((q: any) => (q.question || '').trim().toLowerCase()));
+       setBankSelectExistingTexts(existSet);
+       setBankSelectFiltered(data || []);
+       setShowBankSelectModal(true);
+     }
 
    function filterBankSelect(search: string) {
      setBankSelectSearch(search);
@@ -444,6 +604,11 @@ async function handleCreateExam() {
 
    async function handleAddQuestion() {
     if (!selectedExam) return;
+    if (!questionData.question || !questionData.question.trim()) {
+      setError('Please enter the question text before adding.');
+      return;
+    }
+    setError('');
     setSaving(true);
     const payload: any = {
       exam_id: selectedExam.id,
@@ -457,6 +622,7 @@ async function handleCreateExam() {
       topic: questionData.topic || null,
       subtopic: questionData.subtopic || null,
       explanation: questionData.explanation || null,
+      order_index: questions.length,
     };
     if (questionData.question_image) payload.question_image = questionData.question_image;
     const { error } = await db.from('entrance_questions').insert(payload);
@@ -522,12 +688,16 @@ async function handleCreateExam() {
   }
 
   async function handleAssignExam(applicationId: string, examId: string) {
+    if (!examId) return;
     setSaving(true);
     await db.from('entrance_applications').update({
       status: 'assigned',
       exam_id: examId
     }).eq('id', applicationId);
+    const assignedExam = exams.find(e => e.id === examId) || null;
+    setSelectedApplication((prev: any) => prev && prev.id === applicationId ? { ...prev, status: 'assigned', exam_id: examId, exam: assignedExam } : prev);
     setSaving(false);
+    setSuccess('Exam assigned to applicant');
     fetchData();
   }
 
@@ -1458,9 +1628,11 @@ async function viewAnalyticsDetails(record: any) {
       return buildDetailedRecommendations(record.mastery_level, record.score || 0, [], [], [], qs.length, qs.filter((q: any) => q.is_correct).length);
     }
 
-  const filteredApps = applications.filter(a =>
-    `${a.first_name} ${a.last_name} ${a.email}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredApps = applications.filter(a => {
+    const matchesExam = examFilter === '' || a.exam_id === examFilter;
+    const haystack = `${a.first_name} ${a.last_name} ${a.email} ${a.applied_class || ''} ${a.exam?.title || ''}`.toLowerCase();
+    return matchesExam && haystack.includes(searchQuery.toLowerCase());
+  });
 
   const statsCount = {
     pending: applications.filter(a => a.status === 'pending').length,
@@ -1511,6 +1683,28 @@ async function viewAnalyticsDetails(record: any) {
           <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase">Banned</span><XCircle size={16} className="text-red-600 dark:text-red-400 dark:text-red-400" /></div><p className="text-2xl font-bold text-red-600 dark:text-red-400 dark:text-red-400">{statsCount.banned}</p></div>
         </div>
 
+        {error && (
+          <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 text-red-700 dark:text-red-300 dark:text-red-300 rounded-lg px-4 py-3">
+            <AlertCircle size={18} className="mt-0.5 shrink-0" />
+            <div className="flex-1 text-sm font-medium break-words">{error}</div>
+            <button onClick={() => setError('')} className="shrink-0 hover:opacity-70"><X size={16} /></button>
+          </div>
+        )}
+        {warning && (
+          <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 text-amber-700 dark:text-amber-300 dark:text-amber-300 rounded-lg px-4 py-3">
+            <AlertCircle size={18} className="mt-0.5 shrink-0" />
+            <div className="flex-1 text-sm font-medium break-words">{warning}</div>
+            <button onClick={() => setWarning('')} className="shrink-0 hover:opacity-70"><X size={16} /></button>
+          </div>
+        )}
+        {success && (
+          <div className="flex items-start gap-3 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 dark:border-green-900/40 text-green-700 dark:text-green-300 dark:text-green-300 rounded-lg px-4 py-3">
+            <CheckCircle size={18} className="mt-0.5 shrink-0" />
+            <div className="flex-1 text-sm font-medium break-words">{success}</div>
+            <button onClick={() => setSuccess('')} className="shrink-0 hover:opacity-70"><X size={16} /></button>
+          </div>
+        )}
+
         <div className="card p-4">
 <div className="flex gap-1 mb-6 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg p-1 w-fit">
   {(['applications', 'exams', 'codes', 'questionBank', 'analytics'] as const).map(tab => (
@@ -1526,11 +1720,15 @@ async function viewAnalyticsDetails(record: any) {
 
           {activeTab === 'applications' && (
             <div>
-              <div className="mb-4">
-                <div className="relative">
+              <div className="mb-4 flex flex-wrap gap-3">
+                <div className="relative flex-1 min-w-[220px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                   <input type="text" placeholder="Search applications..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="input pl-10" />
                 </div>
+                <select value={examFilter} onChange={e => setExamFilter(e.target.value)} className="input w-auto">
+                  <option value="">All Exams</option>
+                  {exams.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}
+                </select>
               </div>
               {loading ? (
                 <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>
@@ -1545,10 +1743,18 @@ async function viewAnalyticsDetails(record: any) {
                           <div className="flex items-center gap-3 mb-1">
                             <p className="font-semibold text-slate-900 dark:text-white dark:text-white">{app.first_name} {app.last_name}</p>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(app.status)}`}>{app.status}</span>
+                            {app.exam ? (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-900/30 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 dark:text-indigo-300 max-w-[260px] truncate" title={app.exam.title}>
+                                {app.exam.title}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400">No exam assigned</span>
+                            )}
                           </div>
                           <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{app.email} • {app.phone}</p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">
                             <span>Applied: {app.applied_class}</span>
+                            {app.exam && <span className="text-indigo-600 dark:text-indigo-300 dark:text-indigo-300">Exam level: {app.exam.level} • {app.exam.academic_year}</span>}
                             {app.admitted_class && <span className="text-primary-600 dark:text-primary-400 dark:text-primary-400 font-medium">Admitted: {app.admitted_class}</span>}
                             {app.exam_score !== null && <span className={app.exam_score >= (app.exam?.passing_score || 50) ? 'text-green-600 dark:text-green-400 dark:text-green-400' : 'text-red-600 dark:text-red-400 dark:text-red-400'}>Score: {app.exam_score}%</span>}
                           </div>
@@ -1581,7 +1787,7 @@ async function viewAnalyticsDetails(record: any) {
                       <div><h3 className="font-bold text-slate-900 dark:text-white dark:text-white">{exam.title}</h3><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{exam.level} • {exam.academic_year}</p></div>
                       <div className="flex gap-1">
                         {(!exam.questions || exam.questions.length === 0) && <button onClick={() => handlePopulateQuestions(exam)} className="p-2 hover:bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 rounded-lg text-amber-600 dark:text-amber-400 dark:text-amber-400" title="Auto-populate from Question Bank"><Download size={16} /></button>}
-                        <button onClick={() => { setSelectedExam(exam); setShowQuestionModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700" title="Add Questions"><Hash size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
+                        <button onClick={() => { setSelectedExam(exam); loadQuestionsForExam(exam.id, exam.level, exam.subjects || []); setShowQuestionModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700" title="Add Questions"><Hash size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
                         <button onClick={() => { setSelectedExam(exam); setShowCodeModal(true); }} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700" title="Generate Codes"><QrCode size={16} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" /></button>
                         <button onClick={() => handleDeleteExam(exam.id)} disabled={deleting === exam.id} className="p-2 hover:bg-gray-100 dark:bg-slate-700 rounded-lg dark:hover:bg-slate-700">{deleting === exam.id ? <Loader2 size={16} className="animate-spin text-red-500 dark:text-red-400 dark:text-red-400" /> : <Trash2 size={16} className="text-red-500 dark:text-red-400 dark:text-red-400" />}</button>
                       </div>
@@ -1688,7 +1894,39 @@ async function viewAnalyticsDetails(record: any) {
                   <input type="text" value={questionData.subtopic} onChange={e => setQuestionData({...questionData, subtopic: e.target.value})} className="input" placeholder="Subtopic (optional)" />
                 </div>
                 {questionData.question_type === 'MCQ' && questionData.options.map((opt, i) => (<div key={i} className="flex gap-2 mb-2"><input type="radio" checked={questionData.correct_answer === i} onChange={() => setQuestionData({...questionData, correct_answer: i})} /><input type="text" value={opt} onChange={e => {const os = [...questionData.options]; os[i] = e.target.value; setQuestionData({...questionData, options: os});}} className="input flex-1" /></div>))}
-                <div className="mt-4 border-t pt-4"><div className="flex justify-between"><h4>{questions.length} Questions Added</h4><button onClick={() => openBankSelectModal(selectedExam)} className="text-xs text-primary-600 dark:text-primary-400 dark:text-primary-400">+ From Bank</button></div>{questions.map((q, i) => (<div key={q.id} className="flex justify-between p-2 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 mt-2"><span>{i+1}. {q.question}</span><button onClick={() => handleRemoveQuestion(q.id)} className="text-red-500 dark:text-red-400 dark:text-red-400"><Trash2 size={12} /></button></div>))}</div>
+                <div className="mt-4 border-t pt-4">
+                 <div className="flex justify-between items-center">
+                   <h4>{questionsLoading ? 'Loading questions...' : `${questions.length} Questions Added`}</h4>
+                   <button onClick={() => openBankSelectModal(selectedExam)} className="text-xs text-primary-600 dark:text-primary-400 dark:text-primary-400">+ From Bank</button>
+                 </div>
+                 {questions.length === 0 && !questionsLoading && <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">No questions added yet. Add one below or populating from the bank.</p>}
+                 {questions.map((q: any, i: number) => (
+                   <div key={q.id} className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 mt-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                     <div className="flex justify-between items-start gap-2">
+                       <div className="flex-1 min-w-0">
+                         <span className="font-medium text-slate-900 dark:text-white">{i+1}. {q.question}</span>
+                         <div className="flex flex-wrap gap-2 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                           <span className="px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{q.subject || 'General'}</span>
+                           <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300">{q.difficulty_level || 'MEDIUM'}</span>
+                           {q.topic && <span>• {q.topic}</span>}
+                           {q.question_type && <span>• {q.question_type}</span>}
+                         </div>
+                         {q.question_type === 'MCQ' && Array.isArray(q.options) && (
+                           <div className="mt-1 text-xs text-slate-600 dark:text-slate-300 space-y-0.5">
+                             {q.options.map((opt: string, j: number) => (
+                               <div key={j}>{String.fromCharCode(65 + j)}. {opt}{j === q.correct_answer ? ' ✓' : ''}</div>
+                             ))}
+                           </div>
+                         )}
+                       </div>
+                       <div className="flex gap-1 shrink-0">
+                         {swapLoading === q.id ? <Loader2 size={14} className="animate-spin text-primary-500" /> : <button onClick={() => handleSwapQuestion(selectedExam.id, q.id, q.subject || 'General', selectedExam.level)} className="p-1.5 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-lg" title="Swap (replace from bank)"><RefreshCw size={14} className="text-blue-500" /></button>}
+                         <button onClick={() => handleRemoveQuestion(q.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-slate-700 rounded-lg" title="Remove"><Trash2 size={14} className="text-red-500" /></button>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+               </div>
               </div>
               <div className="flex justify-end gap-3 p-5 border-t"><button onClick={() => setShowQuestionModal(false)} className="btn-ghost">Close</button><button onClick={handleAddQuestion} disabled={saving} className="btn-primary">Add Question</button></div>
             </div>
@@ -1707,7 +1945,26 @@ async function viewAnalyticsDetails(record: any) {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800">
               <div className="p-5 border-b flex justify-between"><h3>Select from Bank</h3><button onClick={() => setShowBankSelectModal(false)}><X size={20} /></button></div>
-              <div className="p-5 space-y-4"><input type="text" placeholder="Search..." value={bankSelectSearch} onChange={e => filterBankSelect(e.target.value)} className="input" />{bankSelectFiltered.map(q => (<label key={q.id} className="flex gap-2 p-2 border mt-1"><input type="checkbox" checked={selectedBankIds.has(q.id)} onChange={() => toggleBankSelect(q.id)} /><span>{q.question} ({q.level})</span></label>))}</div>
+              <div className="p-5 space-y-4">
+                 <input type="text" placeholder="Search..." value={bankSelectSearch} onChange={e => filterBankSelect(e.target.value)} className="input" />
+                 {bankSelectFiltered.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">No questions available.</p>}
+                 {bankSelectFiltered.map(q => {
+                   const alreadyIn = bankSelectExistingTexts.has((q.question || '').trim().toLowerCase());
+                   return (
+                     <label key={q.id} className={`flex items-start gap-2 p-2 border mt-1 rounded-lg ${alreadyIn ? 'bg-slate-50 dark:bg-slate-700/50 opacity-60' : 'hover:bg-primary-50 dark:hover:bg-primary-900/20'}`}>
+                       <input type="checkbox" checked={selectedBankIds.has(q.id)} disabled={alreadyIn} onChange={() => toggleBankSelect(q.id)} className="mt-1" />
+                       <div className="flex-1 min-w-0">
+                         <span className="text-sm text-slate-900 dark:text-white">{q.question}</span>
+                         <div className="flex gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                           <span className="px-1.5 py-0.5 rounded bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{q.level}</span>
+                           {q.subject && <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">{q.subject}</span>}
+                           {alreadyIn && <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Already in exam</span>}
+                         </div>
+                       </div>
+                     </label>
+                   );
+                 })}
+               </div>
               <div className="p-5 border-t flex justify-between"><button onClick={() => setShowBankSelectModal(false)}>Cancel</button><button onClick={async () => {await handleAddQuestionsFromBank(selectedExam.id, Array.from(selectedBankIds)); setShowBankSelectModal(false);}} className="btn-primary">Add {selectedBankIds.size}</button></div>
             </div>
           </div>
@@ -1717,15 +1974,54 @@ async function viewAnalyticsDetails(record: any) {
          {showApplicationModal && selectedApplication && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
              <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto dark:bg-slate-800">
-               <div className="p-5 border-b flex justify-between"><h3>Review Application</h3><button onClick={() => setShowApplicationModal(false)}><X size={20} /></button></div>
+               <div className="p-5 border-b flex justify-between sticky top-0 bg-white z-10 rounded-t-2xl dark:bg-slate-800"><h3>Review Application</h3><button onClick={() => setShowApplicationModal(false)}><X size={20} /></button></div>
                <div className="p-5 space-y-4">
-                 <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-3"><strong>{selectedApplication.first_name} {selectedApplication.last_name}</strong><br/>{selectedApplication.email} | {selectedApplication.applied_class}</div>
-                 {selectedApplication.exam_score !== null && (<div className="bg-primary-50 dark:bg-primary-900/20 dark:bg-primary-900/20 p-3 font-bold text-center text-xl">{selectedApplication.exam_score}%</div>)}
-                 <select value={admissionData.status} onChange={e => setAdmissionData({...admissionData, status: e.target.value})} className="input"><option value="">Decision</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="admitted">Admit</option><option value="assigned">Assign Exam</option></select>
-                 {admissionData.status === 'admitted' && (<select value={admissionData.admitted_class} onChange={e => setAdmissionData({...admissionData, admitted_class: e.target.value})} className="input">{classes.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}</select>)}
-                 {admissionData.status === 'assigned' && (<select onChange={e => handleAssignExam(selectedApplication.id, e.target.value)} className="input"><option value="">Select Exam</option>{exams.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}</select>)}
+                 <div className="bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-3 rounded-lg"><strong>{selectedApplication.first_name} {selectedApplication.last_name}</strong><br/><span className="text-sm text-slate-500 dark:text-slate-400">{selectedApplication.email} | {selectedApplication.phone}</span></div>
+
+                 <div className="rounded-lg border border-indigo-200 dark:border-indigo-900/40 overflow-hidden">
+                   <div className="bg-indigo-50 dark:bg-indigo-900/30 dark:bg-indigo-900/30 px-3 py-2 text-xs font-bold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">Exam Taken</div>
+                   {selectedApplication.exam ? (
+                     <div className="p-3 space-y-1 text-sm">
+                       <p className="font-semibold text-slate-900 dark:text-white">{selectedApplication.exam.title}</p>
+                       <p className="text-slate-500 dark:text-slate-400">{selectedApplication.exam.level} • {selectedApplication.exam.academic_year}</p>
+                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 dark:text-slate-400">
+                         {selectedApplication.exam.exam_date && <span>Exam date: {selectedApplication.exam.exam_date}</span>}
+                         <span>Duration: {selectedApplication.exam.duration_minutes} min</span>
+                         <span>Questions: {selectedApplication.exam.total_questions}</span>
+                         <span>Pass mark: {selectedApplication.exam.passing_score}%</span>
+                       </div>
+                     </div>
+                   ) : (
+                     <div className="p-3 text-sm text-slate-400 dark:text-slate-400">No exam assigned yet. Use "Assign Exam" below.</div>
+                   )}
+                 </div>
+
+                 {selectedApplication.exam_score !== null && (
+                   <div className={`p-3 font-bold text-center text-xl rounded-lg ${selectedApplication.exam_score >= (selectedApplication.exam?.passing_score || 50) ? 'bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 text-green-700 dark:text-green-300 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 text-red-700 dark:text-red-300 dark:text-red-300'}`}>
+                     {selectedApplication.exam_score}% {selectedApplication.exam_score >= (selectedApplication.exam?.passing_score || 50) ? '(Passed)' : '(Failed)'}
+                   </div>
+                 )}
+
+                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                   <div><span className="text-xs text-slate-400 dark:text-slate-400 block">Applied Class</span><span className="font-medium text-slate-800 dark:text-slate-200">{selectedApplication.applied_class || '—'}</span></div>
+                   <div><span className="text-xs text-slate-400 dark:text-slate-400 block">Admitted Class</span><span className="font-medium text-slate-800 dark:text-slate-200">{selectedApplication.admitted_class || '—'}</span></div>
+                   <div><span className="text-xs text-slate-400 dark:text-slate-400 block">Previous School</span><span className="font-medium text-slate-800 dark:text-slate-200">{selectedApplication.previous_school || '—'}</span></div>
+                   <div><span className="text-xs text-slate-400 dark:text-slate-400 block">Date of Birth</span><span className="font-medium text-slate-800 dark:text-slate-200">{selectedApplication.date_of_birth || '—'}</span></div>
+                   <div><span className="text-xs text-slate-400 dark:text-slate-400 block">Gender</span><span className="font-medium text-slate-800 dark:text-slate-200">{selectedApplication.gender || '—'}</span></div>
+                   <div><span className="text-xs text-slate-400 dark:text-slate-400 block">Applied On</span><span className="font-medium text-slate-800 dark:text-slate-200">{selectedApplication.created_at ? new Date(selectedApplication.created_at).toLocaleDateString() : '—'}</span></div>
+                   {selectedApplication.completed_at && (
+                     <div><span className="text-xs text-slate-400 dark:text-slate-400 block">Completed On</span><span className="font-medium text-slate-800 dark:text-slate-200">{new Date(selectedApplication.completed_at).toLocaleDateString()}</span></div>
+                   )}
+                   <div><span className="text-xs text-slate-400 dark:text-slate-400 block">Status</span><span className="font-medium text-slate-800 dark:text-slate-200 capitalize">{selectedApplication.status}</span></div>
+                 </div>
+
+                 <div className="border-t pt-3">
+                   <select value={admissionData.status} onChange={e => setAdmissionData({...admissionData, status: e.target.value})} className="input"><option value="">Decision</option><option value="passed">Passed</option><option value="failed">Failed</option><option value="admitted">Admit</option><option value="assigned">Assign Exam</option></select>
+                   {admissionData.status === 'admitted' && (<select value={admissionData.admitted_class} onChange={e => setAdmissionData({...admissionData, admitted_class: e.target.value})} className="input mt-2">{classes.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}</select>)}
+                   {admissionData.status === 'assigned' && (<select onChange={e => handleAssignExam(selectedApplication.id, e.target.value)} className="input mt-2"><option value="">Select Exam</option>{exams.map(e => <option key={e.id} value={e.id}>{e.title}</option>)}</select>)}
+                 </div>
                </div>
-               <div className="p-5 border-t flex justify-end gap-2"><button onClick={() => setShowApplicationModal(false)}>Cancel</button><button onClick={handleAdmissionDecision} className="btn-primary">Save</button></div>
+               <div className="p-5 border-t flex justify-end gap-2 sticky bottom-0 bg-white dark:bg-slate-800"><button onClick={() => setShowApplicationModal(false)} className="btn-ghost">Cancel</button><button onClick={handleAdmissionDecision} className="btn-primary">Save</button></div>
              </div>
            </div>
          )}

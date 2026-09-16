@@ -147,7 +147,9 @@ export async function GET(req: NextRequest) {
         studentAdmission = st.admission_number || '';
         className = st.class_name || '';
       }
-    } catch (_) {}
+    } catch (e) {
+      console.error('Failed to fetch student info for compiled report:', e);
+    }
 
     // Process each attempt
     const allSubjectData: Record<string, { correct: number; total: number }> = {};

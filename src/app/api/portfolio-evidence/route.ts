@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query as dbQuery } from '@/lib/neon';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,17 +16,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'student_id and text_snapshot are required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const result = await pool.query(
+    const result = await dbQuery(
       `INSERT INTO portfolio_evidence (student_id, session_id, term_id, evidence_type, text_snapshot, created_by)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [student_id, session_id || null, term_id || null, evidence_type || 'manual', text_snapshot, created_by || null]
     );
 
-    await pool.end();
-    return NextResponse.json({ evidence: result.rows[0] }, { status: 201 });
+    return NextResponse.json({ evidence: result[0] }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating portfolio evidence:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -48,28 +45,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    let query = 'SELECT * FROM portfolio_evidence WHERE student_id = $1';
+    let sql = 'SELECT * FROM portfolio_evidence WHERE student_id = $1';
     const params: any[] = [studentId];
     let idx = 2;
 
     if (sessionId) {
-      query += ` AND session_id = $${idx++}`;
+      sql += ` AND session_id = $${idx++}`;
       params.push(sessionId);
     }
     if (termId) {
-      query += ` AND term_id = $${idx++}`;
+      sql += ` AND term_id = $${idx++}`;
       params.push(termId);
     }
 
-    query += ' ORDER BY created_at DESC';
+    sql += ' ORDER BY created_at DESC';
 
-    const result = await pool.query(query, params);
-    await pool.end();
+    const evidence = await dbQuery(sql, params);
 
-    return NextResponse.json({ evidence: result.rows });
+    return NextResponse.json({ evidence });
   } catch (error: any) {
     console.error('Error fetching portfolio evidence:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

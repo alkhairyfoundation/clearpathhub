@@ -105,11 +105,23 @@ export async function POST(request: Request) {
         if (!exam_id || !questions || !Array.isArray(questions) || questions.length === 0) {
           return NextResponse.json({ success: false, error: 'exam_id and questions array required' }, { status: 400 });
         }
-        const remaining = await getRemainingCapacity(exam_id);
-        if (remaining < questions.length) {
-          return NextResponse.json({ success: false, error: `Cannot add ${questions.length} question(s). Only ${remaining} slot(s) remaining out of the exam's total_questions capacity.` }, { status: 400 });
+        const existingRows = await neonQuery('SELECT question FROM mock_questions WHERE exam_id = $1::uuid', [exam_id]);
+        const existingTexts = new Set((existingRows || []).map((r: any) => (r.question || '').trim().toLowerCase()));
+        const bulkSeen = new Set<string>();
+        const filteredQuestions = questions.filter((q: any) => {
+          const key = (q.question || '').trim().toLowerCase();
+          if (!key || existingTexts.has(key) || bulkSeen.has(key)) return false;
+          bulkSeen.add(key);
+          return true;
+        });
+        if (filteredQuestions.length === 0) {
+          return NextResponse.json({ success: true, questions: [], message: 'All supplied questions are already in this exam' }, { status: 200 });
         }
-        const toInsert = questions.map((q: any) => ({
+        const remaining = await getRemainingCapacity(exam_id);
+        if (remaining < filteredQuestions.length) {
+          return NextResponse.json({ success: false, error: `Cannot add ${filteredQuestions.length} question(s). Only ${remaining} slot(s) remaining out of the exam's total_questions capacity.` }, { status: 400 });
+        }
+        const toInsert = filteredQuestions.map((q: any) => ({
           exam_id,
           question: q.question,
           question_image: q.question_image || null,
@@ -175,11 +187,24 @@ export async function POST(request: Request) {
           return NextResponse.json({ success: false, error: 'No questions found in bank' }, { status: 404 });
         }
 
+        const existingRows = await neonQuery('SELECT question FROM mock_questions WHERE exam_id = $1::uuid', [exam_id]);
+        const existingTexts = new Set((existingRows || []).map((r: any) => (r.question || '').trim().toLowerCase()));
+        const bankTexts = new Set<string>();
+        const filteredBank = bankQuestions.filter((q: any) => {
+          const key = (q.question || '').trim().toLowerCase();
+          if (!key || existingTexts.has(key) || bankTexts.has(key)) return false;
+          bankTexts.add(key);
+          return true;
+        });
+        if (filteredBank.length === 0) {
+          return NextResponse.json({ success: true, count: 0, questions: [], message: 'All selected questions are already in this exam' });
+        }
+
         const examRows = await neonQuery('SELECT exam_type FROM mock_exams WHERE id = $1::uuid LIMIT 1', [exam_id]);
         const exam = examRows[0];
         const targetLevel = exam?.exam_type === 'JSS3_BECE' ? 'JSS3' : 'SS3';
 
-        const toInsert = bankQuestions.map((q: any) => ({
+        const toInsert = filteredBank.map((q: any) => ({
           exam_id, question: q.question, question_image: q.question_image || null,
           options: q.options || [''], correct_answer: q.correct_answer ?? 0, points: q.points || 1,
           question_type: q.question_type === 'TRUE_FALSE' ? 'true_false' : q.question_type === 'FILL_IN_THE_GAP' || q.question_type === 'FILL_BLANK' ? 'fill_blank' : 'multiple_choice',

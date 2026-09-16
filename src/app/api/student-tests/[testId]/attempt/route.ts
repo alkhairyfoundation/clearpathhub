@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest, { params }: { params: { testId: string } }) {
   try {
@@ -16,31 +17,26 @@ export async function GET(req: NextRequest, { params }: { params: { testId: stri
       return NextResponse.json({ attempt: null });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
     const [attemptResult, countResult, testResult] = await Promise.all([
-      pool.query(
+      query(
         'SELECT id, score, passed, completed_at FROM test_attempts WHERE test_id = $1 AND student_id = $2 AND completed_at IS NOT NULL ORDER BY completed_at DESC LIMIT 1',
         [testId, studentId]
       ),
-      pool.query(
+      query(
         'SELECT COUNT(*) as count FROM test_attempts WHERE test_id = $1 AND student_id = $2 AND completed_at IS NOT NULL',
         [testId, studentId]
       ),
-      pool.query(
+      query(
         'SELECT max_attempts FROM tests WHERE id = $1',
         [testId]
       ),
     ]);
 
-    await pool.end();
-
-    const maxAttempts = testResult.rows[0]?.max_attempts ?? 0;
-    const attemptsCount = parseInt(countResult.rows[0]?.count || '0', 10);
+    const maxAttempts = testResult[0]?.max_attempts ?? 0;
+    const attemptsCount = parseInt(countResult[0]?.count || '0', 10);
 
     return NextResponse.json({
-      attempt: attemptResult.rows[0] || null,
+      attempt: attemptResult[0] || null,
       attemptsCount,
       maxAttempts,
     });

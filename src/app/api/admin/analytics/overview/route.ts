@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-
-function classFilterExpr(classId: string | null, alias: string): string {
-  if (!classId) return '';
-  return ` AND EXISTS (SELECT 1 FROM student_classes sc WHERE sc.student_id = ${alias} AND sc.class_id = '${classId}')`;
-}
-
-function classWhereExpr(classId: string | null, alias: string): string {
-  if (!classId) return '';
-  return ` WHERE EXISTS (SELECT 1 FROM student_classes sc WHERE sc.student_id = ${alias} AND sc.class_id = '${classId}')`;
-}
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,15 +17,12 @@ export async function GET(req: NextRequest) {
     const dateFrom = searchParams.get('date_from');
     const dateTo = searchParams.get('date_to');
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
+    const classFilter = classId ? ` AND EXISTS (SELECT 1 FROM student_classes sc WHERE sc.student_id = $1 AND sc.class_id = $1)` : '';
+    const classFilterR = classId ? ` AND EXISTS (SELECT 1 FROM student_classes sc WHERE sc.student_id = $1 AND sc.class_id = $1)` : '';
+    const classFilterWhere = classId ? ` WHERE EXISTS (SELECT 1 FROM student_classes sc WHERE sc.student_id = $1 AND sc.class_id = $1)` : '';
+    const classFilterPs = classId ? ` AND EXISTS (SELECT 1 FROM student_classes sc WHERE sc.student_id = $1 AND sc.class_id = $1)` : '';
 
-    const classFilter = classFilterExpr(classId, 'p.id');
-    const classWhere = classWhereExpr(classId, 'p.id');
-    const classFilterR = classFilterExpr(classId, 'r.student_id');
-    const classFilterA = classFilterExpr(classId, 'a.student_id');
-    const classFilterPs = classFilterExpr(classId, 'ps.student_id');
-    const classFilterLs = classFilterExpr(classId, 'ls.student_id');
+    const p = classId ? [classId] : [];
 
     const [
       studentCountResult,
@@ -51,41 +39,39 @@ export async function GET(req: NextRequest) {
       subjectPerfResult,
       monthlyAttendanceResult,
     ] = await Promise.all([
-      pool.query(`SELECT COUNT(*) FROM profiles WHERE role = 'student'${classFilter}`),
-      pool.query(`SELECT COUNT(*) FROM subjects`),
-      pool.query(
+      query(`SELECT COUNT(*) FROM profiles WHERE role = 'student'${classFilter}`, p),
+      query(`SELECT COUNT(*) FROM subjects`),
+      query(
         `SELECT ROUND(AVG(r.score), 1) as avg_score,
                 COUNT(*) as total_results
          FROM results r
-         WHERE r.score IS NOT NULL ${classFilterR}`,
+         WHERE r.score IS NOT NULL ${classFilterR}`, p
       ),
-      pool.query(
+      query(
         `SELECT ROUND(
           (COUNT(*) FILTER (WHERE a.status IN ('present','excused')))::NUMERIC /
           NULLIF(COUNT(*), 0) * 100, 1
         ) as attendance_rate
-        FROM attendance a
-        ${classWhereExpr(classId, 'a.student_id')}`,
+        FROM attendance a${classFilterWhere}`, p
       ),
-      pool.query(`SELECT ROUND(AVG(mastery_score), 1) as avg_mastery FROM mastery_scores`),
-      pool.query(
+      query(`SELECT ROUND(AVG(mastery_score), 1) as avg_mastery FROM mastery_scores`),
+      query(
         `SELECT COUNT(*) FROM student_risk_predictions srp
          WHERE srp.risk_level IN ('high','critical')
-         AND srp.prediction_date = (SELECT MAX(prediction_date) FROM student_risk_predictions WHERE student_id = srp.student_id)`,
+         AND srp.prediction_date = (SELECT MAX(prediction_date) FROM student_risk_predictions WHERE student_id = srp.student_id)`
       ),
-      pool.query(
+      query(
         `SELECT COUNT(*) FROM practice_sessions ps
-         WHERE ps.date = CURRENT_DATE ${classFilterPs}`,
+         WHERE ps.date = CURRENT_DATE${classFilterPs}`, p
       ),
-      pool.query(
+      query(
         `SELECT ROUND(AVG(current_streak), 1) as avg_streak,
                 MAX(current_streak) as max_streak
-         FROM learning_streaks ls
-         ${classWhereExpr(classId, 'ls.student_id')}`,
+         FROM learning_streaks ls${classFilterWhere}`, p
       ),
-      pool.query(`SELECT id, name FROM classes ORDER BY name`),
-      pool.query(`SELECT id, name FROM subjects ORDER BY name`),
-      pool.query(
+      query(`SELECT id, name FROM classes ORDER BY name`),
+      query(`SELECT id, name FROM subjects ORDER BY name`),
+      query(
         `SELECT
           CASE
             WHEN r.score >= 80 THEN 'A'
@@ -98,30 +84,30 @@ export async function GET(req: NextRequest) {
          FROM results r
          WHERE 1=1 ${classFilterR}
          GROUP BY grade
-         ORDER BY grade`,
+         ORDER BY grade`, p
       ),
-      pool.query(
+      query(
         `SELECT sub.name,
                 ROUND(AVG(r.score), 1) as avg_score,
                 COUNT(*) as count
          FROM results r
          JOIN subjects sub ON sub.id = r.subject_id
          WHERE r.score IS NOT NULL ${classFilterR}
-         GROUP BY sub.name ORDER BY sub.name`,
+         GROUP BY sub.name ORDER BY sub.name`, p
       ),
-      pool.query(
+      query(
         `SELECT TO_CHAR(a.date, 'YYYY-MM') as month,
                 ROUND(
                   (COUNT(*) FILTER (WHERE a.status IN ('present','excused')))::NUMERIC /
                   NULLIF(COUNT(*), 0) * 100, 1
                 ) as rate
          FROM attendance a
-         WHERE 1=1 ${classFilterA}
-         GROUP BY month ORDER BY month`,
+         WHERE 1=1 ${classFilterR}
+         GROUP BY month ORDER BY month`, p
       ),
     ]);
 
-    const studentListResult = await pool.query(
+    const studentListResult = await query(
       `SELECT DISTINCT ON (p.id)
               p.id, p.first_name, p.last_name,
               c.name as class_name,
@@ -143,32 +129,30 @@ export async function GET(req: NextRequest) {
        LEFT JOIN student_levels sl ON sl.student_id = p.id
        LEFT JOIN learning_streaks ls ON ls.student_id = p.id
        WHERE p.role = 'student'${classFilter}
-       ORDER BY p.id, p.first_name, p.last_name`,
+       ORDER BY p.id, p.first_name, p.last_name`, p
     );
-
-    await pool.end();
 
     return NextResponse.json({
       summary: {
-        total_students: parseInt(studentCountResult.rows[0]?.count || '0'),
-        total_subjects: parseInt(subjectCountResult.rows[0]?.count || '0'),
-        avg_score: avgScoreResult.rows[0]?.avg_score,
-        total_results: parseInt(avgScoreResult.rows[0]?.total_results || '0'),
-        attendance_rate: attendanceRateResult.rows[0]?.attendance_rate,
-        avg_mastery: masteryAvgResult.rows[0]?.avg_mastery,
-        at_risk_count: parseInt(riskCountResult.rows[0]?.count || '0'),
-        active_today: parseInt(activeTodayResult.rows[0]?.count || '0'),
-        avg_streak: streakStatsResult.rows[0]?.avg_streak,
-        max_streak: streakStatsResult.rows[0]?.max_streak,
+        total_students: parseInt(studentCountResult[0]?.count || '0'),
+        total_subjects: parseInt(subjectCountResult[0]?.count || '0'),
+        avg_score: avgScoreResult[0]?.avg_score,
+        total_results: parseInt(avgScoreResult[0]?.total_results || '0'),
+        attendance_rate: attendanceRateResult[0]?.attendance_rate,
+        avg_mastery: masteryAvgResult[0]?.avg_mastery,
+        at_risk_count: parseInt(riskCountResult[0]?.count || '0'),
+        active_today: parseInt(activeTodayResult[0]?.count || '0'),
+        avg_streak: streakStatsResult[0]?.avg_streak,
+        max_streak: streakStatsResult[0]?.max_streak,
       },
       filters: {
-        classes: classListResult.rows,
-        subjects: subjectListResult.rows,
+        classes: classListResult,
+        subjects: subjectListResult,
       },
-      grade_distribution: gradeDistResult.rows,
-      subject_performance: subjectPerfResult.rows,
-      attendance_trend: monthlyAttendanceResult.rows,
-      students: studentListResult.rows.map((s: any) => ({
+      grade_distribution: gradeDistResult,
+      subject_performance: subjectPerfResult,
+      attendance_trend: monthlyAttendanceResult,
+      students: studentListResult.map((s: any) => ({
         id: s.id,
         name: `${s.first_name} ${s.last_name}`,
         class_name: s.class_name,

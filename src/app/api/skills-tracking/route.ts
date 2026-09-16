@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,10 +16,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const result = await pool.query(
+    const tracking = await query(
       `SELECT st.*, jsonb_build_object('id', s.id, 'name', s.name, 'category', s.category) as skill
        FROM skills_tracking st
        LEFT JOIN skills s ON st.skill_id = s.id
@@ -28,8 +26,7 @@ export async function GET(req: NextRequest) {
       [studentId]
     );
 
-    await pool.end();
-    return NextResponse.json({ tracking: result.rows });
+    return NextResponse.json({ tracking });
   } catch (error: any) {
     console.error('Error fetching skills tracking:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -50,10 +47,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'student_id and skill_id are required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const result = await pool.query(
+    const result = await query(
       `INSERT INTO skills_tracking (student_id, skill_id, date, activity_type, activity_description, duration_minutes, self_rating)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
@@ -67,8 +61,7 @@ export async function POST(req: NextRequest) {
       ]
     );
 
-    await pool.end();
-    return NextResponse.json({ tracking: result.rows[0] }, { status: 201 });
+    return NextResponse.json({ tracking: result[0] }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating skills tracking:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -155,12 +155,26 @@ export async function POST(request: Request) {
 
         const bankQuestions = await neonQuery(
           `SELECT * FROM question_bank
-           WHERE status = $1 AND level = $2 AND subject::text = ANY($3::text[])`,
-          ['published', targetLevel, targetSubjects]
+           WHERE status::text = ANY($1::text[]) AND level = $2 AND subject::text = ANY($3::text[])`,
+          [['published', 'active'], targetLevel, targetSubjects]
         );
 
         if (!bankQuestions || bankQuestions.length === 0) {
           return NextResponse.json({ success: true, count: 0, message: 'No questions found in bank for this class level' });
+        }
+
+        // Fetch existing questions for this exam to avoid duplicates
+        const existingRows = await neonQuery('SELECT question FROM mock_questions WHERE exam_id = $1::uuid', [examId]);
+        const existingTexts = new Set((existingRows || []).map((r: any) => (r.question || '').trim().toLowerCase()));
+        const seenTexts = new Set<string>();
+        const filteredBank = bankQuestions.filter((q: any) => {
+          const key = (q.question || '').trim().toLowerCase();
+          if (!key || existingTexts.has(key) || seenTexts.has(key)) return false;
+          seenTexts.add(key);
+          return true;
+        });
+        if (filteredBank.length === 0) {
+          return NextResponse.json({ success: true, count: 0, message: 'All available bank questions are already in this exam' });
         }
 
         const weights = SUBJECT_WEIGHTS[exam.exam_type] || {};
@@ -182,7 +196,7 @@ export async function POST(request: Request) {
 
         let selected: any[] = [];
         for (const subject of targetSubjects) {
-          const subjectQs = bankQuestions.filter((q: any) => q.subject === subject);
+          const subjectQs = filteredBank.filter((q: any) => q.subject === subject);
           const need = qsPerSubject[subject] || 0;
           if (subjectQs.length === 0 || need <= 0) continue;
           const veryHard = subjectQs.filter((q: any) => q.difficulty_level === 'VERY_HARD');
@@ -200,6 +214,26 @@ export async function POST(request: Request) {
             selected = [...selected, ...chosen, ...remaining];
           } else {
             selected = [...selected, ...chosen];
+          }
+        }
+
+        // Redistribute: if some subjects fell short, fill remaining capacity from
+        // subjects that still have unused bank questions so the exam matches total_questions.
+        if (selected.length < remainingCapacity) {
+          const usedIds = new Set(selected.map((s: any) => s.id));
+          let guard = 0;
+          while (selected.length < remainingCapacity && guard < targetSubjects.length * 5) {
+            guard++;
+            let added = 0;
+            for (const subject of targetSubjects) {
+              if (selected.length >= remainingCapacity) break;
+              const available = filteredBank.filter((q: any) => q.subject === subject && !usedIds.has(q.id)).sort(() => Math.random() - 0.5);
+              if (available.length === 0) continue;
+              selected.push(available[0]);
+              usedIds.add(available[0].id);
+              added++;
+            }
+            if (added === 0) break;
           }
         }
 

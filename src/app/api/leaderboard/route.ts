@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,27 +11,22 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get('type') || 'class_weekly';
     const studentId = searchParams.get('student_id');
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
     if (type === 'class_weekly') {
       if (!studentId) {
-        await pool.end();
         return NextResponse.json({ rankings: [] });
       }
 
-      const classResult = await pool.query(
+      const classResult = await query(
         `SELECT s.class_id FROM students s WHERE s.profile_id = $1`,
         [studentId]
       );
-      const classId = classResult.rows[0]?.class_id;
+      const classId = classResult[0]?.class_id;
 
       if (!classId) {
-        await pool.end();
         return NextResponse.json({ rankings: [] });
       }
 
-      const rankingsResult = await pool.query(
+      const rankingsRaw = await query(
         `SELECT 
           p.id as student_id,
           CONCAT(p.first_name, ' ', p.last_name) as name,
@@ -45,7 +41,7 @@ export async function GET(req: NextRequest) {
         [classId]
       );
 
-      const rankings = rankingsResult.rows.map((r: any, i: number) => ({
+      const rankings = rankingsRaw.map((r: any, i: number) => ({
         student_id: r.student_id,
         name: r.name,
         score: r.score,
@@ -54,7 +50,6 @@ export async function GET(req: NextRequest) {
 
       const myRankRow = rankings.find((r: any) => r.student_id === studentId);
 
-      await pool.end();
       return NextResponse.json({
         rankings,
         myRank: myRankRow ? { rank: myRankRow.rank, total: rankings.length, score: myRankRow.score } : null,
@@ -62,7 +57,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === 'school_monthly') {
-      const rankingsResult = await pool.query(
+      const rankingsRaw = await query(
         `SELECT 
           p.id as student_id,
           CONCAT(p.first_name, ' ', p.last_name) as name,
@@ -76,7 +71,7 @@ export async function GET(req: NextRequest) {
          LIMIT 50`
       );
 
-      const rankings = rankingsResult.rows.map((r: any, i: number) => ({
+      const rankings = rankingsRaw.map((r: any, i: number) => ({
         student_id: r.student_id,
         name: r.name,
         score: r.score,
@@ -85,7 +80,6 @@ export async function GET(req: NextRequest) {
 
       const myRankRow = studentId ? rankings.find((r: any) => r.student_id === studentId) : null;
 
-      await pool.end();
       return NextResponse.json({
         rankings,
         myRank: myRankRow ? { rank: myRankRow.rank, total: rankings.length, score: myRankRow.score } : null,
@@ -93,7 +87,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === 'islamic') {
-      const rankingsResult = await pool.query(
+      const rankingsRaw = await query(
         `SELECT 
           p.id as student_id,
           CONCAT(p.first_name, ' ', p.last_name) as name,
@@ -114,7 +108,7 @@ export async function GET(req: NextRequest) {
          LIMIT 50`
       );
 
-      const rankings = rankingsResult.rows.map((r: any, i: number) => ({
+      const rankings = rankingsRaw.map((r: any, i: number) => ({
         student_id: r.student_id,
         name: r.name,
         score: r.score,
@@ -123,7 +117,6 @@ export async function GET(req: NextRequest) {
 
       const myRankRow = studentId ? rankings.find((r: any) => r.student_id === studentId) : null;
 
-      await pool.end();
       return NextResponse.json({
         rankings,
         myRank: myRankRow ? { rank: myRankRow.rank, total: rankings.length, score: myRankRow.score } : null,
@@ -131,7 +124,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === 'skills') {
-      const rankingsResult = await pool.query(
+      const rankingsRaw = await query(
         `SELECT 
           p.id as student_id,
           CONCAT(p.first_name, ' ', p.last_name) as name,
@@ -143,7 +136,7 @@ export async function GET(req: NextRequest) {
          LIMIT 50`
       );
 
-      const rankings = rankingsResult.rows.map((r: any, i: number) => ({
+      const rankings = rankingsRaw.map((r: any, i: number) => ({
         student_id: r.student_id,
         name: r.name,
         score: Math.round(r.score),
@@ -152,7 +145,6 @@ export async function GET(req: NextRequest) {
 
       const myRankRow = studentId ? rankings.find((r: any) => r.student_id === studentId) : null;
 
-      await pool.end();
       return NextResponse.json({
         rankings,
         myRank: myRankRow ? { rank: myRankRow.rank, total: rankings.length, score: myRankRow.score } : null,
@@ -160,7 +152,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === 'mastery') {
-      const rankingsResult = await pool.query(
+      const rankingsRaw = await query(
         `SELECT 
           p.id as student_id,
           CONCAT(p.first_name, ' ', p.last_name) as name,
@@ -172,7 +164,7 @@ export async function GET(req: NextRequest) {
          LIMIT 50`
       );
 
-      const rankings = rankingsResult.rows.map((r: any, i: number) => ({
+      const rankings = rankingsRaw.map((r: any, i: number) => ({
         student_id: r.student_id,
         name: r.name,
         score: Math.round(r.score),
@@ -181,14 +173,12 @@ export async function GET(req: NextRequest) {
 
       const myRankRow = studentId ? rankings.find((r: any) => r.student_id === studentId) : null;
 
-      await pool.end();
       return NextResponse.json({
         rankings,
         myRank: myRankRow ? { rank: myRankRow.rank, total: rankings.length, score: myRankRow.score } : null,
       });
     }
 
-    await pool.end();
     return NextResponse.json({ rankings: [] });
   } catch (error: any) {
     console.error('Leaderboard error:', error);

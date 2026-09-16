@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,10 +12,7 @@ export async function GET(req: NextRequest) {
 
     if (!studentId) return NextResponse.json({ error: 'student_id required' }, { status: 400 });
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const result = await pool.query(
+    const result = await query(
       `SELECT pr.*, 
         c.name as current_class_name,
         c.next_class_id,
@@ -29,10 +27,8 @@ export async function GET(req: NextRequest) {
       [studentId]
     );
 
-    await pool.end();
-
     return NextResponse.json({
-      promotion: result.rows[0] || null,
+      promotion: result[0] || null,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -207,7 +207,9 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
       );
       const st = stRows[0];
       if (st) studentAdmission = st.admission_number || '';
-    } catch (_) {}
+    } catch (e) {
+      console.error('Failed to fetch student info for report:', e);
+    }
 
     let securityEvents: any[] = [];
     try {
@@ -215,7 +217,9 @@ export async function GET(req: NextRequest, { params }: { params: { attemptId: s
         'SELECT event_type, event_data, severity, created_at FROM exam_activity_logs WHERE attempt_id = $1 ORDER BY created_at ASC',
         [attemptId]
       );
-    } catch (_) {}
+    } catch (e) {
+      console.error('Failed to fetch security events for report:', e);
+    }
 
     return NextResponse.json({
       success: true,

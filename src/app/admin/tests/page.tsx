@@ -195,7 +195,7 @@ export default function AdminTestsPage() {
     setSelectedTest(test);
     setSelectedBankIds(new Set());
     setBankSearch('');
-    let query = db.from('question_bank').select('*').eq('status', 'published');
+    let query = db.from('question_bank').select('*').in('status', ['published', 'active']);
     const subjectName = test.subject?.name?.toUpperCase();
     if (subjectName) query = query.eq('subject', subjectName);
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -246,7 +246,7 @@ export default function AdminTestsPage() {
     if (!test.subject_id) { setWarning('Select a subject for this test first'); return; }
     setSaving(true);
     try {
-      let bankQuery = db.from('question_bank').select('*').eq('status', 'published');
+      let bankQuery = db.from('question_bank').select('*').in('status', ['published', 'active']);
       const subjectName = test.subject?.name?.toUpperCase();
       if (subjectName) bankQuery = bankQuery.eq('subject', subjectName);
       const { data: allBank } = await bankQuery;

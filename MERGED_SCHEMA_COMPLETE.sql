@@ -435,6 +435,7 @@ CREATE TABLE IF NOT EXISTS entrance_exams (
   max_tab_switches INTEGER DEFAULT 3,
   is_published BOOLEAN DEFAULT false,
   is_active BOOLEAN DEFAULT true,
+  subjects TEXT[] DEFAULT ARRAY[]::TEXT[],
   created_by UUID REFERENCES profiles(id),
   created_at TIMESTAMP DEFAULT NOW()
 );

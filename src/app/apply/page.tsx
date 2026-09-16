@@ -45,7 +45,7 @@ function ApplyPageContent() {
   useEffect(() => {
     if (step !== 'exam' || !exam || !startTime || submittingRef.current) return;
     const interval = setInterval(() => {
-      const elapsed = Math.round((Date.now() - startTime) / 60000);
+      const elapsed = Math.floor((Date.now() - startTime) / 60000);
       const remaining = Math.max(0, exam.duration_minutes - elapsed);
       setTimeRemaining(remaining);
       if (remaining <= 0 && !submittingRef.current) {
@@ -224,7 +224,7 @@ function ApplyPageContent() {
     if (!applicationId || submitting) return;
     setSubmitting(true);
 
-    const timeTaken = Math.round((Date.now() - startTime) / 60000);
+    const timeTaken = Math.floor((Date.now() - startTime) / 60000);
     let correctCount = 0;
     let totalPoints = 0;
 

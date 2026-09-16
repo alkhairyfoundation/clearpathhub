@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,20 +12,17 @@ export async function GET(req: NextRequest) {
 
     if (!studentId) return NextResponse.json({ error: 'student_id required' }, { status: 400 });
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const todayResult = await pool.query(
+    const todayResult = await query(
       `SELECT * FROM daily_accountability WHERE student_id = $1 AND date = CURRENT_DATE`,
       [studentId]
     );
 
-    const historyResult = await pool.query(
+    const historyResult = await query(
       `SELECT * FROM daily_accountability WHERE student_id = $1 ORDER BY date DESC LIMIT 30`,
       [studentId]
     );
 
-    const statsResult = await pool.query(
+    const statsResult = await query(
       `SELECT 
         COUNT(*) as total_days,
         ROUND(AVG(total_score), 1) as avg_score,
@@ -37,12 +35,10 @@ export async function GET(req: NextRequest) {
       [studentId]
     );
 
-    await pool.end();
-
     return NextResponse.json({
-      today: todayResult.rows[0] || null,
-      history: historyResult.rows,
-      stats: statsResult.rows[0] || null,
+      today: todayResult[0] || null,
+      history: historyResult,
+      stats: statsResult[0] || null,
     });
   } catch (error: any) {
     console.error('Accountability error:', error);

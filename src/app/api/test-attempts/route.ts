@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,10 +16,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const result = await pool.query(
+    const attempts = await query(
       `SELECT ta.*, 
         jsonb_build_object('title', t.title, 'subject', jsonb_build_object('name', s.name)) as test
        FROM test_attempts ta
@@ -29,8 +27,7 @@ export async function GET(req: NextRequest) {
       [studentId]
     );
 
-    await pool.end();
-    return NextResponse.json({ attempts: result.rows });
+    return NextResponse.json({ attempts });
   } catch (error: any) {
     console.error('Error fetching test attempts:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

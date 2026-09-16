@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { query as dbQuery } from '@/lib/neon';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'studentId is required' }, { status: 400 });
     }
 
-    let query = `
+    let sql = `
       SELECT 
         gh.*,
         parent_goal.goal_text as parent_goal_text,
@@ -30,22 +31,19 @@ export async function GET(req: NextRequest) {
     let paramIdx = 2;
 
     if (periodType) {
-      query += ` AND gh.period_type = $${paramIdx++}`;
+      sql += ` AND gh.period_type = $${paramIdx++}`;
       params.push(periodType);
     }
     if (dimension) {
-      query += ` AND gh.dimension = $${paramIdx++}`;
+      sql += ` AND gh.dimension = $${paramIdx++}`;
       params.push(dimension);
     }
 
-    query += ' ORDER BY gh.period_start DESC, gh.created_at ASC';
+    sql += ' ORDER BY gh.period_start DESC, gh.created_at ASC';
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-    const result = await pool.query(query, params);
-    await pool.end();
+    const goals = await dbQuery(sql, params);
 
-    return NextResponse.json({ goals: result.rows });
+    return NextResponse.json({ goals });
   } catch (error: any) {
     console.error('Error fetching goals:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -66,18 +64,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { default: { Pool } } = await import('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL });
-
-    const result = await pool.query(
+    const result = await dbQuery(
       `INSERT INTO goal_hierarchy (student_id, period_type, dimension, period_start, period_end, goal_text, target_metric, target_value, parent_goal_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [student_id, period_type, dimension, period_start, period_end, goal_text, target_metric, target_value, parent_goal_id || null]
     );
 
-    await pool.end();
-    return NextResponse.json({ goal: result.rows[0] }, { status: 201 });
+    return NextResponse.json({ goal: result[0] }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating goal:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
