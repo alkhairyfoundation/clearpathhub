@@ -21,6 +21,7 @@ export default function AdminClassesPage() {
 const [formData, setFormData] = useState({ name: '', level: 1, department_id: '', class_teacher_id: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
   const [success, setSuccess] = useState('');
   const [promoteOpen, setPromoteOpen] = useState(false);
   const [promoteLoading, setPromoteLoading] = useState(false);
@@ -117,15 +118,40 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this class? This will unlink associated students and subjects.')) return;
+    if (!confirm('Delete this class? This will unlink associated students, subjects, sessions, lessons, quizzes and other records.')) return;
     setDeleting(id);
     try {
-      await db.from('students').update({ class_id: null }).eq('class_id', id);
-      await db.from('subjects').update({ class_id: null }).eq('class_id', id);
+      // Neutralise every nullable FK column that references the class before the
+      // final delete. teacher_classes.class_id is NOT NULL but its FK is CASCADE,
+      // so those rows are removed automatically with the class.
+      const cleanupTargets: Array<[string, string]> = [
+        ['students', 'class_id'],
+        ['subjects', 'class_id'],
+        ['sessions', 'class_id'],
+        ['lessons', 'class_id'],
+        ['quizzes', 'class_id'],
+        ['homework', 'class_id'],
+        ['attendance', 'class_id'],
+        ['tests', 'class_id'],
+        ['question_bank', 'class_id'],
+        ['student_classes', 'class_id'],
+        ['classes', 'next_class_id'],
+      ];
+      const cleanupErrors: string[] = [];
+      for (const [table, col] of cleanupTargets) {
+        const { error } = await db.from(table).update({ [col]: null }).eq(col, id);
+        if (error) cleanupErrors.push(error.message);
+      }
+
       const { error } = await db.from('classes').delete().eq('id', id);
       if (error) throw new Error(error.message);
+      if (cleanupErrors.length > 0) {
+        setWarning(`Class deleted, but some linked records could not be unlinked: ${cleanupErrors.join('; ')}`);
+        setTimeout(() => setWarning(''), 5000);
+      }
       setSuccess('Class deleted successfully');
       setTimeout(() => setSuccess(''), 3000);
+      fetchData();
     } catch (err: any) {
       setError(err.message || 'Failed to delete class');
     } finally {
@@ -211,6 +237,7 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
         </div>
 
       {success && <div className="bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/40 dark:border-emerald-900/40 rounded-lg p-3 text-emerald-700 dark:text-emerald-300 dark:text-emerald-300 text-sm">{success}</div>}
+      {warning && <div className="bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 dark:border-amber-900/40 rounded-lg p-3 text-amber-700 dark:text-amber-300 dark:text-amber-300 text-sm">{warning}</div>}
       {error && <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 dark:text-red-400 text-sm">{error}</div>}
 
       {loading ? (
