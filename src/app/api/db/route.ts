@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { runDbOp, type DbOp, type Filter } from '@/lib/neon-engine';
 import { query } from '@/lib/neon';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
@@ -81,8 +82,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ data: null, error: 'Missing table' }, { status: 400 });
     }
 
-    const sessionCookie = request.headers.get('cookie') || '';
-    const authed = sessionCookie.includes('__Secure-next-auth.session-token') || sessionCookie.includes('next-auth.session-token');
+    const cookieHeader = (await headers()).get('cookie') || '';
+    const authed = cookieHeader.includes('next-auth') || cookieHeader.includes('__Secure-next-auth');
 
     if (!authed) {
       const isPublicRead = op.op === 'read' && PUBLIC_READ_TABLES.has(op.table);
