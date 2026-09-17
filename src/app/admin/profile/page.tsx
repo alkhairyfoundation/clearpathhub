@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, uploadFile } from '@/lib/supabase';
+import { uploadFile } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -21,7 +21,7 @@ export default function AdminProfilePage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordData, setPasswordData] = useState({ new: '', confirm: '' });
+  const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' });
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState('');
@@ -102,14 +102,21 @@ export default function AdminProfilePage() {
     }
 
     setChangingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: passwordData.new });
-
-    if (error) {
-      setPasswordError(error.message);
-    } else {
-      setPasswordSuccess(true);
-      setPasswordData({ new: '', confirm: '' });
-      setTimeout(() => setPasswordSuccess(false), 3000);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: passwordData.current || '', newPassword: passwordData.new }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPasswordSuccess(true);
+        setPasswordData({ current: '', new: '', confirm: '' });
+        setTimeout(() => setPasswordSuccess(false), 3000);
+      } else {
+        setPasswordError(data.error || 'Failed to change password');
+      }
+    } catch (err: any) {
+      setPasswordError(err.message || 'Failed to change password');
     }
     setChangingPassword(false);
   }

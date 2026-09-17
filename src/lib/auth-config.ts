@@ -1,13 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { createClient } from "@supabase/supabase-js";
 import { query as neonQuery } from "@/lib/neon";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-// Prevent build failure if env vars are missing
-const isConfigured = supabaseUrl && supabaseAnonKey && supabaseUrl.includes('supabase');
+import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,37 +12,31 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       authorize: async (credentials) => {
-        if (!isConfigured) {
-          console.error("Supabase not configured - missing environment variables");
-          return null;
-        }
-        
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: credentials.email,
-            password: credentials.password,
-          });
-
-          if (error || !data.user) {
-            console.error("Auth error:", error?.message);
-            return null;
-          }
-
           const rows = await neonQuery(
-            'SELECT * FROM profiles WHERE id = $1 LIMIT 1',
-            [data.user.id]
+            'SELECT * FROM profiles WHERE email = $1 LIMIT 1',
+            [credentials.email]
           );
           const profile = rows[0] || null;
 
+          if (!profile || !profile.password_hash) {
+            console.error("Auth error: Invalid credentials");
+            return null;
+          }
+
+          const isValid = await bcrypt.compare(credentials.password, profile.password_hash);
+          if (!isValid) {
+            console.error("Auth error: Invalid credentials");
+            return null;
+          }
+
           return {
-            id: data.user.id,
-            email: data.user.email,
-            role: profile?.role || 'student',
-            name: profile ? `${profile.first_name} ${profile.last_name}` : data.user.email,
+            id: profile.id,
+            email: profile.email,
+            role: profile.role || 'student',
+            name: profile ? `${profile.first_name} ${profile.last_name}` : profile.email,
             image: profile?.avatar_url,
           };
         } catch (err) {

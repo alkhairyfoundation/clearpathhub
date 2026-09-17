@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, uploadFile } from '@/lib/supabase'
+import { uploadFile } from '@/lib/supabase'
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { Save, Eye, EyeOff, User, Mail, Phone, Check, AlertCircle, Loader2, Shield, Calendar, Users, GraduationCap, TrendingUp, AlertTriangle, ArrowLeft, Upload } from 'lucide-react';
@@ -19,7 +19,7 @@ export default function ParentProfilePage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordData, setPasswordData] = useState({ new: '', confirm: '' });
+  const [passwordData, setPasswordData] = useState({ current: '', new: '', confirm: '' });
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState('');
@@ -82,8 +82,15 @@ export default function ParentProfilePage() {
     if (passwordData.new !== passwordData.confirm) { setPasswordError('Passwords do not match'); return; }
     if (passwordData.new.length < 6) { setPasswordError('Password must be at least 6 characters'); return; }
     setChangingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: passwordData.new });
-    if (error) { setPasswordError(error.message); } else { setPasswordSuccess(true); setPasswordData({ new: '', confirm: '' }); setTimeout(() => setPasswordSuccess(false), 3000); }
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: passwordData.current || '', newPassword: passwordData.new }),
+      });
+      const data = await res.json();
+      if (data.success) { setPasswordSuccess(true); setPasswordData({ current: '', new: '', confirm: '' }); setTimeout(() => setPasswordSuccess(false), 3000); }
+      else { setPasswordError(data.error || 'Failed to change password'); }
+    } catch (err: any) { setPasswordError(err.message || 'Failed to change password'); }
     setChangingPassword(false);
   }
 

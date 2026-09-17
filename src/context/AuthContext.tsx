@@ -2,12 +2,11 @@
 
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "next-auth/react";
 import { createContext, useEffect, useState, ReactNode, useCallback, useContext } from 'react';
-import { supabase } from "@/lib/supabase";
 import { db } from "@/lib/db";
-import type { Profile, UserRole } from '@/types';
+import type { Profile } from '@/types';
 
 interface AuthContextType {
-  session: any; // NextAuth session type
+  session: any;
   user: any;
   profile: Profile | null;
   setProfile: (profile: Profile | null) => void;
@@ -21,46 +20,46 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function getStoredProfile(): Profile | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = window.localStorage.getItem('user-profile');
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return null;
+}
+
+function storeProfile(profile: Profile | null) {
+  if (typeof window === 'undefined') return;
+  if (profile) {
+    window.localStorage.setItem('user-profile', JSON.stringify(profile));
+    window.localStorage.setItem('user-role', profile.role);
+  } else {
+    window.localStorage.removeItem('user-profile');
+    window.localStorage.removeItem('user-role');
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
-  const [profile, setProfileState] = useState<Profile | null>(() => {
-    if (typeof window !== 'undefined') {
-      const savedRole = window.localStorage.getItem('user-role');
-      if (savedRole) {
-        return { role: savedRole } as Profile;
-      }
-    }
-    return null;
-  });
+  const [profile, setProfileState] = useState<Profile | null>(getStoredProfile);
   const [loading, setLoading] = useState(true);
-
-  // On mount, recover Supabase session from localStorage so client queries
-  // (profiles, etc.) have proper auth and pass RLS.
-  useEffect(() => {
-    supabase.auth.getSession().catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (status === 'loading') {
       setLoading(true);
     } else if (status === 'unauthenticated') {
       setProfileState(null);
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem('user-role');
-      }
+      storeProfile(null);
       setLoading(false);
     } else if (status === 'authenticated') {
       if (session?.user && (session.user as any).id) {
-        // Keep loading true until profile fetch completes so child pages
-        // never see a null profile before the fetch finishes.
         fetchProfile((session.user as any).id).finally(() => {
           setLoading(false);
         });
       } else {
         setProfileState(null);
-        if (typeof window !== 'undefined') {
-          window.localStorage.removeItem('user-role');
-        }
+        storeProfile(null);
         setLoading(false);
       }
     }
@@ -69,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string, retries = 3) {
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-        // Profile is read from Neon (primary store) via /api/db.
         const { data, error } = await db
           .from('profiles')
           .select('*')
@@ -78,13 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (data) {
           setProfileState(data);
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem('user-role', data.role);
-          }
+          storeProfile(data);
           return;
         }
-        // If error or no data, retry after a delay (session might still be
-        // recovering via autoRefreshToken)
         if (error) console.warn(`Profile fetch attempt ${attempt + 1} failed:`, error.message);
       } catch (error) {
         console.warn(`Profile fetch attempt ${attempt + 1} error:`, error);
@@ -93,11 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await new Promise(r => setTimeout(r, 500));
       }
     }
-    // All retries exhausted — profile will remain null. Auth is still valid
-    // via NextAuth; individual pages can choose to show fallback UI.
     console.warn('Profile fetch failed after all retries');
-    // If it failed but we have a cached role, keep it to prevent abrupt logouts
-    if (typeof window !== 'undefined' && window.localStorage.getItem('user-role')) {
+    const cached = getStoredProfile();
+    if (cached) {
+      setProfileState(cached);
       return;
     }
     setProfileState(null);
@@ -110,51 +103,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password
       });
-      if (result && result.error) {
-        return { error: new Error(result.error), profile: null };
+      if (result && (result as any).error) {
+        return { error: new Error((result as any).error), profile: null };
       }
-
-      // After NextAuth succeeds, sign in to Supabase directly to authenticate
-      // the browser's supabase client for all subsequent DB queries
-      const { error: supabaseError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (supabaseError) {
-        console.warn('Supabase client auth failed:', supabaseError.message);
-      }
-
-      // Fetch and return profile for immediate role-based redirect
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await db
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        if (profile) {
-          return { error: null, profile };
-        }
-      }
-
-      return { error: null, profile: null };
+      return { error: null, profile: getStoredProfile() };
     } catch (err) {
       return { error: err instanceof Error ? err : new Error("An error occurred"), profile: null };
     }
   }, []);
 
   const signOut = useCallback(async () => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('user-role');
-    }
+    storeProfile(null);
     await nextAuthSignOut({ redirect: false });
   }, []);
 
   const refreshSession = useCallback(async () => {
     try {
-      const { data: { session: newSession } } = await supabase.auth.getSession();
-      if (newSession?.user) {
-        await fetchProfile(newSession.user.id);
+      const userId = (session?.user as any)?.id;
+      if (userId) {
+        await fetchProfile(userId);
         return true;
       }
       return false;
@@ -162,17 +129,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Error refreshing session:", error);
       return false;
     }
-  }, []);
+  }, [session]);
 
   const clearSession = useCallback(() => {
     setProfileState(null);
+    storeProfile(null);
   }, []);
 
   const isAuthenticated = !!session && !!profile;
   const user = session?.user || null;
 
   return (
-    <AuthContext.Provider value={{ 
+    <AuthContext.Provider value={{
       session,
       user,
       profile,

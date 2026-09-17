@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, uploadFile } from '@/lib/supabase';
+import { uploadFile } from '@/lib/supabase';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -82,10 +82,21 @@ export default function AccountantProfilePage() {
     if (pwData.new !== pwData.confirm) { setPwMsg({ type: 'error', text: 'Passwords do not match' }); return; }
     if (pwData.new.length < 6) { setPwMsg({ type: 'error', text: 'Password must be at least 6 characters' }); return; }
     setPwLoading(true); setPwMsg(null);
-    const { error } = await supabase.auth.updateUser({ password: pwData.new });
-    if (error) { setPwMsg({ type: 'error', text: error.message }); } 
-    else { setPwMsg({ type: 'success', text: 'Password updated!' }); setPwData({ current: '', new: '', confirm: '' }); }
+    const handlePasswordChange = async () => {
+    if (pwData.new !== pwData.confirm) { setPwMsg({ type: 'error', text: 'Passwords do not match' }); return; }
+    if (pwData.new.length < 6) { setPwMsg({ type: 'error', text: 'Password must be at least 6 characters' }); return; }
+    setPwLoading(true); setPwMsg(null);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: pwData.current || '', newPassword: pwData.new }),
+      });
+      const data = await res.json();
+      if (data.success) { setPwMsg({ type: 'success', text: 'Password updated!' }); setPwData({ current: '', new: '', confirm: '' }); }
+      else { setPwMsg({ type: 'error', text: data.error || 'Failed to update password' }); }
+    } catch (err: any) { setPwMsg({ type: 'error', text: err.message || 'Failed to update password' }); }
     setPwLoading(false);
+  };
   }
 
   if (!profile) return null;
