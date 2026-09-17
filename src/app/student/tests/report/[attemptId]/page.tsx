@@ -56,11 +56,11 @@ export default function TestReportPage({ params }: { params: { attemptId: string
     try {
       const { data: student } = await db
         .from('students')
-        .select('*, parent:parent_id!inner(profiles!profile_id(phone, email))')
+        .select('*, parent:profiles!parent_id(phone, email)')
         .eq('profile_id', profile?.id)
         .maybeSingle();
       if (!student) { alert('No parent contact found.'); return; }
-      const parentProfile = (student as any).parent?.profiles;
+      const parentProfile = (student as any).parent;
       if (!parentProfile) { alert('No parent contact found.'); return; }
       const { phone, email } = parentProfile;
 

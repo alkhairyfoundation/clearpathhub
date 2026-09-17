@@ -4,10 +4,12 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Search, Download, Printer, X, QrCode, Loader2, Users, Filter, Eye, Settings, Image, FileDown, FileText, Check, Palette } from 'lucide-react';
+import { ArrowLeft, Search, Download, Printer, X, Eye, Settings, Image, FileDown, FileText, Check, Palette, Users, Loader2, ShieldCheck, Hash, CalendarDays } from 'lucide-react';
 import QRCode from 'qrcode';
 import DashboardLayout from '@/components/DashboardLayout';
 import jsPDF from 'jspdf';
+import { toPng } from 'html-to-image';
+import JSZip from 'jszip';
 
 interface CardConfig {
   showPhoto: boolean;
@@ -35,6 +37,40 @@ const defaultConfig: CardConfig = {
   primaryColor: '#1e40af',
 };
 
+function hexToRgba(hex: string, alpha = 1) {
+  const clean = (hex || '#1e40af').replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+  const num = parseInt(full, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function shadeColor(hex: string, percent: number) {
+  const clean = (hex || '#1e40af').replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+  const num = parseInt(full, 16);
+  let r = (num >> 16) & 255;
+  let g = (num >> 8) & 255;
+  let b = num & 255;
+  const target = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent) / 100;
+  r = Math.round((target - r) * p) + r;
+  g = Math.round((target - g) * p) + g;
+  b = Math.round((target - b) * p) + b;
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
 export default function AdminIDCardsPage() {
   const { profile } = useAuth();
   const router = useRouter();
@@ -59,7 +95,8 @@ export default function AdminIDCardsPage() {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
 
-  const cardRef = useRef<HTMLDivElement>(null);
+  const frontCardRef = useRef<HTMLDivElement>(null);
+  const backCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -74,7 +111,6 @@ export default function AdminIDCardsPage() {
       db.from('classes').select('id, name').order('level'),
       db.from('school_settings').select('*').limit(1).maybeSingle(),
     ]);
-    console.log('Students data:', studentsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
     if (classesRes.data) setClasses(classesRes.data);
     if (settingsRes.data) setSchoolSettings(settingsRes.data);
@@ -117,7 +153,7 @@ export default function AdminIDCardsPage() {
       school: schoolSettings?.school_name || 'School',
       timestamp: Date.now(),
     });
-    try { return await QRCode.toDataURL(qrData, { width: 180, margin: 2, color: { dark: '#000000', light: '#ffffff' } }); } 
+    try { return await QRCode.toDataURL(qrData, { width: 180, margin: 2, color: { dark: '#000000', light: '#ffffff' } }); }
     catch { return ''; }
   }
 
@@ -127,7 +163,7 @@ export default function AdminIDCardsPage() {
       admissionNumber,
       school: schoolSettings?.school_name || 'School',
     });
-    try { return await QRCode.toDataURL(qrData, { width: 120, margin: 2 }); } 
+    try { return await QRCode.toDataURL(qrData, { width: 120, margin: 2 }); }
     catch { return ''; }
   }
 
@@ -145,311 +181,269 @@ export default function AdminIDCardsPage() {
     setGenerating(false);
   }
 
-  const getCardTheme = () => {
-    const themes: Record<string, { bg: string, header: string, text: string }> = {
-      blue: { bg: 'bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20', header: 'bg-blue-600', text: 'text-blue-900' },
-      green: { bg: 'bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20', header: 'bg-emerald-600', text: 'text-emerald-900' },
-      purple: { bg: 'bg-purple-50 dark:bg-purple-900/20 dark:bg-purple-900/20', header: 'bg-purple-600', text: 'text-purple-900' },
-      amber: { bg: 'bg-amber-50 dark:bg-amber-900/20 dark:bg-amber-900/20', header: 'bg-amber-600', text: 'text-amber-900' },
-      slate: { bg: 'bg-slate-50 dark:bg-slate-800 dark:bg-slate-800', header: 'bg-slate-600', text: 'text-slate-900 dark:text-white dark:text-white' },
-    };
-    return themes[cardConfig.cardTheme] || themes.blue;
-  };
-
-  const theme = getCardTheme();
-
   function formatDate(dateStr: string) {
     try { return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); }
     catch { return dateStr || ''; }
   }
 
-  const renderCardFront = (student: any, qr: string, idCard: any) => (
-    <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg" ref={cardRef}>
-      <div className={`${theme.header} text-white p-4 text-center`}>
-        <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
-        <h3 className="text-lg font-bold">STUDENT ID CARD</h3>
-      </div>
-      
-      <div className="p-4">
-        <div className="flex flex-col items-center mb-4">
-          {student.profile?.avatar_url ? (
-            <img src={student.profile.avatar_url} alt="Photo" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 dark:border-slate-700" />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-bold text-slate-400 dark:text-slate-500 dark:text-slate-500">
-              {student.profile?.first_name?.[0]}{student.profile?.last_name?.[0]}
+  const renderCardFront = (student: any, qr: string, idCard: any) => {
+    if (!student) return null;
+    const primary = cardConfig.primaryColor || '#1e40af';
+    const darker = shadeColor(primary, -28);
+    const lighter = shadeColor(primary, 35);
+    const initials = `${(student.profile?.first_name || '')[0] || ''}${(student.profile?.last_name || '')[0] || ''}`.toUpperCase();
+    return (
+      <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 10% 0%, ${hexToRgba(primary, 0.10)} 0%, transparent 45%), radial-gradient(circle at 96% 100%, ${hexToRgba(primary, 0.09)} 0%, transparent 42%)` }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${primary}, ${lighter})` }} />
+
+        <div className="relative px-5 pb-6 pt-10 text-center" style={{ background: `linear-gradient(150deg, ${primary} 0%, ${darker} 100%)` }}>
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.3) 0%, transparent 55%)' }} />
+          <ShieldCheck className="relative mx-auto h-6 w-6 text-white/90" />
+          <p className="relative mt-1 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">{schoolSettings?.school_name || 'School Name'}</p>
+          <h3 className="relative mt-1 text-[22px] font-extrabold tracking-wide text-white drop-shadow-sm">STUDENT ID CARD</h3>
+          <div className="relative mt-2.5 flex items-center justify-center gap-1.5">
+            <span className="h-[3px] w-9 rounded-full bg-white/90" />
+            <span className="h-[3px] w-2.5 rounded-full bg-white/50" />
+            <span className="h-[3px] w-9 rounded-full bg-white/90" />
+          </div>
+        </div>
+
+        <div className="relative z-10 -mt-9 flex justify-center">
+          <div className="rounded-full p-[3px]" style={{ background: `linear-gradient(135deg, ${lighter}, ${primary} 45%, ${darker})` }}>
+            <div className="rounded-full border-[3px] border-white bg-white">
+              {cardConfig.showPhoto && student.profile?.avatar_url ? (
+                <img crossOrigin="anonymous" src={student.profile.avatar_url} alt="Student" className="h-[84px] w-[84px] rounded-full object-cover" />
+              ) : (
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full text-2xl font-extrabold text-white" style={{ background: `linear-gradient(135deg, ${lighter}, ${darker})` }}>
+                  {initials || 'ST'}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-
-        <div className="text-center mb-4">
-          <h4 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{student.profile?.first_name} {student.profile?.last_name}</h4>
-          <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 font-mono">Adm No: {student.admission_number}</p>
-          {student.date_of_birth && (
-            <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-1">DOB: {formatDate(student.date_of_birth)}</p>
-          )}
-          {idCard?.issued_at && (
-            <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Issued: {formatDate(idCard.issued_at)}</p>
-          )}
-        </div>
-
-        <div className="flex justify-center mb-4">
-          <div className="bg-white p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700">
-            <img src={qr} alt="QR Code" className="w-32 h-32" />
           </div>
         </div>
 
-        <div className="text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">
-          <p>Scan to mark attendance</p>
-        </div>
-      </div>
-    </div>
-  );
+        <div className="relative flex-1 px-5">
+          <div className="mt-3 text-center">
+            <h4 className="text-[19px] font-extrabold leading-tight text-slate-900">{(student.profile?.first_name || '')} {(student.profile?.last_name || '')}</h4>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{student.class?.name || 'Student'}</p>
 
-  const renderCardBack = (student: any, qr: string) => (
-    <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
-      <div className={`${theme.header} text-white p-4 text-center`}>
-        <h3 className="text-lg font-bold">ID CARD RULES</h3>
-      </div>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5" style={{ background: hexToRgba(primary, 0.07), border: `1.5px solid ${hexToRgba(primary, 0.35)}` }}>
+              <Hash size={12} style={{ color: primary }} />
+              <span className="text-[9px] font-extrabold uppercase tracking-[0.16em]" style={{ color: primary }}>Adm No</span>
+              <span className="border-l pl-2 font-mono text-[13px] font-bold text-slate-800" style={{ borderColor: hexToRgba(primary, 0.25) }}>{student.admission_number}</span>
+            </div>
+          </div>
 
-      <div className="p-4">
-        <div className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 whitespace-pre-wrap min-h-[120px]">
-          {cardConfig.backRules || 'This ID card is non-transferable.'}
-        </div>
-      </div>
+          <div className="mt-4 space-y-1 text-center">
+            {student.date_of_birth && (
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                <CalendarDays size={12} style={{ color: primary }} />
+                <span className="font-semibold text-slate-600">DOB:</span> {formatDate(student.date_of_birth)}
+              </p>
+            )}
+            {idCard?.issued_at && (
+              <p className="text-[11px] text-slate-400"><span className="font-semibold text-slate-500">Issued:</span> {formatDate(idCard.issued_at)}</p>
+            )}
+          </div>
 
-      <div className="p-4 text-center border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
-        <div className="flex justify-center mb-2">
-          <div className="bg-white p-2 rounded-lg border">
-            <img src={qr} alt="Verification QR" className="w-20 h-20" />
+          <div className="mt-auto flex flex-col items-center pb-3 pt-2">
+            <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
+              {qr ? <img src={qr} alt="QR Code" className="h-[112px] w-[112px]" /> : <div className="flex h-[112px] w-[112px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
+            </div>
+            <p className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Scan to mark attendance</p>
+            {cardConfig.frontMessage && (
+              <p className="mt-1.5 px-5 text-center text-[11px] font-medium italic text-slate-500">{cardConfig.frontMessage}</p>
+            )}
           </div>
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">ID Verification Code</p>
-      </div>
 
-      <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 border-t">
-        {cardConfig.backMessage || 'This ID card is the property of the school.'}
+        <div className="relative flex items-center justify-between px-5 py-2.5" style={{ background: `linear-gradient(90deg, ${hexToRgba(primary, 0.10)}, ${hexToRgba(lighter, 0.14)})` }}>
+          <span className="text-[9px] font-extrabold uppercase tracking-[0.18em]" style={{ color: primary }}>{schoolSettings?.school_name || 'School'}</span>
+          <span className="flex items-center gap-1.5 text-[9px] font-semibold text-slate-500">
+            <ShieldCheck size={10} style={{ color: primary }} /> Valid • {schoolSettings?.academic_year || 'This Year'}
+          </span>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  const renderCardBack = (student: any, qr: string) => {
+    if (!student) return null;
+    const primary = cardConfig.primaryColor || '#1e40af';
+    const darker = shadeColor(primary, -28);
+    const lighter = shadeColor(primary, 35);
+    const rules = (cardConfig.backRules || 'This ID card is non-transferable.').split('\n').map(r => r.trim()).filter(Boolean);
+    return (
+      <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 90% 0%, ${hexToRgba(primary, 0.08)} 0%, transparent 45%), radial-gradient(circle at 8% 100%, ${hexToRgba(primary, 0.07)} 0%, transparent 40%)` }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${primary}, ${lighter})` }} />
+
+        <div className="relative px-5 pb-5 pt-8 text-center" style={{ background: `linear-gradient(150deg, ${primary} 0%, ${darker} 100%)` }}>
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.28) 0%, transparent 55%)' }} />
+          <ShieldCheck className="relative mx-auto h-5 w-5 text-white/90" />
+          <h3 className="relative mt-1 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">ID CARD RULES</h3>
+          <div className="relative mt-2 flex items-center justify-center gap-1.5">
+            <span className="h-[3px] w-8 rounded-full bg-white/90" />
+            <span className="h-[3px] w-2 rounded-full bg-white/50" />
+            <span className="h-[3px] w-8 rounded-full bg-white/90" />
+          </div>
+        </div>
+
+        <div className="relative flex flex-1 flex-col px-6 py-5">
+          <div className="space-y-2.5">
+            {rules.map((rule, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: `linear-gradient(135deg, ${lighter}, ${darker})` }}>{i + 1}</span>
+                <span className="text-[13px] leading-snug text-slate-600">{rule}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-auto flex flex-col items-center pt-4">
+            <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
+              {qr ? <img src={qr} alt="Verification QR" className="h-[104px] w-[104px]" /> : <div className="flex h-[104px] w-[104px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
+            </div>
+            <p className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+              <ShieldCheck size={11} style={{ color: primary }} /> ID Verification Code
+            </p>
+          </div>
+        </div>
+
+        <div className="relative px-5 py-3 text-center" style={{ background: `linear-gradient(90deg, ${hexToRgba(primary, 0.10)}, ${hexToRgba(lighter, 0.14)})` }}>
+          <p className="text-[10px] font-medium leading-snug text-slate-500">{cardConfig.backMessage || 'This ID card is the property of the school.'}</p>
+        </div>
+      </div>
+    );
+  };
+
+  function buildCardPDF(frontUrl: string | null, backUrl: string | null) {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pw = doc.internal.pageSize.getWidth();
+    const ph = doc.internal.pageSize.getHeight();
+    const imgW = 140;
+    const imgH = (imgW * 540) / 340;
+    const place = (url: string) => doc.addImage(url, 'PNG', (pw - imgW) / 2, (ph - imgH) / 2, imgW, imgH);
+    if (frontUrl) {
+      place(frontUrl);
+      if (backUrl) { doc.addPage(); place(backUrl); }
+    } else if (backUrl) {
+      place(backUrl);
+    }
+    return doc;
+  }
 
   async function downloadPNG() {
-    if (!selectedStudent || !qrCodeUrl) return;
-    
-    const frontCanvas = document.createElement('canvas');
-    const backCanvas = document.createElement('canvas');
-    
-    frontCanvas.width = 340 * 3;
-    frontCanvas.height = 540 * 3;
-    backCanvas.width = 340 * 3;
-    backCanvas.height = 540 * 3;
-
-    const frontCtx = frontCanvas.getContext('2d');
-    const backCtx = backCanvas.getContext('2d');
-
-    if (!frontCtx || !backCtx) return;
-
-    if (downloadFormat === 'front' || downloadFormat === 'both') {
-      frontCtx.fillStyle = '#ffffff';
-      frontCtx.fillRect(0, 0, frontCanvas.width, frontCanvas.height);
-      frontCtx.fillStyle = cardConfig.primaryColor;
-      frontCtx.fillRect(0, 0, frontCanvas.width, 105);
-      frontCtx.fillStyle = '#ffffff';
-      frontCtx.font = 'bold 48px Arial';
-      frontCtx.textAlign = 'center';
-      frontCtx.fillText(schoolSettings?.school_name || 'School', frontCanvas.width/2, 35);
-      frontCtx.font = 'bold 36px Arial';
-      frontCtx.fillText('STUDENT ID CARD', frontCanvas.width/2, 75);
-      
-      if (selectedStudent.profile?.avatar_url) {
-        const img = document.createElement('img');
-        img.crossOrigin = 'anonymous';
-        img.src = selectedStudent.profile.avatar_url;
-        await new Promise(resolve => { img.onload = () => resolve(true); img.onerror = () => resolve(false); });
-        frontCtx.save();
-        frontCtx.beginPath();
-        frontCtx.arc(frontCanvas.width/2, 210, 75, 0, Math.PI * 2);
-        frontCtx.clip();
-        frontCtx.drawImage(img, frontCanvas.width/2 - 75, 135, 150, 150);
-        frontCtx.restore();
-      }
-      
-      frontCtx.fillStyle = '#000000';
-      frontCtx.font = 'bold 32px Arial';
-      frontCtx.fillText(`${selectedStudent.profile?.first_name} ${selectedStudent.profile?.last_name}`, frontCanvas.width/2, 360);
-      frontCtx.font = '20px Arial';
-      frontCtx.fillText(`Adm No: ${selectedStudent.admission_number}`, frontCanvas.width/2, 395);
-
-      if (selectedStudent.date_of_birth) {
-        frontCtx.font = '18px Arial';
-        frontCtx.fillStyle = '#64748b';
-        const dob = new Date(selectedStudent.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        frontCtx.fillText(`DOB: ${dob}`, frontCanvas.width/2, 425);
-      }
-
-      if (selectedIdCard?.issued_at) {
-        frontCtx.font = '16px Arial';
-        frontCtx.fillStyle = '#94a3b8';
-        const issued = new Date(selectedIdCard.issued_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        frontCtx.fillText(`Issued: ${issued}`, frontCanvas.width/2, 450);
-      }
-
-const qrImg = document.createElement('img');
-        qrImg.src = qrCodeUrl;
-        await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
-      frontCtx.drawImage(qrImg, frontCanvas.width/2 - 100, 475, 200, 200);
-    }
-
-    if (downloadFormat === 'back' || downloadFormat === 'both') {
-      backCtx.fillStyle = '#ffffff';
-      backCtx.fillRect(0, 0, backCanvas.width, backCanvas.height);
-      backCtx.fillStyle = cardConfig.primaryColor;
-      backCtx.fillRect(0, 0, backCanvas.width, 80);
-      backCtx.fillStyle = '#ffffff';
-      backCtx.font = 'bold 36px Arial';
-      backCtx.textAlign = 'center';
-      backCtx.fillText('ID CARD RULES', backCanvas.width/2, 50);
-
-      backCtx.fillStyle = '#475569';
-      backCtx.font = '18px Arial';
-      backCtx.textAlign = 'left';
-      const rules = cardConfig.backRules || 'This ID card is non-transferable.';
-      const lines = rules.split('\n');
-      let yPos = 140;
-      for (const rule of lines) {
-        if (rule.trim()) {
-          backCtx.fillText(`\u2022 ${rule.trim()}`, 40, yPos);
-          yPos += 28;
+    if (!selectedStudent) return;
+    setGenerating(true);
+    try {
+      const prefix = selectedStudent.admission_number;
+      if (downloadFormat === 'front' || downloadFormat === 'both') {
+        const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true });
+        if (downloadFormat === 'front') {
+          const a = document.createElement('a');
+          a.href = frontUrl; a.download = `${prefix}-front.png`; a.click();
+        } else {
+          const backUrl = await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true });
+          const zip = new JSZip();
+          const blob = await fetch(frontUrl).then(r => r.blob());
+          const backBlob = await fetch(backUrl).then(r => r.blob());
+          zip.file(`${prefix}-front.png`, blob);
+          zip.file(`${prefix}-back.png`, backBlob);
+          const zipped = await zip.generateAsync({ type: 'blob' });
+          downloadBlob(zipped, `${prefix}-id-cards.zip`);
         }
+      } else {
+        const backUrl = await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true });
+        const a = document.createElement('a');
+        a.href = backUrl; a.download = `${prefix}-back.png`; a.click();
       }
-
-      if (qrBackUrl) {
-        const qrImg = document.createElement('img');
-        qrImg.src = qrBackUrl;
-        await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
-        backCtx.drawImage(qrImg, backCanvas.width/2 - 60, 340, 120, 120);
-      }
-
-      backCtx.font = '16px Arial';
-      backCtx.fillStyle = '#666666';
-      backCtx.textAlign = 'center';
-      const msg = cardConfig.backMessage || 'Property of school';
-      backCtx.fillText(msg, backCanvas.width/2, 510);
+    } finally {
+      setGenerating(false);
     }
-
-    const link = document.createElement('a');
-    const prefix = selectedStudent.admission_number;
-    if (downloadFormat === 'both') {
-      link.download = `${prefix}-id-card.png`;
-    } else if (downloadFormat === 'front') {
-      link.download = `${prefix}-front.png`;
-    } else {
-      link.download = `${prefix}-back.png`;
-    }
-    link.href = downloadFormat === 'both' 
-      ? frontCanvas.toDataURL('image/png') 
-      : downloadFormat === 'front' ? frontCanvas.toDataURL('image/png') : backCanvas.toDataURL('image/png');
-    link.click();
   }
 
   async function downloadPDF() {
-    if (!selectedStudent || !qrCodeUrl) return;
-    
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    
-    const cardWidth = 85;
-    const cardHeight = 135;
-    const marginX = (pageWidth - cardWidth * 2) / 2;
-    const marginY = (pageHeight - cardHeight * 2) / 2;
-
-    doc.setFillColor(30, 58, 95);
-    doc.rect(0, 0, pageWidth, 25, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.text(schoolSettings?.school_name || 'School', pageWidth/2, 10, { align: 'center' });
-    doc.setFontSize(10);
-    doc.text('STUDENT ID CARD', pageWidth/2, 18, { align: 'center' });
-    doc.setFontSize(8);
-    doc.text(schoolSettings?.academic_year || '2024-2025', pageWidth/2, 23, { align: 'center' });
-
-    if (downloadFormat === 'front' || downloadFormat === 'both') {
-      doc.setFillColor(245, 247, 250);
-      doc.roundedRect(marginX, marginY + 10, cardWidth, cardHeight, 3, 3, 'F');
-      
-      doc.setTextColor(30, 58, 95);
-      doc.setFontSize(10);
-      doc.text(`${selectedStudent.profile?.first_name} ${selectedStudent.profile?.last_name}`, pageWidth/4, marginY + 32, { align: 'center' });
-      doc.setFontSize(7);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Adm No: ${selectedStudent.admission_number}`, pageWidth/4, marginY + 40, { align: 'center' });
-
-      if (selectedStudent.date_of_birth) {
-        doc.setFontSize(7);
-        const dob = new Date(selectedStudent.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-        doc.text(`DOB: ${dob}`, pageWidth/4, marginY + 48, { align: 'center' });
-      }
-
-      if (qrCodeUrl) {
-        doc.addImage(qrCodeUrl, 'PNG', marginX + 25, marginY + 55, 35, 35);
-      }
-
-      doc.setFontSize(6);
-      doc.setTextColor(150, 150, 150);
-      doc.text('Scan to mark attendance', pageWidth/4, marginY + 130, { align: 'center' });
+    if (!selectedStudent) return;
+    setGenerating(true);
+    try {
+      const prefix = selectedStudent.admission_number;
+      const frontUrl = downloadFormat !== 'back' ? await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true }) : null;
+      const backUrl = downloadFormat !== 'front' ? await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true }) : null;
+      const doc = buildCardPDF(frontUrl, backUrl);
+      doc.save(downloadFormat === 'both' ? `${prefix}-id-card.pdf` : downloadFormat === 'front' ? `${prefix}-front.pdf` : `${prefix}-back.pdf`);
+    } finally {
+      setGenerating(false);
     }
+  }
 
-    if (downloadFormat === 'back' || downloadFormat === 'both') {
-      const backX = pageWidth * 0.75 - cardWidth/2;
-      
-      doc.setFillColor(245, 247, 250);
-      doc.roundedRect(backX, marginY + 10, cardWidth, cardHeight, 3, 3, 'F');
-      
-      doc.setTextColor(30, 58, 95);
-      doc.setFontSize(10);
-      doc.text('ID CARD RULES', backX + cardWidth/2, marginY + 18, { align: 'center' });
-
-      doc.setFontSize(6);
-      doc.setTextColor(80, 80, 80);
-      const rules = cardConfig.backRules || 'This ID card is non-transferable.';
-      const splitRules = doc.splitTextToSize(rules, cardWidth - 10);
-      doc.text(splitRules, backX + 5, marginY + 28);
-
-      if (qrBackUrl) {
-        doc.addImage(qrBackUrl, 'PNG', backX + 25, marginY + 80, 30, 30);
-      }
+  async function handlePrint() {
+    if (!selectedStudent) return;
+    setGenerating(true);
+    try {
+      const frontUrl = downloadFormat !== 'back' ? await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true }) : null;
+      const backUrl = downloadFormat !== 'front' ? await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true }) : null;
+      const printWindow = window.open('', '_blank', 'width=800,height=900');
+      if (!printWindow) return;
+      const cardHtml = [];
+      if (frontUrl) cardHtml.push(`<div class="card-wrap"><img src="${frontUrl}" /></div>`);
+      if (backUrl) cardHtml.push(`<div class="card-wrap"><img src="${backUrl}" /></div>`);
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>Print ID Card</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: Arial, sans-serif; background: #e2e8f0; }
+          .sheet { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; padding: 24px; align-items: flex-start; }
+          .card-wrap { width: 310px; }
+          .card-wrap img { width: 100%; display: block; border-radius: 14px; box-shadow: 0 10px 30px rgba(15,23,42,0.25); }
+          @media print {
+            body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .sheet { padding: 0; gap: 8px; }
+            .card-wrap { page-break-inside: avoid; }
+            @page { size: auto; margin: 8mm; }
+          }
+        </style></head><body>
+        <div class="sheet">${cardHtml.join('')}</div>
+        <script>
+          window.onload = function(){ setTimeout(function(){ window.print(); }, 250); };
+        </script></body></html>`);
+      printWindow.document.close();
+    } finally {
+      setGenerating(false);
     }
-
-    const prefix = selectedStudent.admission_number;
-    const filename = downloadFormat === 'both' 
-      ? `${prefix}-id-card.pdf` 
-      : downloadFormat === 'front' ? `${prefix}-front.pdf` : `${prefix}-back.pdf`;
-    
-    doc.save(filename);
   }
 
   async function handleBulkDownload() {
     if (selectedStudents.length === 0) return;
     setGenerating(true);
-    
-    for (const studentId of selectedStudents) {
-      const student = students.find(s => s.id === studentId);
-      if (student) {
+    try {
+      const total = selectedStudents.length;
+      let count = 0;
+      for (const studentId of selectedStudents) {
+        const student = students.find(s => s.id === studentId);
+        if (!student) continue;
         setSelectedStudent(student);
         const qr = await generateAttendanceQR(student.admission_number);
         const qrBack = await generateBackQR(student.admission_number);
         setQrCodeUrl(qr);
         setQrBackUrl(qrBack);
-        await downloadPDF();
-        await new Promise(r => setTimeout(r, 500));
+        const { data: idCardData } = await db.from('id_cards').select('*').eq('student_id', student.profile_id).maybeSingle();
+        setSelectedIdCard(idCardData || null);
+        await new Promise(r => setTimeout(r, 150));
+        const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true });
+        const backUrl = await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true });
+        const doc = buildCardPDF(frontUrl, backUrl);
+        doc.save(`${student.admission_number}-id-card.pdf`);
+        count++;
+        setSuccess(`Downloading ${count} of ${total}...`);
+        await new Promise(r => setTimeout(r, 400));
       }
+      setShowBulkModal(false);
+      setSelectedStudents([]);
+      setSuccess(`Downloaded ${count} ID cards`);
+      setTimeout(() => setSuccess(''), 3000);
+    } finally {
+      setGenerating(false);
     }
-    
-    setGenerating(false);
-    setShowBulkModal(false);
-    setSelectedStudents([]);
-    setSuccess(`Downloaded ${selectedStudents.length} ID cards`);
-    setTimeout(() => setSuccess(''), 3000);
   }
 
   return (
@@ -524,6 +518,12 @@ const qrImg = document.createElement('img');
           </div>
         )}
 
+        {/* Hidden capture target used by exports */}
+        <div className="fixed left-[-12000px] top-0 pointer-events-none" aria-hidden="true">
+          <div ref={frontCardRef}>{renderCardFront(selectedStudent, qrCodeUrl, selectedIdCard)}</div>
+          <div ref={backCardRef}>{renderCardBack(selectedStudent, qrBackUrl)}</div>
+        </div>
+
         {showCardModal && selectedStudent && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 animate-scale-in">
@@ -533,7 +533,7 @@ const qrImg = document.createElement('img');
                   <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
-              
+
               <div className="p-6">
                 <div className="flex flex-wrap justify-center gap-8 mb-6">
                   {renderCardFront(selectedStudent, qrCodeUrl, selectedIdCard)}
@@ -554,32 +554,12 @@ const qrImg = document.createElement('img');
                       </select>
                     </div>
                     <button onClick={downloadPNG} disabled={generating} className="btn-primary flex items-center gap-2">
-                      <Image size={16} /> PNG
+                      {generating ? <Loader2 size={16} className="animate-spin" /> : <Image size={16} />} PNG
                     </button>
                     <button onClick={downloadPDF} disabled={generating} className="btn-outline flex items-center gap-2">
                       <FileText size={16} /> PDF
                     </button>
-                    <button onClick={() => {
-                      const printWindow = window.open('', '_blank');
-                      if (printWindow) {
-                        printWindow.document.write(`
-                          <html><head><title>Print ID Card</title>
-                          <style>
-                            body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
-                            .card-container { display: flex; gap: 20px; justify-content: center; }
-                            @media print { body { padding: 0; } }
-                          </style>
-                          </head><body>
-                            <div class="card-container">
-                              <div>${renderCardFront(selectedStudent, qrCodeUrl, selectedIdCard).props.children}</div>
-                              <div>${renderCardBack(selectedStudent, qrBackUrl).props.children}</div>
-                            </div>
-                          </body></html>
-                        `);
-                        printWindow.document.close();
-                        printWindow.print();
-                      }
-                    }} className="btn-outline flex items-center gap-2">
+                    <button onClick={handlePrint} disabled={generating} className="btn-outline flex items-center gap-2">
                       <Printer size={16} /> Print
                     </button>
                   </div>
@@ -598,7 +578,7 @@ const qrImg = document.createElement('img');
                   <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
-              
+
               <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
                 <div>
                   <label className="label flex items-center gap-2"><Palette size={16} /> Card Theme</label>
@@ -620,6 +600,11 @@ const qrImg = document.createElement('img');
                   <input type="checkbox" checked={cardConfig.showPhoto} onChange={(e) => setCardConfig({...cardConfig, showPhoto: e.target.checked})} className="w-4 h-4" />
                   <span className="text-sm">Student Photo</span>
                 </label>
+
+                <div>
+                  <label className="label">Front Message</label>
+                  <textarea value={cardConfig.frontMessage} onChange={(e) => setCardConfig({...cardConfig, frontMessage: e.target.value})} className="input" rows={2} placeholder="Optional short message on front of card" />
+                </div>
 
                 <div>
                   <label className="label">ID Card Rules (Back of Card)</label>
@@ -652,14 +637,14 @@ const qrImg = document.createElement('img');
                   <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                 </button>
               </div>
-              
+
               <div className="p-5">
                 <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-4">Select students to download ID cards (PDF):</p>
                 <div className="max-h-64 overflow-y-auto space-y-2 mb-4">
                   {filtered.map(student => (
                     <label key={student.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg cursor-pointer">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={selectedStudents.includes(student.id)}
                         onChange={(e) => {
                           if (e.target.checked) {

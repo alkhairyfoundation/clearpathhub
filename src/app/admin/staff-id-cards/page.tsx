@@ -1,13 +1,15 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Search, Download, Printer, X, QrCode, Loader2, Users, Eye, Settings, FileDown, FileText, Check, Palette } from 'lucide-react';
+import { ArrowLeft, Search, Download, Printer, X, Users, Eye, FileDown, FileText, Loader2, ShieldCheck, Mail, Phone, BadgeCheck, CalendarDays } from 'lucide-react';
 import QRCode from 'qrcode';
 import DashboardLayout from '@/components/DashboardLayout';
 import jsPDF from 'jspdf';
+import { toPng } from 'html-to-image';
+import JSZip from 'jszip';
 
 interface StaffMember {
   id: string;
@@ -18,6 +20,30 @@ interface StaffMember {
   role: string;
   avatar_url?: string;
   created_at: string;
+}
+
+const STAFF_GRADIENT = 'linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)';
+const STAFF_ACCENT = '#1d4ed8';
+const STAFF_DARK = '#1e3a8a';
+const AVATAR_GRADIENT = 'linear-gradient(135deg, #3b82f6 0%, #4338ca 100%)';
+
+function hexToRgba(hex: string, alpha = 1) {
+  const clean = (hex || '#1e40af').replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+  const num = parseInt(full, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
 export default function AdminStaffIDCardsPage() {
@@ -36,6 +62,9 @@ export default function AdminStaffIDCardsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [downloadFormat, setDownloadFormat] = useState<'front' | 'back' | 'both'>('both');
+
+  const frontCardRef = useRef<HTMLDivElement>(null);
+  const backCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -103,91 +132,228 @@ export default function AdminStaffIDCardsPage() {
     }
   }
 
-  async function downloadPDF() {
-    if (!selectedStaff || !qrCodeUrl) return;
+  const renderCardFront = (member: StaffMember) => {
+    if (!member) return null;
+    const badge = getRoleBadge(member.role);
+    const initials = `${(member.first_name || '')[0] || ''}${(member.last_name || '')[0] || ''}`.toUpperCase();
+    return (
+      <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 10% 0%, ${hexToRgba(STAFF_ACCENT, 0.08)} 0%, transparent 42%), radial-gradient(circle at 96% 100%, ${hexToRgba(STAFF_DARK, 0.10)} 0%, transparent 45%)` }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${STAFF_ACCENT}, #60a5fa)` }} />
+
+        <div className="relative px-5 pb-6 pt-10 text-center" style={{ background: STAFF_GRADIENT }}>
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.3) 0%, transparent 55%)' }} />
+          <ShieldCheck className="relative mx-auto h-6 w-6 text-white/90" />
+          <p className="relative mt-1 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">{schoolSettings?.school_name || 'School Name'}</p>
+          <h3 className="relative mt-1 text-[22px] font-extrabold tracking-wide text-white drop-shadow-sm">STAFF ID CARD</h3>
+          <div className="relative mt-2.5 flex items-center justify-center gap-1.5">
+            <span className="h-[3px] w-9 rounded-full bg-white/90" />
+            <span className="h-[3px] w-2.5 rounded-full bg-white/50" />
+            <span className="h-[3px] w-9 rounded-full bg-white/90" />
+          </div>
+        </div>
+
+        <div className="relative z-10 -mt-9 flex justify-center">
+          <div className="rounded-full p-[3px] bg-gradient-to-br from-blue-400 to-indigo-900">
+            <div className="rounded-full border-[3px] border-white bg-white">
+              {member.avatar_url ? (
+                <img crossOrigin="anonymous" src={member.avatar_url} alt="Staff" className="h-[84px] w-[84px] rounded-full object-cover" />
+              ) : (
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full text-2xl font-extrabold text-white" style={{ background: AVATAR_GRADIENT }}>
+                  {initials || 'ST'}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative flex-1 px-5">
+          <div className="mt-3 text-center">
+            <h4 className="text-[19px] font-extrabold leading-tight text-slate-900">{member.first_name} {member.last_name}</h4>
+            <span className={`mt-2 inline-block rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${badge.bg}`}>
+              {badge.label}
+            </span>
+          </div>
+
+          <div className="mt-4 mx-auto max-w-[240px] space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
+            <p className="flex items-center gap-2 text-[11px] text-slate-600">
+              <Mail size={12} className="flex-none text-blue-600" /> <span className="truncate">{member.email}</span>
+            </p>
+            {member.phone && (
+              <p className="flex items-center gap-2 text-[11px] text-slate-600">
+                <Phone size={12} className="flex-none text-blue-600" /> <span className="truncate">{member.phone}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="mt-auto flex flex-col items-center pb-3 pt-2">
+            <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
+              {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code" className="h-[112px] w-[112px]" /> : <div className="flex h-[112px] w-[112px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
+            </div>
+            <p className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Scan for attendance</p>
+          </div>
+        </div>
+
+        <div className="relative flex items-center justify-between px-5 py-2.5" style={{ background: `linear-gradient(90deg, ${hexToRgba(STAFF_ACCENT, 0.10)}, ${hexToRgba(STAFF_DARK, 0.14)})` }}>
+          <span className="text-[9px] font-extrabold uppercase tracking-[0.18em]" style={{ color: STAFF_ACCENT }}>{schoolSettings?.school_name || 'School'}</span>
+          <span className="flex items-center gap-1.5 text-[9px] font-semibold text-slate-500">
+            <BadgeCheck size={10} style={{ color: STAFF_ACCENT }} /> Staff Verified
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderCardBack = (member: StaffMember) => {
+    if (!member) return null;
+    const badge = getRoleBadge(member.role);
+    const infoRows = [
+      { label: 'Email', value: member.email, icon: Mail },
+      { label: 'Phone', value: member.phone || '—', icon: Phone },
+      { label: 'Role', value: badge.label, icon: BadgeCheck },
+      { label: 'Joined', value: new Date(member.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }), icon: CalendarDays },
+    ];
+    return (
+      <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 90% 0%, ${hexToRgba(STAFF_ACCENT, 0.08)} 0%, transparent 45%), radial-gradient(circle at 8% 100%, ${hexToRgba(STAFF_DARK, 0.08)} 0%, transparent 40%)` }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${STAFF_ACCENT}, #60a5fa)` }} />
+
+        <div className="relative px-5 pb-5 pt-8 text-center" style={{ background: STAFF_GRADIENT }}>
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.28) 0%, transparent 55%)' }} />
+          <ShieldCheck className="relative mx-auto h-5 w-5 text-white/90" />
+          <h3 className="relative mt-1 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">INFORMATION</h3>
+          <div className="relative mt-2 flex items-center justify-center gap-1.5">
+            <span className="h-[3px] w-8 rounded-full bg-white/90" />
+            <span className="h-[3px] w-2 rounded-full bg-white/50" />
+            <span className="h-[3px] w-8 rounded-full bg-white/90" />
+          </div>
+        </div>
+
+        <div className="relative flex flex-1 flex-col px-6 py-5">
+          <div className="space-y-2.5">
+            {infoRows.map((row, i) => (
+              <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
+                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg text-white" style={{ background: AVATAR_GRADIENT }}>
+                  <row.icon size={14} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{row.label}</p>
+                  <p className="truncate text-[12px] font-semibold text-slate-700">{row.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-auto flex flex-col items-center pt-4">
+            <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
+              {qrBackUrl ? <img src={qrBackUrl} alt="Verification QR" className="h-[104px] w-[104px]" /> : <div className="flex h-[104px] w-[104px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
+            </div>
+            <p className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+              <ShieldCheck size={11} className="text-blue-600" /> ID Verification Code
+            </p>
+          </div>
+        </div>
+
+        <div className="relative px-5 py-3 text-center" style={{ background: `linear-gradient(90deg, ${hexToRgba(STAFF_ACCENT, 0.10)}, ${hexToRgba(STAFF_DARK, 0.14)})` }}>
+          <p className="text-[10px] font-medium leading-snug text-slate-500">This ID card is the property of the school. If found, please return to the school office.</p>
+        </div>
+      </div>
+    );
+  };
+
+  function buildCardPDF(frontUrl: string | null, backUrl: string | null) {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const badge = getRoleBadge(selectedStaff.role);
-
-    doc.setFillColor(30, 58, 95);
-    doc.rect(0, 0, pageWidth, 30, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.text(schoolSettings?.school_name || 'School', pageWidth / 2, 12, { align: 'center' });
-    doc.setFontSize(10);
-    doc.text('STAFF IDENTITY CARD', pageWidth / 2, 20, { align: 'center' });
-    doc.setFontSize(8);
-    doc.text(schoolSettings?.academic_year || '2024-2025', pageWidth / 2, 27, { align: 'center' });
-
-    // Card content
-    doc.setTextColor(30, 58, 95);
-    doc.setFontSize(16);
-    doc.text(`${selectedStaff.first_name} ${selectedStaff.last_name}`, pageWidth / 2, 55, { align: 'center' });
-    doc.setFontSize(11);
-    doc.setTextColor(100, 100, 100);
-    doc.text(badge.label, pageWidth / 2, 63, { align: 'center' });
-    doc.setFontSize(9);
-    doc.text(selectedStaff.email, pageWidth / 2, 71, { align: 'center' });
-    if (selectedStaff.phone) {
-      doc.text(`Phone: ${selectedStaff.phone}`, pageWidth / 2, 78, { align: 'center' });
+    const pw = doc.internal.pageSize.getWidth();
+    const ph = doc.internal.pageSize.getHeight();
+    const imgW = 140;
+    const imgH = (imgW * 540) / 340;
+    const place = (url: string) => doc.addImage(url, 'PNG', (pw - imgW) / 2, (ph - imgH) / 2, imgW, imgH);
+    if (frontUrl) {
+      place(frontUrl);
+      if (backUrl) { doc.addPage(); place(backUrl); }
+    } else if (backUrl) {
+      place(backUrl);
     }
-
-    if (qrCodeUrl) {
-      doc.addImage(qrCodeUrl, 'PNG', (pageWidth - 40) / 2, 85, 40, 40);
-    }
-
-    doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
-    doc.text('Scan for staff verification', pageWidth / 2, 130, { align: 'center' });
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 135, { align: 'center' });
-
-    doc.save(`${selectedStaff.first_name}-${selectedStaff.last_name}-staff-id.pdf`);
+    return doc;
   }
 
   async function downloadPNG() {
-    if (!selectedStaff || !qrCodeUrl) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = 340 * 3;
-    canvas.height = 540 * 3;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#1e3a5f';
-    ctx.fillRect(0, 0, canvas.width, 140);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 42px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(schoolSettings?.school_name || 'School', canvas.width / 2, 50);
-    ctx.font = 'bold 36px Arial';
-    ctx.fillText('STAFF ID CARD', canvas.width / 2, 95);
-    ctx.font = '24px Arial';
-    ctx.fillText(schoolSettings?.academic_year || '2024-2025', canvas.width / 2, 125);
-
-    ctx.fillStyle = '#000000';
-    ctx.font = 'bold 36px Arial';
-    ctx.fillText(`${selectedStaff.first_name} ${selectedStaff.last_name}`, canvas.width / 2, 260);
-    ctx.font = '28px Arial';
-    ctx.fillStyle = '#666666';
-    ctx.fillText(getRoleBadge(selectedStaff.role).label, canvas.width / 2, 300);
-    ctx.font = '22px Arial';
-    ctx.fillText(selectedStaff.email, canvas.width / 2, 340);
-    if (selectedStaff.phone) {
-      ctx.fillText(selectedStaff.phone, canvas.width / 2, 370);
+    if (!selectedStaff) return;
+    setGenerating(true);
+    try {
+      const prefix = `${selectedStaff.first_name}-${selectedStaff.last_name}`.toLowerCase().replace(/\s+/g, '-');
+      if (downloadFormat === 'front' || downloadFormat === 'both') {
+        const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true });
+        if (downloadFormat === 'front') {
+          const a = document.createElement('a');
+          a.href = frontUrl; a.download = `${prefix}-staff-front.png`; a.click();
+        } else {
+          const backUrl = await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true });
+          const zip = new JSZip();
+          const blob = await fetch(frontUrl).then(r => r.blob());
+          const backBlob = await fetch(backUrl).then(r => r.blob());
+          zip.file(`${prefix}-staff-front.png`, blob);
+          zip.file(`${prefix}-staff-back.png`, backBlob);
+          const zipped = await zip.generateAsync({ type: 'blob' });
+          downloadBlob(zipped, `${prefix}-staff-id-cards.zip`);
+        }
+      } else {
+        const backUrl = await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true });
+        const a = document.createElement('a');
+        a.href = backUrl; a.download = `${prefix}-staff-back.png`; a.click();
+      }
+    } finally {
+      setGenerating(false);
     }
+  }
 
-    if (qrCodeUrl) {
-      const qrImg = document.createElement('img');
-      qrImg.src = qrCodeUrl;
-      await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
-      ctx.drawImage(qrImg, canvas.width / 2 - 100, 400, 200, 200);
+  async function downloadPDF() {
+    if (!selectedStaff) return;
+    setGenerating(true);
+    try {
+      const prefix = `${selectedStaff.first_name}-${selectedStaff.last_name}`.toLowerCase().replace(/\s+/g, '-');
+      const frontUrl = downloadFormat !== 'back' ? await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true }) : null;
+      const backUrl = downloadFormat !== 'front' ? await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true }) : null;
+      const doc = buildCardPDF(frontUrl, backUrl);
+      doc.save(downloadFormat === 'both' ? `${prefix}-staff-id.pdf` : downloadFormat === 'front' ? `${prefix}-staff-front.pdf` : `${prefix}-staff-back.pdf`);
+    } finally {
+      setGenerating(false);
     }
+  }
 
-    const link = document.createElement('a');
-    link.download = `${selectedStaff.first_name}-${selectedStaff.last_name}-staff-id.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+  async function handlePrint() {
+    if (!selectedStaff) return;
+    setGenerating(true);
+    try {
+      const frontUrl = downloadFormat !== 'back' ? await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true }) : null;
+      const backUrl = downloadFormat !== 'front' ? await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true }) : null;
+      const printWindow = window.open('', '_blank', 'width=800,height=900');
+      if (!printWindow) return;
+      const cardHtml = [];
+      if (frontUrl) cardHtml.push(`<div class="card-wrap"><img src="${frontUrl}" /></div>`);
+      if (backUrl) cardHtml.push(`<div class="card-wrap"><img src="${backUrl}" /></div>`);
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>Print Staff ID</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: Arial, sans-serif; background: #e2e8f0; }
+          .sheet { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; padding: 24px; align-items: flex-start; }
+          .card-wrap { width: 310px; }
+          .card-wrap img { width: 100%; display: block; border-radius: 14px; box-shadow: 0 10px 30px rgba(15,23,42,0.25); }
+          @media print {
+            body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .sheet { padding: 0; gap: 8px; }
+            .card-wrap { page-break-inside: avoid; }
+            @page { size: auto; margin: 8mm; }
+          }
+        </style></head><body>
+        <div class="sheet">${cardHtml.join('')}</div>
+        <script>
+          window.onload = function(){ setTimeout(function(){ window.print(); }, 250); };
+        </script></body></html>`);
+      printWindow.document.close();
+    } finally {
+      setGenerating(false);
+    }
   }
 
   return (
@@ -262,7 +428,12 @@ export default function AdminStaffIDCardsPage() {
           </div>
         )}
 
-        {/* Card Preview Modal */}
+        {/* Hidden capture target used by exports */}
+        <div className="fixed left-[-12000px] top-0 pointer-events-none" aria-hidden="true">
+          <div ref={frontCardRef}>{selectedStaff && renderCardFront(selectedStaff)}</div>
+          <div ref={backCardRef}>{selectedStaff && renderCardBack(selectedStaff)}</div>
+        </div>
+
         {showCardModal && selectedStaff && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
             <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-8 animate-scale-in">
@@ -274,104 +445,31 @@ export default function AdminStaffIDCardsPage() {
               </div>
 
               <div className="p-6">
-                {/* Card Preview */}
                 <div className="flex flex-wrap justify-center gap-8 mb-6">
-                  {/* Front */}
-                  <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
-                    <div className="bg-gradient-to-r from-primary-700 to-primary-900 text-white p-5 text-center">
-                      <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
-                      <h3 className="text-lg font-bold mt-1">STAFF ID CARD</h3>
-                      <p className="text-xs opacity-80">{schoolSettings?.academic_year || '2024-2025'}</p>
-                    </div>
-                    <div className="p-5 flex flex-col items-center">
-                      {selectedStaff.avatar_url ? (
-                        <img src={selectedStaff.avatar_url} alt="Photo" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 dark:border-slate-700 mb-4" />
-                      ) : (
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-3xl font-bold text-white mb-4">
-                          {selectedStaff.first_name?.[0]}{selectedStaff.last_name?.[0]}
-                        </div>
-                      )}
-                      <h4 className="text-xl font-bold text-slate-900 dark:text-white dark:text-white">{selectedStaff.first_name} {selectedStaff.last_name}</h4>
-                      <span className={`mt-2 px-3 py-1 rounded-full text-xs font-semibold text-white ${getRoleBadge(selectedStaff.role).bg}`}>
-                        {getRoleBadge(selectedStaff.role).label}
-                      </span>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-2">{selectedStaff.email}</p>
-                      {selectedStaff.phone && <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{selectedStaff.phone}</p>}
-
-                      <div className="mt-4 bg-white p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700">
-                        {qrCodeUrl && <img src={qrCodeUrl} alt="QR Code" className="w-28 h-28" />}
-                      </div>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-2">Scan for attendance</p>
-                    </div>
-                  </div>
-
-                  {/* Back */}
-                  <div className="w-[340px] h-[540px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 dark:border-slate-700 overflow-hidden shadow-lg">
-                    <div className="bg-gradient-to-r from-primary-700 to-primary-900 text-white p-5 text-center">
-                      <h3 className="text-lg font-bold">INFORMATION</h3>
-                    </div>
-                    <div className="p-5 space-y-4">
-                      <div className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 pb-2">
-                        <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Email:</span>
-                        <span className="font-medium text-sm">{selectedStaff.email}</span>
-                      </div>
-                      {selectedStaff.phone && (
-                        <div className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 pb-2">
-                          <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Phone:</span>
-                          <span className="font-medium">{selectedStaff.phone}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 pb-2">
-                        <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Role:</span>
-                        <span className="font-medium">{getRoleBadge(selectedStaff.role).label}</span>
-                      </div>
-                      <div className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-700 dark:border-slate-700 pb-2">
-                        <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Joined:</span>
-                        <span className="font-medium">{new Date(selectedStaff.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <div className="p-4 text-center border-t border-slate-100 dark:border-slate-700 dark:border-slate-700 mt-auto">
-                      {qrBackUrl && (
-                        <div className="inline-block bg-white p-2 rounded-lg border mb-2">
-                          <img src={qrBackUrl} alt="Verification QR" className="w-20 h-20" />
-                        </div>
-                      )}
-                      <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">ID Verification Code</p>
-                    </div>
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 border-t">
-                      This ID card is the property of the school. If found, please return to the school office.
-                    </div>
-                  </div>
+                  {renderCardFront(selectedStaff)}
+                  {renderCardBack(selectedStaff)}
                 </div>
 
-                {/* Download Options */}
                 <div className="card bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 p-4">
                   <h4 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-3 flex items-center gap-2">
                     <FileDown size={16} /> Download Options
                   </h4>
                   <div className="flex flex-wrap gap-3 items-center">
+                    <div className="flex gap-2">
+                      <label className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Format:</label>
+                      <select value={downloadFormat} onChange={(e) => setDownloadFormat(e.target.value as any)} className="input py-1 text-sm">
+                        <option value="both">Front & Back</option>
+                        <option value="front">Front Only</option>
+                        <option value="back">Back Only</option>
+                      </select>
+                    </div>
                     <button onClick={downloadPNG} disabled={generating} className="btn-primary flex items-center gap-2">
-                      <Download size={16} /> PNG
+                      {generating ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PNG
                     </button>
                     <button onClick={downloadPDF} disabled={generating} className="btn-outline flex items-center gap-2">
                       <FileText size={16} /> PDF
                     </button>
-                    <button onClick={() => {
-                      const printWindow = window.open('', '_blank');
-                      if (printWindow && selectedStaff) {
-                        const badge = getRoleBadge(selectedStaff.role);
-                        printWindow.document.write(`
-                          <html><head><title>Print Staff ID - ${selectedStaff.first_name}</title>
-                          <style>body{margin:0;padding:20px;font-family:Arial,sans-serif;text-align:center}.card{max-width:340px;margin:0 auto;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden}.header{background:linear-gradient(to right,#1d4ed8,#1e3a8a);color:white;padding:20px;text-align:center}.content{padding:20px}img{width:120px;height:120px}@media print{body{margin:0}}</style>
-                          </head><body>
-                            <div class="card"><div class="header"><p>${schoolSettings?.school_name || 'School'}</p><h2>STAFF ID CARD</h2></div>
-                            <div class="content"><h3>${selectedStaff.first_name} ${selectedStaff.last_name}</h3><p>${badge.label}</p><p>${selectedStaff.email}</p>${selectedStaff.phone ? `<p>${selectedStaff.phone}</p>` : ''}${qrCodeUrl ? `<img src="${qrCodeUrl}" alt="QR" />` : ''}</div></div>
-                          </body></html>
-                        `);
-                        printWindow.document.close();
-                        setTimeout(() => printWindow.print(), 500);
-                      }
-                    }} className="btn-outline flex items-center gap-2">
+                    <button onClick={handlePrint} disabled={generating} className="btn-outline flex items-center gap-2">
                       <Printer size={16} /> Print
                     </button>
                   </div>

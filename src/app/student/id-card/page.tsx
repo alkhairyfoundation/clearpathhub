@@ -5,9 +5,35 @@ import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { FileText, Download, Printer, QrCode, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Download, Printer, Loader2, ChevronDown, ChevronUp, ShieldCheck, Hash, CalendarDays, BadgeCheck } from 'lucide-react';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
+import { toPng } from 'html-to-image';
+
+function hexToRgba(hex: string, alpha = 1) {
+  const clean = (hex || '#1e40af').replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+  const num = parseInt(full, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function shadeColor(hex: string, percent: number) {
+  const clean = (hex || '#1e40af').replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+  const num = parseInt(full, 16);
+  let r = (num >> 16) & 255;
+  let g = (num >> 8) & 255;
+  let b = num & 255;
+  const target = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent) / 100;
+  r = Math.round((target - r) * p) + r;
+  g = Math.round((target - g) * p) + g;
+  b = Math.round((target - b) * p) + b;
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
 
 export default function StudentIDCardPage() {
   const { profile } = useAuth();
@@ -15,13 +41,16 @@ export default function StudentIDCardPage() {
   const [student, setStudent] = useState<any>(null);
   const [idCard, setIdCard] = useState<any>(null);
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
-  const [backRules, setBackRules] = useState('');
+  const [cardConfig, setCardConfig] = useState<any>(null);
   const [qrFrontUrl, setQrFrontUrl] = useState('');
   const [qrBackUrl, setQrBackUrl] = useState('');
-  const [exporting, setExporting] = useState<'png' | 'pdf' | null>(null);
+  const [exporting, setExporting] = useState<'png' | 'pdf' | 'print' | null>(null);
   const [showBack, setShowBack] = useState(false);
   const initials = profile ? `${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`.toUpperCase() : 'ST';
   const avatarUrl = student?.profile?.avatar_url || profile?.avatar_url;
+
+  const frontCardRef = useRef<HTMLDivElement>(null);
+  const backCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!profile || profile.role !== 'student') { router.push('/login'); return; }
@@ -42,9 +71,7 @@ export default function StudentIDCardPage() {
     const { data: settings } = await db.from('school_settings').select('*').limit(1).maybeSingle();
     if (settings) {
       setSchoolSettings(settings);
-      if (settings.id_card_config?.backRules) {
-        setBackRules(settings.id_card_config.backRules);
-      }
+      if (settings.id_card_config) setCardConfig(settings.id_card_config);
     }
   }
 
@@ -53,6 +80,7 @@ export default function StudentIDCardPage() {
       type: 'STUDENT_ATTENDANCE',
       admissionNumber,
       school: schoolSettings?.school_name || 'School',
+      timestamp: Date.now(),
     });
     try { return await QRCode.toDataURL(qrData, { width: 180, margin: 2, color: { dark: '#000000', light: '#ffffff' } }); }
     catch { return ''; }
@@ -73,161 +101,204 @@ export default function StudentIDCardPage() {
     catch { return dateStr || ''; }
   }
 
-  async function handlePrint() {
-    await generateQRs();
-    const printWindow = window.open('', '_blank');
-    if (!printWindow || !student) return;
-    const photoHtml = avatarUrl
-      ? `<img src="${avatarUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;" />`
-      : `<div style="width:80px;height:80px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold;color:#94a3b8;">${initials}</div>`;
-    const issueDate = idCard?.issued_at ? formatDate(idCard.issued_at) : '';
-    const rulesHtml = backRules
-      ? `<div style="margin-top:8px;font-size:11px;color:#475569;white-space:pre-wrap;text-align:left;">${backRules}</div>`
-      : '<p style="font-size:11px;color:#94a3b8;text-align:center;">This ID card is non-transferable.</p>';
-    printWindow.document.write(`
-      <html><head><title>ID Card</title>
-      <style>
-        body{margin:0;padding:20px;font-family:Arial,sans-serif;background:#f1f5f9;}
-        .card{width:320px;margin:20px auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15);border:1px solid #e2e8f0;}
-        .card-header{background:#1e40af;color:white;padding:16px;text-align:center;}
-        .card-body{padding:20px;text-align:center;}
-        .back-card .card-header{background:#334155;}
-        hr{border:none;border-top:1px solid #e2e8f0;margin:16px 0;}
-      </style></head><body>
-      <div class="card">
-        <div class="card-header">
-          <p style="margin:0;font-size:11px;opacity:0.9;">${schoolSettings?.school_name || 'School'}</p>
-          <h3 style="margin:4px 0;font-size:18px;">STUDENT ID CARD</h3>
-        </div>
-        <div class="card-body">
-          <div style="margin-bottom:12px;">${photoHtml}</div>
-          <h2 style="margin:0;font-size:20px;">${student.profile?.first_name} ${student.profile?.last_name}</h2>
-          <p style="margin:4px 0 8px;font-size:12px;color:#94a3b8;font-family:monospace;">Adm No: ${student.admission_number}</p>
-          ${student.date_of_birth ? `<p style="margin:2px 0;font-size:12px;color:#64748b;">DOB: ${formatDate(student.date_of_birth)}</p>` : ''}
-          ${issueDate ? `<p style="margin:2px 0;font-size:11px;color:#94a3b8;">Issued: ${issueDate}</p>` : ''}
-          <img src="${qrFrontUrl}" style="width:110px;height:110px;margin-top:8px;" />
-          <p style="margin:4px 0 0;font-size:10px;color:#94a3b8;">Scan to mark attendance</p>
-        </div>
-      </div>
-      <div class="card back-card">
-        <div class="card-header">
-          <h3 style="margin:0;font-size:18px;">ID CARD RULES</h3>
-        </div>
-        <div class="card-body" style="text-align:left;">
-          ${rulesHtml}
-          <hr/>
-          <div style="text-align:center;">
-            <img src="${qrBackUrl}" style="width:80px;height:80px;" />
-            <p style="font-size:10px;color:#94a3b8;">ID Verification Code</p>
+  const primary = cardConfig?.primaryColor || '#1e40af';
+  const darker = shadeColor(primary, -28);
+  const lighter = shadeColor(primary, 35);
+  const backRules: string = (cardConfig?.backRules as string) || 'This ID card is non-transferable.\nReport lost or stolen cards immediately.\nStudents must carry their ID at all times.\nThis card remains valid until further notice.';
+  const backMessage: string = (cardConfig?.backMessage as string) || 'This ID card is the property of the school. If found, please return to the school office.';
+
+  const renderCardFront = () => {
+    const name = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
+    return (
+      <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 10% 0%, ${hexToRgba(primary, 0.10)} 0%, transparent 45%), radial-gradient(circle at 96% 100%, ${hexToRgba(primary, 0.09)} 0%, transparent 42%)` }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${primary}, ${lighter})` }} />
+
+        <div className="relative px-5 pb-6 pt-10 text-center" style={{ background: `linear-gradient(150deg, ${primary} 0%, ${darker} 100%)` }}>
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.3) 0%, transparent 55%)' }} />
+          <ShieldCheck className="relative mx-auto h-6 w-6 text-white/90" />
+          <p className="relative mt-1 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">{schoolSettings?.school_name || 'School Name'}</p>
+          <h3 className="relative mt-1 text-[22px] font-extrabold tracking-wide text-white drop-shadow-sm">STUDENT ID CARD</h3>
+          <div className="relative mt-2.5 flex items-center justify-center gap-1.5">
+            <span className="h-[3px] w-9 rounded-full bg-white/90" />
+            <span className="h-[3px] w-2.5 rounded-full bg-white/50" />
+            <span className="h-[3px] w-9 rounded-full bg-white/90" />
           </div>
         </div>
+
+        <div className="relative z-10 -mt-9 flex justify-center">
+          <div className="rounded-full p-[3px]" style={{ background: `linear-gradient(135deg, ${lighter}, ${primary} 45%, ${darker})` }}>
+            <div className="rounded-full border-[3px] border-white bg-white">
+              {cardConfig?.showPhoto !== false && avatarUrl ? (
+                <img crossOrigin="anonymous" src={avatarUrl} alt="Student" className="h-[84px] w-[84px] rounded-full object-cover" />
+              ) : (
+                <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full text-2xl font-extrabold text-white" style={{ background: `linear-gradient(135deg, ${lighter}, ${darker})` }}>
+                  {initials || 'ST'}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative flex-1 px-5">
+          <div className="mt-3 text-center">
+            <h4 className="text-[19px] font-extrabold leading-tight text-slate-900">{name || 'Student'}</h4>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{student?.class?.name || 'Student'}</p>
+
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5" style={{ background: hexToRgba(primary, 0.07), border: `1.5px solid ${hexToRgba(primary, 0.35)}` }}>
+              <Hash size={12} style={{ color: primary }} />
+              <span className="text-[9px] font-extrabold uppercase tracking-[0.16em]" style={{ color: primary }}>Adm No</span>
+              <span className="border-l pl-2 font-mono text-[13px] font-bold text-slate-800" style={{ borderColor: hexToRgba(primary, 0.25) }}>{student?.admission_number}</span>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-1 text-center">
+            {student?.date_of_birth && (
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                <CalendarDays size={12} style={{ color: primary }} />
+                <span className="font-semibold text-slate-600">DOB:</span> {formatDate(student.date_of_birth)}
+              </p>
+            )}
+            {idCard?.issued_at && (
+              <p className="text-[11px] text-slate-400"><span className="font-semibold text-slate-500">Issued:</span> {formatDate(idCard.issued_at)}</p>
+            )}
+          </div>
+
+          <div className="mt-auto flex flex-col items-center pb-3 pt-2">
+            <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
+              {qrFrontUrl ? <img src={qrFrontUrl} alt="QR Code" className="h-[112px] w-[112px]" /> : <div className="flex h-[112px] w-[112px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
+            </div>
+            <p className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Scan to mark attendance</p>
+            {cardConfig?.frontMessage && (
+              <p className="mt-1.5 px-5 text-center text-[11px] font-medium italic text-slate-500">{cardConfig.frontMessage}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="relative flex items-center justify-between px-5 py-2.5" style={{ background: `linear-gradient(90deg, ${hexToRgba(primary, 0.10)}, ${hexToRgba(lighter, 0.14)})` }}>
+          <span className="text-[9px] font-extrabold uppercase tracking-[0.18em]" style={{ color: primary }}>{schoolSettings?.school_name || 'School'}</span>
+          <span className="flex items-center gap-1.5 text-[9px] font-semibold text-slate-500">
+            <ShieldCheck size={10} style={{ color: primary }} /> Valid • {schoolSettings?.academic_year || 'This Year'}
+          </span>
+        </div>
       </div>
-    </body></html>`);
-    printWindow.document.close();
-    printWindow.print();
+    );
+  };
+
+  const renderCardBack = () => {
+    const rules: string[] = (backRules || '').split('\n').map(r => r.trim()).filter(Boolean);
+    return (
+      <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 90% 0%, ${hexToRgba(primary, 0.08)} 0%, transparent 45%), radial-gradient(circle at 8% 100%, ${hexToRgba(primary, 0.07)} 0%, transparent 40%)` }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${primary}, ${lighter})` }} />
+
+        <div className="relative px-5 pb-5 pt-8 text-center" style={{ background: `linear-gradient(150deg, ${primary} 0%, ${darker} 100%)` }}>
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.28) 0%, transparent 55%)' }} />
+          <ShieldCheck className="relative mx-auto h-5 w-5 text-white/90" />
+          <h3 className="relative mt-1 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">ID CARD RULES</h3>
+          <div className="relative mt-2 flex items-center justify-center gap-1.5">
+            <span className="h-[3px] w-8 rounded-full bg-white/90" />
+            <span className="h-[3px] w-2 rounded-full bg-white/50" />
+            <span className="h-[3px] w-8 rounded-full bg-white/90" />
+          </div>
+        </div>
+
+        <div className="relative flex flex-1 flex-col px-6 py-5">
+          <div className="space-y-2.5">
+            {rules.map((rule, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: `linear-gradient(135deg, ${lighter}, ${darker})` }}>{i + 1}</span>
+                <span className="text-[13px] leading-snug text-slate-600">{rule}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-auto flex flex-col items-center pt-4">
+            <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
+              {qrBackUrl ? <img src={qrBackUrl} alt="Verification QR" className="h-[104px] w-[104px]" /> : <div className="flex h-[104px] w-[104px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
+            </div>
+            <p className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+              <ShieldCheck size={11} style={{ color: primary }} /> ID Verification Code
+            </p>
+          </div>
+        </div>
+
+        <div className="relative px-5 py-3 text-center" style={{ background: `linear-gradient(90deg, ${hexToRgba(primary, 0.10)}, ${hexToRgba(lighter, 0.14)})` }}>
+          <p className="text-[10px] font-medium leading-snug text-slate-500">{backMessage}</p>
+        </div>
+      </div>
+    );
+  };
+
+  function buildCardPDF(frontUrl: string, backUrl: string | null) {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pw = doc.internal.pageSize.getWidth();
+    const ph = doc.internal.pageSize.getHeight();
+    const imgW = 140;
+    const imgH = (imgW * 540) / 340;
+    const place = (url: string) => doc.addImage(url, 'PNG', (pw - imgW) / 2, (ph - imgH) / 2, imgW, imgH);
+    place(frontUrl);
+    if (backUrl) { doc.addPage(); place(backUrl); }
+    return doc;
   }
 
-  async function generateQRs() {
+  async function handlePrint() {
     if (!student) return;
-    if (!qrFrontUrl) {
-      const qr = await generateAttendanceQR(student.admission_number);
-      setQrFrontUrl(qr);
+    setExporting('print');
+    try {
+      const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true });
+      const backUrl = await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true });
+      const printWindow = window.open('', '_blank', 'width=800,height=900');
+      if (!printWindow) return;
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>Print ID Card</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: Arial, sans-serif; background: #e2e8f0; }
+          .sheet { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; padding: 24px; align-items: flex-start; }
+          .card-wrap { width: 310px; }
+          .card-wrap img { width: 100%; display: block; border-radius: 14px; box-shadow: 0 10px 30px rgba(15,23,42,0.25); }
+          @media print {
+            body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .sheet { padding: 0; gap: 8px; }
+            .card-wrap { page-break-inside: avoid; }
+            @page { size: auto; margin: 8mm; }
+          }
+        </style></head><body>
+        <div class="sheet">
+          <div class="card-wrap"><img src="${frontUrl}" /></div>
+          <div class="card-wrap"><img src="${backUrl}" /></div>
+        </div>
+        <script>
+          window.onload = function(){ setTimeout(function(){ window.print(); }, 250); };
+        </script></body></html>`);
+      printWindow.document.close();
+    } catch (err: any) {
+      console.error('Print failed:', err);
     }
-    if (!qrBackUrl) {
-      const qr = await generateBackQR(student.admission_number);
-      setQrBackUrl(qr);
-    }
+    setExporting(null);
   }
 
   async function exportAs(type: 'png' | 'pdf') {
     if (!student) return;
     setExporting(type);
-    await generateQRs();
     try {
-      const CARD_W = 340;
-      const CARD_H = 540;
-      const SCALE = 3;
-      const primary = '#1e40af';
-
-      const frontCanvas = document.createElement('canvas');
-      frontCanvas.width = CARD_W * SCALE;
-      frontCanvas.height = CARD_H * SCALE;
-      const ctx = frontCanvas.getContext('2d');
-      if (!ctx) return;
-
-      ctx.scale(SCALE, SCALE);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, CARD_W, CARD_H);
-
-      ctx.fillStyle = primary;
-      ctx.fillRect(0, 0, CARD_W, 70);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(schoolSettings?.school_name || 'School', CARD_W / 2, 25);
-      ctx.font = 'bold 20px Arial';
-      ctx.fillText('STUDENT ID CARD', CARD_W / 2, 52);
-
-      if (avatarUrl) {
-        const img = document.createElement('img');
-        img.crossOrigin = 'anonymous';
-        img.src = avatarUrl;
-        await new Promise(resolve => { img.onload = () => resolve(true); img.onerror = () => resolve(false); });
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(CARD_W / 2, 130, 36, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(img, CARD_W / 2 - 36, 94, 72, 72);
-        ctx.restore();
-      } else {
-        ctx.fillStyle = '#e2e8f0';
-        ctx.beginPath();
-        ctx.arc(CARD_W / 2, 130, 36, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 28px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(initials, CARD_W / 2, 138);
-      }
-
-      ctx.fillStyle = '#000000';
-      ctx.font = 'bold 22px Arial';
-      ctx.fillText(`${student.profile?.first_name} ${student.profile?.last_name}`, CARD_W / 2, 215);
-      ctx.font = '13px Arial';
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillText(`Adm No: ${student.admission_number}`, CARD_W / 2, 240);
-
-      if (student.date_of_birth) {
-        ctx.font = '12px Arial';
-        ctx.fillStyle = '#64748b';
-        ctx.fillText(`DOB: ${formatDate(student.date_of_birth)}`, CARD_W / 2, 262);
-      }
-
-      if (idCard?.issued_at) {
-        ctx.font = '11px Arial';
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillText(`Issued: ${formatDate(idCard.issued_at)}`, CARD_W / 2, 280);
-      }
-
-      if (qrFrontUrl) {
-        const qrImg = document.createElement('img');
-        qrImg.src = qrFrontUrl;
-        await new Promise(resolve => { qrImg.onload = () => resolve(true); qrImg.onerror = () => resolve(false); });
-        ctx.drawImage(qrImg, CARD_W / 2 - 55, 300, 110, 110);
-      }
-
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '10px Arial';
-      ctx.fillText('Scan to mark attendance', CARD_W / 2, 430);
-
+      const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true });
+      const backUrl = await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true });
       if (type === 'png') {
-        const link = document.createElement('a');
-        link.download = `id_card_${student.admission_number}.png`;
-        link.href = frontCanvas.toDataURL('image/png');
-        link.click();
+        const zip = new (await import('jszip')).default();
+        const blob = await fetch(frontUrl).then(r => r.blob());
+        const backBlob = await fetch(backUrl).then(r => r.blob());
+        zip.file(`id_card_${student.admission_number}-front.png`, blob);
+        zip.file(`id_card_${student.admission_number}-back.png`, backBlob);
+        const zipped = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(zipped);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `id_card_${student.admission_number}.zip`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
       } else {
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'px', format: [CARD_W, CARD_H] });
-        doc.addImage(frontCanvas.toDataURL('image/png'), 'PNG', 0, 0, CARD_W, CARD_H);
+        const doc = buildCardPDF(frontUrl, backUrl);
         doc.save(`id_card_${student.admission_number}.pdf`);
       }
     } catch (err: any) {
@@ -244,52 +315,18 @@ export default function StudentIDCardPage() {
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 dark:text-slate-200">My ID Card</h1>
             <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">Digital ID card with QR code</p>
           </div>
+          <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 dark:bg-emerald-900/20 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 dark:text-emerald-300">
+            <BadgeCheck size={14} /> Verified
+          </span>
         </div>
 
         {/* Front Card */}
-        <div className="flex justify-center">
-          <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg dark:bg-slate-800">
-            <div className="bg-blue-600 text-white p-4 text-center">
-              <p className="text-xs font-medium opacity-90">{schoolSettings?.school_name || 'School Name'}</p>
-              <h3 className="text-lg font-bold">STUDENT ID CARD</h3>
+        <div className="flex justify-center" ref={frontCardRef}>
+          {student ? renderCardFront() : (
+            <div className="flex h-[540px] w-[340px] items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 dark:border-slate-700">
+              <Loader2 size={28} className="animate-spin text-slate-300" />
             </div>
-
-            <div className="p-4">
-              <div className="flex flex-col items-center mb-4">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Photo" className="w-20 h-20 rounded-full object-cover border-4 border-slate-100 dark:border-slate-700 dark:border-slate-700" />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400 dark:text-slate-500 dark:bg-slate-600">
-                    {initials}
-                  </div>
-                )}
-              </div>
-
-              <div className="text-center mb-4">
-                <h4 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">{profile?.first_name} {profile?.last_name}</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 font-mono">Adm No: {student?.admission_number}</p>
-                {student?.date_of_birth && (
-                  <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 mt-1">DOB: {formatDate(student.date_of_birth)}</p>
-                )}
-                {idCard?.issued_at && (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500 mt-1">Issued: {formatDate(idCard.issued_at)}</p>
-                )}
-              </div>
-
-              <div className="flex justify-center mb-2">
-                {qrFrontUrl ? (
-                  <div className="bg-white p-2 rounded-lg border-2 border-slate-200 dark:border-slate-700 dark:bg-slate-800">
-                    <img src={qrFrontUrl} alt="QR Code" className="w-28 h-28" />
-                  </div>
-                ) : (
-                  <div className="w-28 h-28 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg flex items-center justify-center">
-                    <Loader2 size={24} className="animate-spin text-slate-400 dark:text-slate-500 dark:text-slate-500" />
-                  </div>
-                )}
-              </div>
-              <p className="text-center text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Scan to mark attendance</p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Back Card Toggle */}
@@ -307,37 +344,19 @@ export default function StudentIDCardPage() {
 
         {showBack && student && (
           <div className="flex justify-center">
-            <div className="w-[340px] bg-white rounded-xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg dark:bg-slate-800">
-              <div className="bg-slate-600 text-white p-4 text-center">
-                <h3 className="text-lg font-bold">ID CARD RULES</h3>
-              </div>
-              <div className="p-4">
-                <div className="text-sm text-slate-700 dark:text-slate-300 dark:text-slate-300 whitespace-pre-wrap min-h-[80px]">
-                  {backRules || 'This ID card is non-transferable.'}
-                </div>
-              </div>
-              <div className="p-4 text-center border-t border-slate-100 dark:border-slate-700 dark:border-slate-700">
-                {qrBackUrl ? (
-                  <div className="flex justify-center mb-2">
-                    <div className="bg-white p-2 rounded-lg border dark:bg-slate-800">
-                      <img src={qrBackUrl} alt="Verification QR" className="w-20 h-20" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                    <Loader2 size={16} className="animate-spin text-slate-400 dark:text-slate-500 dark:text-slate-500" />
-                  </div>
-                )}
-                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">ID Verification Code</p>
-              </div>
-            </div>
+            {renderCardBack()}
           </div>
         )}
 
+        {/* Hidden back card for export/print */}
+        <div className="fixed left-[-12000px] top-0 pointer-events-none" aria-hidden="true">
+          <div ref={backCardRef}>{student && renderCardBack()}</div>
+        </div>
+
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 flex-wrap">
-          <button onClick={handlePrint} className="btn-primary flex items-center gap-2">
-            <Printer size={18} />Print ID Card
+          <button onClick={handlePrint} disabled={exporting !== null} className="btn-primary flex items-center gap-2">
+            {exporting === 'print' ? <Loader2 size={18} className="animate-spin" /> : <Printer size={18} />}Print ID Card
           </button>
           <button onClick={() => exportAs('png')} disabled={exporting !== null} className="btn-outline flex items-center gap-2">
             {exporting === 'png' ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}

@@ -427,9 +427,13 @@ const [formData, setFormData] = useState({ name: '', level: 1, department_id: ''
                   <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{promoteResult.skipped_no_next_class}</p>
                   <p className="text-sm text-amber-600 dark:text-amber-300">Skipped (Highest Level)</p>
                 </div>
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-900/40">
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-400">{promoteResult.skipped_unassigned || 0}</p>
+                  <p className="text-sm text-red-600 dark:text-red-300">No Class Assigned</p>
+                </div>
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-900/40">
-                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{promoteResult.total_eligible - promoteResult.promoted_count}</p>
-                  <p className="text-sm text-blue-600 dark:text-blue-300">Total Not Promoted</p>
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{promoteResult.total_eligible - promoteResult.promoted_count - (promoteResult.skipped_unassigned || 0)}</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-300">Other Not Promoted</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

@@ -104,7 +104,8 @@ interface Embed {
   alias: string;
   table: string;
   hint: string | null;
-  cols: string;
+  childCols: string[] | null; // null = '*'
+  nested: Embed[];
   inner: boolean;
 }
 
@@ -113,10 +114,45 @@ interface ParsedSelect {
   embeds: Embed[];
 }
 
-export function parseSelect(select?: string): ParsedSelect {
-  if (!select || select.trim() === '') {
-    return { rootCols: null, embeds: [] };
+function parseEmbedItem(item: string): Embed {
+  const open = item.indexOf('(');
+  if (open === -1) {
+    throw new Error(`Embedded resource missing "(": ${item}`);
   }
+  if (!item.endsWith(')')) {
+    throw new Error(`Malformed select item: ${item}`);
+  }
+  const inner = item.slice(open + 1, item.length - 1).trim();
+  const head = item.slice(0, open).trim();
+  const colon = head.indexOf(':');
+  const aliasRaw = colon !== -1 ? head.slice(0, colon).trim() : '';
+  let tableRef = colon !== -1 ? head.slice(colon + 1).trim() : head.trim();
+  let innerFlag = false;
+  let hint: string | null = null;
+  const bang = tableRef.indexOf('!');
+  if (bang !== -1) {
+    const modifiers = tableRef.slice(bang + 1).trim().split('!').map((s) => s.trim()).filter(Boolean);
+    tableRef = tableRef.slice(0, bang).trim();
+    innerFlag = modifiers.includes('inner');
+    const hintPart = modifiers.find((m) => m !== 'inner' && m !== 'left');
+    hint = hintPart || null;
+  }
+  if (!idPattern.test(tableRef)) {
+    throw new Error(`Malformed table reference: ${tableRef}`);
+  }
+  const embedAlias = aliasRaw === '' ? tableRef : aliasRaw;
+  const parsed = parseSelectBody(inner);
+  return {
+    alias: embedAlias,
+    table: tableRef,
+    hint,
+    childCols: parsed.rootCols,
+    nested: parsed.embeds,
+    inner: innerFlag,
+  };
+}
+
+function parseSelectBody(select: string): ParsedSelect {
   const rootCols: string[] = [];
   const embeds: Embed[] = [];
   const parts = splitTopLevel(select);
@@ -124,8 +160,7 @@ export function parseSelect(select?: string): ParsedSelect {
   for (const raw of parts) {
     const item = raw.trim();
     if (!item) continue;
-    const open = item.indexOf('(');
-    if (open === -1) {
+    if (item.indexOf('(') === -1) {
       if (item === '*') {
         rootCols.length = 0;
         rootCols.push('*');
@@ -134,33 +169,16 @@ export function parseSelect(select?: string): ParsedSelect {
       }
       continue;
     }
-    if (!item.endsWith(')')) {
-      throw new Error(`Malformed select item: ${item}`);
-    }
-    const inner = item.slice(open + 1, item.length - 1).trim();
-    const head = item.slice(0, open).trim();
-    const colon = head.indexOf(':');
-    if (colon === -1) {
-      throw new Error(`Embedded resource missing alias: ${item}`);
-    }
-    const aliasRaw = head.slice(0, colon).trim();
-    let tableRef = head.slice(colon + 1).trim();
-    let innerFlag = false;
-    let hint: string | null = null;
-    const bang = tableRef.indexOf('!');
-    if (bang !== -1) {
-      const modifiers = tableRef.slice(bang + 1).trim().split('!').map((s) => s.trim()).filter(Boolean);
-      tableRef = tableRef.slice(0, bang).trim();
-      innerFlag = modifiers.includes('inner');
-      const hintPart = modifiers.find((m) => m !== 'inner' && m !== 'left');
-      hint = hintPart || null;
-    }
-    if (!idPattern.test(tableRef)) {
-      throw new Error(`Malformed table reference: ${tableRef}`);
-    }
-    embeds.push({ alias: aliasRaw, table: tableRef, hint, cols: inner === '' ? '*' : inner, inner: innerFlag });
+    embeds.push(parseEmbedItem(item));
   }
   return { rootCols: rootCols.length ? rootCols : null, embeds };
+}
+
+export function parseSelect(select?: string): ParsedSelect {
+  if (!select || select.trim() === '') {
+    return { rootCols: null, embeds: [] };
+  }
+  return parseSelectBody(select);
 }
 
 function splitTopLevel(input: string): string[] {
@@ -465,30 +483,49 @@ async function executeRead(op: DbOp): Promise<{ data: unknown; count?: number }>
       .join(', ');
   }
 
+  // Recursively builds a scalar (sub)query that embeds child rows into each
+  // parent row. parentAlias is the SQL alias of the row the embed is attached to
+  // ("t" for the root query, the child alias for nested embeds).
+  async function buildEmbedSql(embed: Embed, parentTable: string, parentAlias: string, depth: number): Promise<string> {
+    const childAlias = depth === 0 ? 'x' : `x${depth}`;
+    const teCols = await getColumns(embed.table);
+
+    let childList: string;
+    if (embed.childCols === null || (embed.childCols.length === 1 && embed.childCols[0] === '*')) {
+      childList = `"${childAlias}".*`;
+    } else {
+      childList = embed.childCols
+        .map((c) => {
+          if (!teCols.some((x) => x.name === c)) throw new Error(`Unknown column "${c}" on "${embed.table}" for embed "${embed.alias}"`);
+          return `"${childAlias}"."${c}"`;
+        })
+        .join(', ');
+      if (childList === '') childList = `"${childAlias}".*`;
+    }
+
+    const nestedSqls: string[] = [];
+    for (const nested of embed.nested) {
+      nestedSqls.push(await buildEmbedSql(nested, embed.table, childAlias, depth + 1));
+    }
+
+    const dir = await resolveEmbedDirection(parentTable, await getPrimaryKey(parentTable), embed);
+    const joinCond = `"${childAlias}"."${dir.childCol}" = "${parentAlias}"."${dir.parentCol}"`;
+    if (embed.inner) {
+      innerConds.push(`EXISTS (SELECT 1 FROM "${embed.table}" AS "${childAlias}" WHERE ${joinCond})`);
+    }
+    const selectList = [childList, ...nestedSqls].filter(Boolean).join(', ');
+
+    if (dir.many) {
+      return `COALESCE((SELECT jsonb_agg("sq") FROM (SELECT ${selectList} FROM "${embed.table}" AS "${childAlias}" WHERE ${joinCond}) AS "sq"), '[]'::jsonb) AS "${embed.alias}"`;
+    }
+    return `(SELECT to_jsonb("sq") FROM (SELECT ${selectList} FROM "${embed.table}" AS "${childAlias}" WHERE ${joinCond} LIMIT 1) AS "sq") AS "${embed.alias}"`;
+  }
+
   const embedSqls: string[] = [];
   const innerConds: string[] = [];
   for (const embed of parsed.embeds) {
     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(embed.alias)) throw new Error(`Bad alias ${embed.alias}`);
-    const teCols = await getColumns(embed.table);
-    const embCols = embed.cols === '*'
-      ? '"x".*'
-      : embed.cols.split(',').map((c) => c.trim()).filter(Boolean).map((c) => {
-          if (!teCols.some((x) => x.name === c)) throw new Error(`Unknown column "${c}" on "${embed.table}" for embed "${embed.alias}"`);
-          return `"x"."${c}"`;
-        }).join(', ');
-
-    const dir = await resolveEmbedDirection(table, await getPrimaryKey(table), embed);
-    const joinCond = `"x"."${dir.childCol}" = "t"."${dir.parentCol}"`;
-    if (embed.inner) innerConds.push(`EXISTS (SELECT 1 FROM "${embed.table}" AS "x" WHERE ${joinCond})`);
-    if (dir.many) {
-      embedSqls.push(
-        `COALESCE((SELECT jsonb_agg("sq") FROM (SELECT ${embCols} FROM "${embed.table}" AS "x" WHERE ${joinCond}) AS "sq"), '[]'::jsonb) AS "${embed.alias}"`
-      );
-    } else {
-      embedSqls.push(
-        `(SELECT to_jsonb("sq") FROM (SELECT ${embCols} FROM "${embed.table}" AS "x" WHERE ${joinCond} LIMIT 1) AS "sq") AS "${embed.alias}"`
-      );
-    }
+    embedSqls.push(await buildEmbedSql(embed, table, 't', 0));
   }
 
   const selectList = embedSqls.length > 0 ? `${rootList}, ${embedSqls.join(', ')}` : rootList;
