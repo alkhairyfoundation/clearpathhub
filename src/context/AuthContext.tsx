@@ -2,7 +2,6 @@
 
 import { useSession, signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "next-auth/react";
 import { createContext, useEffect, useState, ReactNode, useCallback, useContext } from 'react';
-import { db } from "@/lib/db";
 import type { Profile } from '@/types';
 
 interface AuthContextType {
@@ -68,18 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string, retries = 3) {
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-        const { data, error } = await db
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle();
-
-        if (data) {
-          setProfileState(data);
-          storeProfile(data);
+        const res = await fetch(`/api/me`, { headers: { 'Content-Type': 'application/json' } });
+        const json = await res.json();
+        if (json.success && json.profile) {
+          setProfileState(json.profile);
+          storeProfile(json.profile);
           return;
         }
-        if (error) console.warn(`Profile fetch attempt ${attempt + 1} failed:`, error.message);
+        console.warn(`Profile fetch attempt ${attempt + 1} failed:`, json.error);
       } catch (error) {
         console.warn(`Profile fetch attempt ${attempt + 1} error:`, error);
       }

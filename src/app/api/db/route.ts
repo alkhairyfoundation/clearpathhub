@@ -87,8 +87,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ data: null, error: 'Missing table' }, { status: 400 });
     }
 
-    const session = await getServerSession(authOptions);
-    const authedId = session?.user ? (session.user as any).id : null;
+    let authedId: string | null = null;
+    try {
+      const session = await getServerSession(authOptions);
+      authedId = session?.user ? (session.user as any).id : null;
+    } catch {
+      // Session verification failed, treat as unauthenticated
+    }
     if (!authedId) {
       const isPublicRead = op.op === 'read' && PUBLIC_READ_TABLES.has(op.table);
       const isPublicWrite = op.op === 'write' && PUBLIC_WRITE_TABLES.has(op.table) && op.write?.kind === 'insert';
