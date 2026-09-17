@@ -1,19 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { runDbOp, type DbOp, type Filter } from '@/lib/neon-engine';
+import { query } from '@/lib/neon';
+import { createSupabaseAdminClient } from '@/lib/supabase-server';
 
 export const dynamic = 'force-dynamic';
 
-// Public tables that were previously accessible via anon PostgREST (RLS-open
-// for the public application form). Reads require no login; writes are limited
-// to the entrance_applications row creation.
 const PUBLIC_READ_TABLES = new Set(['entrance_codes', 'entrance_questions']);
 const PUBLIC_WRITE_TABLES = new Set(['entrance_applications']);
 const PUBLIC_RPCS = new Set(['increment_code_usage']);
 
-// Mirrors a successful Neon write to Supabase (secondary store, best-effort).
 function buildMirror() {
   return async (table: string, kind: string, payload: any) => {
     const adminClient = createSupabaseAdminClient();
@@ -66,12 +61,11 @@ function applyFilters(q: any, filters: Filter[]): any {
       q = q.gt(f.col!, f.val);
     } else if (f.type === 'gte') {
       q = q.gte(f.col!, f.val);
-    } else if (f.type === 'lt') {
-      q = q.lt(f.col!, f.val);
     } else if (f.type === 'lte') {
       q = q.lte(f.col!, f.val);
+    } else if (f.type === 'lt') {
+      q = q.lt(f.col!, f.val);
     }
-    // 'or' filters are not mirrored (rare in writes) — skipped intentionally.
   }
   return q;
 }
@@ -87,22 +81,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ data: null, error: 'Missing table' }, { status: 400 });
     }
 
-    let authedId: string | null = null;
-    try {
-      const session = await getServerSession(authOptions);
-      authedId = session?.user ? (session.user as any).id : null;
-    } catch {
-      // Session verification failed, treat as unauthenticated
-    }
-    if (!authedId) {
+    const sessionCookie = request.headers.get('cookie') || '';
+    const authed = sessionCookie.includes('__Secure-next-auth.session-token') || sessionCookie.includes('next-auth.session-token');
+
+    if (!authed) {
       const isPublicRead = op.op === 'read' && PUBLIC_READ_TABLES.has(op.table);
       const isPublicWrite = op.op === 'write' && PUBLIC_WRITE_TABLES.has(op.table) && op.write?.kind === 'insert';
       const isPublicRpc = op.op === 'rpc' && PUBLIC_RPCS.has(op.rpc?.name || '');
       if (!isPublicRead && !isPublicWrite && !isPublicRpc) {
-        return NextResponse.json(
-          { data: null, error: 'Not authenticated' },
-          { status: 401 }
-        );
+        return NextResponse.json({ data: null, error: 'Not authenticated' }, { status: 401 });
       }
     }
 
@@ -110,10 +97,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ data: result.data ?? null, count: result.count });
   } catch (error: any) {
     console.error('[/api/db] error:', error);
-    const status = error?.status ? Number(error.status) : 500;
     return NextResponse.json(
       { data: null, error: error?.message || 'Database operation failed' },
-      { status }
+      { status: error?.status ? Number(error.status) : 500 }
     );
   }
 }
