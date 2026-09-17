@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [status, session]);
 
   async function fetchProfile(userId: string, retries = 3) {
+    void userId;
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
         const res = await fetch(`/api/me`, { headers: { 'Content-Type': 'application/json' } });
@@ -101,7 +102,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result && (result as any).error) {
         return { error: new Error((result as any).error), profile: null };
       }
-      return { error: null, profile: getStoredProfile() };
+
+      // A fresh login has no profile in localStorage yet, so fetch the real
+      // profile from the server before returning. This lets the login page
+      // redirect by role on the very first attempt instead of falling back to
+      // the home page (which made the first login appear to fail).
+      let profile: Profile | null = getStoredProfile();
+      for (let attempt = 0; attempt < 3 && !profile; attempt++) {
+        try {
+          const res = await fetch('/api/me', { headers: { 'Content-Type': 'application/json' } });
+          const json = await res.json();
+          if (json.success && json.profile) {
+            profile = json.profile as Profile;
+            setProfileState(profile);
+            storeProfile(profile);
+            break;
+          }
+        } catch (error) {
+          console.warn(`Profile fetch after sign-in attempt ${attempt + 1} error:`, error);
+        }
+        if (!profile && attempt < 2) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+      }
+      return { error: null, profile };
     } catch (err) {
       return { error: err instanceof Error ? err : new Error("An error occurred"), profile: null };
     }

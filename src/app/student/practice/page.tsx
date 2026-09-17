@@ -277,7 +277,7 @@ export default function StudentPracticePage() {
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
     if (existing) {
-      const lastDate = existing.last_activity_date;
+      const lastDate = existing.last_activity_date ? String(existing.last_activity_date).slice(0, 10) : null;
       let newStreak = 1;
       if (lastDate === yesterday) newStreak = existing.current_streak + 1;
       else if (lastDate === today) newStreak = existing.current_streak;

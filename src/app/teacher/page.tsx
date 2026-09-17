@@ -50,7 +50,7 @@ useEffect(() => {
           ? db.from('classes').select('id, name, level').in('id', uniqueClassIds).order('level')
           : { data: [] },
         db.from('homework').select('id, title, due_date, class_id', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_active', true),
-        db.from('quizzes').select('id, title, due_date', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_active', true),
+        db.from('quizzes').select('id, title', { count: 'exact' }).in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).eq('is_published', true),
         db.from('sessions').select('*, class:classes!class_id(name), subject:subjects!subject_id(name)').in('class_id', uniqueClassIds.length > 0 ? uniqueClassIds : ['none']).order('created_at', { ascending: false }).limit(5),
         db.from('announcements').select('*, creator:profiles!created_by(first_name, last_name)').in('audience', ['all', 'teachers', 'staff']).order('created_at', { ascending: false }).limit(5),
       ]);
@@ -171,7 +171,7 @@ useEffect(() => {
       if (resultsResData.length > 0) {
         const distribution = ['A', 'B', 'C', 'D', 'F'].map(grade => ({
           name: grade,
-          value: resultsResData.filter((r: any) => r.grade.startsWith(grade)).length
+          value: resultsResData.filter((r: any) => ((r.grade || '') as string).startsWith(grade)).length
         }));
         setPerformanceData(distribution);
       }

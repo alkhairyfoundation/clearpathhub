@@ -257,6 +257,9 @@ CREATE TABLE IF NOT EXISTS homework (
   description TEXT,
   due_date DATE,
   total_marks INTEGER DEFAULT 100,
+  homework_type TEXT DEFAULT 'assignment',
+  attachments TEXT[] DEFAULT '{}',
+  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -678,7 +681,7 @@ CREATE TABLE IF NOT EXISTS practice_attempts (
     source_id UUID,
     question_text TEXT NOT NULL,
     question_type TEXT,
-    options JSONB,
+    options TEXT[],
     correct_answer INTEGER NOT NULL,
     selected_answer INTEGER,
     is_correct BOOLEAN,
@@ -696,7 +699,7 @@ CREATE TABLE IF NOT EXISTS daily_goals (
     student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     date DATE NOT NULL,
     target_questions INTEGER DEFAULT 10,
-    target_score INTEGER DEFAULT 80,
+    target_score INTEGER DEFAULT 70,
     completed_questions INTEGER DEFAULT 0,
     achieved_score INTEGER,
     status TEXT DEFAULT 'in_progress',

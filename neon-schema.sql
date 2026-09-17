@@ -233,6 +233,9 @@ CREATE TABLE IF NOT EXISTS homework (
   description TEXT,
   due_date DATE,
   total_marks INTEGER DEFAULT 100,
+  homework_type TEXT DEFAULT 'assignment',
+  attachments TEXT[] DEFAULT '{}',
+  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -620,65 +623,84 @@ CREATE TABLE IF NOT EXISTS announcements_messages (
 CREATE TABLE IF NOT EXISTS practice_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    subject TEXT NOT NULL,
-    topic TEXT NOT NULL,
-    started_at TIMESTAMP DEFAULT NOW(),
-    ended_at TIMESTAMP,
-    duration_seconds INTEGER,
-    questions_attempted INTEGER DEFAULT 0,
+    term_id UUID REFERENCES terms(id),
+    date DATE NOT NULL,
+    goal_type TEXT,
+    total_questions INTEGER DEFAULT 0,
+    answered_questions INTEGER DEFAULT 0,
     correct_answers INTEGER DEFAULT 0,
-    performance_percentage NUMERIC(5,2)
+    score NUMERIC(5,2),
+    duration_seconds INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'in_progress',
+    created_at TIMESTAMP DEFAULT NOW(),
+    completed_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS practice_attempts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    practice_session_id UUID REFERENCES practice_sessions(id) ON DELETE CASCADE,
-    question_text TEXT,
+    session_id UUID REFERENCES practice_sessions(id) ON DELETE CASCADE,
+    student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    question_source TEXT,
+    source_id UUID,
+    question_text TEXT NOT NULL,
+    question_type TEXT DEFAULT 'multiple_choice',
+    options TEXT[],
+    correct_answer INTEGER NOT NULL,
     selected_answer INTEGER,
     is_correct BOOLEAN,
-    points_awarded INTEGER DEFAULT 0,
-    time_taken_seconds INTEGER,
-    attempted_at TIMESTAMP DEFAULT NOW()
+    time_taken INTEGER DEFAULT 0,
+    difficulty TEXT,
+    topic TEXT,
+    subtopic TEXT,
+    explanation TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS daily_goals (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    goal_date DATE NOT NULL,
-    target_questions INTEGER DEFAULT 0,
-    target_minutes INTEGER DEFAULT 0,
+    date DATE NOT NULL,
+    target_questions INTEGER DEFAULT 10,
+    target_score INTEGER DEFAULT 70,
     completed_questions INTEGER DEFAULT 0,
-    completed_minutes INTEGER DEFAULT 0,
-    achieved BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT NOW()
+    achieved_score INTEGER,
+    status TEXT DEFAULT 'in_progress',
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(student_id, date)
 );
 
 CREATE TABLE IF NOT EXISTS learning_streaks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    streak_days INTEGER DEFAULT 0,
-    last_active_date DATE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    current_streak INTEGER DEFAULT 0,
+    longest_streak INTEGER DEFAULT 0,
+    last_activity_date DATE,
+    streak_type TEXT DEFAULT 'practice',
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(student_id)
 );
 
 CREATE TABLE IF NOT EXISTS badges (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    description TEXT,
-    icon TEXT,
-    criteria JSONB,
-    created_at TIMESTAMP DEFAULT NOW()
+    student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    badge_type TEXT NOT NULL,
+    badge_data JSONB,
+    awarded_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(student_id, badge_type)
 );
 
 CREATE TABLE IF NOT EXISTS review_schedule (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    subject TEXT NOT NULL,
+    subject_id UUID REFERENCES subjects(id),
     topic TEXT NOT NULL,
-    review_date DATE NOT NULL,
-    completed BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT NOW()
+    subtopic TEXT,
+    next_review_date DATE NOT NULL,
+    interval_days INTEGER DEFAULT 1,
+    last_reviewed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(student_id, subject_id, topic, subtopic)
 );
 
 -- Row Level Security Policies (simplified for our use case)

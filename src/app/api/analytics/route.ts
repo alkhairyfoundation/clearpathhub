@@ -93,8 +93,8 @@ export async function POST(request: Request) {
                        JOIN student_classes sc ON sc.class_id = h.class_id
                        WHERE sc.student_id = st.profile_id), 0), 1) AS homework_rate,
            ROUND(100.0 *
-             (SELECT COUNT(*) FROM practice_sessions ps
-              WHERE ps.student_id = st.profile_id AND ps.end IS NOT NULL AND ps.duration_seconds > 60)
+(SELECT COUNT(*) FROM practice_sessions ps
+               WHERE ps.student_id = st.profile_id AND ps.completed_at IS NOT NULL AND ps.duration_seconds > 60)
              / NULLIF((SELECT COUNT(*) FROM terms t WHERE t.is_current = true), 0) * (SELECT COUNT(*) FROM terms t WHERE t.is_current = true), 1) AS practice_rate,
            NULLIF(COUNT(*) FILTER (WHERE r.score < (SELECT passing_score FROM tests LIMIT 1)), 0) AS subjects_below_pass
          FROM students st

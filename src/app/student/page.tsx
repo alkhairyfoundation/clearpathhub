@@ -73,7 +73,7 @@ useEffect(() => {
         }
         let sessionsQuery = db
           .from('sessions')
-          .select('id, title, description, created_at, class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name)')
+          .select('id, title, created_at, class:classes!class_id(name), teacher:profiles!teacher_id(first_name, last_name)')
           .order('created_at', { ascending: false })
           .limit(5);
         if (studentClassId) {
@@ -111,7 +111,7 @@ useEffect(() => {
       const [goalRes, streakRes, badgesRes, reviewRes] = await Promise.all([
         db.from('daily_goals').select('*').eq('student_id', profile?.id).eq('date', today).maybeSingle(),
         db.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle(),
-        db.from('badges').select('*').eq('student_id', profile?.id),
+        db.from('badges').select('*').eq('student_id', profile?.id).order('awarded_at', { ascending: false }),
         db.from('review_schedule').select('id', { count: 'exact', head: true }).eq('student_id', profile?.id).lte('next_review_date', today),
       ]);
       if (goalRes.data) setTodayGoal(goalRes.data);

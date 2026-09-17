@@ -187,7 +187,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
                 (SELECT COUNT(*) FROM badges b WHERE b.student_id = $1) as badge_count
          FROM student_levels sl
          LEFT JOIN learning_streaks ls ON ls.student_id = sl.student_id
-         WHERE sl.student_id = $1`,
+         WHERE sl.student_id = $2`,
         [studentId, studentId]
       ),
 

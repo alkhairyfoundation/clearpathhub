@@ -16,8 +16,8 @@ export const authOptions: NextAuthOptions = {
 
         try {
           const rows = await neonQuery(
-            'SELECT * FROM profiles WHERE email = $1 LIMIT 1',
-            [credentials.email]
+            'SELECT * FROM profiles WHERE LOWER(email) = LOWER($1) LIMIT 1',
+            [credentials.email.trim()]
           );
           const profile = rows[0] || null;
 

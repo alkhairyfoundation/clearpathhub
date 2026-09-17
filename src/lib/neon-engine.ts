@@ -546,6 +546,8 @@ async function executeWrite(
 
     const allKeys = Array.from(new Set(dataArr.flatMap((d) => Object.keys(d || {}))));
     for (const k of allKeys) assertColumn(cols, k, `in insert data`);
+    const colType = new Map(cols.map((c) => [c.name, c.dataType]));
+    const jsonbCols = new Set(allKeys.filter((k) => colType.get(k) === 'jsonb'));
     const colList = allKeys.map((k) => `"${k}"`).join(', ');
 
     const valuePlaceholders: string[] = [];
@@ -553,9 +555,15 @@ async function executeWrite(
     for (const row of dataArr) {
       const rowVals = allKeys.map((k) => {
         const v = (row ?? {})[k];
-        return isScalar(v) ? (v ?? null) : toDbValue(v);
+        if (isScalar(v)) return v ?? null;
+        if (jsonbCols.has(k)) return typeof v === 'string' ? v : JSON.stringify(v);
+        if (Array.isArray(v)) return v;
+        return toDbValue(v);
       });
-      valuePlaceholders.push(`(${rowVals.map((_, i) => `$${flatValues.length + i + 1}`).join(', ')})`);
+      const ph = allKeys
+        .map((k, i) => `$${flatValues.length + i + 1}${jsonbCols.has(k) ? '::jsonb' : ''}`)
+        .join(', ');
+      valuePlaceholders.push(`(${ph})`);
       flatValues.push(...rowVals);
     }
 
@@ -616,8 +624,17 @@ async function executeWrite(
     for (const k of setKeys) assertColumn(cols, k, `in update data`);
     const { sql: whereSql, values } = await buildWhere(table, op.filters || [], cols);
 
-    const setParts = setKeys.map((k, i) => `"${k}" = $${values.length + i + 1}`);
-    const setVals = setKeys.map((k) => (isScalar(data[k]) ? (data[k] ?? null) : toDbValue(data[k])));
+    const colType = new Map(cols.map((c) => [c.name, c.dataType]));
+    const jsonbCols = new Set(setKeys.filter((k) => colType.get(k) === 'jsonb'));
+
+    const setParts = setKeys.map((k, i) => `"${k}" = $${values.length + i + 1}${jsonbCols.has(k) ? '::jsonb' : ''}`);
+    const setVals = setKeys.map((k) => {
+      const v = data[k];
+      if (isScalar(v)) return v ?? null;
+      if (jsonbCols.has(k)) return typeof v === 'string' ? v : JSON.stringify(v);
+      if (Array.isArray(v)) return v;
+      return toDbValue(v);
+    });
     const sql = `UPDATE "${table}" SET ${setParts.join(', ')} ${whereSql} RETURNING *`;
 
     rows = await neonQuery(sql, [...values, ...setVals]);
