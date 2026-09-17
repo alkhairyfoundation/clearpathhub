@@ -23,6 +23,8 @@ interface CsvRow {
   guardian_email: string;
   blood_group: string;
   emergency_contact: string;
+  admission_number: string;
+  parent_email: string;
 }
 
 interface ImportResult {
@@ -37,14 +39,14 @@ const CSV_HEADERS = [
   'first_name', 'last_name', 'email', 'password', 'class_name',
   'gender', 'date_of_birth', 'phone', 'address',
   'guardian_name', 'guardian_phone', 'guardian_email',
-  'blood_group', 'emergency_contact',
+  'blood_group', 'emergency_contact', 'admission_number', 'parent_email',
 ];
 
 const TEMPLATE_SAMPLE = [
-  'John', 'Doe', 'john@example.com', 'password123', 'SS1-A',
-  'M', '2010-05-15', '08012345678', '123 Main St',
+  'John', 'Doe', 'john@example.com', 'password123', 'SS 1',
+  'male', '2010-05-15', '08012345678', '123 Main St',
   'John Sr', '08098765432', 'john.sr@example.com',
-  'O+', '0801112222',
+  'O+', '0801112222', '', '',
 ];
 
 function generateTemplateCsv(): string {
@@ -175,7 +177,10 @@ export default function BulkStudentUpload({ isOpen, onClose, role, onSuccess }: 
                   <strong>Required columns:</strong> first_name, last_name, email, password
                 </p>
                 <p className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">
-                  <strong>Optional columns:</strong> class_name, gender, date_of_birth, phone, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact
+                  <strong>Optional columns:</strong> class_name, gender, date_of_birth, phone, address, guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact, admission_number, parent_email
+                </p>
+                <p className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">
+                  <strong>gender:</strong> male, female, or other. <strong>admission_number:</strong> leave blank to auto-generate. <strong>parent_email:</strong> email of an existing parent account to link the student to their parent.
                 </p>
               </div>
 

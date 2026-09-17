@@ -450,6 +450,7 @@ export async function getAllSubjects(): Promise<{ id: string; name: string; code
 export interface NewStudentData {
   admission_number: string;
   class_id?: string | null;
+  parent_id?: string | null;
   date_of_birth?: string | null;
   gender?: string | null;
   address?: string | null;
@@ -526,13 +527,14 @@ export async function createUserInNeon(input: CreateUserInput): Promise<void> {
 
     if (student) {
       await client.query(
-        `INSERT INTO students (profile_id, admission_number, class_id, date_of_birth, gender, address,
+        `INSERT INTO students (profile_id, admission_number, class_id, parent_id, date_of_birth, gender, address,
           guardian_name, guardian_phone, guardian_email, blood_group, emergency_contact)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         [
           id,
           student.admission_number,
           student.class_id ?? null,
+          student.parent_id ?? null,
           student.date_of_birth ?? null,
           student.gender ?? null,
           student.address ?? null,

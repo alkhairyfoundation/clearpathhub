@@ -88,19 +88,39 @@ export default function ImportExportPage() {
         });
 
         let successCount = 0;
-        for (const row of rows) {
-          if (type === 'Students' && row.first_name && row.last_name && row.email) {
-            const { error } = await db.from('profiles').insert({
-              first_name: row.first_name, last_name: row.last_name,
-              email: row.email, phone: row.phone || '', role: 'student', is_active: true,
-            });
-            if (!error) successCount++;
+        if (type === 'Students') {
+          const res = await fetch('/api/students/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ students: rows }),
+          });
+          const data = await res.json();
+          if (!data.success) {
+            alert(data.error || 'Import failed');
+            setImporting(null);
+            return;
           }
+          successCount = data.totalSuccess || 0;
+          const failures = (data.results || []).filter((r: any) => !r.success);
+          if (failures.length > 0) {
+            setImportSuccess(`Imported ${successCount}/${rows.length} students. ${failures.length} failed: ${failures.slice(0, 5).map((f: any) => `${f.email}: ${f.error}`).join(' | ')}`);
+          } else {
+            setImportSuccess(`Successfully imported ${successCount}/${rows.length} students`);
+          }
+        } else if (type === 'Teachers') {
+          for (const row of rows) {
+            if (row.first_name && row.last_name && row.email) {
+              const { error } = await db.from('profiles').insert({
+                first_name: row.first_name, last_name: row.last_name,
+                email: row.email, phone: row.phone || '', role: 'teacher',
+              });
+              if (!error) successCount++;
+            }
+          }
+          setImportSuccess(`Successfully imported ${successCount}/${rows.length} ${type.toLowerCase()}`);
         }
-
-        setImportSuccess(`Successfully imported ${successCount}/${rows.length} ${type.toLowerCase()}`);
         fetchStats();
-        setTimeout(() => setImportSuccess(null), 5000);
+        setTimeout(() => setImportSuccess(null), 8000);
       } catch (err) {
         console.error('Import error:', err);
         alert('Import failed. Please check your CSV format.');
@@ -163,12 +183,12 @@ export default function ImportExportPage() {
         <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white mb-4 flex items-center gap-2"><FileText size={18} className="text-slate-400 dark:text-slate-500 dark:text-slate-500" />Student Import Template</h2>
         <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4">Download the CSV template and fill in student data for bulk import</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-xl"><h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-2 text-sm">Required Fields</h3><ul className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-1"><li>first_name</li><li>last_name</li><li>email (must be unique)</li></ul></div>
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-xl"><h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-2 text-sm">Optional Fields</h3><ul className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-1"><li>phone</li><li>address</li><li>date_of_birth</li><li>gender</li></ul></div>
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/20 rounded-xl"><h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-2 text-sm">Required Fields</h3><ul className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-1"><li>first_name</li><li>last_name</li><li>email (must be unique)</li><li>password (min 6 characters)</li></ul></div>
+          <div className="p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-xl"><h3 className="font-semibold text-slate-900 dark:text-white dark:text-white mb-2 text-sm">Optional Fields</h3><ul className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 space-y-1"><li>class_name (e.g. SS 1)</li><li>gender (male / female)</li><li>date_of_birth, phone, address</li><li>guardian_name, guardian_phone, guardian_email</li><li>blood_group, emergency_contact</li><li>admission_number (auto-generated if blank)</li><li>parent_email (link to existing parent account)</li></ul></div>
         </div>
         <button onClick={() => {
-          const headers = 'first_name,last_name,email,phone,address,date_of_birth,gender';
-          const sample = 'John,Doe,john@example.com,08012345678,Lagos,2010-05-15,M';
+          const headers = 'first_name,last_name,email,password,class_name,gender,date_of_birth,phone,address,guardian_name,guardian_phone,guardian_email,blood_group,emergency_contact,admission_number,parent_email';
+          const sample = 'John,Doe,john@example.com,password123,SS 1,male,2010-05-15,08012345678,123 Main St,John Sr,08098765432,john.sr@example.com,O+,0801112222,,';
           const blob = new Blob([`${headers}\n${sample}`], { type: 'text/csv' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a'); a.href = url; a.download = 'student_import_template.csv'; a.click();

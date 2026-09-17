@@ -20,6 +20,7 @@ interface CsvRow {
   date_of_employment: string;
   staff_id: string;
   employee_id: string;
+  status: string;
 }
 
 interface ImportResult {
@@ -33,13 +34,13 @@ interface ImportResult {
 const CSV_HEADERS = [
   'first_name', 'last_name', 'email', 'password', 'role',
   'department_name', 'designation', 'phone', 'salary',
-  'date_of_employment', 'staff_id', 'employee_id',
+  'date_of_employment', 'staff_id', 'employee_id', 'status',
 ];
 
 const TEMPLATE_SAMPLE = [
   'Jane', 'Smith', 'jane@school.com', 'password123', 'teacher',
   'Science', 'Senior Teacher', '08098765432', '150000',
-  '2026-01-15', 'TCH001', 'EMP00001',
+  '2026-01-15', 'TCH001', 'EMP00001', 'active',
 ];
 
 function generateTemplateCsv(): string {
@@ -175,7 +176,10 @@ export default function BulkStaffUpload({ isOpen, onClose, onSuccess }: Props) {
                   <strong>Role must be:</strong> teacher, accountant, or admin
                 </p>
                 <p className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">
-                  <strong>Optional columns:</strong> department_name, designation, phone, salary, date_of_employment, staff_id, employee_id
+                  <strong>Optional columns:</strong> department_name, designation, phone, salary, date_of_employment, staff_id, employee_id, status
+                </p>
+                <p className="text-sm text-primary-600 dark:text-primary-400 dark:text-primary-400 mt-1">
+                  <strong>staff_id and employee_id:</strong> leave blank to auto-generate. <strong>status:</strong> active (default) or inactive.
                 </p>
               </div>
 

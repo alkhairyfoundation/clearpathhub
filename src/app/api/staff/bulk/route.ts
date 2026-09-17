@@ -19,6 +19,7 @@ interface StaffInput {
   salary?: number;
   date_of_employment?: string;
   phone?: string;
+  status?: string;
 }
 
 interface BulkResult {
@@ -128,6 +129,16 @@ export async function POST(request: NextRequest) {
         if (!['teacher', 'accountant', 'admin'].includes(s.role)) {
           throw new Error('Role must be teacher, accountant, or admin');
         }
+        const staffStatus = (() => {
+          const raw =
+            s.status === undefined || s.status === null || String(s.status).trim() === ''
+              ? 'active'
+              : String(s.status).trim().toLowerCase();
+          if (raw !== 'active' && raw !== 'inactive') {
+            throw new Error('Status must be active or inactive');
+          }
+          return raw;
+        })();
 
         const emailKey = s.email.toLowerCase();
         if (existingEmails.has(emailKey)) {
@@ -191,7 +202,7 @@ export async function POST(request: NextRequest) {
               designation: str(s.designation) || s.role.charAt(0).toUpperCase() + s.role.slice(1),
               salary: s.salary != null ? parseFloat(String(s.salary)) : null,
               date_of_employment: str(s.date_of_employment),
-              status: 'active',
+              status: staffStatus,
             },
           });
         } catch (neonError: any) {
@@ -217,7 +228,7 @@ export async function POST(request: NextRequest) {
           designation: str(s.designation) || s.role.charAt(0).toUpperCase() + s.role.slice(1),
           salary: s.salary != null ? parseFloat(String(s.salary)) : null,
           date_of_employment: str(s.date_of_employment),
-          status: 'active',
+          status: staffStatus,
         });
         if (stSync) console.error('Supabase staff sync error:', stSync.message);
 
