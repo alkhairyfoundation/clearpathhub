@@ -10,8 +10,10 @@ import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
 import { toPng } from 'html-to-image';
 
+const CARD_PRIMARY = '#065f46';
+
 function hexToRgba(hex: string, alpha = 1) {
-  const clean = (hex || '#1e40af').replace('#', '');
+  const clean = (hex || CARD_PRIMARY).replace('#', '');
   const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
   const num = parseInt(full, 16);
   const r = (num >> 16) & 255;
@@ -21,7 +23,7 @@ function hexToRgba(hex: string, alpha = 1) {
 }
 
 function shadeColor(hex: string, percent: number) {
-  const clean = (hex || '#1e40af').replace('#', '');
+  const clean = (hex || CARD_PRIMARY).replace('#', '');
   const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
   const num = parseInt(full, 16);
   let r = (num >> 16) & 255;
@@ -35,12 +37,25 @@ function shadeColor(hex: string, percent: number) {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
+async function urlToBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return ''; }
+}
+
 export default function StudentIDCardPage() {
   const { profile } = useAuth();
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
   const [idCard, setIdCard] = useState<any>(null);
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
+  const [schoolLogo, setSchoolLogo] = useState('');
   const [cardConfig, setCardConfig] = useState<any>(null);
   const [qrFrontUrl, setQrFrontUrl] = useState('');
   const [qrBackUrl, setQrBackUrl] = useState('');
@@ -71,7 +86,17 @@ export default function StudentIDCardPage() {
     const { data: settings } = await db.from('school_settings').select('*').limit(1).maybeSingle();
     if (settings) {
       setSchoolSettings(settings);
-      if (settings.id_card_config) setCardConfig(settings.id_card_config);
+      if (settings.school_logo) {
+        urlToBase64(settings.school_logo).then(b64 => { if (b64) setSchoolLogo(b64); });
+      }
+      if (settings.id_card_config) {
+        const stored = { ...settings.id_card_config };
+        if (!stored.cardTheme || stored.cardTheme === 'blue') {
+          stored.cardTheme = 'emerald';
+          stored.primaryColor = CARD_PRIMARY;
+        }
+        setCardConfig(stored);
+      }
     }
   }
 
@@ -101,7 +126,7 @@ export default function StudentIDCardPage() {
     catch { return dateStr || ''; }
   }
 
-  const primary = cardConfig?.primaryColor || '#1e40af';
+  const primary = cardConfig?.primaryColor || CARD_PRIMARY;
   const darker = shadeColor(primary, -28);
   const lighter = shadeColor(primary, 35);
   const backRules: string = (cardConfig?.backRules as string) || 'This ID card is non-transferable.\nReport lost or stolen cards immediately.\nStudents must carry their ID at all times.\nThis card remains valid until further notice.';
@@ -114,10 +139,14 @@ export default function StudentIDCardPage() {
         <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 10% 0%, ${hexToRgba(primary, 0.10)} 0%, transparent 45%), radial-gradient(circle at 96% 100%, ${hexToRgba(primary, 0.09)} 0%, transparent 42%)` }} />
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${primary}, ${lighter})` }} />
 
-        <div className="relative px-5 pb-6 pt-10 text-center" style={{ background: `linear-gradient(150deg, ${primary} 0%, ${darker} 100%)` }}>
+        <div className="relative px-5 pb-6 pt-7 text-center" style={{ background: `linear-gradient(150deg, ${primary} 0%, ${darker} 100%)` }}>
           <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.3) 0%, transparent 55%)' }} />
-          <ShieldCheck className="relative mx-auto h-6 w-6 text-white/90" />
-          <p className="relative mt-1 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">{schoolSettings?.school_name || 'School Name'}</p>
+          {schoolLogo ? (
+            <img src={schoolLogo} alt="School Logo" className="relative mx-auto h-[46px] w-[46px] rounded-full bg-white object-cover ring-2 ring-white/80 shadow" />
+          ) : (
+            <ShieldCheck className="relative mx-auto h-6 w-6 text-white/90" />
+          )}
+          <p className="relative mt-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">{schoolSettings?.school_name || 'School Name'}</p>
           <h3 className="relative mt-1 text-[22px] font-extrabold tracking-wide text-white drop-shadow-sm">STUDENT ID CARD</h3>
           <div className="relative mt-2.5 flex items-center justify-center gap-1.5">
             <span className="h-[3px] w-9 rounded-full bg-white/90" />
@@ -143,7 +172,6 @@ export default function StudentIDCardPage() {
         <div className="relative flex-1 px-5">
           <div className="mt-3 text-center">
             <h4 className="text-[19px] font-extrabold leading-tight text-slate-900">{name || 'Student'}</h4>
-            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{student?.class?.name || 'Student'}</p>
 
             <div className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5" style={{ background: hexToRgba(primary, 0.07), border: `1.5px solid ${hexToRgba(primary, 0.35)}` }}>
               <Hash size={12} style={{ color: primary }} />
@@ -178,7 +206,7 @@ export default function StudentIDCardPage() {
         <div className="relative flex items-center justify-between px-5 py-2.5" style={{ background: `linear-gradient(90deg, ${hexToRgba(primary, 0.10)}, ${hexToRgba(lighter, 0.14)})` }}>
           <span className="text-[9px] font-extrabold uppercase tracking-[0.18em]" style={{ color: primary }}>{schoolSettings?.school_name || 'School'}</span>
           <span className="flex items-center gap-1.5 text-[9px] font-semibold text-slate-500">
-            <ShieldCheck size={10} style={{ color: primary }} /> Valid • {schoolSettings?.academic_year || 'This Year'}
+            <ShieldCheck size={10} style={{ color: primary }} /> {idCard?.card_number ? `Card No. ${idCard.card_number}` : 'School ID'}
           </span>
         </div>
       </div>
@@ -192,10 +220,14 @@ export default function StudentIDCardPage() {
         <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 90% 0%, ${hexToRgba(primary, 0.08)} 0%, transparent 45%), radial-gradient(circle at 8% 100%, ${hexToRgba(primary, 0.07)} 0%, transparent 40%)` }} />
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${primary}, ${lighter})` }} />
 
-        <div className="relative px-5 pb-5 pt-8 text-center" style={{ background: `linear-gradient(150deg, ${primary} 0%, ${darker} 100%)` }}>
+        <div className="relative px-5 pb-5 pt-7 text-center" style={{ background: `linear-gradient(150deg, ${primary} 0%, ${darker} 100%)` }}>
           <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.28) 0%, transparent 55%)' }} />
-          <ShieldCheck className="relative mx-auto h-5 w-5 text-white/90" />
-          <h3 className="relative mt-1 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">ID CARD RULES</h3>
+          {schoolLogo ? (
+            <img src={schoolLogo} alt="School Logo" className="relative mx-auto h-[40px] w-[40px] rounded-full bg-white object-cover ring-2 ring-white/80 shadow" />
+          ) : (
+            <ShieldCheck className="relative mx-auto h-5 w-5 text-white/90" />
+          )}
+          <h3 className="relative mt-1.5 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">ID CARD RULES</h3>
           <div className="relative mt-2 flex items-center justify-center gap-1.5">
             <span className="h-[3px] w-8 rounded-full bg-white/90" />
             <span className="h-[3px] w-2 rounded-full bg-white/50" />
