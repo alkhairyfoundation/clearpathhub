@@ -240,13 +240,13 @@ export default function AdminStaffIDCardsPage() {
         </div>
 
         <div className="relative flex-1 px-5">
-          <div className="mt-3 text-center">
+          <div className="mt-3 flex flex-col items-center gap-2.5 text-center">
             <h4 className="text-[19px] font-extrabold leading-tight text-slate-900">{member.first_name} {member.last_name}</h4>
-            <span className={`mt-2 inline-block rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${badge.bg}`}>
+            <span className={`rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${badge.bg}`}>
               {badge.label}
             </span>
 
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5" style={{ background: hexToRgba(STAFF_PRIMARY, 0.07), border: `1.5px solid ${hexToRgba(STAFF_PRIMARY, 0.35)}` }}>
+            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5" style={{ background: hexToRgba(STAFF_PRIMARY, 0.07), border: `1.5px solid ${hexToRgba(STAFF_PRIMARY, 0.35)}` }}>
               <Hash size={12} style={{ color: STAFF_PRIMARY }} />
               <span className="text-[9px] font-extrabold uppercase tracking-[0.16em]" style={{ color: STAFF_PRIMARY }}>Staff ID</span>
               <span className="border-l pl-2 font-mono text-[13px] font-bold text-slate-800" style={{ borderColor: hexToRgba(STAFF_PRIMARY, 0.25) }}>{getStaffNumber(member)}</span>
