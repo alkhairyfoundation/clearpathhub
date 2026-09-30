@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Search, Download, Printer, X, Users, Eye, FileDown, FileText, Loader2, ShieldCheck, Mail, Phone, BadgeCheck, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Search, Download, Printer, X, Users, Eye, FileDown, FileText, Loader2, ShieldCheck, Mail, Phone, BadgeCheck, CalendarDays, Hash } from 'lucide-react';
 import QRCode from 'qrcode';
 import DashboardLayout from '@/components/DashboardLayout';
 import jsPDF from 'jspdf';
@@ -22,19 +22,90 @@ interface StaffMember {
   created_at: string;
 }
 
-const STAFF_GRADIENT = 'linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%)';
-const STAFF_ACCENT = '#1d4ed8';
-const STAFF_DARK = '#1e3a8a';
-const AVATAR_GRADIENT = 'linear-gradient(135deg, #3b82f6 0%, #4338ca 100%)';
+const STAFF_PRIMARY = '#065f46';
+
+function shadeColor(hex: string, percent: number) {
+  const clean = (hex || STAFF_PRIMARY).replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+  const num = parseInt(full, 16);
+  let r = (num >> 16) & 255;
+  let g = (num >> 8) & 255;
+  let b = num & 255;
+  const target = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent) / 100;
+  r = Math.round((target - r) * p) + r;
+  g = Math.round((target - g) * p) + g;
+  b = Math.round((target - b) * p) + b;
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+const STAFF_DARK = shadeColor(STAFF_PRIMARY, -28);
+const STAFF_LIGHT = shadeColor(STAFF_PRIMARY, 35);
+const STAFF_GRADIENT = `linear-gradient(150deg, ${STAFF_PRIMARY} 0%, ${STAFF_DARK} 100%)`;
+const AVATAR_GRADIENT = `linear-gradient(135deg, ${STAFF_LIGHT}, ${STAFF_DARK})`;
+
+const ROLE_DESIGNATIONS: Record<string, string> = {
+  admin: 'Administrator',
+  teacher: 'Teacher',
+  accountant: 'Accountant',
+  principal: 'Principal',
+  vice_principal: 'Vice Principal',
+  head_teacher: 'Head of Department',
+  bursar: 'Bursar',
+  librarian: 'Librarian',
+  nurse: 'School Nurse',
+  security: 'Security Officer',
+  driver: 'Driver',
+  cook: 'Cook',
+  cleaner: 'Cleaner',
+  staff: 'Staff Member',
+};
+
+/** Always resolves to a non-empty, human readable designation. */
+function getDesignation(role?: string | null): string {
+  const key = (role || '').trim().toLowerCase();
+  if (!key) return 'Staff Member';
+  return ROLE_DESIGNATIONS[key] || key.charAt(0).toUpperCase() + key.slice(1).replace(/[_-]+/g, ' ');
+}
+
+const ROLE_BADGE_COLORS: Record<string, string> = {
+  teacher: 'bg-emerald-600',
+  accountant: 'bg-amber-600',
+  admin: 'bg-primary-600',
+};
+
+function getRoleBadge(role?: string | null) {
+  return {
+    bg: ROLE_BADGE_COLORS[(role || '').trim().toLowerCase()] || 'bg-slate-600',
+    label: getDesignation(role),
+  };
+}
+
+/** Short, stable staff identifier printed on the card. */
+function getStaffNumber(member: StaffMember): string {
+  return `STF-${(member.id || '').replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+}
 
 function hexToRgba(hex: string, alpha = 1) {
-  const clean = (hex || '#1e40af').replace('#', '');
+  const clean = (hex || STAFF_PRIMARY).replace('#', '');
   const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
   const num = parseInt(full, 16);
   const r = (num >> 16) & 255;
   const g = (num >> 8) & 255;
   const b = num & 255;
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+async function urlToBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch { return ''; }
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -59,6 +130,7 @@ export default function AdminStaffIDCardsPage() {
   const [qrBackUrl, setQrBackUrl] = useState('');
   const [generating, setGenerating] = useState(false);
   const [schoolSettings, setSchoolSettings] = useState<any>(null);
+  const [schoolLogo, setSchoolLogo] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [downloadFormat, setDownloadFormat] = useState<'front' | 'back' | 'both'>('both');
@@ -82,7 +154,12 @@ export default function AdminStaffIDCardsPage() {
       db.from('school_settings').select('*').limit(1).maybeSingle(),
     ]);
     if (staffRes.data) setStaff(staffRes.data);
-    if (settingsRes.data) setSchoolSettings(settingsRes.data);
+    if (settingsRes.data) {
+      setSchoolSettings(settingsRes.data);
+      if (settingsRes.data.school_logo) {
+        urlToBase64(settingsRes.data.school_logo).then(b64 => { if (b64) setSchoolLogo(b64); });
+      }
+    }
     setLoading(false);
   }
 
@@ -123,28 +200,23 @@ export default function AdminStaffIDCardsPage() {
     setGenerating(false);
   }
 
-  function getRoleBadge(role: string) {
-    switch (role) {
-      case 'teacher': return { bg: 'bg-emerald-600', label: 'Teacher' };
-      case 'accountant': return { bg: 'bg-amber-600', label: 'Accountant' };
-      case 'admin': return { bg: 'bg-primary-600', label: 'Administrator' };
-      default: return { bg: 'bg-slate-600', label: role };
-    }
-  }
-
   const renderCardFront = (member: StaffMember) => {
     if (!member) return null;
     const badge = getRoleBadge(member.role);
     const initials = `${(member.first_name || '')[0] || ''}${(member.last_name || '')[0] || ''}`.toUpperCase();
     return (
       <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 10% 0%, ${hexToRgba(STAFF_ACCENT, 0.08)} 0%, transparent 42%), radial-gradient(circle at 96% 100%, ${hexToRgba(STAFF_DARK, 0.10)} 0%, transparent 45%)` }} />
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${STAFF_ACCENT}, #60a5fa)` }} />
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 10% 0%, ${hexToRgba(STAFF_PRIMARY, 0.10)} 0%, transparent 45%), radial-gradient(circle at 96% 100%, ${hexToRgba(STAFF_DARK, 0.09)} 0%, transparent 42%)` }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${STAFF_PRIMARY}, ${STAFF_LIGHT})` }} />
 
-        <div className="relative px-5 pb-6 pt-10 text-center" style={{ background: STAFF_GRADIENT }}>
+        <div className="relative px-5 pb-6 pt-7 text-center" style={{ background: STAFF_GRADIENT }}>
           <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.3) 0%, transparent 55%)' }} />
-          <ShieldCheck className="relative mx-auto h-6 w-6 text-white/90" />
-          <p className="relative mt-1 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">{schoolSettings?.school_name || 'School Name'}</p>
+          {schoolLogo ? (
+            <img src={schoolLogo} alt="School Logo" className="relative mx-auto h-[46px] w-[46px] rounded-full bg-white object-cover ring-2 ring-white/80 shadow" />
+          ) : (
+            <ShieldCheck className="relative mx-auto h-6 w-6 text-white/90" />
+          )}
+          <p className="relative mt-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80">{schoolSettings?.school_name || 'School Name'}</p>
           <h3 className="relative mt-1 text-[22px] font-extrabold tracking-wide text-white drop-shadow-sm">STAFF ID CARD</h3>
           <div className="relative mt-2.5 flex items-center justify-center gap-1.5">
             <span className="h-[3px] w-9 rounded-full bg-white/90" />
@@ -154,7 +226,7 @@ export default function AdminStaffIDCardsPage() {
         </div>
 
         <div className="relative z-10 -mt-9 flex justify-center">
-          <div className="rounded-full p-[3px] bg-gradient-to-br from-blue-400 to-indigo-900">
+          <div className="rounded-full p-[3px]" style={{ background: `linear-gradient(135deg, ${STAFF_LIGHT}, ${STAFF_PRIMARY} 45%, ${STAFF_DARK})` }}>
             <div className="rounded-full border-[3px] border-white bg-white">
               {member.avatar_url ? (
                 <img crossOrigin="anonymous" src={member.avatar_url} alt="Staff" className="h-[84px] w-[84px] rounded-full object-cover" />
@@ -173,20 +245,15 @@ export default function AdminStaffIDCardsPage() {
             <span className={`mt-2 inline-block rounded-full px-3.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ${badge.bg}`}>
               {badge.label}
             </span>
+
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5" style={{ background: hexToRgba(STAFF_PRIMARY, 0.07), border: `1.5px solid ${hexToRgba(STAFF_PRIMARY, 0.35)}` }}>
+              <Hash size={12} style={{ color: STAFF_PRIMARY }} />
+              <span className="text-[9px] font-extrabold uppercase tracking-[0.16em]" style={{ color: STAFF_PRIMARY }}>Staff ID</span>
+              <span className="border-l pl-2 font-mono text-[13px] font-bold text-slate-800" style={{ borderColor: hexToRgba(STAFF_PRIMARY, 0.25) }}>{getStaffNumber(member)}</span>
+            </div>
           </div>
 
-          <div className="mt-4 mx-auto max-w-[240px] space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-            <p className="flex items-center gap-2 text-[11px] text-slate-600">
-              <Mail size={12} className="flex-none text-blue-600" /> <span className="truncate">{member.email}</span>
-            </p>
-            {member.phone && (
-              <p className="flex items-center gap-2 text-[11px] text-slate-600">
-                <Phone size={12} className="flex-none text-blue-600" /> <span className="truncate">{member.phone}</span>
-              </p>
-            )}
-          </div>
-
-          <div className="mt-auto flex flex-col items-center pb-3 pt-2">
+          <div className="mt-auto flex flex-col items-center pb-3 pt-4">
             <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
               {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code" className="h-[112px] w-[112px]" /> : <div className="flex h-[112px] w-[112px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
             </div>
@@ -194,10 +261,10 @@ export default function AdminStaffIDCardsPage() {
           </div>
         </div>
 
-        <div className="relative flex items-center justify-between px-5 py-2.5" style={{ background: `linear-gradient(90deg, ${hexToRgba(STAFF_ACCENT, 0.10)}, ${hexToRgba(STAFF_DARK, 0.14)})` }}>
-          <span className="text-[9px] font-extrabold uppercase tracking-[0.18em]" style={{ color: STAFF_ACCENT }}>{schoolSettings?.school_name || 'School'}</span>
-          <span className="flex items-center gap-1.5 text-[9px] font-semibold text-slate-500">
-            <BadgeCheck size={10} style={{ color: STAFF_ACCENT }} /> Staff Verified
+        <div className="relative flex items-center justify-between gap-2 px-5 py-2.5" style={{ background: `linear-gradient(90deg, ${hexToRgba(STAFF_PRIMARY, 0.10)}, ${hexToRgba(STAFF_LIGHT, 0.14)})` }}>
+          <span className="truncate text-[9px] font-medium italic text-slate-500">{schoolSettings?.school_motto || 'School Staff'}</span>
+          <span className="flex flex-none items-center gap-1.5 text-[9px] font-semibold text-slate-500">
+            <BadgeCheck size={10} style={{ color: STAFF_PRIMARY }} /> Staff Verified
           </span>
         </div>
       </div>
@@ -206,22 +273,25 @@ export default function AdminStaffIDCardsPage() {
 
   const renderCardBack = (member: StaffMember) => {
     if (!member) return null;
-    const badge = getRoleBadge(member.role);
+    // Only details NOT already printed on the front belong here.
     const infoRows = [
       { label: 'Email', value: member.email, icon: Mail },
-      { label: 'Phone', value: member.phone || '—', icon: Phone },
-      { label: 'Role', value: badge.label, icon: BadgeCheck },
-      { label: 'Joined', value: new Date(member.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }), icon: CalendarDays },
+      ...(member.phone ? [{ label: 'Phone', value: member.phone, icon: Phone }] : []),
+      { label: 'Date Joined', value: member.created_at ? new Date(member.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—', icon: CalendarDays },
     ];
     return (
       <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 90% 0%, ${hexToRgba(STAFF_ACCENT, 0.08)} 0%, transparent 45%), radial-gradient(circle at 8% 100%, ${hexToRgba(STAFF_DARK, 0.08)} 0%, transparent 40%)` }} />
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${STAFF_ACCENT}, #60a5fa)` }} />
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 90% 0%, ${hexToRgba(STAFF_PRIMARY, 0.08)} 0%, transparent 45%), radial-gradient(circle at 8% 100%, ${hexToRgba(STAFF_DARK, 0.07)} 0%, transparent 40%)` }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${STAFF_PRIMARY}, ${STAFF_LIGHT})` }} />
 
-        <div className="relative px-5 pb-5 pt-8 text-center" style={{ background: STAFF_GRADIENT }}>
+        <div className="relative px-5 pb-5 pt-7 text-center" style={{ background: STAFF_GRADIENT }}>
           <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.28) 0%, transparent 55%)' }} />
-          <ShieldCheck className="relative mx-auto h-5 w-5 text-white/90" />
-          <h3 className="relative mt-1 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">INFORMATION</h3>
+          {schoolLogo ? (
+            <img src={schoolLogo} alt="School Logo" className="relative mx-auto h-[40px] w-[40px] rounded-full bg-white object-cover ring-2 ring-white/80 shadow" />
+          ) : (
+            <ShieldCheck className="relative mx-auto h-5 w-5 text-white/90" />
+          )}
+          <h3 className="relative mt-1.5 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">STAFF INFORMATION</h3>
           <div className="relative mt-2 flex items-center justify-center gap-1.5">
             <span className="h-[3px] w-8 rounded-full bg-white/90" />
             <span className="h-[3px] w-2 rounded-full bg-white/50" />
@@ -244,17 +314,30 @@ export default function AdminStaffIDCardsPage() {
             ))}
           </div>
 
+          <div className="mt-4 space-y-2.5">
+            {[
+              'This ID card is non-transferable.',
+              'Report lost or stolen cards immediately.',
+              'This card remains valid until further notice.',
+            ].map((rule, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: `linear-gradient(135deg, ${STAFF_LIGHT}, ${STAFF_DARK})` }}>{i + 1}</span>
+                <span className="text-[12px] leading-snug text-slate-600">{rule}</span>
+              </div>
+            ))}
+          </div>
+
           <div className="mt-auto flex flex-col items-center pt-4">
             <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
               {qrBackUrl ? <img src={qrBackUrl} alt="Verification QR" className="h-[104px] w-[104px]" /> : <div className="flex h-[104px] w-[104px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
             </div>
             <p className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
-              <ShieldCheck size={11} className="text-blue-600" /> ID Verification Code
+              <ShieldCheck size={11} style={{ color: STAFF_PRIMARY }} /> ID Verification Code
             </p>
           </div>
         </div>
 
-        <div className="relative px-5 py-3 text-center" style={{ background: `linear-gradient(90deg, ${hexToRgba(STAFF_ACCENT, 0.10)}, ${hexToRgba(STAFF_DARK, 0.14)})` }}>
+        <div className="relative px-5 py-3 text-center" style={{ background: `linear-gradient(90deg, ${hexToRgba(STAFF_PRIMARY, 0.10)}, ${hexToRgba(STAFF_LIGHT, 0.14)})` }}>
           <p className="text-[10px] font-medium leading-snug text-slate-500">This ID card is the property of the school. If found, please return to the school office.</p>
         </div>
       </div>
