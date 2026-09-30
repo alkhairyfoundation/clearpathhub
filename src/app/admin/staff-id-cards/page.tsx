@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Search, Download, Printer, X, Users, Eye, FileDown, FileText, Loader2, ShieldCheck, Mail, Phone, BadgeCheck, CalendarDays, Hash } from 'lucide-react';
+import { ArrowLeft, Search, Download, Printer, X, Users, Eye, FileDown, FileText, Loader2, ShieldCheck, Mail, Phone, BadgeCheck, Hash } from 'lucide-react';
 import QRCode from 'qrcode';
 import DashboardLayout from '@/components/DashboardLayout';
 import jsPDF from 'jspdf';
@@ -209,10 +209,10 @@ export default function AdminStaffIDCardsPage() {
         <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 10% 0%, ${hexToRgba(STAFF_PRIMARY, 0.10)} 0%, transparent 45%), radial-gradient(circle at 96% 100%, ${hexToRgba(STAFF_DARK, 0.09)} 0%, transparent 42%)` }} />
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${STAFF_PRIMARY}, ${STAFF_LIGHT})` }} />
 
-        <div className="relative px-5 pb-6 pt-7 text-center" style={{ background: STAFF_GRADIENT }}>
+        <div className="relative px-5 pb-4 pt-5 text-center" style={{ background: STAFF_GRADIENT }}>
           <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.3) 0%, transparent 55%)' }} />
           {schoolLogo ? (
-            <img src={schoolLogo} alt="School Logo" className="relative mx-auto h-[46px] w-[46px] rounded-full bg-white object-cover ring-2 ring-white/80 shadow" />
+            <img src={schoolLogo} alt="School Logo" className="relative mx-auto h-[44px] w-[44px] rounded-full bg-white object-cover ring-2 ring-white/80 shadow" />
           ) : (
             <ShieldCheck className="relative mx-auto h-6 w-6 text-white/90" />
           )}
@@ -253,7 +253,7 @@ export default function AdminStaffIDCardsPage() {
             </div>
           </div>
 
-          <div className="mt-auto flex flex-col items-center pb-3 pt-4">
+          <div className="mt-auto flex flex-col items-center pb-2.5 pt-3">
             <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
               {qrCodeUrl ? <img src={qrCodeUrl} alt="QR Code" className="h-[112px] w-[112px]" /> : <div className="flex h-[112px] w-[112px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
             </div>
@@ -277,34 +277,33 @@ export default function AdminStaffIDCardsPage() {
     const infoRows = [
       { label: 'Email', value: member.email, icon: Mail },
       ...(member.phone ? [{ label: 'Phone', value: member.phone, icon: Phone }] : []),
-      { label: 'Date Joined', value: member.created_at ? new Date(member.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—', icon: CalendarDays },
     ];
     return (
       <div className="relative flex h-[540px] w-[340px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
         <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(circle at 90% 0%, ${hexToRgba(STAFF_PRIMARY, 0.08)} 0%, transparent 45%), radial-gradient(circle at 8% 100%, ${hexToRgba(STAFF_DARK, 0.07)} 0%, transparent 40%)` }} />
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[6px]" style={{ background: `linear-gradient(90deg, ${STAFF_PRIMARY}, ${STAFF_LIGHT})` }} />
 
-        <div className="relative px-5 pb-5 pt-7 text-center" style={{ background: STAFF_GRADIENT }}>
+        <div className="relative px-5 pb-4 pt-5 text-center" style={{ background: STAFF_GRADIENT }}>
           <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 130% at 85% -10%, rgba(255,255,255,0.28) 0%, transparent 55%)' }} />
           {schoolLogo ? (
-            <img src={schoolLogo} alt="School Logo" className="relative mx-auto h-[40px] w-[40px] rounded-full bg-white object-cover ring-2 ring-white/80 shadow" />
+            <img src={schoolLogo} alt="School Logo" className="relative mx-auto h-[32px] w-[32px] rounded-full bg-white object-cover ring-2 ring-white/80 shadow" />
           ) : (
             <ShieldCheck className="relative mx-auto h-5 w-5 text-white/90" />
           )}
-          <h3 className="relative mt-1.5 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">STAFF INFORMATION</h3>
-          <div className="relative mt-2 flex items-center justify-center gap-1.5">
+          <h3 className="relative mt-1 text-[20px] font-extrabold tracking-wide text-white drop-shadow-sm">STAFF INFORMATION</h3>
+          <div className="relative mt-1.5 flex items-center justify-center gap-1.5">
             <span className="h-[3px] w-8 rounded-full bg-white/90" />
             <span className="h-[3px] w-2 rounded-full bg-white/50" />
             <span className="h-[3px] w-8 rounded-full bg-white/90" />
           </div>
         </div>
 
-        <div className="relative flex flex-1 flex-col px-6 py-5">
-          <div className="space-y-2.5">
+        <div className="relative flex flex-1 flex-col overflow-hidden px-6 py-3.5">
+          <div className="space-y-2">
             {infoRows.map((row, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
-                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg text-white" style={{ background: AVATAR_GRADIENT }}>
-                  <row.icon size={14} />
+              <div key={i} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-2">
+                <span className="flex h-7 w-7 flex-none items-center justify-center rounded-lg text-white" style={{ background: AVATAR_GRADIENT }}>
+                  <row.icon size={13} />
                 </span>
                 <div className="min-w-0">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{row.label}</p>
@@ -314,24 +313,24 @@ export default function AdminStaffIDCardsPage() {
             ))}
           </div>
 
-          <div className="mt-4 space-y-2.5">
+          <div className="mt-2.5 space-y-2">
             {[
               'This ID card is non-transferable.',
               'Report lost or stolen cards immediately.',
               'This card remains valid until further notice.',
             ].map((rule, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: `linear-gradient(135deg, ${STAFF_LIGHT}, ${STAFF_DARK})` }}>{i + 1}</span>
-                <span className="text-[12px] leading-snug text-slate-600">{rule}</span>
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="mt-0.5 flex h-[18px] w-[18px] flex-none items-center justify-center rounded-full text-[9px] font-bold text-white" style={{ background: `linear-gradient(135deg, ${STAFF_LIGHT}, ${STAFF_DARK})` }}>{i + 1}</span>
+                <span className="text-[11px] leading-snug text-slate-600">{rule}</span>
               </div>
             ))}
           </div>
 
-          <div className="mt-auto flex flex-col items-center pt-4">
-            <div className="rounded-xl border-2 border-slate-100 bg-white p-2 shadow-md">
-              {qrBackUrl ? <img src={qrBackUrl} alt="Verification QR" className="h-[104px] w-[104px]" /> : <div className="flex h-[104px] w-[104px] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-300" /></div>}
+          <div className="mt-auto flex flex-col items-center pt-3">
+            <div className="rounded-xl border-2 border-slate-100 bg-white p-1.5 shadow-md">
+              {qrBackUrl ? <img src={qrBackUrl} alt="Verification QR" className="h-[96px] w-[96px]" /> : <div className="flex h-[96px] w-[96px] items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-slate-300" /></div>}
             </div>
-            <p className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            <p className="mt-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
               <ShieldCheck size={11} style={{ color: STAFF_PRIMARY }} /> ID Verification Code
             </p>
           </div>
