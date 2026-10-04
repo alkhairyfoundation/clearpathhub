@@ -33,6 +33,7 @@ const navItems = {
     { href: '/admin/attendance', label: 'Attendance', icon: UserCheck },
     { href: '/admin/staff-attendance', label: 'Scan Staff Attendance', icon: ScanLine },
     { href: '/admin/staff-attendance-dashboard', label: 'Attendance Records', icon: UserCheck },
+    { href: '/admin/attendance-reports', label: 'Attendance Reports', icon: FileText },
     { href: '/admin/student-practice', label: 'Student Practice', icon: Brain },
     { href: '/admin/learning-zone', label: 'Learning Zone', icon: Activity },
     { href: '/admin/announcements', label: 'Announcements', icon: Megaphone },

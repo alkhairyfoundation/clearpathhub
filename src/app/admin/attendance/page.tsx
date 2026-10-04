@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
+import { buildCsv, downloadCsv, fullName } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Calendar, Search, UserCheck, CheckCircle, XCircle, Clock, Shield, Loader2, Download, Users } from 'lucide-react';
@@ -33,7 +34,7 @@ export default function AdminAttendancePage() {
 
   async function fetchAttendance() {
     setLoading(true);
-    let query = db.from('attendance').select('*, student:profiles!student_id(first_name, last_name, email), class:classes!class_id(name)').eq('date', date);
+    let query = db.from('attendance').select('*, student:profiles!student_id(first_name, last_name, email, records:students!profile_id(admission_number)), class:classes!class_id(name), marker:profiles!marked_by(first_name, last_name)').eq('date', date);
     if (selectedClass !== 'all') query = query.eq('class_id', selectedClass);
     const { data, error } = await query;
     if (error) setError(error.message);
@@ -74,18 +75,14 @@ export default function AdminAttendancePage() {
 
   function exportCSV() {
     if (attendance.length === 0) { setError('No attendance data to export'); return; }
-    const headers = 'Student Name,Admission Number,Class,Date,Status,Marked By';
+    const headers = ['Student Name', 'Admission Number', 'Class', 'Date', 'Status', 'Marked By'];
     const rows = attendance.map(a => {
-      const name = a.student ? `${a.student.first_name} ${a.student.last_name}` : 'N/A';
-      return `"${name}","${a.student_id?.slice(0, 8) || 'N/A'}","${a.class?.name || 'N/A'}","${a.date}","${a.status}","${a.marked_by?.slice(0, 8) || 'N/A'}"`;
-    }).join('\n');
-    const blob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `attendance_${date}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+      const name = fullName(a.student) || 'N/A';
+      const admissionNumber = a.student?.records?.[0]?.admission_number || 'N/A';
+      const markedBy = fullName(a.marker) || 'N/A';
+      return [name, admissionNumber, a.class?.name || 'N/A', a.date, a.status, markedBy];
+    });
+    downloadCsv(`attendance_${date}.csv`, buildCsv(headers, rows));
   }
 
   const presentPct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;

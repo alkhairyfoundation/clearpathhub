@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
+import { buildCsv, buildCsvFromRecords, downloadCsv, formatTimestamp, fullName } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Download, Upload, FileText, Table, FileSpreadsheet, Printer, Loader2, CheckCircle, AlertCircle, Users, BookOpen, BarChart3, DollarSign, QrCode } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -38,24 +39,47 @@ export default function ImportExportPage() {
   async function handleExport(type: string, format: string) {
     setExporting(`${type}-${format}`);
     try {
+      if (type === 'Attendance') {
+        const { data, error } = await db.from('attendance').select(
+          '*, student:profiles!student_id(first_name, last_name, records:students!profile_id(admission_number)), class:classes!class_id(name), marker:profiles!marked_by(first_name, last_name)',
+        );
+        if (error) throw new Error(error.message);
+        const records = data || [];
+        if (records.length === 0) { alert('No data to export'); setExporting(null); return; }
+        downloadCsv('attendance_export.csv', buildCsv(
+          ['Admission Number', 'Student Name', 'Class', 'Date', 'Status', 'Marked By', 'Marked At', 'Scan Method'],
+          records.map((r: any) => {
+            const person = Array.isArray(r.student) ? r.student[0] : r.student;
+            const rec = Array.isArray(person?.records) ? person.records[0] : person?.records;
+            const klass = Array.isArray(r.class) ? r.class[0] : r.class;
+            const marker = Array.isArray(r.marker) ? r.marker[0] : r.marker;
+            return [
+              rec?.admission_number || 'N/A',
+              fullName(person) || 'N/A',
+              klass?.name || 'N/A',
+              r.date,
+              r.status,
+              fullName(marker) || '—',
+              formatTimestamp(r.marked_at),
+              r.scan_method || '—',
+            ];
+          }),
+        ));
+        setExporting(null);
+        return;
+      }
+
       let data: any[] = [];
       switch (type) {
         case 'Students': data = (await db.from('profiles').select('*').eq('role', 'student')).data || []; break;
         case 'Teachers': data = (await db.from('profiles').select('*').eq('role', 'teacher')).data || []; break;
         case 'Results': data = (await db.from('results').select('*, student:profiles!student_id(first_name, last_name), subject:subjects!subject_id(name)')).data || []; break;
-        case 'Attendance': data = (await db.from('attendance').select('*, student:profiles!student_id(first_name, last_name)')).data || []; break;
         case 'Invoices': data = (await db.from('invoices').select('*')).data || []; break;
       }
 
       if (format === 'CSV') {
         if (data.length === 0) { alert('No data to export'); setExporting(null); return; }
-        const headers = Object.keys(data[0]).join(',');
-        const rows = data.map(row => Object.values(row).map(v => typeof v === 'object' ? JSON.stringify(v) : String(v || '')).join(',')).join('\n');
-        const blob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `${type.toLowerCase()}_export.csv`; a.click();
-        URL.revokeObjectURL(url);
+        downloadCsv(`${type.toLowerCase()}_export.csv`, buildCsvFromRecords(data));
       } else {
         alert(`${format} export will be available in a future update. CSV export is ready now.`);
       }
