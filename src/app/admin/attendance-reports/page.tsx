@@ -7,11 +7,12 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   ArrowLeft, Calendar, Download, Users, UserCheck, Loader2, AlertTriangle,
-  CheckCircle, XCircle, Clock, Shield, FileText, Table,
+  CheckCircle, XCircle, Clock, Shield, FileText, Table, SlidersHorizontal,
+  RotateCcw,
 } from 'lucide-react';
 import {
-  buildCsv, csvFilename, downloadCsv, enumerateWeekdays,
-  formatTimestamp, fullName, weekdayOf,
+  buildCsv, csvFilename, downloadCsv, enumerateWeekdays, formatTimestamp,
+  fullName, minutesOfDay, parseHhMm, SCHOOL_DAYS, WEEKDAY_LABELS, weekdayOf,
 } from '@/lib/csv';
 
 interface ReportRow {
@@ -29,8 +30,15 @@ interface ReportRow {
   status: string;
   markedBy: string;
   markedAt: string;
+  markedAtRaw: string;
   scanMethod: string;
 }
+
+const PREVIEW_LIMIT = 50;
+const LARGE_EXPORT = 10000;
+const STUDENT_STATUSES = ['present', 'absent', 'late', 'excused', 'unmarked'];
+const STAFF_STATUSES = ['present', 'absent', 'late', 'unmarked'];
+const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6];
 
 function one(v: any) {
   return Array.isArray(v) ? v[0] : v;
@@ -41,14 +49,11 @@ function admissionOf(v: any): string {
   return rec?.admission_number || '';
 }
 
-const PREVIEW_LIMIT = 50;
-const LARGE_EXPORT = 10000;
-
 function emptyRow(over: Partial<ReportRow>): ReportRow {
   return {
     key: '', personId: '', personName: '', admissionNumber: '', employeeId: '',
     role: '', designation: '', department: '', className: '', date: '', day: '',
-    status: '', markedBy: '', markedAt: '', scanMethod: '', ...over,
+    status: '', markedBy: '', markedAt: '', markedAtRaw: '', scanMethod: '', ...over,
   };
 }
 
@@ -62,17 +67,29 @@ export default function AttendanceReportsPage() {
   const [classes, setClasses] = useState<any[]>([]);
   const [sessionId, setSessionId] = useState('');
   const [termId, setTermId] = useState('');
-  const [classId, setClassId] = useState('');
+  const [classIds, setClassIds] = useState<string[]>([]);
   const [roleFilter, setRoleFilter] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [includeUnmarked, setIncludeUnmarked] = useState(true);
+
+  const [statuses, setStatuses] = useState<string[]>([...STUDENT_STATUSES]);
+  const [dayIndexes, setDayIndexes] = useState<number[]>([...SCHOOL_DAYS]);
+  const [timeFrom, setTimeFrom] = useState('');
+  const [timeTo, setTimeTo] = useState('');
+  const [scanMethod, setScanMethod] = useState('');
+  const [markedByFilter, setMarkedByFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [belowPct, setBelowPct] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
 
   const isStudent = reportType === 'students';
+  const availableStatuses = isStudent ? STUDENT_STATUSES : STAFF_STATUSES;
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -108,11 +125,10 @@ export default function AttendanceReportsPage() {
       setFrom(currentSession.start_date);
       setTo(currentSession.end_date);
     } else {
-      const today = new Date().toISOString().split('T')[0];
       const back = new Date();
       back.setDate(back.getDate() - 30);
       setFrom(back.toISOString().split('T')[0]);
-      setTo(today);
+      setTo(new Date().toISOString().split('T')[0]);
     }
     setReady(true);
   }
@@ -135,9 +151,29 @@ export default function AttendanceReportsPage() {
     if (term) { setFrom(term.start_date); setTo(term.end_date); }
   }
 
-  function onClassChange(value: string) {
-    setClassId(value);
-    if (value === '' && includeUnmarked) setIncludeUnmarked(false);
+  function toggleClass(id: string) {
+    const next = classIds.includes(id) ? classIds.filter(x => x !== id) : [...classIds, id];
+    setClassIds(next);
+    if (next.length === 0 && includeUnmarked) setIncludeUnmarked(false);
+  }
+
+  function toggleStatus(value: string) {
+    setStatuses(prev => prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]);
+  }
+
+  function toggleDay(index: number) {
+    setDayIndexes(prev => prev.includes(index) ? prev.filter(d => d !== index) : [...prev, index]);
+  }
+
+  function resetAdvanced() {
+    setStatuses([...(isStudent ? STUDENT_STATUSES : STAFF_STATUSES)]);
+    setDayIndexes([...SCHOOL_DAYS]);
+    setTimeFrom('');
+    setTimeTo('');
+    setScanMethod('');
+    setMarkedByFilter('');
+    setSearch('');
+    setBelowPct('');
   }
 
   async function runReport() {
@@ -158,17 +194,17 @@ export default function AttendanceReportsPage() {
   }
 
   async function buildStudentReport(): Promise<ReportRow[]> {
-    const days = enumerateWeekdays(from, to);
+    const days = enumerateWeekdays(from, to, dayIndexes);
 
     let q = db.from('attendance').select(
       '*, student:profiles!student_id(first_name, last_name, records:students!profile_id(admission_number)), class:classes!class_id(name), marker:profiles!marked_by(first_name, last_name)',
     ).gte('date', from).lte('date', to);
-    if (classId) q = q.eq('class_id', classId);
+    if (classIds.length) q = q.in('class_id', classIds);
 
     let rq = db.from('students').select(
       'profile_id, admission_number, person:profiles!profile_id(first_name, last_name), class:classes!class_id(name)',
     );
-    if (classId) rq = rq.eq('class_id', classId);
+    if (classIds.length) rq = rq.in('class_id', classIds);
 
     const [attRes, rosterRes] = await Promise.all([q, rq]);
     if (attRes.error) throw new Error(attRes.error.message);
@@ -195,6 +231,7 @@ export default function AttendanceReportsPage() {
         status: r.status,
         markedBy: fullName(one(r.marker)) || '—',
         markedAt: formatTimestamp(r.marked_at),
+        markedAtRaw: r.marked_at || '',
         scanMethod: r.scan_method || '—',
       });
     };
@@ -224,6 +261,7 @@ export default function AttendanceReportsPage() {
           status: 'unmarked',
           markedBy: '—',
           markedAt: '',
+          markedAtRaw: '',
           scanMethod: '—',
         }));
       }
@@ -232,7 +270,7 @@ export default function AttendanceReportsPage() {
   }
 
   async function buildStaffReport(): Promise<ReportRow[]> {
-    const days = enumerateWeekdays(from, to);
+    const days = enumerateWeekdays(from, to, dayIndexes);
 
     const [attRes, staffRes] = await Promise.all([
       db.from('staff_attendance').select(
@@ -273,6 +311,7 @@ export default function AttendanceReportsPage() {
         status: r.status,
         markedBy: fullName(one(r.marker)) || '—',
         markedAt: formatTimestamp(r.marked_at),
+        markedAtRaw: r.marked_at || '',
       });
     };
 
@@ -301,30 +340,97 @@ export default function AttendanceReportsPage() {
           status: 'unmarked',
           markedBy: '—',
           markedAt: '',
+          markedAtRaw: '',
         }));
       }
     }
     return out;
   }
 
+  const rateByPerson = useMemo(() => {
+    const acc = new Map<string, { present: number; recorded: number }>();
+    for (const r of rows) {
+      if (r.status === 'unmarked') continue;
+      const e = acc.get(r.personId) || { present: 0, recorded: 0 };
+      e.recorded += 1;
+      if (r.status === 'present') e.present += 1;
+      acc.set(r.personId, e);
+    }
+    const out = new Map<string, number>();
+    for (const [id, v] of acc) out.set(id, v.recorded ? (v.present / v.recorded) * 100 : 0);
+    return out;
+  }, [rows]);
+
+  const rateOf = (r: ReportRow) => (rateByPerson.has(r.personId) ? rateByPerson.get(r.personId)! : null);
+
+  const visibleRows = useMemo(() => {
+    const lower = search.trim().toLowerCase();
+    const fromMins = timeFrom ? parseHhMm(timeFrom) : null;
+    const toMins = timeTo ? parseHhMm(timeTo) : null;
+    const pctLimit = belowPct === '' ? null : Number(belowPct);
+
+    return rows.filter(r => {
+      if (!statuses.includes(r.status)) return false;
+      if (scanMethod && r.scanMethod !== scanMethod) return false;
+      if (markedByFilter && r.markedBy !== markedByFilter) return false;
+
+      if (fromMins !== null || toMins !== null) {
+        if (r.markedAtRaw) {
+          const mins = minutesOfDay(r.markedAtRaw);
+          if (mins !== null) {
+            if (fromMins !== null && mins < fromMins) return false;
+            if (toMins !== null && mins > toMins) return false;
+          }
+        }
+      }
+
+      if (lower) {
+        const hay = [r.personName, r.admissionNumber, r.employeeId, r.className, r.designation]
+          .filter(Boolean).join(' ').toLowerCase();
+        if (!hay.includes(lower)) return false;
+      }
+
+      if (pctLimit !== null) {
+        const rate = rateOf(r);
+        if (rate === null || rate >= pctLimit) return false;
+      }
+
+      return true;
+    });
+  }, [rows, statuses, scanMethod, markedByFilter, timeFrom, timeTo, search, belowPct, rateByPerson]);
+
   const summary = useMemo(() => {
-    const count = (s: string) => rows.filter(r => r.status === s).length;
+    const count = (s: string) => visibleRows.filter(r => r.status === s).length;
     return {
       present: count('present'),
       absent: count('absent'),
       late: count('late'),
       excused: isStudent ? count('excused') : 0,
       unmarked: count('unmarked'),
-      total: rows.length,
+      total: visibleRows.length,
     };
-  }, [rows, isStudent]);
+  }, [visibleRows, isStudent]);
+
+  const markerOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows) if (r.markedBy && r.markedBy !== '—') set.add(r.markedBy);
+    return [...set].sort();
+  }, [rows]);
+
+  const activeAdvanced = [
+    statuses.length !== availableStatuses.length,
+    dayIndexes.length !== SCHOOL_DAYS.length,
+    !!timeFrom, !!timeTo, !!scanMethod, !!markedByFilter, !!search, belowPct !== '',
+  ].filter(Boolean).length;
 
   const sessionName = sessions.find(s => s.id === sessionId)?.name || '';
   const termName = terms.find(t => t.id === termId)?.name || '';
-  const className = classes.find(c => c.id === classId)?.name || '';
+  const className = classIds.length === 1
+    ? classes.find(c => c.id === classIds[0])?.name || ''
+    : classIds.length > 1 ? `${classIds.length}-classes` : '';
 
   function handleExport() {
-    if (rows.length === 0) { setError('Nothing to export'); return; }
+    if (visibleRows.length === 0) { setError('Nothing to export'); return; }
 
     const stamp = csvFilename([
       isStudent ? 'student_attendance' : 'staff_attendance',
@@ -332,17 +438,20 @@ export default function AttendanceReportsPage() {
       termName, from, to,
     ]);
 
-    if (isStudent) {
-      downloadCsv(stamp, buildCsv(
-        ['Admission Number', 'Student Name', 'Class', 'Date', 'Day', 'Status', 'Marked By', 'Marked At', 'Scan Method'],
-        rows.map(r => [r.admissionNumber, r.personName, r.className, r.date, r.day, r.status, r.markedBy, r.markedAt, r.scanMethod]),
-      ));
-    } else {
-      downloadCsv(stamp, buildCsv(
-        ['Employee ID', 'Staff Name', 'Role', 'Designation', 'Department', 'Date', 'Day', 'Status', 'Marked By', 'Marked At'],
-        rows.map(r => [r.employeeId, r.personName, r.role, r.designation, r.department, r.date, r.day, r.status, r.markedBy, r.markedAt]),
-      ));
-    }
+    const body = visibleRows.map(r => {
+      const rate = rateOf(r);
+      const rateCell = rate === null ? '' : `${rate.toFixed(1)}%`;
+      return isStudent
+        ? [r.admissionNumber, r.personName, r.className, r.date, r.day, r.status, r.markedBy, r.markedAt, r.scanMethod, rateCell]
+        : [r.employeeId, r.personName, r.role, r.designation, r.department, r.date, r.day, r.status, r.markedBy, r.markedAt, rateCell];
+    });
+
+    downloadCsv(stamp, buildCsv(
+      isStudent
+        ? ['Admission Number', 'Student Name', 'Class', 'Date', 'Day', 'Status', 'Marked By', 'Marked At', 'Scan Method', 'Attendance Rate']
+        : ['Employee ID', 'Staff Name', 'Role', 'Designation', 'Department', 'Date', 'Day', 'Status', 'Marked By', 'Marked At', 'Attendance Rate'],
+      body,
+    ));
   }
 
   const statusBadge: Record<string, string> = {
@@ -353,11 +462,16 @@ export default function AttendanceReportsPage() {
     unmarked: 'bg-slate-100 text-slate-600',
   };
 
-  const preview = rows.slice(0, PREVIEW_LIMIT);
+  const chipBase = 'px-2.5 py-1 rounded-full text-xs font-medium border transition-colors';
+  const chipOn = 'bg-primary-600 text-white border-primary-600';
+  const chipOff = 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600';
+
+  const preview = visibleRows.slice(0, PREVIEW_LIMIT);
   const tooLarge = summary.total > LARGE_EXPORT;
+  const filtered = visibleRows.length !== rows.length;
   const previewHeaders = isStudent
-    ? ['Admission Number', 'Student Name', 'Class', 'Date', 'Status', 'Marked By']
-    : ['Employee ID', 'Staff Name', 'Role', 'Designation', 'Date', 'Status', 'Marked By'];
+    ? ['Admission Number', 'Student Name', 'Class', 'Date', 'Status', 'Marked By', 'Rate']
+    : ['Employee ID', 'Staff Name', 'Role', 'Designation', 'Date', 'Status', 'Marked By', 'Rate'];
 
   return (
     <DashboardLayout title="Attendance Reports" subtitle="Filter and export student or staff attendance">
@@ -368,7 +482,7 @@ export default function AttendanceReportsPage() {
           </button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Attendance Reports</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Filter by session, term, class or role, then export CSV</p>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Choose exactly which attendance data to export</p>
           </div>
           <button className="btn-outline flex items-center gap-2" onClick={runReport} disabled={loading}>
             {loading ? <Loader2 size={18} className="animate-spin" /> : <Calendar size={18} />}
@@ -381,25 +495,23 @@ export default function AttendanceReportsPage() {
         )}
 
         <div className="card">
-          <div className="flex flex-wrap gap-4">
-            <div className="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 p-1">
-              <button
-                onClick={() => setReportType('students')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 ${reportType === 'students' ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
-              >
-                <Users size={16} /> Students
-              </button>
-              <button
-                onClick={() => setReportType('staff')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 ${reportType === 'staff' ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
-              >
-                <UserCheck size={16} /> Staff
-              </button>
-            </div>
+          <div className="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 p-1">
+            <button
+              onClick={() => { setReportType('students'); setStatuses([...STUDENT_STATUSES]); setScanMethod(''); }}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 ${reportType === 'students' ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
+            >
+              <Users size={16} /> Students
+            </button>
+            <button
+              onClick={() => { setReportType('staff'); setStatuses([...STAFF_STATUSES]); setScanMethod(''); }}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 ${reportType === 'staff' ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
+            >
+              <UserCheck size={16} /> Staff
+            </button>
           </div>
         </div>
 
-        <div className="card">
+        <div className="card space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Academic Session</label>
@@ -427,11 +539,14 @@ export default function AttendanceReportsPage() {
 
             {isStudent ? (
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Class</label>
-                <select value={classId} onChange={e => onClassChange(e.target.value)} className="input">
-                  <option value="">All Classes</option>
-                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Search</label>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Name or admission number"
+                  className="input"
+                />
               </div>
             ) : (
               <div>
@@ -463,25 +578,149 @@ export default function AttendanceReportsPage() {
                   onChange={e => setIncludeUnmarked(e.target.checked)}
                   className="w-4 h-4 rounded border-slate-300"
                 />
-                Include unmarked weekdays
+                Include unmarked days
               </label>
             </div>
           </div>
 
-          {isStudent && !classId && (
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <AlertTriangle size={13} /> Select a specific class to include unmarked students. Unmarked rows are generated for Monday to Friday only.
-            </p>
+          {isStudent && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Classes {classIds.length > 0 && <span className="text-primary-600">{classIds.length} selected</span>}
+              </label>
+              <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto">
+                <button
+                  onClick={() => { setClassIds([]); if (includeUnmarked) setIncludeUnmarked(false); }}
+                  className={`${chipBase} ${classIds.length === 0 ? chipOn : chipOff}`}
+                >
+                  All Classes
+                </button>
+                {classes.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => toggleClass(c.id)}
+                    className={`${chipBase} ${classIds.includes(c.id) ? chipOn : chipOff}`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+              {classIds.length === 0 && (
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <AlertTriangle size={13} /> Select one or more classes to include unmarked students.
+                </p>
+              )}
+            </div>
           )}
-          {!isStudent && (
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <AlertTriangle size={13} /> Unmarked rows are generated for Monday to Friday only. Unmarked means no record exists, not that the person was absent.
-            </p>
-          )}
+
+          <div>
+            <button
+              onClick={() => setShowAdvanced(v => !v)}
+              className="flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700"
+            >
+              <SlidersHorizontal size={16} />
+              Advanced filters
+              {activeAdvanced > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-primary-600 text-white text-xs">{activeAdvanced}</span>
+              )}
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-4 space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex justify-end">
+                  <button onClick={resetAdvanced} className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                    <RotateCcw size={13} /> Reset advanced filters
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Status to include</label>
+                  <div className="flex flex-wrap gap-2">
+                    {availableStatuses.map(s => (
+                      <button
+                        key={s}
+                        onClick={() => toggleStatus(s)}
+                        className={`${chipBase} capitalize ${statuses.includes(s) ? chipOn : chipOff}`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Days of the week</label>
+                  <div className="flex flex-wrap gap-2">
+                    {DAY_INDEXES.map(d => (
+                      <button
+                        key={d}
+                        onClick={() => toggleDay(d)}
+                        className={`${chipBase} ${dayIndexes.includes(d) ? chipOn : chipOff}`}
+                      >
+                        {WEEKDAY_LABELS[d]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Marked from</label>
+                    <input type="time" value={timeFrom} onChange={e => setTimeFrom(e.target.value)} className="input" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Marked until</label>
+                    <input type="time" value={timeTo} onChange={e => setTimeTo(e.target.value)} className="input" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Marked by</label>
+                    <select value={markedByFilter} onChange={e => setMarkedByFilter(e.target.value)} className="input" disabled={markerOptions.length === 0}>
+                      <option value="">Anyone</option>
+                      {markerOptions.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  {isStudent && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Scan method</label>
+                      <select value={scanMethod} onChange={e => setScanMethod(e.target.value)} className="input">
+                        <option value="">Any method</option>
+                        <option value="manual">Manual</option>
+                        <option value="qr_scan">QR scan</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                <div className="max-w-xs">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Below attendance rate</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={belowPct}
+                      onChange={e => setBelowPct(e.target.value)}
+                      placeholder="e.g. 75"
+                      className="input"
+                    />
+                    <span className="text-sm text-slate-500">%</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1">
+                  <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+                  <span>
+                    Time-of-day filtering uses the marking timestamp, so unmarked days have no time and are always kept.
+                    Attendance rate is each person's present days as a share of their recorded days, excluding unmarked days.
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400">Rows</span><Table size={16} className="text-slate-400" /></div><p className="text-2xl font-bold text-slate-900 dark:text-white">{summary.total}</p></div>
+          <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400">Rows</span><Table size={16} className="text-slate-400" /></div><p className="text-2xl font-bold text-slate-900 dark:text-white">{summary.total.toLocaleString()}</p></div>
           <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400">Present</span><CheckCircle size={16} className="text-green-600" /></div><p className="text-2xl font-bold text-green-600">{summary.present}</p></div>
           <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400">Absent</span><XCircle size={16} className="text-red-600" /></div><p className="text-2xl font-bold text-red-600">{summary.absent}</p></div>
           <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400">Late</span><Clock size={16} className="text-amber-600" /></div><p className="text-2xl font-bold text-amber-600">{summary.late}</p></div>
@@ -493,7 +732,7 @@ export default function AttendanceReportsPage() {
 
         {tooLarge && (
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-3 text-amber-700 dark:text-amber-300 text-sm">
-            This report has {summary.total.toLocaleString()} rows. Narrow the date range or class to keep the file manageable.
+            This export has {summary.total.toLocaleString()} rows. Narrow the date range, classes or statuses to keep the file manageable.
           </div>
         )}
 
@@ -504,7 +743,8 @@ export default function AttendanceReportsPage() {
                 <FileText size={18} className="text-slate-400" /> Preview
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Showing {preview.length} of {summary.total.toLocaleString()} rows
+                Showing {preview.length.toLocaleString()} of {summary.total.toLocaleString()} rows
+                {filtered ? ` (filtered from ${rows.length.toLocaleString()})` : ''}
                 {sessionName ? ` • ${sessionName}` : ''}{termName ? ` • ${termName}` : ''}{className ? ` • ${className}` : ''}
               </p>
             </div>
@@ -520,8 +760,8 @@ export default function AttendanceReportsPage() {
           ) : preview.length === 0 ? (
             <div className="text-center py-16">
               <FileText className="mx-auto text-slate-300 mb-4" size={48} />
-              <p className="font-medium text-slate-500 dark:text-slate-400">No rows to show</p>
-              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Adjust the filters and generate the report again</p>
+              <p className="font-medium text-slate-500 dark:text-slate-400">No rows match these filters</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Adjust the filters, then generate the report again</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -534,29 +774,35 @@ export default function AttendanceReportsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {preview.map(r => (
-                    <tr key={r.key} className="border-b border-slate-100 dark:border-slate-700/50">
-                      <td className="py-2 px-3 font-mono text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        {isStudent ? r.admissionNumber : (r.employeeId || '—')}
-                      </td>
-                      <td className="py-2 px-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">{r.personName}</td>
-                      {isStudent ? (
-                        <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.className}</td>
-                      ) : (
-                        <>
-                          <td className="py-2 px-3 text-slate-600 dark:text-slate-400 capitalize whitespace-nowrap">{r.role || '—'}</td>
-                          <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.designation || '—'}</td>
-                        </>
-                      )}
-                      <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.date}</td>
-                      <td className="py-2 px-3">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize whitespace-nowrap ${statusBadge[r.status] || 'bg-slate-100 text-slate-600'}`}>
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.markedBy}</td>
-                    </tr>
-                  ))}
+                  {preview.map(r => {
+                    const rate = rateOf(r);
+                    return (
+                      <tr key={r.key} className="border-b border-slate-100 dark:border-slate-700/50">
+                        <td className="py-2 px-3 font-mono text-xs text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          {isStudent ? r.admissionNumber : (r.employeeId || '—')}
+                        </td>
+                        <td className="py-2 px-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">{r.personName}</td>
+                        {isStudent ? (
+                          <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.className}</td>
+                        ) : (
+                          <>
+                            <td className="py-2 px-3 text-slate-600 dark:text-slate-400 capitalize whitespace-nowrap">{r.role || '—'}</td>
+                            <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.designation || '—'}</td>
+                          </>
+                        )}
+                        <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.date}</td>
+                        <td className="py-2 px-3">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize whitespace-nowrap ${statusBadge[r.status] || 'bg-slate-100 text-slate-600'}`}>
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.markedBy}</td>
+                        <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                          {rate === null ? '—' : `${rate.toFixed(1)}%`}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

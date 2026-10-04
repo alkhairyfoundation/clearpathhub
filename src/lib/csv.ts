@@ -52,17 +52,36 @@ export function weekdayOf(date: string): string {
   return d.toLocaleDateString('en-US', { weekday: 'long' });
 }
 
-export function enumerateWeekdays(from: string, to: string): string[] {
+export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
+export const SCHOOL_DAYS = [1, 2, 3, 4, 5];
+
+export function enumerateWeekdays(from: string, to: string, allowed?: number[]): string[] {
   if (!from || !to || from > to) return [];
+  const allow = new Set(allowed ?? SCHOOL_DAYS);
   const out: string[] = [];
   const end = new Date(`${to}T00:00:00`);
   const cur = new Date(`${from}T00:00:00`);
   while (cur <= end) {
-    const day = cur.getDay();
-    if (day !== 0 && day !== 6) out.push(toIsoDate(cur));
+    if (allow.has(cur.getDay())) out.push(toIsoDate(cur));
     cur.setDate(cur.getDate() + 1);
   }
   return out;
+}
+
+export function minutesOfDay(value: string): number | null {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+export function parseHhMm(value: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(value || '');
+  if (!m) return null;
+  const hours = Number(m[1]);
+  const mins = Number(m[2]);
+  if (hours > 23 || mins > 59) return null;
+  return hours * 60 + mins;
 }
 
 export function toIsoDate(d: Date): string {
