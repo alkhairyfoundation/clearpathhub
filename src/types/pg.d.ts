@@ -34,4 +34,11 @@ declare module 'pg' {
   }
   
   export function createPool(config: any): Pool;
+
+  export interface TypesRegistry {
+    setTypeParser(oid: number, parseFn: (value: string) => any): void;
+    getTypeParser(oid: number): ((value: string) => any) | null;
+  }
+
+  export const types: TypesRegistry;
 }

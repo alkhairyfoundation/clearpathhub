@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
+import { todayLocal } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, UserCheck, Calendar, Search, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
@@ -10,7 +11,7 @@ import { ArrowLeft, UserCheck, Calendar, Search, Loader2, CheckCircle, XCircle, 
 export default function AdminStaffAttendanceDashboard() {
   const { profile } = useAuth();
   const router = useRouter();
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(todayLocal());
   const [staffAttendance, setStaffAttendance] = useState<any[]>([]);
   const [allStaff, setAllStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

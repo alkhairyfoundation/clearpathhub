@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import {
   buildCsv, csvFilename, downloadCsv, enumerateWeekdays, formatTimestamp,
-  fullName, minutesOfDay, parseHhMm, SCHOOL_DAYS, WEEKDAY_LABELS, weekdayOf,
+  fullName, minutesOfDay, parseHhMm, SCHOOL_DAYS, toDateOnly, todayLocal,
+  toIsoDate, WEEKDAY_LABELS, weekdayOf,
 } from '@/lib/csv';
 
 interface ReportRow {
@@ -87,16 +88,28 @@ export default function AttendanceReportsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
+  const [span, setSpan] = useState<{ min: string; max: string }>({ min: '', max: '' });
 
   const isStudent = reportType === 'students';
   const availableStatuses = isStudent ? STUDENT_STATUSES : STAFF_STATUSES;
+  const classKey = classIds.join(',');
+  const dayKey = dayIndexes.join(',');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
     fetchOptions();
   }, [profile]);
 
-  useEffect(() => { if (ready && profile?.role === 'admin') runReport(); }, [ready, reportType]);
+  useEffect(() => {
+    if (!ready || profile?.role !== 'admin') return;
+    const id = setTimeout(() => { runReport(); }, 350);
+    return () => clearTimeout(id);
+  }, [ready, reportType, from, to, classKey, roleFilter, includeUnmarked, dayKey]);
+
+  useEffect(() => {
+    if (!ready || profile?.role !== 'admin') return;
+    loadSpan();
+  }, [ready, reportType]);
 
   async function fetchOptions() {
     const [sessionsRes, termsRes, classesRes] = await Promise.all([
@@ -111,44 +124,69 @@ export default function AttendanceReportsPage() {
     setTerms(loadedTerms);
     setClasses(classesRes.data || []);
 
-    const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[0];
-    const currentTerm = loadedTerms.find(t => t.is_current)
-      || (currentSession ? loadedTerms.find(t => t.session_id === currentSession.id) : undefined);
+const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[0];
+    const sessionTerms = currentSession
+      ? loadedTerms.filter(t => t.session_id === currentSession.id)
+      : [];
+    const currentTerm = sessionTerms.find(t => t.is_current) || sessionTerms[0];
 
     if (currentTerm) {
+      const termStart = toDateOnly(currentTerm.start_date);
+      const termEnd = toDateOnly(currentTerm.end_date);
       setSessionId(currentTerm.session_id || currentSession?.id || '');
       setTermId(currentTerm.id);
-      setFrom(currentTerm.start_date);
-      setTo(currentTerm.end_date);
+      setFrom(termStart);
+      setTo(termEnd);
     } else if (currentSession) {
       setSessionId(currentSession.id);
-      setFrom(currentSession.start_date);
-      setTo(currentSession.end_date);
+      setFrom(toDateOnly(currentSession.start_date));
+      setTo(toDateOnly(currentSession.end_date));
     } else {
       const back = new Date();
       back.setDate(back.getDate() - 30);
-      setFrom(back.toISOString().split('T')[0]);
-      setTo(new Date().toISOString().split('T')[0]);
+      setFrom(toIsoDate(back));
+      setTo(todayLocal());
     }
     setReady(true);
+  }
+
+  async function loadSpan() {
+    const table = isStudent ? 'attendance' : 'staff_attendance';
+    const [lo, hi] = await Promise.all([
+      db.from(table).select('date').order('date', { ascending: true }).limit(1),
+      db.from(table).select('date').order('date', { ascending: false }).limit(1),
+    ]);
+    setSpan({
+      min: toDateOnly((lo.data || [])[0]?.date),
+      max: toDateOnly((hi.data || [])[0]?.date),
+    });
   }
 
   function onSessionChange(value: string) {
     setSessionId(value);
     setTermId('');
     const session = sessions.find(s => s.id === value);
-    if (session) { setFrom(session.start_date); setTo(session.end_date); }
+    if (session) {
+      setFrom(toDateOnly(session.start_date));
+      setTo(toDateOnly(session.end_date));
+    }
   }
 
   function onTermChange(value: string) {
     setTermId(value);
     if (!value) {
       const session = sessions.find(s => s.id === sessionId);
-      if (session) { setFrom(session.start_date); setTo(session.end_date); }
+      if (session) {
+        setFrom(toDateOnly(session.start_date));
+        setTo(toDateOnly(session.end_date));
+      }
       return;
     }
     const term = terms.find(t => t.id === value);
-    if (term) { setFrom(term.start_date); setTo(term.end_date); }
+    if (term) {
+      setFrom(toDateOnly(term.start_date));
+      setTo(toDateOnly(term.end_date));
+    }
   }
 
   function toggleClass(id: string) {
@@ -215,7 +253,11 @@ export default function AttendanceReportsPage() {
     for (const s of (rosterRes.data || []) as any[]) roster.set(s.profile_id, s);
 
     const marked = new Map<string, any>();
-    for (const r of records) if (r.student_id) marked.set(`${r.student_id}|${r.date}`, r);
+    for (const r of records) {
+      if (!r.student_id) continue;
+      r.date = toDateOnly(r.date);
+      marked.set(`${r.student_id}|${r.date}`, r);
+    }
 
     const fromMarked = (r: any) => {
       const person = one(r.student);
@@ -291,7 +333,11 @@ export default function AttendanceReportsPage() {
 
     const records = (attRes.data || []) as any[];
     const marked = new Map<string, any>();
-    for (const r of records) if (r.staff_id) marked.set(`${r.staff_id}|${r.date}`, r);
+    for (const r of records) {
+      if (!r.staff_id) continue;
+      r.date = toDateOnly(r.date);
+      marked.set(`${r.staff_id}|${r.date}`, r);
+    }
 
     const fromMarked = (r: any) => {
       const person = one(r.staff);
@@ -469,6 +515,7 @@ export default function AttendanceReportsPage() {
   const preview = visibleRows.slice(0, PREVIEW_LIMIT);
   const tooLarge = summary.total > LARGE_EXPORT;
   const filtered = visibleRows.length !== rows.length;
+  const spanOutside = !!(span.min && from && to && (to < span.min || from > span.max));
   const previewHeaders = isStudent
     ? ['Admission Number', 'Student Name', 'Class', 'Date', 'Status', 'Marked By', 'Rate']
     : ['Employee ID', 'Staff Name', 'Role', 'Designation', 'Date', 'Status', 'Marked By', 'Rate'];
@@ -729,6 +776,22 @@ export default function AttendanceReportsPage() {
           )}
           <div className="card"><div className="flex items-center justify-between mb-1"><span className="text-sm text-slate-500 dark:text-slate-400">Unmarked</span><AlertTriangle size={16} className="text-slate-500" /></div><p className="text-2xl font-bold text-slate-600 dark:text-slate-300">{summary.unmarked}</p></div>
         </div>
+
+        {spanOutside && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-4 text-amber-800 dark:text-amber-200 text-sm flex flex-wrap items-center gap-3">
+            <AlertTriangle size={18} className="shrink-0" />
+            <span className="flex-1">
+              No {isStudent ? 'student' : 'staff'} attendance exists between <strong>{from}</strong> and <strong>{to}</strong>.
+              The records on file run from <strong>{span.min}</strong> to <strong>{span.max}</strong>.
+            </span>
+            <button
+              onClick={() => { setFrom(span.min); setTo(span.max); }}
+              className="btn-outline py-1.5 px-3 text-xs"
+            >
+              Use full range
+            </button>
+          </div>
+        )}
 
         {tooLarge && (
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-3 text-amber-700 dark:text-amber-300 text-sm">

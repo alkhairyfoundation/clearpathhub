@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
+import { todayLocal } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar, Clock, AlertCircle } from 'lucide-react';
 import jsQR from 'jsqr';
@@ -29,7 +30,7 @@ export default function AdminStaffAttendancePage() {
   }, [profile, loading]);
 
   async function checkToday() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocal();
     const { data } = await db
       .from('staff_attendance')
       .select('*')
@@ -96,7 +97,7 @@ export default function AdminStaffAttendancePage() {
     stopCamera();
     setMessage(null);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocal();
     const status = isLate() ? 'late' : 'present';
     const now = new Date().toISOString();
 

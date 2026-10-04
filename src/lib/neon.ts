@@ -1,4 +1,7 @@
-import { Pool } from 'pg';
+import { Pool, types } from 'pg';
+
+types.setTypeParser(1082, (v) => v);
+types.setTypeParser(1083, (v) => v);
 
 const pool = new Pool({
   connectionString: process.env.NEON_DATABASE_URL,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
-import { buildCsv, downloadCsv, fullName } from '@/lib/csv';
+import { buildCsv, downloadCsv, fullName, todayLocal } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, Calendar, Search, UserCheck, CheckCircle, XCircle, Clock, Shield, Loader2, Download, Users } from 'lucide-react';
@@ -11,7 +11,7 @@ import { ArrowLeft, Calendar, Search, UserCheck, CheckCircle, XCircle, Clock, Sh
 export default function AdminAttendancePage() {
   const { profile } = useAuth();
   const router = useRouter();
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(todayLocal());
   const [selectedClass, setSelectedClass] = useState('all');
   const [attendance, setAttendance] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);

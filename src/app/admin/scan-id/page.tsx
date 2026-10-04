@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
+import { todayLocal } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { QrCode, Camera, UserCheck, Check, X, Loader2 } from 'lucide-react';
@@ -29,7 +30,7 @@ export default function AdminScanIDPage() {
   }, [profile, router]);
 
   async function fetchTodayHistory() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocal();
     const { data } = await db
       .from('attendance')
       .select('*, student:profiles!student_id(first_name, last_name)')
@@ -67,7 +68,7 @@ export default function AdminScanIDPage() {
       .maybeSingle();
     
     if (student) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayLocal();
       const now = new Date();
       const cutoffHour = 8, cutoffMin = 30;
       const isLate = now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() > cutoffMin);

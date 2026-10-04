@@ -48,8 +48,34 @@ export function downloadCsv(filename: string, csv: string): void {
 }
 
 export function weekdayOf(date: string): string {
-  const d = new Date(`${date}T00:00:00`);
+  const d = parseDateOnly(date);
+  if (!d) return '';
   return d.toLocaleDateString('en-US', { weekday: 'long' });
+}
+
+export function parseDateOnly(value: unknown): Date | null {
+  const iso = toDateOnly(value);
+  if (!iso) return null;
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export function toDateOnly(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '';
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+    const d = new Date(trimmed);
+    return Number.isNaN(d.getTime()) ? '' : toIsoDate(d);
+  }
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? '' : toIsoDate(value);
+  }
+  return '';
+}
+
+export function todayLocal(): string {
+  return toIsoDate(new Date());
 }
 
 export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
@@ -57,12 +83,13 @@ export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] 
 export const SCHOOL_DAYS = [1, 2, 3, 4, 5];
 
 export function enumerateWeekdays(from: string, to: string, allowed?: number[]): string[] {
-  if (!from || !to || from > to) return [];
+  const start = parseDateOnly(from);
+  const finish = parseDateOnly(to);
+  if (!start || !finish || start > finish) return [];
   const allow = new Set(allowed ?? SCHOOL_DAYS);
   const out: string[] = [];
-  const end = new Date(`${to}T00:00:00`);
-  const cur = new Date(`${from}T00:00:00`);
-  while (cur <= end) {
+  const cur = new Date(start);
+  while (cur <= finish) {
     if (allow.has(cur.getDay())) out.push(toIsoDate(cur));
     cur.setDate(cur.getDate() + 1);
   }
