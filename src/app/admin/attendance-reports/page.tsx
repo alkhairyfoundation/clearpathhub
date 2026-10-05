@@ -95,6 +95,7 @@ export default function AttendanceReportsPage() {
   const [ready, setReady] = useState(false);
   const [span, setSpan] = useState<{ min: string; max: string }>({ min: '', max: '' });
   const [staffRoles, setStaffRoles] = useState<string[]>([]);
+  const [unattributed, setUnattributed] = useState(0);
 
   const isStudent = reportType === 'students';
   const availableStatuses = isStudent ? STUDENT_STATUSES : STAFF_STATUSES;
@@ -245,6 +246,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
 
     setLoading(true);
     setError('');
+    if (isStudent) setUnattributed(0);
     try {
       const built = isStudent ? await buildStudentReport() : await buildStaffReport();
       setRows(built);
@@ -371,20 +373,26 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
       roster.set(p.id, p);
     }
 
+    const roleOf = (r: any) => one(r.staff)?.role || roster.get(r.staff_id)?.role || '';
+
     const marked = new Map<string, any>();
+    let unattributedCount = 0;
     for (const r of (attRes.data || []) as any[]) {
-      if (!r.staff_id) continue;
       r.date = toDateOnly(r.date);
       if (!allowedDays.has(weekdayIndex(r.date))) continue;
-      if (roleFilter && one(r.staff)?.role && one(r.staff).role !== roleFilter) continue;
+      // Records with no staff_id cannot be attributed to anyone. Keep them out of
+      // the rows, but surface the count so a silent gap never looks like a clean report.
+      if (!r.staff_id) { unattributedCount++; continue; }
+      if (roleFilter && roleOf(r) !== roleFilter) continue;
       marked.set(`${r.staff_id}|${r.date}`, r);
     }
+    setUnattributed(unattributedCount);
 
     const fromMarked = (r: any) => {
       const person = one(r.staff);
       const fallback = roster.get(r.staff_id);
       const source = person || fallback;
-      const rec = one(one(source)?.record);
+      const rec = one(one(fallback)?.record) || one(one(person)?.record);
       return emptyRow({
         key: `r-${r.id}`,
         personId: r.staff_id || '',
@@ -393,6 +401,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
         employeeId: rec?.employee_id || '',
         designation: rec?.designation || '',
         department: one(rec?.department)?.name || '',
+        className: '',
         date: r.date,
         day: weekdayOf(r.date),
         status: r.status,
@@ -424,6 +433,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
           employeeId: rec?.employee_id || '',
           designation: rec?.designation || '',
           department: one(rec?.department)?.name || '',
+          className: '',
           date,
           day: weekdayOf(date),
           status: 'unmarked',
@@ -519,7 +529,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
   const activeAdvanced = [
     statuses.length !== availableStatuses.length,
     dayIndexes.length !== SCHOOL_DAYS.length,
-    !!timeFrom, !!timeTo, !!scanMethod, !!markedByFilter, !!search, belowPct !== '',
+    !!timeFrom, !!timeTo, !!scanMethod, !!markedByFilter, !!search, pctLimit !== null,
   ].filter(Boolean).length;
 
   const sessionName = sessions.find(s => s.id === sessionId)?.name || '';
@@ -598,6 +608,14 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
 
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm">{error}</div>
+        )}
+
+        {!error && unattributed > 0 && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-3 text-amber-800 dark:text-amber-300 text-sm">
+            {unattributed} staff attendance {unattributed === 1 ? 'record has' : 'records have'} no staff ID and could not be
+            attributed to anyone, so {unattributed === 1 ? 'it is' : 'they are'} not in this report or the export. Run the
+            Import&nbsp;&amp;&nbsp;Export attendance fix to repair these rows.
+          </div>
         )}
 
         <div className="card">

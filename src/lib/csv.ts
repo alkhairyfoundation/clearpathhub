@@ -44,7 +44,7 @@ export function downloadCsv(filename: string, csv: string): void {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function weekdayOf(date: string): string {
@@ -178,9 +178,15 @@ export interface SortableAttendanceRow {
 
 const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 
-function identityOf(row: SortableAttendanceRow): string {
-  return row.admissionNumber || row.employeeId || row.personId || row.personName;
+function text(value: unknown): string {
+  return value === null || value === undefined ? '' : String(value);
 }
+
+function identityOf(row: SortableAttendanceRow): string {
+  return text(row.admissionNumber) || text(row.employeeId) || text(row.personId) || text(row.personName);
+}
+
+const TIE_BREAK_ORDER: AttendanceSortKey[] = ['person', 'date', 'class'];
 
 export function sortAttendanceRows<T extends SortableAttendanceRow>(
   rows: T[],
@@ -188,14 +194,13 @@ export function sortAttendanceRows<T extends SortableAttendanceRow>(
   direction: SortDirection = 'asc',
 ): T[] {
   const dir = direction === 'desc' ? -1 : 1;
-  const identity = identityOf;
 
   const weight = (row: T, k: AttendanceSortKey): string => {
     switch (k) {
-      case 'date': return row.date;
-      case 'class': return row.className;
-      case 'status': return row.status;
-      default: return identity(row);
+      case 'date': return text(row.date);
+      case 'class': return text(row.className);
+      case 'status': return text(row.status);
+      default: return identityOf(row);
     }
   };
 
@@ -203,22 +208,15 @@ export function sortAttendanceRows<T extends SortableAttendanceRow>(
     const primary = collator.compare(weight(a, sort), weight(b, sort));
     if (primary !== 0) return primary * dir;
 
-    if (sort !== 'class') {
-      const byClass = collator.compare(a.className, b.className);
-      if (byClass !== 0) return byClass * dir;
+    for (const tie of TIE_BREAK_ORDER) {
+      if (tie === sort) continue;
+      const cmp = collator.compare(weight(a, tie), weight(b, tie));
+      if (cmp !== 0) return cmp * dir;
     }
 
-    if (sort !== 'person') {
-      const byIdentity = collator.compare(identity(a), identity(b));
-      if (byIdentity !== 0) return byIdentity * dir;
-    }
-
-    const byDate = collator.compare(a.date, b.date);
-    if (byDate !== 0) return byDate * dir;
-
-    const byName = collator.compare(a.personName, b.personName);
+    const byName = collator.compare(text(a.personName), text(b.personName));
     if (byName !== 0) return byName * dir;
 
-    return collator.compare(a.key, b.key);
+    return collator.compare(text(a.key), text(b.key));
   });
 }
