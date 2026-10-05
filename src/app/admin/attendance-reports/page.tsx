@@ -6,14 +6,15 @@ import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
-  ArrowLeft, Calendar, Download, Users, UserCheck, Loader2, AlertTriangle,
+  ArrowDownUp, ArrowLeft, Calendar, Download, Users, UserCheck, Loader2, AlertTriangle,
   CheckCircle, XCircle, Clock, Shield, FileText, Table, SlidersHorizontal,
   RotateCcw,
 } from 'lucide-react';
 import {
   buildCsv, csvFilename, downloadCsv, enumerateWeekdays, formatTimestamp,
   fullName, minutesOfDay, parseHhMm, SCHOOL_DAYS, toDateOnly, todayLocal,
-  toIsoDate, WEEKDAY_LABELS, weekdayOf,
+  toIsoDate, WEEKDAY_LABELS, weekdayIndex, weekdayOf,
+  sortAttendanceRows, type AttendanceSortKey, type SortDirection,
 } from '@/lib/csv';
 
 interface ReportRow {
@@ -30,6 +31,7 @@ interface ReportRow {
   day: string;
   status: string;
   markedBy: string;
+  markedById: string;
   markedAt: string;
   markedAtRaw: string;
   scanMethod: string;
@@ -54,7 +56,8 @@ function emptyRow(over: Partial<ReportRow>): ReportRow {
   return {
     key: '', personId: '', personName: '', admissionNumber: '', employeeId: '',
     role: '', designation: '', department: '', className: '', date: '', day: '',
-    status: '', markedBy: '', markedAt: '', markedAtRaw: '', scanMethod: '', ...over,
+    status: '', markedBy: '', markedById: '', markedAt: '', markedAtRaw: '',
+    scanMethod: '', ...over,
   };
 }
 
@@ -82,6 +85,8 @@ export default function AttendanceReportsPage() {
   const [markedByFilter, setMarkedByFilter] = useState('');
   const [search, setSearch] = useState('');
   const [belowPct, setBelowPct] = useState('');
+  const [sortKey, setSortKey] = useState<AttendanceSortKey>('person');
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [rows, setRows] = useState<ReportRow[]>([]);
@@ -89,6 +94,7 @@ export default function AttendanceReportsPage() {
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
   const [span, setSpan] = useState<{ min: string; max: string }>({ min: '', max: '' });
+  const [staffRoles, setStaffRoles] = useState<string[]>([]);
 
   const isStudent = reportType === 'students';
   const availableStatuses = isStudent ? STUDENT_STATUSES : STAFF_STATUSES;
@@ -112,10 +118,11 @@ export default function AttendanceReportsPage() {
   }, [ready, reportType]);
 
   async function fetchOptions() {
-    const [sessionsRes, termsRes, classesRes] = await Promise.all([
+    const [sessionsRes, termsRes, classesRes, staffRes] = await Promise.all([
       db.from('academic_sessions').select('*').order('start_date', { ascending: false }),
       db.from('terms').select('*').order('start_date', { ascending: false }),
       db.from('classes').select('id, name, level').order('level', { ascending: true }),
+      db.from('staff').select('profile_id'),
     ]);
 
     const loadedSessions: any[] = sessionsRes.data || [];
@@ -123,6 +130,15 @@ export default function AttendanceReportsPage() {
     setSessions(loadedSessions);
     setTerms(loadedTerms);
     setClasses(classesRes.data || []);
+
+    const staffProfileIds = [...new Set((staffRes.data || []).map((s: any) => s.profile_id).filter(Boolean))] as string[];
+    if (staffProfileIds.length) {
+      const rolesRes = await db.from('profiles').select('role').in('id', staffProfileIds);
+      const roles = [...new Set((rolesRes.data || []).map((p: any) => p.role).filter(Boolean) as string[])]
+        .sort((a, b) => a.localeCompare(b));
+      setStaffRoles(roles);
+      if (roleFilter && !roles.includes(roleFilter)) setRoleFilter('');
+    }
 
 const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[0];
     const sessionTerms = currentSession
@@ -195,6 +211,15 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
     if (next.length === 0 && includeUnmarked) setIncludeUnmarked(false);
   }
 
+  function changeReportType(next: 'students' | 'staff') {
+    if (next === reportType) return;
+    setReportType(next);
+    setStatuses([...(next === 'students' ? STUDENT_STATUSES : STAFF_STATUSES)]);
+    setScanMethod('');
+    setMarkedByFilter('');
+    if (next === 'students') setRoleFilter('');
+  }
+
   function toggleStatus(value: string) {
     setStatuses(prev => prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]);
   }
@@ -233,29 +258,32 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
 
   async function buildStudentReport(): Promise<ReportRow[]> {
     const days = enumerateWeekdays(from, to, dayIndexes);
+    const allowedDays = new Set(dayIndexes);
 
     let q = db.from('attendance').select(
       '*, student:profiles!student_id(first_name, last_name, records:students!profile_id(admission_number)), class:classes!class_id(name), marker:profiles!marked_by(first_name, last_name)',
-    ).gte('date', from).lte('date', to);
+    ).gte('date', from).lte('date', to)
+      .order('date', { ascending: true })
+      .order('student_id', { ascending: true });
     if (classIds.length) q = q.in('class_id', classIds);
 
     let rq = db.from('students').select(
       'profile_id, admission_number, person:profiles!profile_id(first_name, last_name), class:classes!class_id(name)',
-    );
+    ).order('admission_number', { ascending: true });
     if (classIds.length) rq = rq.in('class_id', classIds);
 
     const [attRes, rosterRes] = await Promise.all([q, rq]);
     if (attRes.error) throw new Error(attRes.error.message);
     if (rosterRes.error) throw new Error(rosterRes.error.message);
 
-    const records = (attRes.data || []) as any[];
     const roster = new Map<string, any>();
     for (const s of (rosterRes.data || []) as any[]) roster.set(s.profile_id, s);
 
     const marked = new Map<string, any>();
-    for (const r of records) {
+    for (const r of (attRes.data || []) as any[]) {
       if (!r.student_id) continue;
       r.date = toDateOnly(r.date);
+      if (!allowedDays.has(weekdayIndex(r.date))) continue;
       marked.set(`${r.student_id}|${r.date}`, r);
     }
 
@@ -272,16 +300,17 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
         day: weekdayOf(r.date),
         status: r.status,
         markedBy: fullName(one(r.marker)) || '—',
+        markedById: r.marked_by || '',
         markedAt: formatTimestamp(r.marked_at),
         markedAtRaw: r.marked_at || '',
         scanMethod: r.scan_method || '—',
       });
     };
 
-    if (!includeUnmarked) return records.filter(r => r.student_id).map(fromMarked);
+    if (!includeUnmarked) return [...marked.values()].map(fromMarked);
 
     const personIds = new Set<string>(roster.keys());
-    for (const r of records) if (r.student_id) personIds.add(r.student_id);
+    for (const id of marked.keys()) personIds.add(id.split('|')[0]);
 
     const out: ReportRow[] = [];
     for (const personId of personIds) {
@@ -302,6 +331,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
           day: weekdayOf(date),
           status: 'unmarked',
           markedBy: '—',
+          markedById: '',
           markedAt: '',
           markedAtRaw: '',
           scanMethod: '—',
@@ -313,29 +343,40 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
 
   async function buildStaffReport(): Promise<ReportRow[]> {
     const days = enumerateWeekdays(from, to, dayIndexes);
+    const allowedDays = new Set(dayIndexes);
+
+    const staffListRes = await db.from('staff').select('profile_id');
+    if (staffListRes.error) throw new Error(staffListRes.error.message);
+    const staffProfileIds = [...new Set((staffListRes.data || []).map((s: any) => s.profile_id).filter(Boolean))] as string[];
 
     const [attRes, staffRes] = await Promise.all([
       db.from('staff_attendance').select(
         '*, staff:profiles!staff_id(first_name, last_name, role), marker:profiles!marked_by(first_name, last_name)',
-      ).gte('date', from).lte('date', to),
-      db.from('profiles').select(
-        'id, first_name, last_name, role, record:staff!profile_id(staff_id, employee_id, designation, department:departments!department_id(name))',
-      ).in('role', ['teacher', 'accountant', 'admin']).order('first_name'),
+      ).gte('date', from).lte('date', to)
+        .order('date', { ascending: true })
+        .order('staff_id', { ascending: true }),
+      staffProfileIds.length
+        ? db.from('profiles').select(
+            'id, first_name, last_name, role, record:staff!profile_id(staff_id, employee_id, designation, department:departments!department_id(name))',
+          ).in('id', staffProfileIds).order('first_name', { ascending: true })
+        : Promise.resolve({ data: [], error: null } as any),
     ]);
     if (attRes.error) throw new Error(attRes.error.message);
     if (staffRes.error) throw new Error(staffRes.error.message);
 
     const roster = new Map<string, any>();
     for (const p of (staffRes.data || []) as any[]) {
+      if (!p?.id) continue;
       if (roleFilter && p.role !== roleFilter) continue;
       roster.set(p.id, p);
     }
 
-    const records = (attRes.data || []) as any[];
     const marked = new Map<string, any>();
-    for (const r of records) {
+    for (const r of (attRes.data || []) as any[]) {
       if (!r.staff_id) continue;
       r.date = toDateOnly(r.date);
+      if (!allowedDays.has(weekdayIndex(r.date))) continue;
+      if (roleFilter && one(r.staff)?.role && one(r.staff).role !== roleFilter) continue;
       marked.set(`${r.staff_id}|${r.date}`, r);
     }
 
@@ -356,15 +397,17 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
         day: weekdayOf(r.date),
         status: r.status,
         markedBy: fullName(one(r.marker)) || '—',
+        markedById: r.marked_by || '',
         markedAt: formatTimestamp(r.marked_at),
         markedAtRaw: r.marked_at || '',
+        scanMethod: '—',
       });
     };
 
-    if (!includeUnmarked) return records.filter(r => r.staff_id).map(fromMarked);
+    if (!includeUnmarked) return [...marked.values()].map(fromMarked);
 
     const staffIds = new Set<string>(roster.keys());
-    for (const r of records) if (r.staff_id) staffIds.add(r.staff_id);
+    for (const id of marked.keys()) staffIds.add(id.split('|')[0]);
 
     const out: ReportRow[] = [];
     for (const staffId of staffIds) {
@@ -385,8 +428,10 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
           day: weekdayOf(date),
           status: 'unmarked',
           markedBy: '—',
+          markedById: '',
           markedAt: '',
           markedAtRaw: '',
+          scanMethod: '—',
         }));
       }
     }
@@ -409,25 +454,28 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
 
   const rateOf = (r: ReportRow) => (rateByPerson.has(r.personId) ? rateByPerson.get(r.personId)! : null);
 
+  const pctLimit = useMemo(() => {
+    if (belowPct === '') return null;
+    const n = Number(belowPct);
+    if (!Number.isFinite(n)) return null;
+    return Math.min(100, Math.max(0, n));
+  }, [belowPct]);
+
   const visibleRows = useMemo(() => {
     const lower = search.trim().toLowerCase();
     const fromMins = timeFrom ? parseHhMm(timeFrom) : null;
     const toMins = timeTo ? parseHhMm(timeTo) : null;
-    const pctLimit = belowPct === '' ? null : Number(belowPct);
 
     return rows.filter(r => {
       if (!statuses.includes(r.status)) return false;
       if (scanMethod && r.scanMethod !== scanMethod) return false;
-      if (markedByFilter && r.markedBy !== markedByFilter) return false;
+      if (markedByFilter && r.markedById !== markedByFilter) return false;
 
       if (fromMins !== null || toMins !== null) {
-        if (r.markedAtRaw) {
-          const mins = minutesOfDay(r.markedAtRaw);
-          if (mins !== null) {
-            if (fromMins !== null && mins < fromMins) return false;
-            if (toMins !== null && mins > toMins) return false;
-          }
-        }
+        const mins = r.markedAtRaw ? minutesOfDay(r.markedAtRaw) : null;
+        if (mins === null) return false;
+        if (fromMins !== null && mins < fromMins) return false;
+        if (toMins !== null && mins > toMins) return false;
       }
 
       if (lower) {
@@ -443,7 +491,12 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
 
       return true;
     });
-  }, [rows, statuses, scanMethod, markedByFilter, timeFrom, timeTo, search, belowPct, rateByPerson]);
+  }, [rows, statuses, scanMethod, markedByFilter, timeFrom, timeTo, search, pctLimit, rateByPerson]);
+
+  const sortedRows = useMemo(
+    () => sortAttendanceRows(visibleRows, sortKey, sortDir),
+    [visibleRows, sortKey, sortDir],
+  );
 
   const summary = useMemo(() => {
     const count = (s: string) => visibleRows.filter(r => r.status === s).length;
@@ -458,9 +511,9 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
   }, [visibleRows, isStudent]);
 
   const markerOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of rows) if (r.markedBy && r.markedBy !== '—') set.add(r.markedBy);
-    return [...set].sort();
+    const map = new Map<string, string>();
+    for (const r of rows) if (r.markedById) map.set(r.markedById, r.markedBy);
+    return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [rows]);
 
   const activeAdvanced = [
@@ -476,7 +529,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
     : classIds.length > 1 ? `${classIds.length}-classes` : '';
 
   function handleExport() {
-    if (visibleRows.length === 0) { setError('Nothing to export'); return; }
+    if (sortedRows.length === 0) { setError('Nothing to export'); return; }
 
     const stamp = csvFilename([
       isStudent ? 'student_attendance' : 'staff_attendance',
@@ -484,7 +537,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
       termName, from, to,
     ]);
 
-    const body = visibleRows.map(r => {
+    const body = sortedRows.map(r => {
       const rate = rateOf(r);
       const rateCell = rate === null ? '' : `${rate.toFixed(1)}%`;
       return isStudent
@@ -512,13 +565,19 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
   const chipOn = 'bg-primary-600 text-white border-primary-600';
   const chipOff = 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600';
 
-  const preview = visibleRows.slice(0, PREVIEW_LIMIT);
+  const preview = sortedRows.slice(0, PREVIEW_LIMIT);
   const tooLarge = summary.total > LARGE_EXPORT;
   const filtered = visibleRows.length !== rows.length;
   const spanOutside = !!(span.min && from && to && (to < span.min || from > span.max));
   const previewHeaders = isStudent
-    ? ['Admission Number', 'Student Name', 'Class', 'Date', 'Status', 'Marked By', 'Rate']
-    : ['Employee ID', 'Staff Name', 'Role', 'Designation', 'Date', 'Status', 'Marked By', 'Rate'];
+    ? ['Admission Number', 'Student Name', 'Class', 'Date', 'Day', 'Status', 'Marked By', 'Rate']
+    : ['Employee ID', 'Staff Name', 'Role', 'Designation', 'Date', 'Day', 'Status', 'Marked By', 'Rate'];
+  const sortOptions: { value: AttendanceSortKey; label: string }[] = [
+    { value: 'person', label: 'Person, then date' },
+    { value: 'date', label: 'Date, then person' },
+    { value: 'class', label: 'Class, then person' },
+    { value: 'status', label: 'Status, then date' },
+  ];
 
   return (
     <DashboardLayout title="Attendance Reports" subtitle="Filter and export student or staff attendance">
@@ -544,13 +603,13 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
         <div className="card">
           <div className="inline-flex rounded-lg border border-slate-300 dark:border-slate-600 p-1">
             <button
-              onClick={() => { setReportType('students'); setStatuses([...STUDENT_STATUSES]); setScanMethod(''); }}
+              onClick={() => changeReportType('students')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 ${reportType === 'students' ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
             >
               <Users size={16} /> Students
             </button>
             <button
-              onClick={() => { setReportType('staff'); setStatuses([...STAFF_STATUSES]); setScanMethod(''); }}
+              onClick={() => changeReportType('staff')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-2 ${reportType === 'staff' ? 'bg-primary-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
             >
               <UserCheck size={16} /> Staff
@@ -600,9 +659,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
                 <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="input">
                   <option value="">All Roles</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="accountant">Accountant</option>
-                  <option value="admin">Admin</option>
+                  {staffRoles.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
                 </select>
               </div>
             )}
@@ -723,7 +780,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Marked by</label>
                     <select value={markedByFilter} onChange={e => setMarkedByFilter(e.target.value)} className="input" disabled={markerOptions.length === 0}>
                       <option value="">Anyone</option>
-                      {markerOptions.map(m => <option key={m} value={m}>{m}</option>)}
+                      {markerOptions.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
                     </select>
                   </div>
                   {isStudent && (
@@ -757,8 +814,10 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
                 <p className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1">
                   <AlertTriangle size={13} className="mt-0.5 shrink-0" />
                   <span>
-                    Time-of-day filtering uses the marking timestamp, so unmarked days have no time and are always kept.
-                    Attendance rate is each person's present days as a share of their recorded days, excluding unmarked days.
+                    Days of the week filters both recorded and unmarked days. Time-of-day filtering uses the
+                    marking timestamp, so unmarked days have no timestamp and are dropped while it is active.
+                    Attendance rate is each person's present days as a share of their recorded days, excluding
+                    unmarked days. The CSV export follows the row order and every active filter.
                   </span>
                 </p>
               </div>
@@ -811,9 +870,30 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
                 {sessionName ? ` • ${sessionName}` : ''}{termName ? ` • ${termName}` : ''}{className ? ` • ${className}` : ''}
               </p>
             </div>
-            <button className="btn-primary flex items-center gap-2" onClick={handleExport} disabled={summary.total === 0}>
-              <Download size={18} /> Export CSV
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <ArrowDownUp size={14} />
+                <label htmlFor="sortKey" className="sr-only">Sort rows by</label>
+                <select
+                  id="sortKey"
+                  value={sortKey}
+                  onChange={e => setSortKey(e.target.value as AttendanceSortKey)}
+                  className="input py-1.5 text-xs"
+                >
+                  {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <button
+                onClick={() => setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))}
+                title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
+                className="btn-outline py-1.5 px-2.5 text-xs"
+              >
+                {sortDir === 'asc' ? 'Asc' : 'Desc'}
+              </button>
+              <button className="btn-primary flex items-center gap-2" onClick={handleExport} disabled={summary.total === 0}>
+                <Download size={18} /> Export CSV
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -854,6 +934,7 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
                           </>
                         )}
                         <td className="py-2 px-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{r.date}</td>
+                        <td className="py-2 px-3 text-slate-500 dark:text-slate-500 whitespace-nowrap">{r.day}</td>
                         <td className="py-2 px-3">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize whitespace-nowrap ${statusBadge[r.status] || 'bg-slate-100 text-slate-600'}`}>
                             {r.status}

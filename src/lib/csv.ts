@@ -78,6 +78,31 @@ export function todayLocal(): string {
   return toIsoDate(new Date());
 }
 
+export function weekdayIndex(date: unknown): number {
+  const d = parseDateOnly(date);
+  return d ? d.getDay() : -1;
+}
+
+const TIMESTAMP_RE = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?$/;
+
+export function parseStoredTimestamp(value: unknown): Date | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const m = TIMESTAMP_RE.exec(raw);
+  if (m) {
+    const [, y, mo, d, h, mi, sec = '0', frac = ''] = m;
+    const ms = Number(frac.slice(0, 3).padEnd(3, '0')) || 0;
+    return new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +sec, ms));
+  }
+
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 export const SCHOOL_DAYS = [1, 2, 3, 4, 5];
@@ -96,9 +121,9 @@ export function enumerateWeekdays(from: string, to: string, allowed?: number[]):
   return out;
 }
 
-export function minutesOfDay(value: string): number | null {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
+export function minutesOfDay(value: unknown): number | null {
+  const d = parseStoredTimestamp(value);
+  if (!d) return null;
   return d.getHours() * 60 + d.getMinutes();
 }
 
@@ -118,10 +143,10 @@ export function toIsoDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function formatTimestamp(value: string | null | undefined): string {
-  if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
+export function formatTimestamp(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '';
+  const d = parseStoredTimestamp(value);
+  if (!d) return String(value);
   return d.toLocaleString('en-US', {
     year: 'numeric',
     month: '2-digit',
@@ -134,4 +159,66 @@ export function formatTimestamp(value: string | null | undefined): string {
 export function fullName(p: { first_name?: string | null; last_name?: string | null } | null | undefined): string {
   if (!p) return '';
   return [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
+}
+
+export const SORT_KEYS = ['person', 'date', 'class', 'status'] as const;
+export type AttendanceSortKey = (typeof SORT_KEYS)[number];
+export type SortDirection = 'asc' | 'desc';
+
+export interface SortableAttendanceRow {
+  key: string;
+  personId: string;
+  personName: string;
+  admissionNumber: string;
+  employeeId: string;
+  className: string;
+  date: string;
+  status: string;
+}
+
+const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
+
+function identityOf(row: SortableAttendanceRow): string {
+  return row.admissionNumber || row.employeeId || row.personId || row.personName;
+}
+
+export function sortAttendanceRows<T extends SortableAttendanceRow>(
+  rows: T[],
+  sort: AttendanceSortKey = 'person',
+  direction: SortDirection = 'asc',
+): T[] {
+  const dir = direction === 'desc' ? -1 : 1;
+  const identity = identityOf;
+
+  const weight = (row: T, k: AttendanceSortKey): string => {
+    switch (k) {
+      case 'date': return row.date;
+      case 'class': return row.className;
+      case 'status': return row.status;
+      default: return identity(row);
+    }
+  };
+
+  return [...rows].sort((a, b) => {
+    const primary = collator.compare(weight(a, sort), weight(b, sort));
+    if (primary !== 0) return primary * dir;
+
+    if (sort !== 'class') {
+      const byClass = collator.compare(a.className, b.className);
+      if (byClass !== 0) return byClass * dir;
+    }
+
+    if (sort !== 'person') {
+      const byIdentity = collator.compare(identity(a), identity(b));
+      if (byIdentity !== 0) return byIdentity * dir;
+    }
+
+    const byDate = collator.compare(a.date, b.date);
+    if (byDate !== 0) return byDate * dir;
+
+    const byName = collator.compare(a.personName, b.personName);
+    if (byName !== 0) return byName * dir;
+
+    return collator.compare(a.key, b.key);
+  });
 }
