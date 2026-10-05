@@ -112,7 +112,7 @@ export default function AdminStaffAttendancePage() {
     try {
       const { error } = await db.from('staff_attendance').upsert({
         staff_id: profile?.id, date: today, status,
-        qr_code: qrCode, marked_at: now,
+        qr_code: qrCode, marked_at: now, marked_by: profile?.id,
       }, { onConflict: 'staff_id,date' });
 
       if (error) { setMessage({ type: 'error', text: error.message }); return; }

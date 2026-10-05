@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, TrendingUp, UserCheck, Award, FileText, Calendar, Download, ChevronDown, Brain, BookOpen } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { toIsoDate } from '@/lib/csv';
 
 function WeeklyReportContent() {
   const { profile, loading: authLoading } = useAuth();
@@ -49,7 +50,7 @@ function WeeklyReportContent() {
           setSchoolSettings(settingsData);
 
           const [attendanceRes, resultsRes, homeworkRes, behaviorRes, quizRes] = await Promise.all([
-            db.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', weekStart.toISOString().split('T')[0]).lt('date', weekEnd.toISOString().split('T')[0]),
+            db.from('attendance').select('status').eq('student_id', selectedChild.profile_id).gte('date', toIsoDate(weekStart)).lt('date', toIsoDate(weekEnd)),
             db.from('results').select('*, subject:subjects!subject_id(name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),
             db.from('homework_submissions').select('*, homework:homework!homework_id(title, subject:subjects!subject_id(name))').eq('student_id', selectedChild.profile_id).gte('submitted_at', weekStart.toISOString()).lt('submitted_at', weekEnd.toISOString()),
             db.from('behavioral_reports').select('*, teacher:profiles!entered_by(first_name, last_name)').eq('student_id', selectedChild.profile_id).gte('created_at', weekStart.toISOString()).lt('created_at', weekEnd.toISOString()),

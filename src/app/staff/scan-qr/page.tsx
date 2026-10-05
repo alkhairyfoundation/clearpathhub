@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar } from 'lucide-react';
 import jsQR from 'jsqr';
 import DashboardLayout from '@/components/DashboardLayout';
+import { todayLocal, formatTimestamp } from '@/lib/csv';
 
 export default function StaffScanQRPage() {
   const { profile, loading } = useAuth();
@@ -14,6 +15,7 @@ export default function StaffScanQRPage() {
   const [showCamera, setShowCamera] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [scanning, setScanning] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [lastScan, setLastScan] = useState<any>(null);
   const [scanHistory, setScanHistory] = useState<any[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -29,7 +31,7 @@ export default function StaffScanQRPage() {
   }, [profile, loading]);
 
   async function fetchTodayHistory() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocal();
     const { data } = await db
       .from('staff_attendance')
       .select('*')
@@ -100,22 +102,22 @@ export default function StaffScanQRPage() {
       }
     } catch {}
     
-    const todayDate = new Date().toISOString().split('T')[0];
-    const { data: existing } = await db
-      .from('staff_attendance')
-      .select('id')
-      .eq('staff_id', profile?.id)
-      .eq('date', todayDate)
-      .maybeSingle();
+    const todayDate = todayLocal();
+    // 08:30 is the staff late cutoff, matching the other staff attendance pages.
+    const nowDate = new Date();
+    const isLate = nowDate.getHours() > 8 || (nowDate.getHours() === 8 && nowDate.getMinutes() > 30);
+    const status = isLate ? 'late' : 'present';
+    const now = nowDate.toISOString();
 
-    if (existing) {
-      await db.from('staff_attendance').update({ status: 'present', marked_at: new Date().toISOString() }).eq('id', existing.id);
-    } else {
-      await db.from('staff_attendance').insert({
-        staff_id: profile?.id, qr_code: qrCode, marked_at: new Date().toISOString(),
-        date: todayDate, status: 'present',
-      });
-    }
+    const { error } = await db
+      .from('staff_attendance')
+      .upsert({
+        staff_id: profile?.id, date: todayDate, status,
+        qr_code: qrCode, marked_at: now, marked_by: profile?.id,
+      }, { onConflict: 'staff_id,date' });
+
+    if (error) { setMessage({ type: 'error', text: error.message }); return; }
+    setMessage({ type: 'success', text: `Marked as ${status} at ${nowDate.toLocaleTimeString()}` });
     await fetchTodayHistory();
   }
 
@@ -133,6 +135,16 @@ export default function StaffScanQRPage() {
           ) : (
             <button onClick={stopCamera} className="btn-outline flex items-center gap-2 mx-auto"><X size={16} />Close Camera</button>
           )}
+          {message && (
+            <div className={`mt-4 flex items-center gap-2 p-3 rounded-lg text-sm ${
+              message.type === 'error'
+                ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+            }`}>
+              {message.type === 'error' ? <X size={16} /> : <Check size={16} />}
+              <span>{message.text}</span>
+            </div>
+          )}
         </div>
 
         <div className="card">
@@ -140,7 +152,7 @@ export default function StaffScanQRPage() {
           {lastScan ? (
             <div className="flex items-center gap-4 p-4 bg-green-50 dark:bg-green-900/20 dark:bg-green-900/20 rounded-lg mb-4">
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 dark:bg-green-900/30 rounded-full flex items-center justify-center"><Check className="text-green-600 dark:text-green-400 dark:text-green-400" size={24} /></div>
-              <div><p className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Checked In</p><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(lastScan.marked_at).toLocaleTimeString()}</p></div>
+              <div><p className="font-semibold text-slate-800 dark:text-slate-200 dark:text-slate-200">Checked In</p><p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{formatTimestamp(lastScan.marked_at)}</p></div>
             </div>
           ) : (
             <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400"><QrCode size={48} className="mx-auto mb-4 opacity-50" /><p>No attendance marked yet</p></div>
@@ -151,7 +163,7 @@ export default function StaffScanQRPage() {
                 {scanHistory.map((s) => (
                   <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg text-sm">
                     <div className="flex items-center gap-2"><Check size={14} className="text-green-500" /><span>{s.date}</span></div>
-                    <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{new Date(s.marked_at).toLocaleTimeString()}</span>
+                    <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{formatTimestamp(s.marked_at)}</span>
                   </div>
                 ))}
               </div>

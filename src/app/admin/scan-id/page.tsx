@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
-import { todayLocal } from '@/lib/csv';
+import { todayLocal, formatTimestamp } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { QrCode, Camera, UserCheck, Check, X, Loader2 } from 'lucide-react';
@@ -14,6 +14,7 @@ export default function AdminScanIDPage() {
   const router = useRouter();
   const [manualInput, setManualInput] = useState('');
   const [lastScanned, setLastScanned] = useState<any>(null);
+  const [error, setError] = useState('');
   const [scanHistory, setScanHistory] = useState<any[]>([]);
   const [showCamera, setShowCamera] = useState(false);
   const [cameraError, setCameraError] = useState('');
@@ -72,16 +73,19 @@ export default function AdminScanIDPage() {
       const now = new Date();
       const cutoffHour = 8, cutoffMin = 30;
       const isLate = now.getHours() > cutoffHour || (now.getHours() === cutoffHour && now.getMinutes() > cutoffMin);
-      await db.from('attendance').upsert({
+      const { error: saveError } = await db.from('attendance').upsert({
         student_id: student.profile_id,
         class_id: student.class_id,
         date: today,
         status: isLate ? 'late' : 'present',
         marked_by: profile?.id,
-        marked_at: new Date().toISOString(),
+        marked_at: now.toISOString(),
         scan_method: 'qr_scan'
       }, { onConflict: 'student_id,date' });
-      
+
+      // Never report a successful scan when the write actually failed.
+      if (saveError) { setError(saveError.message); return; }
+      setError('');
       setLastScanned(student);
       await fetchTodayHistory();
       stopCamera();
@@ -204,7 +208,12 @@ export default function AdminScanIDPage() {
             ) : (
               <div className="text-center py-8 text-slate-500 dark:text-slate-400 dark:text-slate-400">
                 <QrCode size={48} className="mx-auto mb-4 opacity-50" />
-                <p>No student scanned yet</p>
+<p>No student scanned yet</p>
+              </div>
+            )}
+            {error && (
+              <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm border border-red-200 dark:border-red-900/40">
+                {error}
               </div>
             )}
 
@@ -215,7 +224,7 @@ export default function AdminScanIDPage() {
                   {scanHistory.map((s) => (
                     <div key={s.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg text-sm">
                       <div className="flex items-center gap-2"><UserCheck size={16} className="text-green-500" /><span>{s.student?.first_name} {s.student?.last_name}</span></div>
-                      <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{s.marked_at ? new Date(s.marked_at).toLocaleTimeString() : ''}</span>
+                      <span className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{formatTimestamp(s.marked_at)}</span>
                     </div>
                   ))}
                 </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
-import { todayLocal } from '@/lib/csv';
+import { todayLocal, formatTimestamp } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { ArrowLeft, UserCheck, Calendar, Search, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
@@ -18,6 +18,7 @@ export default function AdminStaffAttendanceDashboard() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!profile || profile.role !== 'admin') { router.push('/login'); return; }
@@ -46,22 +47,19 @@ export default function AdminStaffAttendanceDashboard() {
     if (data) setStaffAttendance(data);
   }
 
-  async function markAttendance(staffId: string, status: 'present' | 'absent' | 'late') {
-    setUpdating(staffId);
-    const existing = staffAttendance.find(a => a.staff_id === staffId);
-    if (existing) {
-      await db.from('staff_attendance').update({
-        status, marked_at: new Date().toISOString(),
-      }).eq('id', existing.id);
-    } else {
-      await db.from('staff_attendance').insert({
+async function markAttendance(staffId: string, status: 'present' | 'absent' | 'late') {
+      setUpdating(staffId);
+      setError('');
+      // Atomic upsert: a read-then-write races when two admins mark at once and
+      // can leave a duplicate or a silently failed write.
+      const { error } = await db.from('staff_attendance').upsert({
         staff_id: staffId, date, status,
-        marked_at: new Date().toISOString(),
-      });
+        marked_at: new Date().toISOString(), marked_by: profile?.id,
+      }, { onConflict: 'staff_id,date' });
+      if (error) setError(error.message);
+      await fetchAttendance();
+      setUpdating(null);
     }
-    await fetchAttendance();
-    setUpdating(null);
-  }
 
   const attendanceMap = new Map(staffAttendance.map(a => [a.staff_id, a]));
 
@@ -104,6 +102,10 @@ export default function AdminStaffAttendanceDashboard() {
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input w-auto" />
         </div>
 
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm">{error}</div>
+        )}
+
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="card text-center"><p className="text-2xl font-bold text-slate-900 dark:text-white dark:text-white">{totalStaff}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Total Staff</p></div>
           <div className="card text-center"><p className="text-2xl font-bold text-green-600 dark:text-green-400 dark:text-green-400">{presentCount}</p><p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">Present</p></div>
@@ -145,7 +147,7 @@ export default function AdminStaffAttendanceDashboard() {
                         {s.status === 'present' && <span className="text-xs text-green-600 dark:text-green-400 dark:text-green-400 flex items-center gap-1"><CheckCircle size={12} />Present</span>}
                         {s.status === 'late' && <span className="text-xs text-amber-600 dark:text-amber-400 dark:text-amber-400 flex items-center gap-1"><Clock size={12} />Late</span>}
                         {s.status === 'absent' && <span className="text-xs text-red-600 dark:text-red-400 dark:text-red-400 flex items-center gap-1"><XCircle size={12} />Absent</span>}
-                        {s.record?.marked_at && <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">&bull; {new Date(s.marked_at).toLocaleTimeString()}</span>}
+                        {s.record?.marked_at && <span className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-500">&bull; {formatTimestamp(s.record.marked_at)}</span>}
                       </div>
                     </div>
                   </div>

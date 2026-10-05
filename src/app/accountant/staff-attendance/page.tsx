@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, QrCode, Camera, Check, X, Loader2, Calendar, Clock, AlertCircle } from 'lucide-react';
 import jsQR from 'jsqr';
 import DashboardLayout from '@/components/DashboardLayout';
+import { todayLocal } from '@/lib/csv';
 
 export default function AccountantStaffAttendancePage() {
   const { profile, loading } = useAuth();
@@ -29,7 +30,7 @@ export default function AccountantStaffAttendancePage() {
   }, [profile, loading]);
 
   async function checkToday() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocal();
     const { data } = await db
       .from('staff_attendance')
       .select('*')
@@ -96,7 +97,7 @@ export default function AccountantStaffAttendancePage() {
     stopCamera();
     setMessage(null);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocal();
     const status = isLate() ? 'late' : 'present';
     const now = new Date().toISOString();
 
@@ -111,7 +112,7 @@ export default function AccountantStaffAttendancePage() {
     try {
       const { error } = await db.from('staff_attendance').upsert({
         staff_id: profile?.id, date: today, status,
-        qr_code: qrCode, marked_at: now,
+        qr_code: qrCode, marked_at: now, marked_by: profile?.id,
       }, { onConflict: 'staff_id,date' });
 
       if (error) { setMessage({ type: 'error', text: error.message }); return; }

@@ -6,11 +6,12 @@ import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Search, X, CheckCircle, XCircle, Clock, UserCheck, Users, Loader2, ArrowLeft, Download } from 'lucide-react';
+import { buildCsv, csvFilename, downloadCsv, fullName, todayLocal } from '@/lib/csv';
 
 export default function TeacherAttendancePage() {
   const { profile } = useAuth();
   const router = useRouter();
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(todayLocal());
   const [selectedClass, setSelectedClass] = useState('');
   const [students, setStudents] = useState<any[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, string>>({});
@@ -84,19 +85,17 @@ export default function TeacherAttendancePage() {
 
   function exportCSV() {
     if (students.length === 0) return;
-    const headers = 'Student Name,Admission Number,Class,Date,Status';
+    const className = classes.find(c => c.id === selectedClass)?.name || 'N/A';
+    const headers = ['Student Name', 'Admission Number', 'Class', 'Date', 'Status'];
     const rows = students.map(s => {
       const status = attendanceRecords[s.profile_id] || 'unmarked';
-      const className = classes.find(c => c.id === selectedClass)?.name || 'N/A';
-      return `"${s.profile?.first_name} ${s.profile?.last_name}","${s.admission_number}","${className}","${date}","${status}"`;
-    }).join('\n');
-    const blob = new Blob([`${headers}\n${rows}`], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `attendance_${date}_${classes.find(c => c.id === selectedClass)?.name || 'class'}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+      const name = fullName(s.profile) || `${s.profile?.first_name ?? ''} ${s.profile?.last_name ?? ''}`.trim();
+      return [name || 'N/A', s.admission_number || '', className, date, status];
+    });
+    downloadCsv(
+      csvFilename(['attendance', date, className, 'csv']),
+      buildCsv(headers, rows),
+    );
   }
 
   const presentCount = Object.values(attendanceRecords).filter(s => s === 'present').length;

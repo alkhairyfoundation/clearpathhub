@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
-import { buildCsv, buildCsvFromRecords, downloadCsv, formatTimestamp, fullName } from '@/lib/csv';
+import { buildCsv, buildCsvFromRecords, downloadCsv, formatTimestamp, fullName, toDateOnly } from '@/lib/csv';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Download, Upload, FileText, Table, FileSpreadsheet, Printer, Loader2, CheckCircle, AlertCircle, Users, BookOpen, BarChart3, DollarSign, QrCode } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -42,7 +42,11 @@ export default function ImportExportPage() {
       if (type === 'Attendance') {
         const { data, error } = await db.from('attendance').select(
           '*, student:profiles!student_id(first_name, last_name, records:students!profile_id(admission_number)), class:classes!class_id(name), marker:profiles!marked_by(first_name, last_name)',
-        );
+        )
+          // Without an explicit order Postgres returns rows in an unspecified
+          // order, so the exported file came out shuffled between exports.
+          .order('date', { ascending: true })
+          .order('student_id', { ascending: true });
         if (error) throw new Error(error.message);
         const records = data || [];
         if (records.length === 0) { alert('No data to export'); setExporting(null); return; }
@@ -57,7 +61,7 @@ export default function ImportExportPage() {
               rec?.admission_number || 'N/A',
               fullName(person) || 'N/A',
               klass?.name || 'N/A',
-              r.date,
+              toDateOnly(r.date),
               r.status,
               fullName(marker) || '—',
               formatTimestamp(r.marked_at),

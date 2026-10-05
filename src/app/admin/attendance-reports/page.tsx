@@ -282,12 +282,16 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
     for (const s of (rosterRes.data || []) as any[]) roster.set(s.profile_id, s);
 
     const marked = new Map<string, any>();
+    let unattributedCount = 0;
     for (const r of (attRes.data || []) as any[]) {
-      if (!r.student_id) continue;
       r.date = toDateOnly(r.date);
       if (!allowedDays.has(weekdayIndex(r.date))) continue;
+      // Same rule as the staff report: keep unattributable rows out of the
+      // data, but never let the gap pass unnoticed.
+      if (!r.student_id) { unattributedCount++; continue; }
       marked.set(`${r.student_id}|${r.date}`, r);
     }
+    setUnattributed(unattributedCount);
 
     const fromMarked = (r: any) => {
       const person = one(r.student);
@@ -612,9 +616,11 @@ const currentSession = loadedSessions.find(s => s.is_current) || loadedSessions[
 
         {!error && unattributed > 0 && (
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-lg p-3 text-amber-800 dark:text-amber-300 text-sm">
-            {unattributed} staff attendance {unattributed === 1 ? 'record has' : 'records have'} no staff ID and could not be
-            attributed to anyone, so {unattributed === 1 ? 'it is' : 'they are'} not in this report or the export. Run the
-            Import&nbsp;&amp;&nbsp;Export attendance fix to repair these rows.
+            {unattributed} {isStudent ? 'student' : 'staff'} attendance{' '}
+            {unattributed === 1 ? 'record has' : 'records have'} no {isStudent ? 'student' : 'staff'} ID, so{' '}
+            {unattributed === 1 ? 'it cannot' : 'they cannot'} be attributed to a person and{' '}
+            {unattributed === 1 ? 'is' : 'are'} excluded from this report and the export. Re-mark{' '}
+            {unattributed === 1 ? 'it' : 'them'} from {isStudent ? 'Attendance' : 'Staff Attendance'} to fix the source data.
           </div>
         )}
 

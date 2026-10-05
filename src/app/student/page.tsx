@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
+import { todayLocal } from '@/lib/csv';
 import { Video, FileText, Award, UserCheck, Printer, Bell, TrendingUp, ArrowRight, ChevronRight, Clock, BookOpen, CheckCircle, AlertCircle, Users, GraduationCap, Brain, Zap, Star } from 'lucide-react';
 
 export default function StudentDashboard() {
@@ -107,7 +108,7 @@ useEffect(() => {
       if (announcementsRes.data) setAnnouncements(announcementsRes.data);
 
       // Practice data
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayLocal();
       const [goalRes, streakRes, badgesRes, reviewRes] = await Promise.all([
         db.from('daily_goals').select('*').eq('student_id', profile?.id).eq('date', today).maybeSingle(),
         db.from('learning_streaks').select('*').eq('student_id', profile?.id).maybeSingle(),
