@@ -82,6 +82,21 @@ function downloadBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+// html-to-image captures whatever is painted, so every <img> inside the node
+// (photo, school logo, QR) must be decoded before we snapshot it.
+async function waitForImages(el: HTMLElement | null) {
+  if (!el) return;
+  const imgs = Array.from(el.querySelectorAll('img'));
+  await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise<void>(resolve => {
+    img.addEventListener('load', () => resolve(), { once: true });
+    img.addEventListener('error', () => resolve(), { once: true });
+  })));
+}
+
+function safeFilePart(value: string) {
+  return (value || '').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+}
+
 async function urlToBase64(url: string): Promise<string> {
   try {
     const response = await fetch(url);
@@ -118,6 +133,7 @@ export default function AdminIDCardsPage() {
   const [downloadFormat, setDownloadFormat] = useState<'front' | 'back' | 'both'>('both');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkQuality, setBulkQuality] = useState<'high' | 'standard' | 'compact'>('standard');
 
   const frontCardRef = useRef<HTMLDivElement>(null);
   const backCardRef = useRef<HTMLDivElement>(null);
@@ -456,10 +472,21 @@ export default function AdminIDCardsPage() {
 
   async function handleBulkDownload() {
     if (selectedStudents.length === 0) return;
+    // Guard: bulk ZIP with high quality for >20 students may be slow.
+    if (selectedStudents.length > 20 && bulkQuality === 'high') {
+      if (!window.confirm('Exporting ' + selectedStudents.length + ' ID cards as ZIP may be slow at high quality. Continue?')) {
+        setGenerating(false);
+        return;
+      }
+    }
     setGenerating(true);
     try {
       const total = selectedStudents.length;
       let count = 0;
+      const zip = new JSZip();
+      const folder = zip.folder('Student_ID_Cards') || zip;
+      // Use pixelRatio based on selected quality: high=3, standard=2, compact=1
+      const pr = { high: 3, standard: 2, compact: 1 }[bulkQuality];
       for (const studentId of selectedStudents) {
         const student = students.find(s => s.id === studentId);
         if (!student) continue;
@@ -470,18 +497,24 @@ export default function AdminIDCardsPage() {
         setQrBackUrl(qrBack);
         const { data: idCardData } = await db.from('id_cards').select('*').eq('student_id', student.profile_id).maybeSingle();
         setSelectedIdCard(idCardData || null);
+        // Let React commit the newly selected student before snapshotting.
         await new Promise(r => setTimeout(r, 150));
-        const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: 3, cacheBust: true });
-        const backUrl = await toPng(backCardRef.current!, { pixelRatio: 3, cacheBust: true });
+        await waitForImages(frontCardRef.current);
+        await waitForImages(backCardRef.current);
+        const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: pr, cacheBust: true });
+        const backUrl = await toPng(backCardRef.current!, { pixelRatio: pr, cacheBust: true });
         const doc = buildCardPDF(frontUrl, backUrl);
-        doc.save(`${student.admission_number}-id-card.pdf`);
+        const name = `${safeFilePart(student.admission_number)}-${safeFilePart(student.profile?.first_name)}_${safeFilePart(student.profile?.last_name)}.pdf`;
+        folder.file(name, doc.output('blob'));
         count++;
-        setSuccess(`Downloading ${count} of ${total}...`);
-        await new Promise(r => setTimeout(r, 400));
+        setSuccess(`Preparing card ${count} of ${total}...`);
       }
+      setSuccess('Creating ZIP...');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      downloadBlob(zipBlob, `student-id-cards-${new Date().toISOString().slice(0, 10)}.zip`);
       setShowBulkModal(false);
       setSelectedStudents([]);
-      setSuccess(`Downloaded ${count} ID cards`);
+      setSuccess(`Downloaded ${count} ID card${count === 1 ? '' : 's'} as ZIP`);
       setTimeout(() => setSuccess(''), 3000);
     } finally {
       setGenerating(false);
@@ -686,7 +719,26 @@ export default function AdminIDCardsPage() {
               </div>
 
               <div className="p-5">
-                <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400 mb-4">Select students to download ID cards (PDF):</p>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Select students to export (PDF, delivered as one ZIP):</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStudents(filtered.map(s => s.id))}
+                      className="text-xs text-primary-600 hover:underline"
+                    >
+                      Select all
+                    </button>
+                    <span className="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStudents([])}
+                      className="text-xs text-slate-500 hover:underline"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
                 <div className="max-h-64 overflow-y-auto space-y-2 mb-4">
                   {filtered.map(student => (
                     <label key={student.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg cursor-pointer">
@@ -710,13 +762,30 @@ export default function AdminIDCardsPage() {
                   ))}
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{selectedStudents.length} students selected</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">Quality:</label>
+                  <div className="flex gap-2">
+                    <label className="flex items-center gap-1 px-2 py-0.5 rounded border border-slate-300 dark:border-slate-600 ${bulkQuality === 'high' ? 'bg-primary-100 dark:bg-primary-900/30' : ''}">
+                      <input type="radio" checked={bulkQuality === 'high'} value="high" onChange={() => setBulkQuality('high')} className="w-3 h-3 rounded accent-primary" />
+                      High
+                    </label>
+                    <label className="flex items-center gap-1 px-2 py-0.5 rounded border border-slate-300 dark:border-slate-600 ${bulkQuality === 'standard' ? 'bg-primary-100 dark:bg-primary-900/30' : ''}">
+                      <input type="radio" checked={bulkQuality === 'standard'} value="standard" onChange={() => setBulkQuality('standard')} className="w-3 h-3 rounded accent-primary" />
+                      Standard
+                    </label>
+                    <label className="flex items-center gap-1 px-2 py-0.5 rounded border border-slate-300 dark:border-slate-600 ${bulkQuality === 'compact' ? 'bg-primary-100 dark:bg-primary-900/30' : ''}">
+                      <input type="radio" checked={bulkQuality === 'compact'} value="compact" onChange={() => setBulkQuality('compact')} className="w-3 h-3 rounded accent-primary" />
+                      Compact
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
                 <button onClick={() => setShowBulkModal(false)} className="btn-ghost">Cancel</button>
                 <button onClick={handleBulkDownload} disabled={selectedStudents.length === 0 || generating} className="btn-primary flex items-center gap-2">
                   {generating ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                  Download PDF ({selectedStudents.length})
+                  Download ZIP ({selectedStudents.length})
                 </button>
               </div>
             </div>

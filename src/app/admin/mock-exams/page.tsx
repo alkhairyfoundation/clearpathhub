@@ -35,6 +35,10 @@ export default function AdminMockExamsPage() {
   const [selectedExam, setSelectedExam] = useState<any>(null);
   const [editingExam, setEditingExam] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'exams' | 'questions' | 'students' | 'analytics'>('exams');
+  const [studentExamFilter, setStudentExamFilter] = useState('');
+  // student_id -> attempt id the admin chose to view/export. Missing = latest.
+  const [chosenAttempt, setChosenAttempt] = useState<Record<string, string>>({});
+  const [exportingAttemptId, setExportingAttemptId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -166,7 +170,14 @@ export default function AdminMockExamsPage() {
   async function fetchAnalytics() {
     const { data } = await db.from('mock_analytics').select('*, student:profiles!student_id(first_name, last_name, email, id)');
     if (data) setAnalytics(data);
-    const { data: atts } = await db.from('mock_attempts').select('*, student:profiles!student_id(first_name, last_name, email, id)').not('completed_at', 'is', null);
+    // Newest first. With no ORDER BY Postgres returns rows in an unspecified
+    // order, and every consumer below read attempts[0] as "the latest", so the
+    // report link and bulk export could hand back an arbitrary attempt.
+    const { data: atts } = await db.from('mock_attempts')
+      .select('*, student:profiles!student_id(first_name, last_name, email, id), exam:mock_exams(id, title, exam_type, class_level)')
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false })
+      .order('created_at', { ascending: false });
     if (atts) setAttempts(atts);
   }
 
@@ -603,6 +614,8 @@ export default function AdminMockExamsPage() {
   }
 
   // Analytics helpers
+  // Attempts arrive newest-first, but re-sort per student anyway so the "latest"
+  // figure cannot silently regress if the query's ORDER BY ever changes.
   const allAttemptsAnalytics = Object.values(
     attempts.reduce((acc: any, a: any) => {
       const sid = a.student_id;
@@ -611,12 +624,51 @@ export default function AdminMockExamsPage() {
       acc[sid].scores.push(a.score || 0);
       return acc;
     }, {})
-  ).map((s: any) => ({
-    ...s,
-    bestScore: Math.max(...s.scores, 0),
-    avgScore: Math.round(s.scores.reduce((a: number, b: number) => a + b, 0) / s.scores.length),
-    latestScore: s.scores[0] || 0,
-  }));
+  ).map((s: any) => {
+    const ordered = [...s.attempts].sort((a: any, b: any) => {
+      const at = a.completed_at || a.created_at || '';
+      const bt = b.completed_at || b.created_at || '';
+      return bt.localeCompare(at) || (b.attempt_number || 0) - (a.attempt_number || 0);
+    });
+    return {
+      ...s,
+      attempts: ordered,
+      scores: ordered.map((a: any) => a.score || 0),
+      bestScore: Math.max(...s.scores, 0),
+      avgScore: Math.round(s.scores.reduce((a: number, b: number) => a + b, 0) / s.scores.length),
+      latestScore: ordered[0]?.score || 0,
+    };
+  });
+
+  // Exams that actually have completed attempts, for the exam filter.
+  const attemptExams = Array.from(
+    new Map(attempts.filter((a: any) => a.exam).map((a: any) => [a.exam_id, a.exam])).entries()
+  ).map(([id, e]: any) => ({ id, title: e.title, class_level: e.class_level, exam_type: e.exam_type }))
+    .sort((a: any, b: any) => (a.title || '').localeCompare(b.title || ''));
+
+  // When an exam is selected, scope each student to that exam's attempts and
+  // drop students who never took it, so Best/Average/Latest match the view.
+  const filteredStudents = (studentExamFilter
+    ? allAttemptsAnalytics.map((s: any) => ({
+        ...s,
+        attempts: s.attempts.filter((a: any) => a.exam_id === studentExamFilter),
+      })).filter((s: any) => s.attempts.length > 0)
+    : allAttemptsAnalytics
+  ).map((s: any) => {
+    const scores = s.attempts.map((a: any) => a.score || 0);
+    return {
+      ...s,
+      bestScore: scores.length ? Math.max(...scores) : 0,
+      avgScore: scores.length ? Math.round(scores.reduce((a: number, b: number) => a + b, 0) / scores.length) : 0,
+      latestScore: s.attempts[0]?.score || 0,
+    };
+  });
+
+  // The attempt the admin picked for a student, or that student's latest.
+  function pickAttempt(s: any) {
+    const chosenId = chosenAttempt[s.student?.id];
+    return s.attempts.find((a: any) => a.id === chosenId) || s.attempts[0];
+  }
 
   const masteryDist = { POOR: 0, GOOD: 0, EXCELLENT: 0, PROFICIENT: 0, MASTERED: 0 };
   attempts.forEach((a: any) => { const ml = a.mastery_level as keyof typeof masteryDist; if (ml && masteryDist[ml] !== undefined) masteryDist[ml]++; });
@@ -635,8 +687,44 @@ export default function AdminMockExamsPage() {
 
   const availableSubjects = (level: string) => level === 'SS3' ? SS3_SUBJECTS : SUBJECTS;
 
+  async function fetchAttemptPdf(attemptId: string) {
+    const res = await fetch('/api/mock-attempts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get_attempt', id: attemptId }),
+    });
+    const result = await res.json();
+    if (!result.success || !result.attempt) throw new Error(result.error || 'Could not load attempt');
+    return generateMockReportPdf(result.attempt);
+  }
+
+  function attemptFileName(student: any, att: any, multi: boolean) {
+    const base = `${student?.first_name || 'Student'}_${student?.last_name || ''}`;
+    const suffix = multi && att?.attempt_number != null ? `_attempt${att.attempt_number}` : '';
+    return `${base}${suffix}_MockReport.pdf`;
+  }
+
+  // Per-row export of exactly the selected trial (like the entrance exam's
+  // per-record download).
+  async function handleExportSingle(s: any) {
+    const att = pickAttempt(s);
+    if (!att?.id) return;
+    setExportingAttemptId(att.id);
+    setError('');
+    try {
+      const doc = await fetchAttemptPdf(att.id);
+      doc.save(attemptFileName(s.student, att, s.attempts.length > 1));
+      setSuccess(`Report downloaded for ${s.student?.first_name} ${s.student?.last_name}`);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError('Export failed: ' + err.message);
+    } finally {
+      setExportingAttemptId(null);
+    }
+  }
+
   async function handleBulkExportZip() {
-    const allStudents = allAttemptsAnalytics;
+    const allStudents = filteredStudents;
     if (allStudents.length === 0) { setError('No student data to export'); return; }
     setBulkExporting(true);
     setBulkProgress({ current: 0, total: allStudents.length });
@@ -649,19 +737,11 @@ export default function AdminMockExamsPage() {
         const s = allStudents[i];
         setBulkProgress({ current: i + 1, total: allStudents.length });
         try {
-          const att = s.attempts?.[0];
+          // Use the attempt the admin selected for this student, else the latest.
+          const att = pickAttempt(s);
           if (!att?.id) continue;
-          const res = await fetch('/api/mock-attempts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'get_attempt', id: att.id }),
-          });
-          const result = await res.json();
-          if (result.success && result.attempt) {
-            const doc = generateMockReportPdf(result.attempt);
-            const name = `${s.student?.first_name || 'Student'}_${s.student?.last_name || ''}_MockReport.pdf`;
-            folder.file(name, doc.output('blob'));
-          }
+          const doc = await fetchAttemptPdf(att.id);
+          folder.file(attemptFileName(s.student, att, s.attempts.length > 1), doc.output('blob'));
         } catch (err) {
           console.error(`Failed to generate PDF for ${s.student?.first_name}:`, err);
         }
@@ -671,7 +751,7 @@ export default function AdminMockExamsPage() {
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'Mock_Exam_All_Reports.zip';
+      a.download = studentExamFilter ? 'Mock_Exam_Reports_Filtered.zip' : 'Mock_Exam_All_Reports.zip';
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {
@@ -1334,54 +1414,99 @@ export default function AdminMockExamsPage() {
         {/* ═══════════════ STUDENTS TAB ═══════════════ */}
         {activeTab === 'students' && (
           <>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Students Performance</h2>
-              {allAttemptsAnalytics.length > 0 && (
-                <button
-                  onClick={handleBulkExportZip}
-                  disabled={bulkExporting}
-                  className="btn-primary flex items-center gap-2 text-sm"
-                >
-                  {bulkExporting ? (
-                    <>{<Loader2 size={14} className="animate-spin" />} Exporting {bulkProgress.current}/{bulkProgress.total}...</>
-                  ) : (
-                    <><Download size={14} /> Export All Reports (ZIP)</>
-                  )}
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {attemptExams.length > 0 && (
+                  <select
+                    className="input-field text-sm"
+                    value={studentExamFilter}
+                    onChange={e => setStudentExamFilter(e.target.value)}
+                    title="Show results for a single exam"
+                  >
+                    <option value="">All exams</option>
+                    {attemptExams.map((ex: any) => (
+                      <option key={ex.id} value={ex.id}>{ex.title}{ex.class_level ? ` (${ex.class_level})` : ''}</option>
+                    ))}
+                  </select>
+                )}
+                {filteredStudents.length > 0 && (
+                  <button
+                    onClick={handleBulkExportZip}
+                    disabled={bulkExporting}
+                    className="btn-primary flex items-center gap-2 text-sm"
+                  >
+                    {bulkExporting ? (
+                      <>{<Loader2 size={14} className="animate-spin" />} Exporting {bulkProgress.current}/{bulkProgress.total}...</>
+                    ) : (
+                      <><Download size={14} /> Export All Reports (ZIP)</>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
-            {allAttemptsAnalytics.length === 0 ? (
+            {filteredStudents.length === 0 ? (
               <div className="card text-center py-16">
                 <Users size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">No student data available yet.</p>
+                <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400">{studentExamFilter ? 'No students took this exam yet.' : 'No student data available yet.'}</p>
               </div>
             ) : (
               <div className="card overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead><tr className="bg-slate-100 dark:bg-slate-700 dark:bg-slate-700"><th className="p-3 text-left font-semibold">Student</th><th className="p-3 text-center font-semibold">Attempts</th><th className="p-3 text-center font-semibold">Best</th><th className="p-3 text-center font-semibold">Average</th><th className="p-3 text-center font-semibold">Latest</th><th className="p-3 text-center font-semibold">Mastery</th><th className="p-3 text-center font-semibold">Pathway</th><th className="p-3 text-center font-semibold">Action</th></tr></thead>
                   <tbody className="divide-y divide-slate-100">
-                    {allAttemptsAnalytics.map((s: any) => (
+                    {filteredStudents.map((s: any) => {
+                      const shown = pickAttempt(s);
+                      return (
                       <tr key={s.student?.id || Math.random()}>
                         <td className="p-3 font-medium">{s.student?.first_name} {s.student?.last_name}</td>
                         <td className="p-3 text-center">{s.attempts.length}</td>
                         <td className={`p-3 text-center font-bold ${getGradeColor(s.bestScore)}`}>{s.bestScore}%</td>
                         <td className={`p-3 text-center font-bold ${getGradeColor(s.avgScore)}`}>{s.avgScore}%</td>
                         <td className={`p-3 text-center font-bold ${getGradeColor(s.latestScore)}`}>{s.latestScore}%</td>
-                        <td className="p-3 text-center text-xs">{s.attempts[0]?.mastery_level || '—'}</td>
+                        <td className="p-3 text-center text-xs">{shown?.mastery_level || '—'}</td>
                         <td className="p-3 text-center text-xs text-primary-600 dark:text-primary-400 dark:text-primary-400 font-medium">
                           {analytics.find((a: any) => a.student_id === s.student?.id)?.recommended_pathway || '—'}
                         </td>
-                        <td className="p-3 text-center">
-                          <a
-                            href={`/admin/mock-exams/report/${s.attempts[0]?.id}`}
-                            target="_blank"
-                            className="btn-outline text-xs py-1 px-2"
-                          >
-                            <Eye size={14} className="inline" /> Report
-                          </a>
+                        <td className="p-3">
+                          <div className="flex items-center justify-center gap-2">
+                            {s.attempts.length > 1 ? (
+                              <select
+                                className="input-field text-xs py-1 pr-6 max-w-[190px]"
+                                value={shown?.id || ''}
+                                onChange={e => setChosenAttempt(prev => ({ ...prev, [s.student?.id]: e.target.value }))}
+                                title="Choose which attempt to view and export"
+                              >
+                                {s.attempts.map((a: any) => (
+                                  <option key={a.id} value={a.id}>
+                                    Attempt {a.attempt_number ?? '?'} · {a.score ?? 0}%{a.completed_at ? ` · ${String(a.completed_at).slice(0, 10)}` : ''}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : null}
+                            <a
+                              href={`/admin/mock-exams/report/${shown?.id}`}
+                              target="_blank"
+                              className="btn-outline text-xs py-1 px-2 whitespace-nowrap"
+                            >
+                              <Eye size={14} className="inline" /> Report
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleExportSingle(s)}
+                              disabled={exportingAttemptId === shown?.id}
+                              title="Download this attempt's report as PDF"
+                              className="btn-outline text-xs py-1 px-2 whitespace-nowrap"
+                            >
+                              {exportingAttemptId === shown?.id
+                                ? <Loader2 size={14} className="inline animate-spin" />
+                                : <FileText size={14} className="inline" />} PDF
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

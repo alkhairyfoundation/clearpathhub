@@ -117,6 +117,21 @@ function downloadBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+// html-to-image captures whatever is painted, so every <img> inside the node
+// (photo, school logo, QR) must be decoded before we snapshot it.
+async function waitForImages(el: HTMLElement | null) {
+  if (!el) return;
+  const imgs = Array.from(el.querySelectorAll('img'));
+  await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise<void>(resolve => {
+    img.addEventListener('load', () => resolve(), { once: true });
+    img.addEventListener('error', () => resolve(), { once: true });
+  })));
+}
+
+function safeFilePart(value: string) {
+  return (value || '').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+}
+
 export default function AdminStaffIDCardsPage() {
   const { profile } = useAuth();
   const router = useRouter();
@@ -134,6 +149,9 @@ export default function AdminStaffIDCardsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [downloadFormat, setDownloadFormat] = useState<'front' | 'back' | 'both'>('both');
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkQuality, setBulkQuality] = useState<'high' | 'standard' | 'compact'>('standard');
 
   const frontCardRef = useRef<HTMLDivElement>(null);
   const backCardRef = useRef<HTMLDivElement>(null);
@@ -438,6 +456,52 @@ export default function AdminStaffIDCardsPage() {
     }
   }
 
+  async function handleBulkDownload() {
+    if (selectedStaffIds.length === 0) return;
+    if (selectedStaffIds.length > 20 && bulkQuality === 'high') {
+      if (!window.confirm('Exporting ' + selectedStaffIds.length + ' staff ID cards as ZIP may be slow at high quality. Continue?')) {
+        setGenerating(false);
+        return;
+      }
+    }
+    setGenerating(true);
+    try {
+      const total = selectedStaffIds.length;
+      let count = 0;
+      const zip = new JSZip();
+      const folder = zip.folder('Staff_ID_Cards') || zip;
+      for (const staffId of selectedStaffIds) {
+        const member = staff.find(s => s.id === staffId);
+        if (!member) continue;
+        setSelectedStaff(member);
+        const qr = await generateStaffQR(member);
+        const qrBack = await generateBackQR(member);
+        setQrCodeUrl(qr);
+        setQrBackUrl(qrBack);
+        // Let React commit the newly selected staff before snapshotting.
+        await new Promise(r => setTimeout(r, 150));
+        await waitForImages(frontCardRef.current);
+        await waitForImages(backCardRef.current);
+        const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: { high: 3, standard: 2, compact: 1 }[bulkQuality], cacheBust: true });
+        const backUrl = await toPng(backCardRef.current!, { pixelRatio: { high: 3, standard: 2, compact: 1 }[bulkQuality], cacheBust: true });
+        const doc = buildCardPDF(frontUrl, backUrl);
+        const name = `${safeFilePart(member.first_name)}_${safeFilePart(member.last_name)}-${getStaffNumber(member)}.pdf`;
+        folder.file(name, doc.output('blob'));
+        count++;
+        setSuccess(`Preparing card ${count} of ${total}...`);
+      }
+      setSuccess('Creating ZIP...');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      downloadBlob(zipBlob, `staff-id-cards-${new Date().toISOString().slice(0, 10)}.zip`);
+      setShowBulkModal(false);
+      setSelectedStaffIds([]);
+      setSuccess(`Downloaded ${count} ID card${count === 1 ? '' : 's'} as ZIP`);
+      setTimeout(() => setSuccess(''), 3000);
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   return (
     <DashboardLayout title="Staff ID Cards" subtitle="Generate and print staff identity cards with QR codes">
       <div className="space-y-6">
@@ -451,6 +515,13 @@ export default function AdminStaffIDCardsPage() {
               <p className="text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">{staff.length} staff members</p>
             </div>
           </div>
+          <button
+            onClick={() => setShowBulkModal(true)}
+            disabled={staff.length === 0}
+            className="btn-outline flex items-center gap-2"
+          >
+            <Download size={18} /> Bulk Download
+          </button>
         </div>
 
         <div className="card p-4">
@@ -556,6 +627,90 @@ export default function AdminStaffIDCardsPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showBulkModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+              <div className="p-5 border-b border-slate-200 dark:border-slate-700 dark:border-slate-700 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white dark:text-white">Bulk Download (ZIP)</h3>
+                <button onClick={() => setShowBulkModal(false)} className="p-1.5 hover:bg-slate-100 dark:bg-slate-700 dark:bg-slate-700 rounded-lg">
+                  <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-400" />
+                </button>
+              </div>
+
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 dark:text-slate-400">Select staff to export (PDF, delivered as one ZIP):</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStaffIds(filtered.map(s => s.id))}
+                      className="text-xs text-primary-600 hover:underline"
+                    >
+                      Select all
+                    </button>
+                    <span className="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStaffIds([])}
+                      className="text-xs text-slate-500 hover:underline"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-2 mb-4">
+                  {filtered.map(member => (
+                    <label key={member.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedStaffIds.includes(member.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedStaffIds([...selectedStaffIds, member.id]);
+                          } else {
+                            setSelectedStaffIds(selectedStaffIds.filter(id => id !== member.id));
+                          }
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{member.first_name} {member.last_name}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">{getDesignation(member.role)} - {getStaffNumber(member)}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400">{selectedStaffIds.length} staff selected</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-xs text-slate-600 dark:text-slate-400 dark:text-slate-400">Quality:</label>
+                  <div className="flex gap-2">
+                    <label className={`flex items-center gap-1 px-2 py-0.5 rounded border border-slate-300 dark:border-slate-600 text-xs ${bulkQuality === 'high' ? 'bg-primary-100 dark:bg-primary-900/30' : ''}`}>
+                      <input type="radio" checked={bulkQuality === 'high'} value="high" onChange={() => setBulkQuality('high')} className="w-3 h-3 rounded accent-primary" />
+                      High
+                    </label>
+                    <label className={`flex items-center gap-1 px-2 py-0.5 rounded border border-slate-300 dark:border-slate-600 text-xs ${bulkQuality === 'standard' ? 'bg-primary-100 dark:bg-primary-900/30' : ''}`}>
+                      <input type="radio" checked={bulkQuality === 'standard'} value="standard" onChange={() => setBulkQuality('standard')} className="w-3 h-3 rounded accent-primary" />
+                      Standard
+                    </label>
+                    <label className={`flex items-center gap-1 px-2 py-0.5 rounded border border-slate-300 dark:border-slate-600 text-xs ${bulkQuality === 'compact' ? 'bg-primary-100 dark:bg-primary-900/30' : ''}`}>
+                      <input type="radio" checked={bulkQuality === 'compact'} value="compact" onChange={() => setBulkQuality('compact')} className="w-3 h-3 rounded accent-primary" />
+                      Compact
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 p-5 border-t border-slate-200 dark:border-slate-700 dark:border-slate-700">
+                <button onClick={() => setShowBulkModal(false)} className="btn-ghost">Cancel</button>
+                <button onClick={handleBulkDownload} disabled={selectedStaffIds.length === 0 || generating} className="btn-primary flex items-center gap-2">
+                  {generating ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                  Download ZIP ({selectedStaffIds.length})
+                </button>
               </div>
             </div>
           </div>
