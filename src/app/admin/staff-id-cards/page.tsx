@@ -132,6 +132,25 @@ function safeFilePart(value: string) {
   return (value || '').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 }
 
+function compressImageUrl(url: string, targetW = 680): Promise<string> {
+  return new Promise((resolve) => {
+    const img: HTMLImageElement = document.createElement('img') as HTMLImageElement;
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const scale = Math.min(1, targetW / img.width);
+      const nw = Math.round(img.width * scale);
+      const nh = Math.round(img.height * scale);
+      const c = document.createElement('canvas');
+      c.width = nw; c.height = nh;
+      const ctx = c.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, nw, nh);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(url);
+    img.src = url;
+  });
+}
+
 export default function AdminStaffIDCardsPage() {
   const { profile } = useAuth();
   const router = useRouter();
@@ -482,9 +501,11 @@ export default function AdminStaffIDCardsPage() {
         await new Promise(r => setTimeout(r, 50));
         await waitForImages(frontCardRef.current);
         await waitForImages(backCardRef.current);
-        const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: { high: 3, standard: 2, compact: 1 }[bulkQuality], cacheBust: true });
-        const backUrl = await toPng(backCardRef.current!, { pixelRatio: { high: 3, standard: 2, compact: 1 }[bulkQuality], cacheBust: true });
-        const doc = buildCardPDF(frontUrl, backUrl);
+        const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: 1, cacheBust: true });
+        const backUrl = await toPng(backCardRef.current!, { pixelRatio: 1, cacheBust: true });
+        const frontCompressed = await compressImageUrl(frontUrl, 680);
+        const backCompressed = await compressImageUrl(backUrl, 680);
+        const doc = buildCardPDF(frontCompressed, backCompressed);
         const name = `${safeFilePart(member.first_name)}_${safeFilePart(member.last_name)}-${getStaffNumber(member)}.pdf`;
         folder.file(name, doc.output('blob'));
         count++;

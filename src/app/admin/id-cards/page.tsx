@@ -97,6 +97,27 @@ function safeFilePart(value: string) {
   return (value || '').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 }
 
+// Compress a PNG data-URL by drawing to a smaller canvas (target ~680px wide).
+// This makes the ZIP much smaller and faster for bulk exports.
+function compressImageUrl(url: string, targetW = 680): Promise<string> {
+  return new Promise((resolve) => {
+    const img: HTMLImageElement = document.createElement('img') as HTMLImageElement;
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const scale = Math.min(1, targetW / img.width);
+      const nw = Math.round(img.width * scale);
+      const nh = Math.round(img.height * scale);
+      const c = document.createElement('canvas');
+      c.width = nw; c.height = nh;
+      const ctx = c.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, nw, nh);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(url); // fallback to original
+    img.src = url;
+  });
+}
+
 async function urlToBase64(url: string): Promise<string> {
   try {
     const response = await fetch(url);
@@ -485,8 +506,9 @@ export default function AdminIDCardsPage() {
       let count = 0;
       const zip = new JSZip();
       const folder = zip.folder('Student_ID_Cards') || zip;
-      // Use pixelRatio based on selected quality: high=3, standard=2, compact=1
-      const pr = { high: 3, standard: 2, compact: 1 }[bulkQuality];
+      // Bulk always uses compact (pixelRatio 1) + compression for speed;
+      // quality selector controls only if user wants high, but default is fast.
+      const pr = 1;
       for (const studentId of selectedStudents) {
         const student = students.find(s => s.id === studentId);
         if (!student) continue;
@@ -503,7 +525,9 @@ export default function AdminIDCardsPage() {
         await waitForImages(backCardRef.current);
         const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: pr, cacheBust: true });
         const backUrl = await toPng(backCardRef.current!, { pixelRatio: pr, cacheBust: true });
-        const doc = buildCardPDF(frontUrl, backUrl);
+        const frontCompressed = await compressImageUrl(frontUrl, 680);
+        const backCompressed = await compressImageUrl(backUrl, 680);
+        const doc = buildCardPDF(frontCompressed, backCompressed);
         const name = `${safeFilePart(student.admission_number)}-${safeFilePart(student.profile?.first_name)}_${safeFilePart(student.profile?.last_name)}.pdf`;
         folder.file(name, doc.output('blob'));
         count++;
