@@ -458,7 +458,7 @@ export default function AdminStaffIDCardsPage() {
 
   async function handleBulkDownload() {
     if (selectedStaffIds.length === 0) return;
-    if (selectedStaffIds.length > 20 && bulkQuality === 'high') {
+    if (selectedStaffIds.length > 50 && bulkQuality === 'high') {
       if (!window.confirm('Exporting ' + selectedStaffIds.length + ' staff ID cards as ZIP may be slow at high quality. Continue?')) {
         setGenerating(false);
         return;
@@ -479,7 +479,7 @@ export default function AdminStaffIDCardsPage() {
         setQrCodeUrl(qr);
         setQrBackUrl(qrBack);
         // Let React commit the newly selected staff before snapshotting.
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 50));
         await waitForImages(frontCardRef.current);
         await waitForImages(backCardRef.current);
         const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: { high: 3, standard: 2, compact: 1 }[bulkQuality], cacheBust: true });

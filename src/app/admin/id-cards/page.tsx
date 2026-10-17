@@ -473,7 +473,7 @@ export default function AdminIDCardsPage() {
   async function handleBulkDownload() {
     if (selectedStudents.length === 0) return;
     // Guard: bulk ZIP with high quality for >20 students may be slow.
-    if (selectedStudents.length > 20 && bulkQuality === 'high') {
+    if (selectedStudents.length > 50 && bulkQuality === 'high') {
       if (!window.confirm('Exporting ' + selectedStudents.length + ' ID cards as ZIP may be slow at high quality. Continue?')) {
         setGenerating(false);
         return;
@@ -498,7 +498,7 @@ export default function AdminIDCardsPage() {
         const { data: idCardData } = await db.from('id_cards').select('*').eq('student_id', student.profile_id).maybeSingle();
         setSelectedIdCard(idCardData || null);
         // Let React commit the newly selected student before snapshotting.
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 50));
         await waitForImages(frontCardRef.current);
         await waitForImages(backCardRef.current);
         const frontUrl = await toPng(frontCardRef.current!, { pixelRatio: pr, cacheBust: true });
